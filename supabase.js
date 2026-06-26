@@ -1534,9 +1534,7 @@ async function initApp() {
 }
 
 async function renderDashboardProspectsRelance() {
-  const today = new Date().toISOString().split('T')[0];
-  const { data, error } = await sb.from('prospects').select('name,followup_date,status')
-    .lte('followup_date', today)
+  const { data, error } = await sb.from('prospects').select('name,status')
     .not('status', 'eq', 'Gagné')
     .not('status', 'eq', 'Perdu');
   if (error) return;
