@@ -867,6 +867,9 @@ function renderCreances(entries) {
   const totalEl = document.getElementById('creances-total');
   if (totalEl) totalEl.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 0 }) + ' €';
 
+  const dashTotalEl = document.getElementById('stat-creances-total');
+  if (dashTotalEl) dashTotalEl.textContent = total > 0 ? 'Total : ' + total.toLocaleString('fr-FR') + ' €' : '';
+
   const tbody = document.getElementById('creances-tbody');
   if (!tbody) return;
   if (!impayees.length) {
