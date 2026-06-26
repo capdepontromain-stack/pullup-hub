@@ -647,6 +647,21 @@
         </div>
       </div>
     </div>
+
+    <!-- TAB: Créances clients -->
+    <div class="tab-content" id="fin-creances">
+      <div class="creances-encours-card">
+        <div class="creances-encours-label">Encours clients</div>
+        <div class="creances-encours-val" id="creances-total">0 €</div>
+        <div class="creances-encours-sub">Total des factures impayées à ce jour</div>
+      </div>
+      <div class="events-table-wrap" style="margin-top:16px">
+        <table class="data-table">
+          <thead><tr><th>Client</th><th>Montant</th><th>Date facture</th><th>Statut</th></tr></thead>
+          <tbody id="creances-tbody"><tr><td colspan="4" style="text-align:center;color:var(--text2);padding:2rem">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
   </section>
 
   <!-- KNOWLEDGE BASE -->
@@ -1266,6 +1281,7 @@ Afin d'avancer, nous pouvons :
       <button class="tab active" onclick="switchTab(this,'fin-analyse')">Analyse mensuelle</button>
       <button class="tab" onclick="switchTab(this,'fin-factures')">Factures</button>
       <button class="tab" onclick="switchTab(this,'fin-devis')">Devis</button>
+      <button class="tab" onclick="switchTab(this,'fin-creances')">Créances clients</button>
     </div>
 
     <!-- TAB: Analyse mensuelle -->

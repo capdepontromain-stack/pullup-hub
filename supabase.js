@@ -644,6 +644,7 @@ function renderMileageBoard(entries) {
 
 // Render finances
 function renderFinances(entries) {
+  renderCreances(entries);
   const factures = entries.filter(e => e.type === 'facture');
   const devis = entries.filter(e => e.type === 'devis');
 
@@ -682,6 +683,52 @@ function renderFinances(entries) {
       </tr>`;
     }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text2);padding:2rem">Aucun devis — cliquez sur "+ Nouvelle facture" pour commencer</td></tr>';
   }
+}
+
+// Render créances clients (factures impayées)
+function renderCreances(entries) {
+  const impayees = entries.filter(e => e.type === 'facture' && e.status !== 'Payée');
+  const total = impayees.reduce((s, f) => s + (parseFloat(f.amount) || 0), 0);
+
+  const totalEl = document.getElementById('creances-total');
+  if (totalEl) totalEl.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 0 }) + ' €';
+
+  const tbody = document.getElementById('creances-tbody');
+  if (!tbody) return;
+  if (!impayees.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text2);padding:2rem">✅ Aucune créance — toutes les factures sont payées</td></tr>';
+    return;
+  }
+  tbody.innerHTML = impayees.map(f => `
+    <tr data-id="${f.id}">
+      <td>${f.client || '—'}</td>
+      <td style="font-weight:700;color:var(--gold)">${f.amount ? parseFloat(f.amount).toLocaleString('fr-FR') + ' €' : '—'}</td>
+      <td>${f.invoice_date ? new Date(f.invoice_date).toLocaleDateString('fr-FR') : '—'}</td>
+      <td>
+        <select onchange="markInvoicePaid('${f.id}', this)" data-prev="Impayé"
+          style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:.8rem;cursor:pointer">
+          <option selected>Impayé</option>
+          <option>Payé</option>
+        </select>
+      </td>
+    </tr>`).join('');
+}
+
+async function markInvoicePaid(id, selectEl) {
+  if (selectEl.value !== 'Payé') return;
+  const confirmed = confirm('Êtes-vous sûr que cette facture a été payée ?');
+  if (!confirmed) { selectEl.value = 'Impayé'; return; }
+  const { error } = await sb.from('finances').update({ status: 'Payée' }).eq('id', id);
+  if (error) { showToast('Erreur : ' + error.message); selectEl.value = 'Impayé'; return; }
+  showToast('Facture marquée comme payée ✓');
+  // Retirer la ligne sans recharger
+  const row = document.querySelector(`#creances-tbody tr[data-id="${id}"]`);
+  if (row) row.remove();
+  // Recalculer l'encours
+  const remaining = [...document.querySelectorAll('#creances-tbody tr[data-id]')];
+  // Recharger pour avoir le bon total
+  const entries = await sb.from('finances').select('*').order('invoice_date', { ascending: false });
+  if (!entries.error) renderCreances(entries.data);
 }
 
 // Render mail templates
