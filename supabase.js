@@ -2556,7 +2556,14 @@ function renderLeaveCalendar() {
     leaveByDate[l.leave_date].push(l);
   });
 
-  let html = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px">
+  const monthLabel = leaveViewDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  let html = `
+  <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px">
+    <button onclick="leavePrevMonth()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text1);width:36px;height:36px;border-radius:8px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
+    <span style="font-weight:700;font-size:1rem;min-width:160px;text-align:center;text-transform:capitalize">${monthLabel}</span>
+    <button onclick="leaveNextMonth()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text1);width:36px;height:36px;border-radius:8px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center">›</button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px">
     ${days.map(d => `<div style="text-align:center;font-size:.75rem;font-weight:600;color:var(--text2);padding:4px">${d}</div>`).join('')}
   </div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">`;
 
@@ -2576,12 +2583,13 @@ function renderLeaveCalendar() {
     const leavesOnDay = leaveByDate[dateStr] || [];
     const myLeave = leavesOnDay.find(l => l.person_name === currentUserName);
 
-    let cellStyle = `min-height:72px;border-radius:8px;padding:4px;position:relative;cursor:${isWeekend || isPast ? 'default' : 'pointer'};`;
+    let cellStyle = `min-height:72px;border-radius:8px;padding:4px;position:relative;cursor:${isWeekend ? 'default' : 'pointer'};`;
     cellStyle += `background:${isWeekend ? 'var(--bg)' : 'var(--bg3)'};`;
     if (isToday) cellStyle += 'border:2px solid var(--gold);';
     if (isWeekend) cellStyle += 'opacity:.4;';
+    if (isPast && !isWeekend) cellStyle += 'opacity:.7;';
 
-    const clickAttr = (!isWeekend && !isPast) ? `onclick="requestLeaveDay('${dateStr}')"` : '';
+    const clickAttr = !isWeekend ? `onclick="requestLeaveDay('${dateStr}')"` : '';
 
     html += `<div style="${cellStyle}" ${clickAttr}>
       <div style="font-size:.8rem;font-weight:${isToday?'700':'400'};color:${isToday?'var(--gold)':'var(--text2)'};margin-bottom:3px">${d}</div>
