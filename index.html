@@ -1398,18 +1398,38 @@ Afin d'avancer, nous pouvons :
 
     <!-- TAB: Créances clients -->
     <div class="tab-content" id="fin-creances">
-      <div class="creances-encours-card">
-        <div class="creances-encours-label">Encours clients</div>
-        <div class="creances-encours-val" id="creances-total">0 €</div>
-        <div class="creances-encours-sub">Total des factures impayées à ce jour</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+        <div class="creances-encours-card" style="flex:1;min-width:220px">
+          <div class="creances-encours-label">Encours clients</div>
+          <div class="creances-encours-val" id="creances-total">0 €</div>
+          <div class="creances-encours-sub">Total des factures impayées à ce jour</div>
+        </div>
+        <button class="btn-primary" onclick="openModal('newCreance')" style="white-space:nowrap">+ Ajouter une créance</button>
       </div>
-      <div class="events-table-wrap" style="margin-top:16px">
+      <div class="events-table-wrap">
         <table class="data-table">
           <thead><tr><th>Client</th><th>Montant</th><th>Date facture</th><th>Statut</th></tr></thead>
           <tbody id="creances-tbody"><tr><td colspan="4" style="text-align:center;color:var(--text2);padding:2rem">Chargement…</td></tr></tbody>
         </table>
       </div>
     </div>
+
+  <!-- Modal nouvelle créance -->
+  <div class="modal-overlay" id="modal-newCreance" style="display:none">
+    <div class="modal" style="max-width:420px">
+      <div class="modal-header"><h3>Nouvelle créance</h3><button class="modal-close" onclick="closeModal('newCreance')">✕</button></div>
+      <form id="form-newCreance" onsubmit="saveNewCreance(event)">
+        <div class="form-group"><label>Client *</label><input name="client" required placeholder="Nom du client ou de la société"></div>
+        <div class="form-group"><label>Montant HT (€) *</label><input name="amount" type="number" step="0.01" required placeholder="ex: 1500"></div>
+        <div class="form-group"><label>Date de la facture *</label><input name="invoice_date" type="date" required></div>
+        <div class="form-group"><label>Statut</label><input value="Impayé" disabled style="background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:#FF6B9D;font-weight:600"></div>
+        <div class="form-actions">
+          <button type="button" onclick="closeModal('newCreance')" class="btn-secondary">Annuler</button>
+          <button type="submit" class="btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
   </section>
 
   <!-- AI ASSISTANT -->

@@ -728,6 +728,25 @@ function renderCreances(entries) {
     </tr>`).join('');
 }
 
+async function saveNewCreance(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = {
+    type: 'facture',
+    client: form.querySelector('[name=client]').value,
+    amount: parseFloat(form.querySelector('[name=amount]').value),
+    invoice_date: form.querySelector('[name=invoice_date]').value,
+    status: 'Non payé',
+  };
+  const { error } = await sb.from('finances').insert([data]);
+  if (error) { showToast('Erreur : ' + error.message); return; }
+  showToast('Créance ajoutée ✓');
+  closeModal('newCreance');
+  form.reset();
+  const { data: entries } = await sb.from('finances').select('*').order('invoice_date', { ascending: false });
+  if (entries) renderCreances(entries);
+}
+
 async function markInvoicePaid(id, selectEl) {
   if (selectEl.value !== 'Payé') return;
   const confirmed = confirm('Êtes-vous sûr que cette facture a été payée ?');
