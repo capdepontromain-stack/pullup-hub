@@ -483,18 +483,28 @@ function renderClientsTable(clients) {
 }
 
 // Render messages
+async function deleteMessage(id) {
+  if (!confirm('Supprimer ce message ?')) return;
+  const { error } = await sb.from('messages').delete().eq('id', id);
+  if (error) { showToast('Erreur : ' + error.message); return; }
+  const el = document.querySelector(`.chat-msg[data-id="${id}"]`);
+  if (el) el.remove();
+}
+
 function renderMessages(messages) {
   const container = document.getElementById('chatMessages');
   if (!container) return;
+  const isRomain = currentProfile?.name === 'Romain';
   container.innerHTML = messages.map(m => {
     const isMine = m.author_id === currentUser?.id;
+    const canDelete = isMine || isRomain;
     const time = new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    return `<div class="chat-msg ${isMine ? 'mine' : ''}">
+    return `<div class="chat-msg ${isMine ? 'mine' : ''}" data-id="${m.id}">
       ${!isMine ? `<div class="chat-avatar">${chatAvatar(m.author_name)}</div>` : ''}
       <div class="chat-bubble">
         ${!isMine ? `<div class="chat-name">${m.author_name}</div>` : ''}
         <div class="chat-text">${m.content}</div>
-        <div class="chat-time">${time}</div>
+        <div class="chat-time">${time}${canDelete ? ` <span class="msg-delete" onclick="deleteMessage('${m.id}')">🗑</span>` : ''}</div>
       </div>
     </div>`;
   }).join('');
