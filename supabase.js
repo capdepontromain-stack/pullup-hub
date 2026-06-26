@@ -1722,6 +1722,19 @@ function extractDevisFormData(f) {
   };
 }
 
+function resetDevisModal() {
+  const f = document.getElementById('form-newDevisRequest');
+  f.reset();
+  delete f.dataset.editId;
+  delete f.dataset.prevAssignedTo;
+  f.querySelectorAll('input,select,textarea').forEach(el => {
+    el.removeEventListener('input', el._autoSave);
+    el.removeEventListener('change', el._autoSave);
+  });
+  document.querySelector('#modal-newDevisRequest .modal-header h3').textContent = 'Nouvelle demande de devis';
+  document.getElementById('devis-autosave-indicator').textContent = '';
+}
+
 async function openEditDevis(id) {
   const { data: r } = await sb.from('devis_requests').select('*').eq('id', id).single();
   if (!r) return;
