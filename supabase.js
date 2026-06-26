@@ -2467,13 +2467,80 @@ async function saveFloraDay(e) {
 const MOIS_LABELS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 let _chargesMonthly = [];
+let _chargesFixes = [];
 
 async function loadCharges() {
   const annee = parseInt(document.getElementById('charges-year-sel')?.value || 2026);
-  const { data, error } = await sb.from('charges_monthly').select('*').eq('year', annee).order('month');
-  if (error) { console.error(error); return; }
-  _chargesMonthly = data || [];
+  const [rm, rf] = await Promise.all([
+    sb.from('charges_monthly').select('*').eq('year', annee).order('month'),
+    sb.from('charges_fixes').select('*').eq('actif', true).order('categorie').order('label')
+  ]);
+  _chargesMonthly = rm.data || [];
+  _chargesFixes = rf.data || [];
   renderChargesMonthly(annee);
+  renderChargesFixesDetail();
+}
+
+function renderChargesFixesDetail() {
+  const container = document.getElementById('charges-fixes-detail');
+  const sumEl = document.getElementById('charges-fixes-sum');
+  if (!container) return;
+  const total = _chargesFixes.reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
+  if (sumEl) sumEl.textContent = '— Total : ' + total.toLocaleString('fr-FR') + ' €/mois';
+  const byCateg = {};
+  _chargesFixes.forEach(c => { if (!byCateg[c.categorie]) byCateg[c.categorie] = []; byCateg[c.categorie].push(c); });
+  container.innerHTML = Object.entries(byCateg).map(([cat, items]) => `
+    <div style="background:var(--bg3);border-radius:10px;padding:12px">
+      <div style="font-size:.75rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">${cat}</div>
+      ${items.map(c => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:.88rem">${c.label}</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="fin-editable" onclick="editChargeFixeItem('${c.id}')" style="color:#f44336;font-weight:700;cursor:pointer;font-size:.88rem">${parseFloat(c.montant).toLocaleString('fr-FR')} €</span>
+            <button onclick="deleteChargeFixeItem('${c.id}')" style="background:none;border:none;cursor:pointer;font-size:.8rem;color:var(--text3)">✕</button>
+          </div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+function editChargeFixeItem(id) {
+  const c = _chargesFixes.find(x => x.id === id);
+  if (!c) return;
+  const f = document.getElementById('form-newChargeFixe');
+  f.querySelector('[name=id]').value = c.id;
+  f.querySelector('[name=label]').value = c.label;
+  f.querySelector('[name=categorie]').value = c.categorie;
+  f.querySelector('[name=montant]').value = c.montant;
+  document.getElementById('modal-cf-title').textContent = 'Modifier charge fixe';
+  openModal('newChargeFixe');
+}
+
+async function saveChargeFixeItem(e) {
+  e.preventDefault();
+  const f = e.target;
+  const id = f.querySelector('[name=id]').value;
+  const payload = { label: f.querySelector('[name=label]').value, categorie: f.querySelector('[name=categorie]').value, montant: parseFloat(f.querySelector('[name=montant]').value) || 0, actif: true };
+  const { error } = id ? await sb.from('charges_fixes').update(payload).eq('id', id) : await sb.from('charges_fixes').insert([payload]);
+  if (error) { showToast('Erreur : ' + error.message); return; }
+  const { data: allFixes } = await sb.from('charges_fixes').select('montant').eq('actif', true);
+  const newTotal = (allFixes || []).reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
+  const annee = parseInt(document.getElementById('charges-year-sel')?.value || 2026);
+  await sb.from('charges_monthly').update({ charges_fixes: newTotal }).eq('year', annee);
+  showToast('Enregistré ✓');
+  closeModal('newChargeFixe');
+  f.reset(); f.querySelector('[name=id]').value = '';
+  document.getElementById('modal-cf-title').textContent = 'Nouvelle charge fixe';
+  await loadCharges();
+}
+
+async function deleteChargeFixeItem(id) {
+  if (!confirm('Supprimer cette charge fixe ?')) return;
+  await sb.from('charges_fixes').update({ actif: false }).eq('id', id);
+  const { data: allFixes } = await sb.from('charges_fixes').select('montant').eq('actif', true);
+  const newTotal = (allFixes || []).reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
+  const annee = parseInt(document.getElementById('charges-year-sel')?.value || 2026);
+  await sb.from('charges_monthly').update({ charges_fixes: newTotal }).eq('year', annee);
+  await loadCharges();
 }
 
 function renderChargesMonthly(annee) {

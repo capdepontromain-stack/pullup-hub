@@ -1976,7 +1976,7 @@ Afin d'avancer, nous pouvons :
         <option value="2025">2025</option><option value="2026" selected>2026</option>
       </select>
     </div>
-    <div class="card" style="overflow-x:auto">
+    <div class="card" style="overflow-x:auto;margin-bottom:20px">
       <table class="data-table">
         <thead>
           <tr>
@@ -1996,6 +1996,38 @@ Afin d'avancer, nous pouvons :
           </tr>
         </tfoot>
       </table>
+    </div>
+
+    <!-- Détail charges fixes -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <h3 style="margin:0">🔒 Détail des charges fixes <span id="charges-fixes-sum" style="font-size:.85rem;color:#f44336;font-weight:600;margin-left:8px"></span></h3>
+        <button class="btn-primary" style="font-size:.8rem;padding:5px 14px" onclick="openModal('newChargeFixe')">+ Ajouter</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px" id="charges-fixes-detail"></div>
+    </div>
+
+    <!-- Modal charge fixe -->
+    <div class="modal-overlay" id="modal-newChargeFixe">
+      <div class="modal" style="max-width:400px">
+        <div class="modal-header"><h3 id="modal-cf-title">Nouvelle charge fixe</h3><button class="modal-close" onclick="closeModal('newChargeFixe')">✕</button></div>
+        <form id="form-newChargeFixe" onsubmit="saveChargeFixeItem(event)">
+          <input type="hidden" name="id">
+          <div class="form-group"><label>Libellé *</label><input name="label" required placeholder="ex: Loyer, Spotify..."></div>
+          <div class="form-group"><label>Catégorie</label>
+            <select name="categorie">
+              <option>Salaires</option><option>Comptabilité</option><option>Abonnements</option>
+              <option>Assurances</option><option>Mutuelle</option><option>Loyer</option>
+              <option>Équipements</option><option>Autres</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Montant mensuel (€) *</label><input name="montant" type="number" step="0.01" required placeholder="ex: 150"></div>
+          <div class="form-actions">
+            <button type="button" onclick="closeModal('newChargeFixe')" class="btn-secondary">Annuler</button>
+            <button type="submit" class="btn-primary">Enregistrer</button>
+          </div>
+        </form>
+      </div>
     </div>
   </section>
 
