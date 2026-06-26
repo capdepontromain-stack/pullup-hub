@@ -1556,6 +1556,8 @@ async function initApp() {
   if (typeof renderDashboardCA === 'function') renderDashboardCA();
   renderDashboardProspectsRelance();
   renderDashboardDevisRequests();
+  loadUnreadCounts();
+  setInterval(loadUnreadCounts, 30000);
 }
 
 async function loadDevisRequests() {
@@ -1918,6 +1920,57 @@ function mobileSwitchChannel(btn, channel, label) {
   switchChannel(channel);
 }
 
+async function markChannelRead(channel) {
+  if (!currentUser) return;
+  await sb.from('message_reads').upsert({ user_id: currentUser.id, channel, last_read_at: new Date().toISOString() }, { onConflict: 'user_id,channel' });
+  // Efface le badge du channel
+  const badge = document.getElementById('badge-' + channel);
+  if (badge) badge.style.display = 'none';
+  refreshNavMessageBadge();
+}
+
+async function loadUnreadCounts() {
+  if (!currentUser) return;
+  const channels = ['general', 'annonces', 'dm-romain', 'dm-ketsia', 'dm-flora', 'dm-gloria'];
+  const { data: reads } = await sb.from('message_reads').select('channel,last_read_at').eq('user_id', currentUser.id);
+  const readMap = {};
+  (reads || []).forEach(r => { readMap[r.channel] = r.last_read_at; });
+
+  let totalUnread = 0;
+  for (const ch of channels) {
+    const lastRead = readMap[ch] || '1970-01-01T00:00:00Z';
+    let q = sb.from('messages').select('id', { count: 'exact', head: true })
+      .eq('channel', ch)
+      .neq('author_id', currentUser.id)
+      .gt('created_at', lastRead);
+    const { count } = await q;
+    const n = count || 0;
+    const badge = document.getElementById('badge-' + ch);
+    if (badge) {
+      if (n > 0) { badge.textContent = n > 99 ? '99+' : n; badge.style.display = 'inline-flex'; }
+      else badge.style.display = 'none';
+    }
+    totalUnread += n;
+  }
+  refreshNavMessageBadge(totalUnread);
+}
+
+function refreshNavMessageBadge(total) {
+  const navBadge = document.getElementById('nav-badge-messages');
+  if (!navBadge) return;
+  if (total === undefined) {
+    // Recalcule depuis les badges existants
+    let t = 0;
+    ['general','annonces','dm-romain','dm-ketsia','dm-flora','dm-gloria'].forEach(ch => {
+      const b = document.getElementById('badge-' + ch);
+      if (b && b.style.display !== 'none') t += parseInt(b.textContent) || 0;
+    });
+    total = t;
+  }
+  if (total > 0) { navBadge.textContent = total > 99 ? '99+' : total; navBadge.style.display = 'inline-flex'; }
+  else navBadge.style.display = 'none';
+}
+
 async function switchChannel(channel) {
   activeChannel = channel;
   if (messageSubscription) { sb.removeChannel(messageSubscription); }
@@ -1929,6 +1982,7 @@ async function switchChannel(channel) {
     header.textContent = labels[channel] || '# ' + channel;
   }
 
+  await markChannelRead(channel);
   const messages = await fetchMessages(channel);
   renderMessages(messages);
   messageSubscription = subscribeToMessages(channel, (msg) => {

@@ -88,9 +88,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
       <span>Devis à établir</span>
     </a>
-    <a class="nav-item" data-page="messages">
+    <a class="nav-item" data-page="messages" style="position:relative">
       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
       <span>Messages</span>
+      <span id="nav-badge-messages" style="display:none;position:absolute;top:6px;right:6px;background:#f44336;color:#fff;font-size:.6rem;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;line-height:1"></span>
     </a>
     <a class="nav-item" data-page="knowledge">
       <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
@@ -556,8 +557,8 @@
       <div class="channels-panel">
         <div class="channels-section">
           <div class="channel-section-title">Général</div>
-          <div class="channel-item active" data-channel="general"><span>#</span> général</div>
-          <div class="channel-item" data-channel="annonces"><span>#</span> annonces</div>
+          <div class="channel-item active" data-channel="general"><span>#</span> général <span class="msg-badge" id="badge-general" style="display:none"></span></div>
+          <div class="channel-item" data-channel="annonces"><span>#</span> annonces <span class="msg-badge" id="badge-annonces" style="display:none"></span></div>
         </div>
         <div class="channels-section">
           <div class="channel-section-title">Événements</div>
@@ -567,10 +568,10 @@
         </div>
         <div class="channels-section">
           <div class="channel-section-title">Messages privés</div>
-          <div class="channel-item" data-channel="dm-romain"><div class="mini-avatar av-romain" style="width:20px;height:20px;font-size:10px">R</div> Romain</div>
-          <div class="channel-item" data-channel="dm-ketsia"><div class="mini-avatar av-ketsia" style="width:20px;height:20px;font-size:10px">K</div> Ketsia</div>
-          <div class="channel-item" data-channel="dm-flora"><div class="mini-avatar av-flora" style="width:20px;height:20px;font-size:10px">F</div> Flora</div>
-          <div class="channel-item" data-channel="dm-gloria"><div class="mini-avatar av-gloria" style="width:20px;height:20px;font-size:10px">G</div> Gloria</div>
+          <div class="channel-item" data-channel="dm-romain"><div class="mini-avatar av-romain" style="width:20px;height:20px;font-size:10px">R</div> Romain <span class="msg-badge" id="badge-dm-romain" style="display:none"></span></div>
+          <div class="channel-item" data-channel="dm-ketsia"><div class="mini-avatar av-ketsia" style="width:20px;height:20px;font-size:10px">K</div> Ketsia <span class="msg-badge" id="badge-dm-ketsia" style="display:none"></span></div>
+          <div class="channel-item" data-channel="dm-flora"><div class="mini-avatar av-flora" style="width:20px;height:20px;font-size:10px">F</div> Flora <span class="msg-badge" id="badge-dm-flora" style="display:none"></span></div>
+          <div class="channel-item" data-channel="dm-gloria"><div class="mini-avatar av-gloria" style="width:20px;height:20px;font-size:10px">G</div> Gloria <span class="msg-badge" id="badge-dm-gloria" style="display:none"></span></div>
         </div>
       </div>
       <div class="chat-panel">
