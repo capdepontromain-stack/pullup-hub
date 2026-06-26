@@ -1767,6 +1767,51 @@ async function renderDashboardProspectsRelance() {
 // =============================================
 // EDIT EVENT
 // =============================================
+async function loadEventTasks(eventId) {
+  const list = document.getElementById('event-tasks-list');
+  if (!list) return;
+  const { data } = await sb.from('tasks').select('*').eq('event_id', eventId).order('created_at');
+  if (!data || !data.length) { list.innerHTML = '<div style="color:var(--text3);font-size:.85rem">Aucune tâche pour cet événement.</div>'; return; }
+  list.innerHTML = data.map(t => {
+    const done = t.status === 'done' || t.status === 'fait';
+    return `<div style="display:flex;align-items:center;gap:8px;background:var(--bg3);border-radius:8px;padding:8px 10px">
+      <span style="font-size:1rem">${done ? '✅' : '⬜'}</span>
+      <span style="flex:1;font-size:.85rem;${done ? 'text-decoration:line-through;opacity:.5' : ''}">${t.title}</span>
+      <span style="font-size:.75rem;color:var(--text3);background:var(--bg4);border-radius:6px;padding:2px 7px">${t.assignee_name || ''}</span>
+      <button onclick="deleteEventTask('${t.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:.8rem">✕</button>
+    </div>`;
+  }).join('');
+}
+
+async function addEventTask() {
+  const input = document.getElementById('event-task-input');
+  const assignee = document.getElementById('event-task-assignee').value;
+  const title = input?.value.trim();
+  const eventId = document.querySelector('#form-editEvent [name=id]')?.value;
+  if (!title || !eventId) return;
+  input.value = '';
+  const { error } = await sb.from('tasks').insert([{
+    title,
+    assignee_name: assignee,
+    event_id: eventId,
+    status: 'todo',
+    priority: 'normal',
+    created_at: new Date()
+  }]);
+  if (error) { showToast('Erreur : ' + error.message); return; }
+  await loadEventTasks(eventId);
+  loadTasksBadge();
+  showToast('Tâche ajoutée ✓');
+}
+
+async function deleteEventTask(taskId) {
+  if (!confirm('Supprimer cette tâche ?')) return;
+  await sb.from('tasks').delete().eq('id', taskId);
+  const eventId = document.querySelector('#form-editEvent [name=id]')?.value;
+  if (eventId) await loadEventTasks(eventId);
+  loadTasksBadge();
+}
+
 async function openEventDetailById(id) {
   const { data: ev } = await sb.from('events').select('*').eq('id', id).single();
   if (!ev) return;
@@ -1786,6 +1831,7 @@ async function openEventDetailById(id) {
   form.querySelector('[name=amount_ht]').value = ev.amount_ht || '';
   form.querySelector('[name=notes]').value = ev.notes || '';
   openModal('editEvent');
+  await loadEventTasks(ev.id);
 }
 
 async function saveEditEvent() {
