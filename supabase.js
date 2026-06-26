@@ -270,9 +270,16 @@ function renderEventsTable(events) {
 }
 
 async function updateEventStatus(id, status) {
-  const { error } = await sb.from('events').update({ status }).eq('id', id);
-  if (error) { showToast('Erreur : ' + error.message); return; }
-  showToast('Statut mis à jour ✓');
+  if (status === 'Supprimé') {
+    if (!confirm('Supprimer cet événement définitivement ?')) return;
+    const { error } = await sb.from('events').delete().eq('id', id);
+    if (error) { showToast('Erreur : ' + error.message); return; }
+    showToast('Événement supprimé ✓');
+  } else {
+    const { error } = await sb.from('events').update({ status }).eq('id', id);
+    if (error) { showToast('Erreur : ' + error.message); return; }
+    showToast('Statut mis à jour ✓');
+  }
   await loadAndRenderEvents();
 }
 
