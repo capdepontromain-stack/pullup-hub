@@ -1557,14 +1557,15 @@ async function initApp() {
 }
 
 async function renderDashboardProspectsRelance() {
-  const { data, error } = await sb.from('prospects').select('name,status')
+  const { data, error } = await sb.from('prospects').select('name,status,temperature')
     .not('status', 'eq', 'Gagné')
     .not('status', 'eq', 'Perdu');
   if (error) return;
+  const TEMP_EMOJI = { froid: '❄️', tiede: '🌤', chaud: '🔥' };
   const countEl = document.getElementById('stat-prospects-count');
   const namesEl = document.getElementById('stat-prospects-names');
   if (countEl) countEl.textContent = data.length;
-  if (namesEl) namesEl.textContent = data.map(p => p.name).join(', ');
+  if (namesEl) namesEl.innerHTML = data.map(p => `${TEMP_EMOJI[p.temperature] || ''} ${p.name}`).join('<br>');
 }
 
 // =============================================
