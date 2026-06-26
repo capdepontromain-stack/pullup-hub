@@ -13,7 +13,7 @@ function showPage(id) {
     if (typeof loadAndRenderEvents === 'function') loadAndRenderEvents();
   }
   if (id === 'finances') renderFinanceAnalyse().catch(console.error);
-  if (id === 'dashboard') renderDashboardCA();
+  if (id === 'dashboard') renderDashboardCA().catch(console.error);
   if (id === 'leaves') loadAndRenderLeaves();
   if (id === 'flora') loadAndRenderFlora();
 }
@@ -424,22 +424,34 @@ function fmt(n) {
   return n > 0 ? n.toLocaleString('fr-FR') + ' €' : '—';
 }
 
-function renderDashboardCA() {
+async function renderDashboardCA() {
   const container = document.getElementById('dashboard-ca-bars');
   if (!container) return;
   const MONTHS = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   const TARGET = 8000;
-  // Échelle = le CA max du mois le plus haut (au moins TARGET)
-  const maxBenef = Math.max(TARGET, ...Object.values(FINANCE_2026).map(d => d.benef || 0));
+
+  // Charger depuis Supabase
+  const rows = await fetchFinanceMonthly();
+  const byMonth = {};
+  rows.forEach(r => { byMonth[r.month] = r; });
+
+  // Calculer total CA pour le stat dashboard
+  const totalCA = rows.filter(r => r.year === 2026).reduce((s,r) => s + (parseFloat(r.ca)||0), 0);
+  const caStatEl = document.getElementById('stat-ca-count');
+  if (caStatEl) caStatEl.textContent = totalCA.toLocaleString('fr-FR') + ' €';
+
+  const data2026 = rows.filter(r => r.year === 2026);
+  const maxBenef = Math.max(TARGET, ...data2026.map(d => parseFloat(d.benef) || 0));
   const targetPct = Math.round((TARGET / maxBenef) * 100);
 
   let html = '';
   for (let m = 1; m <= 12; m++) {
-    const d = FINANCE_2026[m];
-    if (!d || d.benef === 0) continue;
-    const atteint = d.benef >= TARGET;
-    const surplus = Math.max(0, d.benef - TARGET);
-    const yellowPct = Math.round((Math.min(d.benef, TARGET) / maxBenef) * 100);
+    const d = byMonth[m];
+    const benef = parseFloat(d?.benef) || 0;
+    if (!benef) continue;
+    const atteint = benef >= TARGET;
+    const surplus = Math.max(0, benef - TARGET);
+    const yellowPct = Math.round((Math.min(benef, TARGET) / maxBenef) * 100);
     const greenPct  = Math.round((surplus / maxBenef) * 100);
 
     html += `<div class="objective-item">
@@ -450,7 +462,7 @@ function renderDashboardCA() {
         <div style="position:absolute;left:${targetPct}%;top:0;bottom:0;width:2px;background:#fff;opacity:.6"></div>
       </div>
       <div class="obj-values">
-        <span style="color:${atteint ? '#4CAF50' : '#F5C518'};font-weight:700">${d.benef.toLocaleString('fr-FR')} €${surplus > 0 ? ` <span style="font-size:.75rem">(+${surplus.toLocaleString('fr-FR')} €)</span>` : ''}</span>
+        <span style="color:${atteint ? '#4CAF50' : '#F5C518'};font-weight:700">${benef.toLocaleString('fr-FR')} €${surplus > 0 ? ` <span style="font-size:.75rem">(+${surplus.toLocaleString('fr-FR')} €)</span>` : ''}</span>
         <span class="obj-target">/ ${TARGET.toLocaleString('fr-FR')} €</span>
       </div>
     </div>`;
