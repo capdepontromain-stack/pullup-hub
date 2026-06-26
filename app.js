@@ -131,7 +131,10 @@ function renderCalendar() {
       }
       return cellDate >= start && cellDate <= end;
     });
-    html += `<div class="cal-cell${isToday ? ' today' : ''}"><div class="cal-num">${d}</div>${evts.map(e => `<div class="cal-event">${e.name}</div>`).join('')}</div>`;
+    html += `<div class="cal-cell${isToday ? ' today' : ''}"><div class="cal-num">${d}</div>${evts.map(e => {
+      const c = typeof clientColor === 'function' ? clientColor(e.client) : { bg:'var(--gold)', border:'var(--gold)', text:'#000' };
+      return `<div class="cal-event" style="background:${c.bg};border-left:3px solid ${c.border};color:${c.text}" title="${e.client||''}">${e.name}</div>`;
+    }).join('')}</div>`;
   }
   const remaining = 42 - offset - daysInMonth;
   for (let d = 1; d <= remaining; d++) {
