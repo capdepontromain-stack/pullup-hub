@@ -612,6 +612,33 @@
         </div>
       </div>
       <div class="chat-panel">
+        <!-- Barre de navigation mobile -->
+        <div class="msg-mobile-nav" id="msgMobileNav">
+          <button class="msg-mobile-btn active" data-channel="general" onclick="mobileSwitchChannel(this,'general','# général')">
+            <div class="msg-mobile-avatar-txt" style="background:var(--bg4);color:var(--text2)">#</div>
+            <span>Général</span>
+          </button>
+          <button class="msg-mobile-btn" data-channel="annonces" onclick="mobileSwitchChannel(this,'annonces','# annonces')">
+            <div class="msg-mobile-avatar-txt" style="background:var(--bg4);color:var(--text2)">#</div>
+            <span>Annonces</span>
+          </button>
+          <button class="msg-mobile-btn" data-channel="dm-romain" onclick="mobileSwitchChannel(this,'dm-romain','Romain')">
+            <img src="photos/romain.jpg" class="msg-mobile-avatar" style="border-color:var(--color-romain)" onerror="this.outerHTML='<div class=msg-mobile-avatar-txt style=background:var(--color-romain);color:#000;border-color:var(--color-romain)>R</div>'">
+            <span>Romain</span>
+          </button>
+          <button class="msg-mobile-btn" data-channel="dm-ketsia" onclick="mobileSwitchChannel(this,'dm-ketsia','Ketsia')">
+            <img src="photos/ketsia.jpg" class="msg-mobile-avatar" style="border-color:var(--color-ketsia)" onerror="this.outerHTML='<div class=msg-mobile-avatar-txt style=background:var(--color-ketsia);color:#fff;border-color:var(--color-ketsia)>K</div>'">
+            <span>Ketsia</span>
+          </button>
+          <button class="msg-mobile-btn" data-channel="dm-flora" onclick="mobileSwitchChannel(this,'dm-flora','Flora')">
+            <img src="photos/flora.jpg" class="msg-mobile-avatar" style="border-color:var(--color-flora)" onerror="this.outerHTML='<div class=msg-mobile-avatar-txt style=background:var(--color-flora);color:#fff;border-color:var(--color-flora)>F</div>'">
+            <span>Flora</span>
+          </button>
+          <button class="msg-mobile-btn" data-channel="dm-gloria" onclick="mobileSwitchChannel(this,'dm-gloria','Gloria')">
+            <img src="photos/gloria.jpg" class="msg-mobile-avatar" style="border-color:var(--color-gloria)" onerror="this.outerHTML='<div class=msg-mobile-avatar-txt style=background:var(--color-gloria);color:#fff;border-color:var(--color-gloria)>G</div>'">
+            <span>Gloria</span>
+          </button>
+        </div>
         <div class="chat-header" id="chatHeader"># général</div>
         <div class="chat-messages" id="chatMessages"></div>
         <div class="chat-input-wrap">

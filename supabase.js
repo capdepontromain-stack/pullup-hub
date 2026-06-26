@@ -1342,6 +1342,16 @@ function renderKnowledgeList(docs) {
 // =============================================
 // MESSAGES — UPDATE CHAT HEADER
 // =============================================
+function mobileSwitchChannel(btn, channel, label) {
+  document.querySelectorAll('.msg-mobile-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Sync sidebar
+  document.querySelectorAll('.channel-item').forEach(i => {
+    i.classList.toggle('active', i.dataset.channel === channel);
+  });
+  switchChannel(channel);
+}
+
 async function switchChannel(channel) {
   activeChannel = channel;
   if (messageSubscription) { sb.removeChannel(messageSubscription); }
@@ -1491,7 +1501,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     item.addEventListener('click', () => {
       document.querySelectorAll('.channel-item').forEach(i => i.classList.remove('active'));
       item.classList.add('active');
-      switchChannel(item.dataset.channel || 'general');
+      const ch = item.dataset.channel || 'general';
+      // Sync barre mobile
+      document.querySelectorAll('.msg-mobile-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.channel === ch);
+      });
+      switchChannel(ch);
     });
   });
 });
