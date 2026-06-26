@@ -153,6 +153,32 @@ function subscribeToMessages(channel, callback) {
     .subscribe();
 }
 
+function subscribeToTaskAssignments() {
+  const myName = currentProfile?.name || '';
+  if (!myName) return;
+  sb.channel('tasks-assigned')
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'tasks'
+    }, payload => {
+      const task = payload.new;
+      const assignee = (task.assignee || task.assignee_name || '');
+      if (assignee.toLowerCase().includes(myName.toLowerCase())) {
+        if (Notification.permission === 'granted') {
+          const notif = new Notification('📋 Nouvelle tâche assignée', {
+            body: task.title || task.name || 'Une tâche vous a été assignée',
+            icon: '/logo-192.png',
+            badge: '/logo-192.png',
+            tag: 'task-' + task.id
+          });
+          notif.onclick = () => { window.focus(); showPage('tasks'); notif.close(); };
+        }
+      }
+    })
+    .subscribe();
+}
+
 // =============================================
 // MILEAGE
 // =============================================
@@ -1558,7 +1584,8 @@ async function initApp() {
   renderDashboardDevisRequests();
   loadUnreadCounts();
   setInterval(loadUnreadCounts, 30000);
-  requestNotificationPermission();
+  await requestNotificationPermission();
+  subscribeToTaskAssignments();
 }
 
 async function loadDevisRequests() {
