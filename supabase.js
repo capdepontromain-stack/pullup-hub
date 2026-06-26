@@ -1661,6 +1661,7 @@ async function loadDevisRequests() {
       <td style="text-align:center">${r.guest_count || '—'}</td>
       <td style="font-weight:700;color:var(--gold)">${r.budget_estimate ? parseFloat(r.budget_estimate).toLocaleString('fr-FR') + ' €' : '—'}</td>
       <td><span style="background:${pc}22;color:${pc};padding:2px 8px;border-radius:10px;font-size:.75rem;font-weight:600">${r.priority}</span></td>
+      <td style="font-size:.82rem;font-weight:600;color:var(--gold)">${r.assigned_to || '—'}</td>
       <td>
         <select onchange="updateDevisRequestStatus('${r.id}',this)" style="background:${sc}22;color:${sc};border:1px solid ${sc}55;border-radius:10px;padding:2px 8px;font-size:.75rem;font-weight:600;cursor:pointer;outline:none">
           ${['À faire','En cours','Envoyé'].map(s=>`<option ${r.status===s?'selected':''}>${s}</option>`).join('')}
