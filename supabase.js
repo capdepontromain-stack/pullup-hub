@@ -1994,12 +1994,12 @@ async function rejectLeave(id) {
 let floraViewDate = new Date();
 
 const FLORA_DAY_TYPES = {
-  bureau:    { label: '🏢 Bureau',          color: '#4A9EFF' },
-  terrain:   { label: '🏕 Terrain',         color: '#F5C518' },
-  formation: { label: '📚 Formation',       color: '#9B59B6' },
-  conge:     { label: '🏖 Congé',           color: '#FF6B9D' },
-  fermeture: { label: '🔒 Ferm. agence',    color: '#FF9800' },
-  repos:     { label: '😴 Repos',           color: 'var(--text3)' },
+  bureau:    { label: '🏢 Bureau',       color: '#4A9EFF' },
+  terrain:   { label: '🏕 Terrain',      color: '#F5C518' },
+  formation: { label: '📚 Formation',    color: '#9B59B6' },
+  ferie:     { label: '🎉 Férié',        color: '#4CAF50' },
+  conge:     { label: '🏖 Congé',        color: '#FF6B9D' },
+  fermeture: { label: '🔒 Ferm. agence', color: '#FF9800' },
 };
 
 async function loadAndRenderFlora() {
@@ -2016,6 +2016,59 @@ async function loadAndRenderFlora() {
   (data || []).forEach(r => { byDate[r.date] = r; });
 
   renderFloraTable(y, m, byDate);
+  await renderFloraMonthlySummary();
+}
+
+async function renderFloraMonthlySummary() {
+  const container = document.getElementById('flora-summary');
+  if (!container) return;
+  const { data } = await sb.from('flora_timesheet').select('*').order('date');
+  if (!data || !data.length) return;
+
+  // Grouper par mois
+  const byMonth = {};
+  data.forEach(r => {
+    const key = r.date.slice(0,7); // YYYY-MM
+    if (!byMonth[key]) byMonth[key] = [];
+    byMonth[key].push(r);
+  });
+
+  const MNAMES = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  let html = '<table class="data-table" style="min-width:600px"><thead><tr><th>Mois</th><th>Heures</th><th>H. supp</th><th>Congés</th><th>Ind. km</th><th>Jours Bureau</th><th>Jours Terrain</th><th>Jours Formation</th></tr></thead><tbody>';
+
+  let totH=0,totE=0,totC=0,totK=0;
+  Object.keys(byMonth).sort().forEach(key => {
+    const rows = byMonth[key];
+    const h   = rows.reduce((s,r)=>s+(parseFloat(r.hours)||0),0);
+    const e   = rows.reduce((s,r)=>s+(parseFloat(r.extra_hours)||0),0);
+    const c   = rows.reduce((s,r)=>s+(parseFloat(r.leave_days)||0),0);
+    const k   = rows.reduce((s,r)=>s+(parseFloat(r.km_indemnity)||0),0);
+    const nBureau    = rows.filter(r=>r.day_type==='bureau').length;
+    const nTerrain   = rows.filter(r=>r.day_type==='terrain').length;
+    const nFormation = rows.filter(r=>r.day_type==='formation').length;
+    totH+=h; totE+=e; totC+=c; totK+=k;
+    const [yr,mo] = key.split('-');
+    html += `<tr>
+      <td><strong>${MNAMES[parseInt(mo)-1]} ${yr}</strong></td>
+      <td style="color:var(--color-flora);font-weight:600">${h.toFixed(1)}h</td>
+      <td style="color:var(--gold)">${e>0?'+'+e.toFixed(1)+'h':'—'}</td>
+      <td style="color:#4A9EFF">${c>0?c+'j':'—'}</td>
+      <td style="color:#9B59B6">${k>0?k.toLocaleString('fr-FR')+' €':'—'}</td>
+      <td>${nBureau||'—'}</td>
+      <td>${nTerrain||'—'}</td>
+      <td>${nFormation||'—'}</td>
+    </tr>`;
+  });
+
+  html += `<tr style="font-weight:700;border-top:2px solid var(--border);background:var(--bg3)">
+    <td>TOTAL</td>
+    <td style="color:var(--color-flora)">${totH.toFixed(1)}h</td>
+    <td style="color:var(--gold)">${totE>0?'+'+totE.toFixed(1)+'h':'—'}</td>
+    <td style="color:#4A9EFF">${totC>0?totC+'j':'—'}</td>
+    <td style="color:#9B59B6">${totK>0?totK.toLocaleString('fr-FR')+' €':'—'}</td>
+    <td></td><td></td><td></td>
+  </tr></tbody></table>`;
+  container.innerHTML = html;
 }
 
 function renderFloraTable(year, month, byDate) {
