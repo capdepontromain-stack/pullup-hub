@@ -12,6 +12,7 @@ function showPage(id) {
     if (typeof loadAndRenderEvents === 'function') loadAndRenderEvents();
   }
   if (id === 'finances') renderFinanceAnalyse();
+  if (id === 'dashboard') renderDashboardCA();
   if (id === 'leaves') loadAndRenderLeaves();
 }
 
@@ -419,6 +420,27 @@ const OBJECTIF_CA_ANNUEL = 96000; // 8 000 € × 12 mois
 
 function fmt(n) {
   return n > 0 ? n.toLocaleString('fr-FR') + ' €' : '—';
+}
+
+function renderDashboardCA() {
+  const container = document.getElementById('dashboard-ca-bars');
+  if (!container) return;
+  const MONTHS = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const TARGET = 8000;
+  const curMonth = new Date().getMonth() + 1;
+  let html = '';
+  for (let m = 1; m <= 12; m++) {
+    const d = FINANCE_2026[m];
+    if (!d || d.ca === 0) continue;
+    const pct = Math.min(100, Math.round((d.ca / TARGET) * 100));
+    const color = pct >= 100 ? '#4CAF50' : pct >= 60 ? '#F5C518' : '#FF6B9D';
+    html += `<div class="objective-item">
+      <div class="obj-label">${MONTHS[m]} 2026${pct >= 100 ? ' 🏆' : ''}</div>
+      <div class="obj-progress-wrap"><div class="obj-progress" style="width:${pct}%;background:${color}"></div></div>
+      <div class="obj-values"><span>${d.ca.toLocaleString('fr-FR')} €</span><span class="obj-target">/ ${TARGET.toLocaleString('fr-FR')} €</span></div>
+    </div>`;
+  }
+  container.innerHTML = html || '<p style="color:var(--text2);padding:1rem">Aucune donnée 2026</p>';
 }
 
 function renderFinanceAnalyse() {

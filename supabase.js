@@ -1395,6 +1395,7 @@ async function initApp() {
   allSuppliers = await fetchSuppliers();
 
   showPage('dashboard');
+  if (typeof renderDashboardCA === 'function') renderDashboardCA();
 }
 
 // =============================================
