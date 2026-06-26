@@ -1612,12 +1612,13 @@ async function initApp() {
 
 async function loadTasksBadge() {
   if (!currentUser) return;
-  const myName = currentProfile?.name || '';
-  if (!myName) return;
+  const fullName = currentProfile?.name || '';
+  if (!fullName) return;
+  const firstName = fullName.split(' ')[0];
   const { count } = await sb.from('tasks')
     .select('id', { count: 'exact', head: true })
     .neq('status', 'fait')
-    .ilike('assignee_name', `%${myName}%`);
+    .ilike('assignee_name', `%${firstName}%`);
   const badge = document.getElementById('nav-badge-tasks');
   if (!badge) return;
   const n = count || 0;
