@@ -258,7 +258,7 @@ function renderEventsTable(events) {
       <td>${ev.participants || '—'}</td>
       <td>${ev.amount_ht ? ev.amount_ht.toLocaleString('fr-FR') + ' €' : '—'}</td>
       <td>
-        <select onchange="updateEventStatus('${ev.id}', this.value)"
+        <select onchange="updateEventStatus('${ev.id}', this.value, this)" data-prev="${ev.status}"
           style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:.8rem;cursor:pointer">
           ${['En préparation','Confirmé','Terminé','Annulé','Supprimé'].map(s =>
             `<option ${ev.status===s?'selected':''}>${s}</option>`
@@ -269,9 +269,17 @@ function renderEventsTable(events) {
   }).join('');
 }
 
-async function updateEventStatus(id, status) {
+async function updateEventStatus(id, status, selectEl) {
   if (status === 'Supprimé') {
-    if (!confirm('Supprimer cet événement définitivement ?')) return;
+    const confirmed = confirm('Êtes-vous sûr de vouloir supprimer cet événement ?');
+    if (!confirmed) {
+      // Remettre le menu sur le statut précédent
+      if (selectEl) {
+        const prevStatus = selectEl.dataset.prev || 'En préparation';
+        selectEl.value = prevStatus;
+      }
+      return;
+    }
     const { error } = await sb.from('events').delete().eq('id', id);
     if (error) { showToast('Erreur : ' + error.message); return; }
     showToast('Événement supprimé ✓');
