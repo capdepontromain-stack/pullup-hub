@@ -427,31 +427,32 @@ function renderDashboardCA() {
   if (!container) return;
   const MONTHS = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   const TARGET = 8000;
+  // Échelle = le CA max du mois le plus haut (au moins TARGET)
+  const maxCA = Math.max(TARGET, ...Object.values(FINANCE_2026).map(d => d.ca || 0));
+  const targetPct = Math.round((TARGET / maxCA) * 100); // position du trait 8000€
+
   let html = '';
   for (let m = 1; m <= 12; m++) {
     const d = FINANCE_2026[m];
     if (!d || d.ca === 0) continue;
-    const surplus = Math.max(0, d.ca - TARGET);
-    const basePct = Math.min(100, Math.round((Math.min(d.ca, TARGET) / TARGET) * 100));
-    // Surplus affiché sur une 2e zone max 50% supplémentaire visuellement
-    const surplusPct = surplus > 0 ? Math.min(50, Math.round((surplus / TARGET) * 100)) : 0;
     const atteint = d.ca >= TARGET;
-    const label = atteint
-      ? `🏆 +${surplus.toLocaleString('fr-FR')} €`
-      : `${d.ca.toLocaleString('fr-FR')} €`;
-    const surplusBar = surplus > 0
-      ? `<div style="position:absolute;left:100%;top:0;bottom:0;width:${surplusPct}%;background:linear-gradient(90deg,#4CAF50,#81C784);border-radius:0 4px 4px 0;opacity:.9"></div>`
-      : '';
+    const surplus = Math.max(0, d.ca - TARGET);
+    // Les deux segments restent dans le conteneur (totalPct ≤ 100)
+    const yellowPct = Math.round((Math.min(d.ca, TARGET) / maxCA) * 100);
+    const greenPct  = Math.round((surplus / maxCA) * 100);
+
     html += `<div class="objective-item">
       <div class="obj-label" style="color:${atteint ? '#4CAF50' : 'var(--text)'}">${MONTHS[m]} 2026${atteint ? ' 🏆' : ''}</div>
-      <div class="obj-progress-wrap" style="position:relative;overflow:visible">
-        <div class="obj-progress" style="width:${basePct}%;background:${atteint ? '#4CAF50' : '#F5C518'};position:relative;z-index:1">
-          ${surplusBar}
-        </div>
-        <div style="position:absolute;right:0;top:50%;transform:translateY(-50%);width:1px;height:100%;background:var(--text3);opacity:.4"></div>
+      <div class="obj-progress-wrap" style="position:relative;overflow:hidden">
+        <!-- segment jaune : jusqu'à 8 000 € -->
+        <div style="position:absolute;left:0;top:0;bottom:0;width:${yellowPct}%;background:#F5C518;border-radius:4px 0 0 4px"></div>
+        <!-- segment vert : surplus au-delà de 8 000 € -->
+        ${greenPct > 0 ? `<div style="position:absolute;left:${yellowPct}%;top:0;bottom:0;width:${greenPct}%;background:#4CAF50;border-radius:0 4px 4px 0"></div>` : ''}
+        <!-- trait repère 8 000 € -->
+        <div style="position:absolute;left:${targetPct}%;top:0;bottom:0;width:2px;background:#fff;opacity:.6"></div>
       </div>
       <div class="obj-values">
-        <span style="color:${atteint ? '#4CAF50' : '#F5C518'};font-weight:700">${label}</span>
+        <span style="color:${atteint ? '#4CAF50' : '#F5C518'};font-weight:700">${d.ca.toLocaleString('fr-FR')} €${surplus > 0 ? ` <span style="font-size:.75rem">(+${surplus.toLocaleString('fr-FR')} €)</span>` : ''}</span>
         <span class="obj-target">/ ${TARGET.toLocaleString('fr-FR')} €</span>
       </div>
     </div>`;
