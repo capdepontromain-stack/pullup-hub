@@ -1617,7 +1617,7 @@ async function loadTasksBadge() {
   const firstName = fullName.split(' ')[0];
   const { count } = await sb.from('tasks')
     .select('id', { count: 'exact', head: true })
-    .neq('status', 'fait')
+    .not('status', 'in', '("fait","done")')
     .ilike('assignee_name', `%${firstName}%`);
   const badge = document.getElementById('nav-badge-tasks');
   if (!badge) return;
