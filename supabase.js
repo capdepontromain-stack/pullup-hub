@@ -215,7 +215,8 @@ async function fetchFinanceMonthly() {
 }
 
 async function upsertFinanceMonthly(year, month, field, value) {
-  const update = { year, month, [field]: parseFloat(value) || 0 };
+  const num = parseFloat(value);
+  const update = { year, month, [field]: isNaN(num) ? 0 : num };
   const { error } = await sb.from('finance_monthly').upsert(update, { onConflict: 'year,month' });
   if (error) throw error;
 }
