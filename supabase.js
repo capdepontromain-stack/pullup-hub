@@ -1746,6 +1746,7 @@ async function openEditDevis(id) {
   f.querySelector('[name=notes]').value = r.notes || '';
   f.querySelector('[name=assigned_to]').value = r.assigned_to || '';
   f.dataset.editId = id;
+  f.dataset.prevAssignedTo = r.assigned_to || '';
   document.querySelector('#modal-newDevisRequest .modal-header h3').textContent = 'Modifier le devis';
   openModal('newDevisRequest');
 
@@ -1756,10 +1757,26 @@ async function openEditDevis(id) {
     autoSaveTimer = setTimeout(async () => {
       if (!f.dataset.editId) return;
       const data = extractDevisFormData(f);
+      const newAssignee = data.assigned_to;
+      const prevAssignee = f.dataset.prevAssignedTo || '';
       await sb.from('devis_requests').update(data).eq('id', f.dataset.editId);
+      // Créer une tâche si l'assignation vient de changer
+      if (newAssignee && newAssignee !== prevAssignee) {
+        await sb.from('tasks').insert([{
+          title: `Établir devis — ${data.client}`,
+          description: data.event_type ? `${data.event_type}${data.event_date ? ' · ' + new Date(data.event_date).toLocaleDateString('fr-FR') : ''}` : null,
+          assignee_name: newAssignee,
+          status: 'todo',
+          priority: data.priority === 'Urgent' ? 'Urgent' : 'Normal',
+          created_at: new Date()
+        }]);
+        f.dataset.prevAssignedTo = newAssignee;
+        loadTasksBadge();
+      }
       const indicator = document.getElementById('devis-autosave-indicator');
       if (indicator) { indicator.textContent = '✓ Sauvegardé'; setTimeout(() => { indicator.textContent = ''; }, 2000); }
       await loadDevisRequests();
+      loadDevisBadge();
     }, 800);
   };
   f.querySelectorAll('input,select,textarea').forEach(el => {
