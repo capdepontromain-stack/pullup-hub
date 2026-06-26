@@ -2441,7 +2441,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // CONGÉS
 // =============================================
 let leaveViewDate = new Date();
-const LEAVE_TOTAL = 20; // jours ouvrés par an (4 semaines)
+const LEAVE_TOTAL = 30; // jours ouvrés par an (légal France)
 const LEAVE_MEMBERS = ['Romain', 'Ketsia', 'Flora', 'Gloria'];
 const LEAVE_PHOTOS = { Romain: 'photos/romain.jpg', Ketsia: 'photos/ketsia.jpg', Flora: 'photos/flora.jpg', Gloria: 'photos/gloria.jpg' };
 const LEAVE_COLORS = { Romain: 'var(--color-romain)', Ketsia: 'var(--color-ketsia)', Flora: 'var(--color-flora)', Gloria: 'var(--color-gloria)' };
