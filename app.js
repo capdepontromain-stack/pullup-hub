@@ -432,7 +432,12 @@ async function renderDashboardCA() {
   const container = document.getElementById('dashboard-ca-bars');
   if (!container) return;
   const MONTHS = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-  const TARGET = 8000;
+  const TARGET = (window.CHARGES_FIXES_MOIS || 8717.96) + (window.CHARGES_VARS_MOIS || 2000);
+
+  // Mettre à jour le titre
+  document.querySelectorAll('[data-charges-label]').forEach(el => {
+    el.textContent = TARGET.toLocaleString('fr-FR') + ' €/mois';
+  });
 
   // Charger depuis Supabase
   const rows = await fetchFinanceMonthly();
@@ -454,9 +459,14 @@ async function renderDashboardCA() {
     const benef = parseFloat(d?.benef) || 0;
     if (!benef) continue;
     const atteint = benef >= TARGET;
-    const surplus = Math.max(0, benef - TARGET);
+    const diff = benef - TARGET;
+    const surplus = Math.max(0, diff);
+    const deficit = Math.min(0, diff);
     const yellowPct = Math.round((Math.min(benef, TARGET) / maxBenef) * 100);
     const greenPct  = Math.round((surplus / maxBenef) * 100);
+    const diffLabel = diff >= 0
+      ? `<span style="color:#4CAF50;font-size:.75rem">(+${Math.round(diff).toLocaleString('fr-FR')} €)</span>`
+      : `<span style="color:#f44336;font-size:.75rem">(${Math.round(diff).toLocaleString('fr-FR')} €)</span>`;
 
     html += `<div class="objective-item">
       <div class="obj-label" style="color:${atteint ? '#4CAF50' : 'var(--text)'}">${MONTHS[m]} 2026${atteint ? ' 🏆' : ''}</div>
@@ -466,7 +476,8 @@ async function renderDashboardCA() {
         <div style="position:absolute;left:${targetPct}%;top:0;bottom:0;width:2px;background:#fff;opacity:.6"></div>
       </div>
       <div class="obj-values">
-        <span style="color:${atteint ? '#4CAF50' : '#F5C518'};font-weight:700">${benef.toLocaleString('fr-FR')} €${surplus > 0 ? ` <span style="font-size:.75rem">(+${surplus.toLocaleString('fr-FR')} €)</span>` : ''}</span>
+        <span style="color:${atteint ? '#4CAF50' : '#F5C518'};font-weight:700">${benef.toLocaleString('fr-FR')} €</span>
+        ${diffLabel}
         <span class="obj-target">/ ${TARGET.toLocaleString('fr-FR')} €</span>
       </div>
     </div>`;
@@ -549,7 +560,8 @@ async function renderFinanceAnalyse() {
   foot26.innerHTML = `<td>TOTAL</td><td><strong>${total26ca.toLocaleString('fr-FR')} €</strong></td><td><strong>${total26ben.toLocaleString('fr-FR')} €</strong></td><td><strong>${total26ca > 0 ? Math.round((total26ben/total26ca)*100) + '%' : '—'}</strong></td><td></td>`;
   foot25.innerHTML = `<td>TOTAL</td><td><strong>${total25ca.toLocaleString('fr-FR')} €</strong></td><td></td>`;
 
-  const chargesPct = Math.min(100, Math.round((total26ben / (CHARGES_FIXES_MOIS * 12)) * 100));
+  const totalChargesMois = (window.CHARGES_FIXES_MOIS || 8717.96) + (window.CHARGES_VARS_MOIS || 2000);
+  const chargesPct = Math.min(100, Math.round((total26ben / (totalChargesMois * 12)) * 100));
   const caPct = Math.min(100, Math.round((total26ca / OBJECTIF_CA_ANNUEL) * 100));
   setTimeout(() => {
     const gc = document.getElementById('gauge-charges'); const gcp = document.getElementById('gauge-charges-pct');
