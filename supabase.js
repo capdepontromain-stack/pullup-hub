@@ -1530,6 +1530,20 @@ async function initApp() {
   const lastPage = localStorage.getItem('pullup_last_page') || 'dashboard';
   showPage(lastPage);
   if (typeof renderDashboardCA === 'function') renderDashboardCA();
+  renderDashboardProspectsRelance();
+}
+
+async function renderDashboardProspectsRelance() {
+  const today = new Date().toISOString().split('T')[0];
+  const { data, error } = await sb.from('prospects').select('name,followup_date,status')
+    .lte('followup_date', today)
+    .not('status', 'eq', 'Gagné')
+    .not('status', 'eq', 'Perdu');
+  if (error) return;
+  const countEl = document.getElementById('stat-prospects-count');
+  const namesEl = document.getElementById('stat-prospects-names');
+  if (countEl) countEl.textContent = data.length;
+  if (namesEl) namesEl.textContent = data.map(p => p.name).join(', ');
 }
 
 // =============================================
