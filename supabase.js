@@ -1490,15 +1490,35 @@ async function sendChatMessage() {
   if (!msg) return;
   if (!currentUser) { showToast('Non connecté'); return; }
   input.value = '';
+
+  // Affichage optimiste immédiat
+  const container = document.getElementById('chatMessages');
+  const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const tempId = 'tmp-' + Date.now();
+  if (container) {
+    const div = document.createElement('div');
+    div.className = 'chat-msg mine';
+    div.id = tempId;
+    div.innerHTML = `<div class="chat-bubble"><div class="chat-text">${msg}</div><div class="chat-time">${time} <span style="opacity:.5;font-size:.7rem">…</span></div></div>`;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+  }
+
   try {
     const { error } = await sb.from('messages').insert([{
       channel: activeChannel,
       content: msg,
-      author_name: currentProfile?.name || currentUser.email
+      author_name: currentProfile?.name || currentUser.email,
+      author_id: currentUser.id
     }]);
     if (error) throw error;
+    // Retire l'indicateur d'envoi
+    const tmp = document.getElementById(tempId);
+    if (tmp) tmp.querySelector('.chat-time').innerHTML = time;
   } catch(e) {
     console.error('Erreur message:', e);
+    const tmp = document.getElementById(tempId);
+    if (tmp) tmp.remove();
     input.value = msg;
     showToast('Erreur : ' + (e.message || 'Impossible d\'envoyer'));
   }
