@@ -1560,15 +1560,20 @@ async function initApp() {
 async function loadDevisRequests() {
   const { data, error } = await sb.from('devis_requests').select('*').order('created_at', { ascending: false });
   if (error) { console.error(error); return; }
-  const tbody = document.getElementById('devis-requests-tbody');
-  if (!tbody) return;
-  if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text2);padding:2rem">Aucune demande de devis pour l\'instant</td></tr>';
-    return;
-  }
   const PRIORITY_COLOR = { 'Urgent': '#f44336', 'Normal': '#4A9EFF', 'Basse': '#aaa' };
   const STATUS_COLOR = { 'À faire': '#FF9800', 'En cours': '#4A9EFF', 'Envoyé': '#4CAF50' };
-  tbody.innerHTML = data.map(r => {
+
+  // stats counters
+  const todo = data.filter(r => r.status === 'À faire').length;
+  const encours = data.filter(r => r.status === 'En cours').length;
+  const envoye = data.filter(r => r.status === 'Envoyé').length;
+  ['dr-count-todo','dr-count-encours','dr-count-envoye'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = [todo, encours, envoye][i];
+  });
+
+  const emptyMsg = '<tr><td colspan="10" style="text-align:center;color:var(--text2);padding:2rem">Aucune demande de devis pour l\'instant</td></tr>';
+  const rows = !data.length ? emptyMsg : data.map(r => {
     const pc = PRIORITY_COLOR[r.priority] || '#aaa';
     const sc = STATUS_COLOR[r.status] || '#aaa';
     return `<tr>
@@ -1590,6 +1595,12 @@ async function loadDevisRequests() {
       </td>
     </tr>`;
   }).join('');
+
+  // Injecte dans la page dédiée ET dans l'onglet Finance
+  ['devis-requests-main-tbody','devis-requests-tbody'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = rows;
+  });
 }
 
 async function saveDevisRequest(e) {
