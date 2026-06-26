@@ -944,7 +944,11 @@ function renderProspects(prospects) {
       <td style="${isLate ? 'color:#f44336;font-weight:700' : ''}">${relanceStr}${isLate ? ' ⚠️' : ''}</td>
       <td style="font-weight:600;color:var(--gold)">${p.estimated_amount ? parseFloat(p.estimated_amount).toLocaleString('fr-FR') + ' €' : '—'}</td>
       <td><span style="color:${tempColor};font-weight:600">${TEMP_LABELS[p.temperature] || '—'}</span></td>
-      <td><span style="background:${statusColor}22;color:${statusColor};padding:3px 8px;border-radius:12px;font-size:.75rem;font-weight:600;white-space:nowrap">${p.status || '—'}</span></td>
+      <td>
+        <select onchange="updateProspectStatus('${p.id}', this)" style="background:${statusColor}22;color:${statusColor};border:1px solid ${statusColor}55;border-radius:12px;padding:3px 8px;font-size:.75rem;font-weight:600;cursor:pointer;outline:none">
+          ${Object.keys(PROSPECT_STATUS_COLORS).map(s => `<option value="${s}" ${p.status===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </td>
       <td style="font-size:.8rem;color:var(--text2);max-width:200px;white-space:pre-wrap">${p.notes || '—'}</td>
       <td>
         <button onclick="editProspect('${p.id}')" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:2px 6px" title="Modifier">✏️</button>
@@ -976,6 +980,25 @@ async function saveNewProspect(e) {
   closeModal('newProspect');
   form.reset();
   await loadAndRenderProspects();
+}
+
+async function updateProspectStatus(id, selectEl) {
+  const newStatus = selectEl.value;
+  const prev = selectEl.querySelector('option[selected]')?.value || selectEl.dataset.prev;
+  if (newStatus === 'Gagné' || newStatus === 'Perdu') {
+    const msg = newStatus === 'Gagné'
+      ? '🎉 Êtes-vous sûr que ce prospect a été gagné ?'
+      : '❌ Êtes-vous sûr que ce prospect est perdu ?';
+    if (!confirm(msg)) {
+      selectEl.value = prev || 'À contacter';
+      return;
+    }
+  }
+  const { error } = await sb.from('prospects').update({ status: newStatus }).eq('id', id);
+  if (error) { showToast('Erreur : ' + error.message); selectEl.value = prev || 'À contacter'; return; }
+  showToast('Statut mis à jour ✓');
+  await loadAndRenderProspects();
+  await renderDashboardProspectsRelance();
 }
 
 async function deleteProspect(id) {
