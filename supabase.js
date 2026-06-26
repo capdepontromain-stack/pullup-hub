@@ -2593,10 +2593,16 @@ function renderLeaveCalendar() {
 
     html += `<div style="${cellStyle}" ${clickAttr}>
       <div style="font-size:.8rem;font-weight:${isToday?'700':'400'};color:${isToday?'var(--gold)':'var(--text2)'};margin-bottom:3px">${d}</div>
-      ${leavesOnDay.map(l => `
-        <div style="background:${l.leave_type==='maladie'?'#4A9EFF':LEAVE_COLORS_HEX[l.person_name]};border-radius:4px;padding:1px 5px;font-size:.68rem;font-weight:600;color:${l.leave_type==='maladie'?'#fff':(l.person_name==='Romain'?'#000':'#fff')};margin-bottom:2px;opacity:${l.status==='pending'?'0.6':'1'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.person_name}${l.leave_type==='maladie'?' 🤒':' 🏖'}${l.status==='pending'?' (attente)':''}">
-          ${l.leave_type==='maladie'?'🤒':'🏖'} ${l.person_name}${l.status==='pending'?' ⏳':''}
-        </div>`).join('')}
+      ${leavesOnDay.map(l => {
+        const typeColors = { maladie:'#4A9EFF', formation:'#9B59B6', bureau:'#4CAF50', evenement:'#FF6B9D', conge: LEAVE_COLORS_HEX[l.person_name] };
+        const typeIcons = { maladie:'🤒', formation:'📚', bureau:'🏢', evenement:'🎉', conge:'🏖' };
+        const bg = typeColors[l.leave_type] || LEAVE_COLORS_HEX[l.person_name];
+        const icon = typeIcons[l.leave_type] || '🏖';
+        const textColor = (l.leave_type === 'conge' && l.person_name === 'Romain') ? '#000' : '#fff';
+        return `<div style="background:${bg};border-radius:4px;padding:1px 5px;font-size:.68rem;font-weight:600;color:${textColor};margin-bottom:2px;opacity:${l.status==='pending'?'0.6':'1'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.person_name} ${icon}${l.status==='pending'?' (attente)':''}">
+          ${icon} ${l.person_name}${l.status==='pending'?' ⏳':''}
+        </div>`;
+      }).join('')}
     </div>`;
   }
 
@@ -2626,12 +2632,18 @@ async function requestLeaveDay(dateStr) {
         <div style="display:flex;flex-direction:column;gap:10px">
           <button id="lchoice-conge" style="background:var(--gold);color:#000;border:none;border-radius:10px;padding:12px;font-size:.95rem;font-weight:700;cursor:pointer">🏖 Congé</button>
           <button id="lchoice-maladie" style="background:#4A9EFF;color:#fff;border:none;border-radius:10px;padding:12px;font-size:.95rem;font-weight:700;cursor:pointer">🤒 Maladie</button>
+          <button id="lchoice-formation" style="background:#9B59B6;color:#fff;border:none;border-radius:10px;padding:12px;font-size:.95rem;font-weight:700;cursor:pointer">📚 Formation</button>
+          <button id="lchoice-bureau" style="background:#4CAF50;color:#fff;border:none;border-radius:10px;padding:12px;font-size:.95rem;font-weight:700;cursor:pointer">🏢 Bureau</button>
+          <button id="lchoice-evenement" style="background:#FF6B9D;color:#fff;border:none;border-radius:10px;padding:12px;font-size:.95rem;font-weight:700;cursor:pointer">🎉 Événement</button>
           <button id="lchoice-cancel" style="background:var(--bg3);color:var(--text2);border:none;border-radius:10px;padding:10px;font-size:.85rem;cursor:pointer">Annuler</button>
         </div>
       </div>`;
     document.body.appendChild(overlay);
     overlay.querySelector('#lchoice-conge').onclick = () => { document.body.removeChild(overlay); resolve('conge'); };
     overlay.querySelector('#lchoice-maladie').onclick = () => { document.body.removeChild(overlay); resolve('maladie'); };
+    overlay.querySelector('#lchoice-formation').onclick = () => { document.body.removeChild(overlay); resolve('formation'); };
+    overlay.querySelector('#lchoice-bureau').onclick = () => { document.body.removeChild(overlay); resolve('bureau'); };
+    overlay.querySelector('#lchoice-evenement').onclick = () => { document.body.removeChild(overlay); resolve('evenement'); };
     overlay.querySelector('#lchoice-cancel').onclick = () => { document.body.removeChild(overlay); resolve(null); };
   });
   if (!leaveType) return;
