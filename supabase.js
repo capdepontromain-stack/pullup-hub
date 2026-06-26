@@ -2589,13 +2589,12 @@ function renderLeaveCalendar() {
     const leavesOnDay = leaveByDate[dateStr] || [];
     const myLeave = leavesOnDay.find(l => l.person_name === currentUserName);
 
-    let cellStyle = `min-height:72px;border-radius:8px;padding:4px;position:relative;cursor:${isWeekend ? 'default' : 'pointer'};`;
+    let cellStyle = `min-height:72px;border-radius:8px;padding:4px;position:relative;cursor:pointer;`;
     cellStyle += `background:${isWeekend ? 'var(--bg)' : 'var(--bg3)'};`;
     if (isToday) cellStyle += 'border:2px solid var(--gold);';
-    if (isWeekend) cellStyle += 'opacity:.4;';
-    if (isPast && !isWeekend) cellStyle += 'opacity:.7;';
+    if (isPast) cellStyle += 'opacity:.7;';
 
-    const clickAttr = !isWeekend ? `onclick="requestLeaveDay('${dateStr}')"` : '';
+    const clickAttr = `onclick="requestLeaveDay('${dateStr}')"`;
 
     html += `<div style="${cellStyle}" ${clickAttr}>
       <div style="font-size:.8rem;font-weight:${isToday?'700':'400'};color:${isToday?'var(--gold)':'var(--text2)'};margin-bottom:3px">${d}</div>
