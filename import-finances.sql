@@ -1,0 +1,88 @@
+-- Import données Bénéfice 2026 depuis Pull UP.xlsx
+-- À exécuter dans Supabase SQL Editor
+
+INSERT INTO finances (type, client, amount, invoice_date, status, notes) VALUES
+-- Février 2026
+('paiement', 'Mercialys', 2879.05, '2026-02-11', 'Payée', 'Nuits des soldes'),
+('paiement', 'Casabona', 2879.05, '2026-02-21', 'Payée', 'ST Valentin'),
+-- Mars 2026
+('paiement', 'Mercialys', 3792.40, '2026-03-12', 'Payée', 'Mars'),
+-- Avril 2026
+('paiement', 'Mercialys', 943.14, '2026-04-04', 'Payée', 'Avril'),
+('paiement', 'Lolipop', 2134.47, '2026-04-06', 'Payée', 'TB'),
+('paiement', 'Mercialys', 1985.55, '2026-04-07', 'Payée', 'Scène ouverte'),
+('paiement', 'Sudeco', 4031.66, '2026-04-25', 'Payée', 'Pâques'),
+('paiement', 'Adapéi', 1067.24, '2026-04-28', 'Payée', 'TB'),
+-- Mai 2026
+('paiement', 'Mercialys', 1985.55, '2026-05-05', 'Payée', 'Scène ouverte'),
+('paiement', 'Cilam', 1886.27, '2026-05-12', 'Payée', 'Mai'),
+('paiement', 'Mercialys', 7830.04, '2026-05-22', 'Payée', 'Mai'),
+('paiement', 'MIO', 2556.40, '2026-05-22', 'Payée', 'Mai'),
+('paiement', 'Cilam', 4963.88, '2026-05-25', 'Payée', 'Mai'),
+('paiement', 'Casabona', 3405.23, '2026-05-26', 'Payée', 'Mai'),
+-- Juin 2026
+('paiement', 'Lolipop', 2283.38, '2026-06-02', 'Payée', 'TB'),
+('paiement', 'Mercialys', 3792.40, '2026-06-10', 'Payée', 'Juin'),
+('paiement', 'Mercialys', 1985.55, '2026-06-10', 'Payée', 'Scène ouverte'),
+('paiement', 'Mercialys', 198.56, '2026-06-11', 'Payée', 'Hôtesse'),
+('paiement', 'Mercialys', 198.56, '2026-06-11', 'Payée', 'Hôtesse'),
+('paiement', 'Mercialys', 3865.20, '2026-06-16', 'Payée', 'Juin'),
+('paiement', 'Mercialys', 1932.61, '2026-06-16', 'Payée', 'Juin'),
+('paiement', 'Crédit Moderne', 3973.29, '2026-06-18', 'Payée', 'Juin'),
+('paiement', 'Sudeco', 3127.74, '2026-06-23', 'Payée', 'Juin'),
+-- Juillet 2026
+('paiement', 'Mercialys', 1985.55, '2026-07-07', 'Payée', 'Scène ouverte'),
+-- Août 2026
+('paiement', 'Mercialys', 1985.55, '2026-08-04', 'Payée', 'Scène ouverte'),
+('paiement', 'Mercialys', 4085.28, '2026-08-08', 'Payée', 'Août'),
+('paiement', 'Atexia', 1802.93, '2026-08-18', 'Payée', 'Accompte'),
+('paiement', 'Cours Hippocrate D', 2287.50, '2026-08-21', 'Payée', 'Journée intégration'),
+('paiement', 'Sudeco', 3127.24, '2026-08-26', 'Payée', 'Août'),
+-- Septembre 2026
+('paiement', 'Clinique St Clotilde', 5882.20, '2026-09-03', 'Payée', 'Septembre'),
+('paiement', 'Mercialys', 424.41, '2026-09-08', 'Payée', 'Septembre'),
+('paiement', 'Mercialys', 670.13, '2026-09-08', 'Payée', 'Septembre'),
+('paiement', 'Mercialys', 1985.55, '2026-09-08', 'Payée', 'Scène ouverte'),
+('paiement', 'Crédit Moderne', 11620.93, '2026-09-22', 'Payée', 'Anniversaire'),
+('paiement', 'Association collège lycée', 1489.16, '2026-09-30', 'Payée', 'Septembre'),
+-- Octobre 2026
+('paiement', 'Mauvilac', 2399.13, '2026-10-01', 'Payée', 'Octobre'),
+('paiement', 'Université de La Réunion', 13724.26, '2026-10-06', 'Payée', 'Octobre'),
+('paiement', 'Mercialys', 1985.55, '2026-10-06', 'Payée', 'Scène ouverte'),
+('paiement', 'Lolipop', 1687.26, '2026-10-06', 'Payée', 'TB'),
+('paiement', 'My Pic Booth', 238.27, '2026-10-20', 'Payée', 'Animation commerciale'),
+('paiement', 'Mercialys', 7323.66, '2026-10-20', 'Payée', 'Octobre'),
+('paiement', 'Mercialys', 327.57, '2026-10-20', 'Payée', 'Octobre'),
+('paiement', 'Lolipop', 1836.41, '2026-10-20', 'Payée', 'Octobre'),
+('paiement', 'Sudeco', 3874.56, '2026-10-22', 'Payée', 'Accompte'),
+('paiement', 'Université de La Réunion', 4993.16, '2026-10-23', 'Payée', 'Octobre'),
+('paiement', 'Sudeco', 5062.70, '2026-10-27', 'Payée', 'Octobre'),
+('paiement', 'AFD', 1159.31, '2026-10-28', 'Payée', 'Accompte'),
+('paiement', 'Sudeco', 2584.88, '2026-10-30', 'Payée', 'Octobre'),
+('paiement', 'Sudeco', 3131.21, '2026-10-31', 'Payée', 'Halloween'),
+('paiement', 'Mercialys', 562.73, '2026-10-31', 'Payée', 'Halloween'),
+('paiement', 'Mercialys', 562.73, '2026-10-31', 'Payée', 'Halloween'),
+-- Novembre 2026
+('paiement', 'Mercialys', 1985.55, '2026-11-08', 'Payée', 'Scène ouverte'),
+('paiement', 'Cilam', 1042.19, '2026-11-10', 'Payée', 'TB Cilam'),
+('paiement', 'CPTS', 1304.79, '2026-11-15', 'Payée', 'Journée de la santé'),
+('paiement', 'Crédit Agricole', 2098.01, '2026-11-21', 'Payée', 'TB Crédit Agricole'),
+('paiement', 'Mercialys', 739.63, '2026-11-29', 'Payée', 'Black Friday'),
+-- Décembre 2026
+('paiement', 'Cilam Diego', 9630.92, '2026-12-03', 'Payée', 'Opé Diego'),
+('paiement', 'Mercialys', 1985.55, '2026-12-06', 'Payée', 'Scène ouverte'),
+('paiement', 'My Pic Booth', 238.27, '2026-12-06', 'Payée', 'Animation commerciale'),
+('paiement', 'Cilam', 12949.78, '2026-12-07', 'Payée', 'Arbre de Noël'),
+('paiement', 'Mercialys', 17085.66, '2026-12-09', 'Payée', 'Brigade de Noël'),
+('paiement', 'Mercialys', 19527.88, '2026-12-09', 'Payée', 'Brigade de Noël'),
+('paiement', 'Casabona', 12914.31, '2026-12-10', 'Payée', 'Brigade de Noël'),
+('paiement', 'Carrefour Grand Large', 8618.88, '2026-12-17', 'Payée', 'Brigade de Noël'),
+('paiement', 'Lolipop', 1826.34, '2026-12-12', 'Payée', 'TB Compta'),
+('paiement', 'Testonie', 12566.61, '2026-12-13', 'Payée', 'Arbre de Noël'),
+('paiement', 'Atexia', 4206.26, '2026-12-13', 'Payée', 'Arbre de Noël'),
+('paiement', 'AFD', 3866.86, '2026-12-13', 'Payée', 'Arbre de Noël'),
+('paiement', 'IRIS', 9311.75, '2026-12-14', 'Payée', 'Arbre de Noël'),
+('paiement', 'Ravate PRO', 6879.89, '2026-12-19', 'Payée', 'Remise de médaille et Soirée'),
+('paiement', 'Soltech', 3305.90, '2026-12-19', 'Payée', 'TB'),
+('paiement', 'Casabona', 1538.80, '2026-12-20', 'Payée', 'Animation 20 décembre'),
+('paiement', 'Mercialys', 893.50, '2026-12-20', 'Payée', 'Animation Benjamin Kaloubadya');

@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pull Up Hub</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:2rem;">
+  <div style="text-align:center;">
+    <svg width="110" height="120" viewBox="0 0 110 120" xmlns="http://www.w3.org/2000/svg" style="margin:0 auto 0.5rem;display:block">
+      <!-- Anneau blanc -->
+      <circle cx="55" cy="52" r="34" fill="white"/>
+      <circle cx="55" cy="52" r="21" fill="#0D0D0D"/>
+      <!-- Chapeau doré -->
+      <polygon points="72,4 88,50 56,40" fill="#F5A623"/>
+    </svg>
+    <div style="font-family:Georgia,serif;font-size:1.6rem;font-weight:700;color:#F5A623;letter-spacing:.12em;line-height:1.1;text-align:center">PULL UP</div>
+    <div style="font-family:Georgia,serif;font-size:.75rem;color:#F5A623;letter-spacing:.25em;text-align:center;margin-bottom:.5rem">ÉVÉNEMENTS</div>
+    <p style="color:var(--text2);margin-top:.25rem">Connectez-vous pour accéder à votre espace</p>
+  </div>
+  <form id="login-form" style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:2rem;width:100%;max-width:380px;display:flex;flex-direction:column;gap:1rem;">
+    <div>
+      <label style="font-size:.85rem;color:var(--text2);margin-bottom:.4rem;display:block">Email</label>
+      <input id="login-email" type="email" placeholder="votre@email.com" required
+        style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:1rem;box-sizing:border-box;">
+    </div>
+    <div>
+      <label style="font-size:.85rem;color:var(--text2);margin-bottom:.4rem;display:block">Mot de passe</label>
+      <input id="login-password" type="password" placeholder="••••••••" required
+        style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:1rem;box-sizing:border-box;">
+    </div>
+    <p id="login-error" style="color:var(--danger);font-size:.85rem;min-height:1.2rem;margin:0;"></p>
+    <button id="login-btn" type="submit"
+      style="background:var(--gold);color:#000;font-weight:700;border:none;border-radius:8px;padding:.875rem;font-size:1rem;cursor:pointer;">
+      Se connecter
+    </button>
+  </form>
+  <p style="color:var(--text3);font-size:.8rem">Pull Up Événements · La Réunion</p>
+</div>
+
+<!-- APP CONTAINER -->
+<div id="app-container" style="display:none;width:100%;height:100vh;">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <svg width="38" height="38" viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+      <!-- Anneau blanc -->
+      <circle cx="55" cy="58" r="38" fill="white"/>
+      <circle cx="55" cy="58" r="24" fill="#0D0D0D"/>
+      <!-- Chapeau doré -->
+      <polygon points="72,6 92,56 52,46" fill="#F5A623"/>
+    </svg>
+    <div class="logo-text">
+      <span class="logo-title" style="font-family:Georgia,serif;letter-spacing:.06em;color:#F5A623">PULL UP</span>
+      <span class="logo-sub" style="font-family:Georgia,serif;letter-spacing:.15em;color:#F5A623;font-size:.55rem">ÉVÉNEMENTS</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="nav-item active" data-page="dashboard">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Tableau de bord</span>
+    </a>
+    <a class="nav-item" data-page="events">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Événements</span>
+    </a>
+    <a class="nav-item" data-page="personnel">
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>
+      <span>Personnel</span>
+    </a>
+    <a class="nav-item" data-page="tasks">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
+      <span>Tâches</span>
+    </a>
+    <a class="nav-item" data-page="messages">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <span>Messages</span>
+    </a>
+    <a class="nav-item" data-page="knowledge">
+      <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+      <span>Base de connaissances</span>
+    </a>
+    <a class="nav-item" data-page="suppliers">
+      <svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+      <span>Fournisseurs</span>
+    </a>
+    <a class="nav-item" data-page="crm">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      <span>Clients CRM</span>
+    </a>
+    <a class="nav-item" data-page="mails">
+      <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8l10 6 10-6"/></svg>
+      <span>Modèles Mails</span>
+    </a>
+    <a class="nav-item" data-page="links">
+      <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+      <span>Liens Rapides</span>
+    </a>
+    <a class="nav-item" data-page="mileage">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      <span>Frais kilométriques</span>
+    </a>
+    <a class="nav-item" data-page="inventory">
+      <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+      <span>Inventaire</span>
+    </a>
+    <a class="nav-item" data-page="finances">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      <span>Finances</span>
+    </a>
+    <a class="nav-item" data-page="ai">
+      <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/><path d="M12 8v4l3 3"/></svg>
+      <span>IA Assistante</span>
+    </a>
+    <a class="nav-item" data-page="reports">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Rapports</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-user">
+    <div class="user-avatar" id="sidebar-user-avatar">R</div>
+    <div class="user-info">
+      <span class="user-name" id="user-name">Romain</span>
+      <span class="user-role" id="user-role">Administrateur</span>
+    </div>
+    <button id="btn-logout" title="Déconnexion" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:1.1rem;padding:4px;margin-left:auto;" onclick="signOut()">⏻</button>
+  </div>
+</aside>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn">
+    <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="topbar-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" placeholder="Recherche globale...">
+  </div>
+  <div class="topbar-right">
+    <div style="position:relative">
+      <button class="notif-btn" id="notifBtn" onclick="toggleNotifPanel()">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="notif-badge" id="notifBadge">0</span>
+      </button>
+      <div id="notifPanel" style="display:none;position:absolute;right:0;top:110%;background:var(--bg2);border:1px solid var(--border);border-radius:12px;width:320px;padding:1rem;z-index:500;box-shadow:0 8px 32px rgba(0,0,0,.4)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+          <strong>Notifications</strong>
+          <button onclick="toggleNotifPanel()" style="background:none;border:none;color:var(--text2);cursor:pointer">✕</button>
+        </div>
+        <div id="notifList"><p style="color:var(--text2);font-size:.85rem">Chargement...</p></div>
+      </div>
+    </div>
+    <div class="topbar-avatar">R</div>
+  </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="main-content" id="mainContent">
+
+  <!-- DASHBOARD -->
+  <section class="page active" id="page-dashboard">
+    <div class="page-header">
+      <h1>Tableau de bord</h1>
+      <span class="page-date" id="currentDate"></span>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card gold" onclick="showPage('events')" style="cursor:pointer">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-events-count">—</span>
+          <span class="stat-label">Événements à venir</span>
+        </div>
+      </div>
+      <div class="stat-card" onclick="showPage('tasks')" style="cursor:pointer">
+        <div class="stat-icon warning"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-tasks-count">—</span>
+          <span class="stat-label">Tâches en cours</span>
+        </div>
+      </div>
+      <div class="stat-card" onclick="showPage('finances')" style="cursor:pointer">
+        <div class="stat-icon success"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-ca-count">—</span>
+          <span class="stat-label">CA réalisé (€)</span>
+        </div>
+      </div>
+      <div class="stat-card" onclick="showPage('finances')" style="cursor:pointer">
+        <div class="stat-icon danger"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8l10 6 10-6"/></svg></div>
+        <div class="stat-info">
+          <span class="stat-value">3</span>
+          <span class="stat-label">Factures à relancer</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+      <!-- Upcoming events -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Prochains événements</h3>
+          <button class="btn-sm" onclick="showPage('events')">Voir tout</button>
+        </div>
+        <div class="event-list" id="dash-events-list">
+          <p style="color:var(--text2);text-align:center;padding:1rem">Chargement...</p>
+        </div>
+      </div>
+
+      <!-- Urgent tasks -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Tâches urgentes</h3>
+          <button class="btn-sm" onclick="showPage('tasks')">Voir tout</button>
+        </div>
+        <div class="task-list" id="dash-tasks-list">
+          <p style="color:var(--text2);text-align:center;padding:1rem">Chargement...</p>
+        </div>
+      </div>
+
+      <!-- Team -->
+      <div class="card" style="cursor:pointer" onclick="showPage('personnel')">
+        <div class="card-header"><h3>Équipe</h3><span style="font-size:.8rem;color:var(--text2)">Voir les membres →</span></div>
+        <div class="team-grid">
+          <div class="team-member">
+            <img src="photos/romain.jpg" class="member-avatar-photo" alt="Romain">
+            <span class="member-name">Romain</span>
+            <span class="member-role">Président</span>
+            <span class="status-dot online"></span>
+          </div>
+          <div class="team-member">
+            <img src="photos/ketsia.jpg" class="member-avatar-photo" alt="Ketsia">
+            <span class="member-name">Ketsia</span>
+            <span class="member-role">Resp. Projet</span>
+            <span class="status-dot online"></span>
+          </div>
+          <div class="team-member">
+            <img src="photos/flora.jpg" class="member-avatar-photo" alt="Flora">
+            <span class="member-name">Flora</span>
+            <span class="member-role">Alternante</span>
+            <span class="status-dot away"></span>
+          </div>
+          <div class="team-member">
+            <div class="member-avatar av-gloria">G</div>
+            <span class="member-name">Gloria</span>
+            <span class="member-role">Commerciale</span>
+            <span class="status-dot online"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hours this month -->
+      <div class="card">
+        <div class="card-header"><h3>Heures ce mois — Flora (juin)</h3></div>
+        <div class="hours-list">
+          <div class="hours-row">
+            <div class="hours-user">
+              <div class="mini-avatar av-romain">R</div>
+              <span>Romain</span>
+            </div>
+            <div class="hours-bar-wrap">
+              <div class="hours-bar" style="width:90%;background:var(--color-romain)"></div>
+            </div>
+            <span class="hours-val">~180h</span>
+          </div>
+          <div class="hours-row">
+            <div class="hours-user">
+              <div class="mini-avatar av-ketsia">K</div>
+              <span>Ketsia</span>
+            </div>
+            <div class="hours-bar-wrap">
+              <div class="hours-bar" style="width:75%;background:var(--color-ketsia)"></div>
+            </div>
+            <span class="hours-val">~150h</span>
+          </div>
+          <div class="hours-row">
+            <div class="hours-user">
+              <div class="mini-avatar av-flora">F</div>
+              <span>Flora</span>
+            </div>
+            <div class="hours-bar-wrap">
+              <div class="hours-bar" style="width:62%;background:var(--color-flora)"></div>
+            </div>
+            <span class="hours-val">124h</span>
+          </div>
+          <div class="hours-row">
+            <div class="hours-user">
+              <div class="mini-avatar av-gloria">G</div>
+              <span>Gloria</span>
+            </div>
+            <div class="hours-bar-wrap">
+              <div class="hours-bar" style="width:70%"></div>
+            </div>
+            <span class="hours-val">~140h</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CA Objectifs -->
+      <div class="card span2">
+        <div class="card-header"><h3>CA réalisé 2026 (données réelles)</h3></div>
+        <div class="objectives-grid">
+          <div class="objective-item">
+            <div class="obj-label">CA Janvier 2026</div>
+            <div class="obj-progress-wrap"><div class="obj-progress" style="width:51%"></div></div>
+            <div class="obj-values"><span>15 281 €</span><span class="obj-target">/ 30 000 €</span></div>
+          </div>
+          <div class="objective-item">
+            <div class="obj-label">CA Février 2026</div>
+            <div class="obj-progress-wrap"><div class="obj-progress" style="width:24%"></div></div>
+            <div class="obj-values"><span>7 242 €</span><span class="obj-target">/ 30 000 €</span></div>
+          </div>
+          <div class="objective-item">
+            <div class="obj-label">CA Avril 2026</div>
+            <div class="obj-progress-wrap"><div class="obj-progress" style="width:34%"></div></div>
+            <div class="obj-values"><span>10 162 €</span><span class="obj-target">/ 30 000 €</span></div>
+          </div>
+          <div class="objective-item">
+            <div class="obj-label">CA Mai 2026 🏆</div>
+            <div class="obj-progress-wrap"><div class="obj-progress" style="width:75%"></div></div>
+            <div class="obj-values"><span>22 627 €</span><span class="obj-target">/ 30 000 €</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EVENTS -->
+  <section class="page" id="page-events">
+    <div class="page-header">
+      <h1>Gestion des événements</h1>
+      <button class="btn-primary" onclick="openModal('newEvent')">+ Nouvel événement</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab(this,'cal-list')">Liste</button>
+      <button class="tab" onclick="switchTab(this,'cal-month')">Calendrier</button>
+    </div>
+    <div class="tab-content active" id="cal-list">
+      <div class="events-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Événement</th><th>Client</th><th>Date</th><th>Lieu</th><th>Montant HT</th><th>Statut</th><th></th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Scène ouverte</strong></td>
+              <td>Mercialys</td>
+              <td>4 juil. 2026</td>
+              <td>CSC Saint-Denis</td>
+              <td>1 985,55 €</td>
+              <td><span class="badge badge-warning">À venir</span></td>
+              <td><button class="btn-icon" onclick="openEventDetail()">→</button></td>
+            </tr>
+            <tr>
+              <td><strong>Lotoquine CSC</strong></td>
+              <td>Mercialys</td>
+              <td>7 juil. 2026</td>
+              <td>CSC Saint-Denis</td>
+              <td>2 170,00 €</td>
+              <td><span class="badge badge-info">Devis envoyé</span></td>
+              <td><button class="btn-icon">→</button></td>
+            </tr>
+            <tr>
+              <td><strong>TB Lolipop</strong></td>
+              <td>Lolipop</td>
+              <td>2 juin 2026</td>
+              <td>Cap Homard</td>
+              <td>2 283,38 €</td>
+              <td><span class="badge badge-success">Payé ✅</span></td>
+              <td><button class="btn-icon">→</button></td>
+            </tr>
+            <tr>
+              <td><strong>Team Building Fondation P. Favron</strong></td>
+              <td>Fondation Père Favron</td>
+              <td>25 avr. 2026</td>
+              <td>Cap Homard • 100 pax</td>
+              <td>4 600,40 €</td>
+              <td><span class="badge badge-success">Payé ✅</span></td>
+              <td><button class="btn-icon">→</button></td>
+            </tr>
+            <tr>
+              <td><strong>Team Building Croix Rouge</strong></td>
+              <td>Croix Rouge</td>
+              <td>17 avr. 2026</td>
+              <td>Cap Homard • 40 pax</td>
+              <td>4 006,36 €</td>
+              <td><span class="badge badge-success">Payé ✅</span></td>
+              <td><button class="btn-icon">→</button></td>
+            </tr>
+            <tr>
+              <td><strong>Arbre de Noël AFPAR</strong></td>
+              <td>AFPAR (n.burel@afpar.com)</td>
+              <td>12 déc. 2026</td>
+              <td>À définir • 140 pax</td>
+              <td>En cours</td>
+              <td><span class="badge badge-info">Prospect</span></td>
+              <td><button class="btn-icon">→</button></td>
+            </tr>
+            <tr>
+              <td><strong>TB + Soirée entreprise</strong></td>
+              <td>CSE CYCLEA (a.pader@cyclea.fr)</td>
+              <td>Déc. 2026</td>
+              <td>À définir • 240 pax</td>
+              <td>Fait ☑️</td>
+              <td><span class="badge badge-info">Devis fait</span></td>
+              <td><button class="btn-icon">→</button></td>
+            </tr>
+            <tr>
+              <td><strong>Arbre de Noël INSEE</strong></td>
+              <td>INSEE (dr974-comunication-interne@insee.fr)</td>
+              <td>Déc. 2026</td>
+              <td>À définir • 700 pax</td>
+              <td>Envoyé ✅</td>
+              <td><span class="badge badge-gold">Devis envoyé ✅</span></td>
+              <td><button class="btn-icon">→</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tab-content" id="cal-month">
+      <div class="calendar-wrap" id="calendarWrap"></div>
+    </div>
+
+    <!-- Event Detail Panel -->
+    <div class="detail-panel" id="eventDetailPanel">
+      <div class="detail-header">
+        <h2>Scène ouverte — Mercialys</h2>
+        <button class="btn-icon" onclick="closeEventDetail()">✕</button>
+      </div>
+      <div class="detail-body">
+        <div class="detail-grid">
+          <div class="detail-field"><label>Client</label><span>Mercialys</span></div>
+          <div class="detail-field"><label>Date</label><span>4 juillet 2026</span></div>
+          <div class="detail-field"><label>Lieu</label><span>CSC Saint-Denis</span></div>
+          <div class="detail-field"><label>Participants</label><span>150 personnes</span></div>
+          <div class="detail-field"><label>Budget</label><span>8 500 €</span></div>
+          <div class="detail-field"><label>Contact</label><span>Marie Dupont — 06 12 34 56 78</span></div>
+        </div>
+        <div class="checklist-section">
+          <h4>Checklist Préparation</h4>
+          <label class="check-item"><input type="checkbox" checked> Confirmation client reçue</label>
+          <label class="check-item"><input type="checkbox" checked> Traiteur réservé</label>
+          <label class="check-item"><input type="checkbox"> DJ confirmé</label>
+          <label class="check-item"><input type="checkbox"> Matériel inventorié</label>
+          <label class="check-item"><input type="checkbox"> Ordre de mission envoyé</label>
+        </div>
+        <div class="checklist-section">
+          <h4>Checklist Jour J</h4>
+          <label class="check-item"><input type="checkbox"> Arrivée équipe 14h00</label>
+          <label class="check-item"><input type="checkbox"> Montage sonorisation</label>
+          <label class="check-item"><input type="checkbox"> Test micro et éclairages</label>
+          <label class="check-item"><input type="checkbox"> Accueil clients 18h00</label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PERSONNEL -->
+  <section class="page" id="page-personnel">
+    <div class="page-header">
+      <h1>Gestion du personnel</h1>
+      <button class="btn-primary">+ Ajouter collaborateur</button>
+    </div>
+    <div class="personnel-grid">
+      <div class="personnel-card" onclick="openPersonnelDetail('Romain')">
+        <img src="photos/romain.jpg" class="personnel-avatar-photo" alt="Romain">
+        <div class="personnel-info">
+          <strong>Romain Capdepont</strong>
+          <span>Président SASU — Mercedes Classe A (DS591QS)</span>
+          <div class="personnel-stats">
+            <div class="pstat"><span class="pstat-val">~180h</span><span class="pstat-lbl">Ce mois</span></div>
+            <div class="pstat"><span class="pstat-val gold">1 950 €</span><span class="pstat-lbl">Salaire</span></div>
+            <div class="pstat"><span class="pstat-val">0,374€</span><span class="pstat-lbl">Barème/km</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="personnel-card" onclick="openPersonnelDetail('Ketsia')">
+        <img src="photos/ketsia.jpg" class="personnel-avatar-photo" alt="Ketsia">
+        <div class="personnel-info">
+          <strong>Ketsia</strong>
+          <span>Responsable Projet — CDI</span>
+          <div class="personnel-stats">
+            <div class="pstat"><span class="pstat-val">~150h</span><span class="pstat-lbl">Ce mois</span></div>
+            <div class="pstat"><span class="pstat-val gold">1 950 €</span><span class="pstat-lbl">Salaire</span></div>
+            <div class="pstat"><span class="pstat-val">—</span><span class="pstat-lbl">Congés</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="personnel-card" onclick="openPersonnelDetail('Flora')">
+        <img src="photos/flora.jpg" class="personnel-avatar-photo" alt="Flora">
+        <div class="personnel-info">
+          <strong>Flora Boyer</strong>
+          <span>Alternante — Peugeot 207 (4CV) — Le Tampon</span>
+          <div class="personnel-stats">
+            <div class="pstat"><span class="pstat-val">124h</span><span class="pstat-lbl">Juin (suivi)</span></div>
+            <div class="pstat"><span class="pstat-val gold">1 112 €</span><span class="pstat-lbl">Salaire</span></div>
+            <div class="pstat"><span class="pstat-val" style="color:#F5C518">4j</span><span class="pstat-lbl">Congés pris</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="personnel-card" onclick="openPersonnelDetail('Gloria')">
+        <div class="personnel-avatar">G</div>
+        <div class="personnel-info">
+          <strong>Gloria</strong>
+          <span>Commerciale — CDI</span>
+          <div class="personnel-stats">
+            <div class="pstat"><span class="pstat-val">~140h</span><span class="pstat-lbl">Ce mois</span></div>
+            <div class="pstat"><span class="pstat-val gold">—</span><span class="pstat-lbl">Salaire</span></div>
+            <div class="pstat"><span class="pstat-val">—</span><span class="pstat-lbl">Congés</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TASKS KANBAN -->
+  <section class="page" id="page-tasks">
+    <div class="page-header">
+      <h1>Gestion des tâches</h1>
+      <button class="btn-primary" onclick="openModal('newTask')">+ Nouvelle tâche</button>
+    </div>
+    <div class="person-board" id="person-board">
+      <!-- Romain -->
+      <div class="person-col" style="--person-color:#F5C518">
+        <div class="person-col-header">
+          <img src="photos/romain.jpg" class="person-col-photo" alt="Romain">
+          <div>
+            <div class="person-col-name">Romain</div>
+            <div class="person-col-role">Président</div>
+          </div>
+          <span class="person-task-count" id="count-Romain">0</span>
+        </div>
+        <div class="person-tasks" id="tasks-Romain"></div>
+      </div>
+      <!-- Ketsia -->
+      <div class="person-col" style="--person-color:#4A9EFF">
+        <div class="person-col-header">
+          <img src="photos/ketsia.jpg" class="person-col-photo" alt="Ketsia">
+          <div>
+            <div class="person-col-name">Ketsia</div>
+            <div class="person-col-role">Resp. Projet</div>
+          </div>
+          <span class="person-task-count" id="count-Ketsia">0</span>
+        </div>
+        <div class="person-tasks" id="tasks-Ketsia"></div>
+      </div>
+      <!-- Flora -->
+      <div class="person-col" style="--person-color:#FF6B9D">
+        <div class="person-col-header">
+          <img src="photos/flora.jpg" class="person-col-photo" alt="Flora">
+          <div>
+            <div class="person-col-name">Flora</div>
+            <div class="person-col-role">Alternante</div>
+          </div>
+          <span class="person-task-count" id="count-Flora">0</span>
+        </div>
+        <div class="person-tasks" id="tasks-Flora"></div>
+      </div>
+      <!-- Gloria -->
+      <div class="person-col" style="--person-color:#9B59B6">
+        <div class="person-col-header">
+          <div class="person-col-avatar av-gloria">G</div>
+          <div>
+            <div class="person-col-name">Gloria</div>
+            <div class="person-col-role">Commerciale</div>
+          </div>
+          <span class="person-task-count" id="count-Gloria">0</span>
+        </div>
+        <div class="person-tasks" id="tasks-Gloria"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MESSAGES -->
+  <section class="page" id="page-messages">
+    <div class="page-header"><h1>Messagerie interne</h1></div>
+    <div class="messaging-layout">
+      <div class="channels-panel">
+        <div class="channels-section">
+          <div class="channel-section-title">Général</div>
+          <div class="channel-item active" data-channel="general"><span>#</span> général</div>
+          <div class="channel-item" data-channel="annonces"><span>#</span> annonces</div>
+        </div>
+        <div class="channels-section">
+          <div class="channel-section-title">Événements</div>
+          <div class="channel-item"><span>#</span> galeries-lafayette</div>
+          <div class="channel-item"><span>#</span> archery-tag-renault</div>
+          <div class="channel-item"><span>#</span> marché-bron</div>
+        </div>
+        <div class="channels-section">
+          <div class="channel-section-title">Messages privés</div>
+          <div class="channel-item" data-channel="dm-romain"><div class="mini-avatar av-romain" style="width:20px;height:20px;font-size:10px">R</div> Romain</div>
+          <div class="channel-item" data-channel="dm-ketsia"><div class="mini-avatar av-ketsia" style="width:20px;height:20px;font-size:10px">K</div> Ketsia</div>
+          <div class="channel-item" data-channel="dm-flora"><div class="mini-avatar av-flora" style="width:20px;height:20px;font-size:10px">F</div> Flora</div>
+          <div class="channel-item" data-channel="dm-gloria"><div class="mini-avatar av-gloria" style="width:20px;height:20px;font-size:10px">G</div> Gloria</div>
+        </div>
+      </div>
+      <div class="chat-panel">
+        <div class="chat-header" id="chatHeader"># général</div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-wrap">
+          <input type="text" id="chatInput" class="chat-input" placeholder="Message dans #général... (Entrée pour envoyer)">
+          <button class="btn-send" id="btn-sendMsg">Envoyer</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KNOWLEDGE BASE -->
+  <section class="page" id="page-knowledge">
+    <div class="page-header"><h1>Base de connaissances</h1><button class="btn-primary" onclick="openModal('newKnowledge')">+ Nouveau document</button></div>
+    <div class="knowledge-grid">
+      <div class="knowledge-cat" onclick="filterKnowledge('Animation micro')">
+        <div class="kcat-icon" style="background:#F5C51822">🎤</div>
+        <h4>Animation micro</h4>
+        <span class="kcat-count" data-cat="Animation micro">0 doc</span>
+      </div>
+      <div class="knowledge-cat" onclick="filterKnowledge('Team Building')">
+        <div class="kcat-icon" style="background:#4CAF5022">🏹</div>
+        <h4>Team Building</h4>
+        <span class="kcat-count" data-cat="Team Building">0 doc</span>
+      </div>
+      <div class="knowledge-cat" onclick="filterKnowledge('Gonflables')">
+        <div class="kcat-icon" style="background:#2196F322">🎪</div>
+        <h4>Gonflables</h4>
+        <span class="kcat-count" data-cat="Gonflables">0 doc</span>
+      </div>
+      <div class="knowledge-cat" onclick="filterKnowledge('Logistique')">
+        <div class="kcat-icon" style="background:#9C27B022">📦</div>
+        <h4>Logistique</h4>
+        <span class="kcat-count" data-cat="Logistique">0 doc</span>
+      </div>
+      <div class="knowledge-cat" onclick="filterKnowledge('Commercial')">
+        <div class="kcat-icon" style="background:#FF980022">💼</div>
+        <h4>Commercial</h4>
+        <span class="kcat-count" data-cat="Commercial">0 doc</span>
+      </div>
+      <div class="knowledge-cat" onclick="filterKnowledge('RH')">
+        <div class="kcat-icon" style="background:#F4433622">👥</div>
+        <h4>RH</h4>
+        <span class="kcat-count" data-cat="RH">0 doc</span>
+      </div>
+      <div class="knowledge-cat" onclick="filterKnowledge('Autre')">
+        <div class="kcat-icon" style="background:#00BCD422">📁</div>
+        <h4>Autre</h4>
+        <span class="kcat-count" data-cat="Autre">0 doc</span>
+      </div>
+      <div class="knowledge-cat" onclick="filterKnowledge(null)">
+        <div class="kcat-icon" style="background:#ffffff11">📚</div>
+        <h4>Tous</h4>
+        <span id="kcat-total">0 doc</span>
+      </div>
+    </div>
+    <div class="knowledge-recent" id="knowledge-docs-section" style="margin-top:1.5rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <h3 id="knowledge-section-title">Tous les documents</h3>
+      </div>
+      <div class="doc-list" id="knowledge-doc-list">
+        <p style="color:var(--text2);text-align:center;padding:2rem">Aucun document — cliquez sur "+ Nouveau document" pour commencer</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUPPLIERS -->
+  <section class="page" id="page-suppliers">
+    <div class="page-header"><h1>Fournisseurs</h1><button class="btn-primary" onclick="openModal('newSupplier')">+ Ajouter fournisseur</button></div>
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterSuppliers(null,this)">Tous</button>
+      <button class="filter-btn" onclick="filterSuppliers('Traiteur',this)">Traiteurs</button>
+      <button class="filter-btn" onclick="filterSuppliers('DJ',this)">DJ</button>
+      <button class="filter-btn" onclick="filterSuppliers('Animateur',this)">Animateurs</button>
+      <button class="filter-btn" onclick="filterSuppliers('Hôtesse',this)">Hôtesses</button>
+      <button class="filter-btn" onclick="filterSuppliers('Artiste',this)">Artistes</button>
+      <button class="filter-btn" onclick="filterSuppliers('Sonorisation',this)">Sonorisation</button>
+    </div>
+    <div class="supplier-grid">
+      <div class="supplier-card">
+        <div class="supplier-header">
+          <div class="supplier-avatar">🍽</div>
+          <div><strong>Dany Royal Traiteur</strong><span class="supplier-cat">Traiteur</span></div>
+          <div class="supplier-rating">★★★★★</div>
+        </div>
+        <div class="supplier-details">
+          <p>📞 06 92 39 83 60</p>
+          <p>✉ —</p>
+        </div>
+        <div class="supplier-collab">Traiteur partenaire</div>
+      </div>
+      <div class="supplier-card">
+        <div class="supplier-header">
+          <div class="supplier-avatar">🍽</div>
+          <div><strong>David KLB Traiteur</strong><span class="supplier-cat">Traiteur</span></div>
+          <div class="supplier-rating">★★★★☆</div>
+        </div>
+        <div class="supplier-details">
+          <p>📞 06 93 32 75 85</p>
+          <p>✉ —</p>
+        </div>
+        <div class="supplier-collab">Traiteur partenaire</div>
+      </div>
+      <div class="supplier-card">
+        <div class="supplier-header">
+          <div class="supplier-avatar">🍽</div>
+          <div><strong>Alexandre Traiteur</strong><span class="supplier-cat">Traiteur</span></div>
+          <div class="supplier-rating">★★★★☆</div>
+        </div>
+        <div class="supplier-details">
+          <p>📞 06 92 39 83 60</p>
+          <p>✉ —</p>
+        </div>
+        <div class="supplier-collab">Traiteur partenaire</div>
+      </div>
+      <div class="supplier-card">
+        <div class="supplier-header">
+          <div class="supplier-avatar">🍽</div>
+          <div><strong>Eric Traiteur de l'Ouest</strong><span class="supplier-cat">Traiteur</span></div>
+          <div class="supplier-rating">★★★★☆</div>
+        </div>
+        <div class="supplier-details">
+          <p>📞 06 92 29 03 54</p>
+          <p>✉ —</p>
+        </div>
+        <div class="supplier-collab">Traiteur partenaire</div>
+      </div>
+      <div class="supplier-card">
+        <div class="supplier-header">
+          <div class="supplier-avatar">🍽</div>
+          <div><strong>Julien Traiteur (Ti Julien)</strong><span class="supplier-cat">Traiteur</span></div>
+          <div class="supplier-rating">★★★★★</div>
+        </div>
+        <div class="supplier-details">
+          <p>📞 06 92 79 71 05</p>
+          <p>✉ —</p>
+        </div>
+        <div class="supplier-collab">Traiteur partenaire</div>
+      </div>
+      <div class="supplier-card">
+        <div class="supplier-header">
+          <div class="supplier-avatar">🍽</div>
+          <div><strong>Les Frères Dijoux</strong><span class="supplier-cat">Traiteur</span></div>
+          <div class="supplier-rating">★★★★☆</div>
+        </div>
+        <div class="supplier-details">
+          <p>📞 06 92 77 53 94</p>
+          <p>✉ —</p>
+        </div>
+        <div class="supplier-collab">Traiteur partenaire</div>
+      </div>
+      <div class="supplier-card">
+        <div class="supplier-header">
+          <div class="supplier-avatar">🍽</div>
+          <div><strong>My Traiteur</strong><span class="supplier-cat">Traiteur</span></div>
+          <div class="supplier-rating">★★★★☆</div>
+        </div>
+        <div class="supplier-details">
+          <p>📞 06 93 50 08 93</p>
+          <p>✉ —</p>
+        </div>
+        <div class="supplier-collab">Traiteur partenaire</div>
+      </div>
+      <div class="supplier-card">
+        <div class="supplier-header">
+          <div class="supplier-avatar">🍽</div>
+          <div><strong>Jeremy L'Encrin</strong><span class="supplier-cat">Traiteur</span></div>
+          <div class="supplier-rating">★★★★★</div>
+        </div>
+        <div class="supplier-details">
+          <p>📞 06 92 90 09 00</p>
+          <p>✉ —</p>
+        </div>
+        <div class="supplier-collab">Traiteur partenaire</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CRM -->
+  <section class="page" id="page-crm">
+    <div class="page-header"><h1>Clients CRM</h1><button class="btn-primary" onclick="openModal('newClient')">+ Nouveau client</button></div>
+    <div class="crm-stats">
+      <div class="crm-stat"><span class="crm-stat-val">18</span><span>Clients actifs</span></div>
+      <div class="crm-stat"><span class="crm-stat-val gold">~68 500 €</span><span>CA 2026 (janv–juin)</span></div>
+      <div class="crm-stat"><span class="crm-stat-val">+30</span><span>Prospects CSE 2026</span></div>
+    </div>
+    <div class="events-table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Société</th><th>Contact</th><th>Mail</th><th>CA généré</th><th>Potentiel</th><th>Statut</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Mercialys</strong></td>
+            <td>Emilie (eboyer@mercialys.com)</td>
+            <td>eboyer@mercialys.com</td>
+            <td>~28 000 €</td>
+            <td><span class="potential high">Élevé</span></td>
+            <td><span class="badge badge-success">Actif</span></td>
+          </tr>
+          <tr>
+            <td><strong>CILAM</strong></td>
+            <td>—</td>
+            <td>—</td>
+            <td>~8 700 €</td>
+            <td><span class="potential high">Élevé</span></td>
+            <td><span class="badge badge-success">Actif</span></td>
+          </tr>
+          <tr>
+            <td><strong>Casabona</strong></td>
+            <td>—</td>
+            <td>—</td>
+            <td>~13 000 €</td>
+            <td><span class="potential high">Élevé</span></td>
+            <td><span class="badge badge-success">Actif</span></td>
+          </tr>
+          <tr>
+            <td><strong>Lolipop</strong></td>
+            <td>Océane / Maria</td>
+            <td>—</td>
+            <td>~7 000 €</td>
+            <td><span class="potential high">Élevé</span></td>
+            <td><span class="badge badge-success">Actif</span></td>
+          </tr>
+          <tr>
+            <td><strong>MIO (Rivière des Galets)</strong></td>
+            <td>—</td>
+            <td>—</td>
+            <td>~7 900 €</td>
+            <td><span class="potential medium">Moyen</span></td>
+            <td><span class="badge badge-success">Actif</span></td>
+          </tr>
+          <tr>
+            <td><strong>Sudeco</strong></td>
+            <td>—</td>
+            <td>—</td>
+            <td>4 032 €</td>
+            <td><span class="potential medium">Moyen</span></td>
+            <td><span class="badge badge-success">Actif</span></td>
+          </tr>
+          <tr>
+            <td><strong>Adapéi</strong></td>
+            <td>—</td>
+            <td>—</td>
+            <td>~4 200 €</td>
+            <td><span class="potential medium">Moyen</span></td>
+            <td><span class="badge badge-success">Actif</span></td>
+          </tr>
+          <tr>
+            <td><strong>Croix Rouge</strong></td>
+            <td>—</td>
+            <td>—</td>
+            <td>4 006 €</td>
+            <td><span class="potential medium">Moyen</span></td>
+            <td><span class="badge badge-success">Actif</span></td>
+          </tr>
+          <tr>
+            <td><strong>Mission Locale Nord</strong></td>
+            <td>—</td>
+            <td>—</td>
+            <td>900 €</td>
+            <td><span class="potential medium">Moyen</span></td>
+            <td><span class="badge badge-danger">Non payé ❌</span></td>
+          </tr>
+          <tr>
+            <td><strong>CSE IRT (Ile Réunion Tourisme)</strong></td>
+            <td>Mardaye Muriel</td>
+            <td>cse@reunion.fr</td>
+            <td>En cours</td>
+            <td><span class="potential high">Élevé</span></td>
+            <td><span class="badge badge-gold">Devis envoyé ✅</span></td>
+          </tr>
+          <tr>
+            <td><strong>INSEE Réunion</strong></td>
+            <td>Jocelyne Damour</td>
+            <td>dr974-comunication-interne@insee.fr</td>
+            <td>En cours (700 pax)</td>
+            <td><span class="potential high">Élevé</span></td>
+            <td><span class="badge badge-gold">Devis envoyé ✅</span></td>
+          </tr>
+          <tr>
+            <td><strong>AFPAR</strong></td>
+            <td>Mme Riviere / n.burel</td>
+            <td>n.burel@afpar.com</td>
+            <td>Prospect</td>
+            <td><span class="potential high">Élevé</span></td>
+            <td><span class="badge badge-info">À relancer</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- MAILS TEMPLATES -->
+  <section class="page" id="page-mails">
+    <div class="page-header"><h1>Modèles de mails</h1><button class="btn-primary">+ Nouveau modèle</button></div>
+    <div class="mail-templates">
+      <div class="mail-card">
+        <div class="mail-card-header">
+          <h4>Mail Salon CSE (officiel)</h4>
+          <span class="badge badge-gold">Template Pull Up</span>
+        </div>
+        <div class="mail-preview">Bonjour,
+Nous avons eu le plaisir d'échanger avec vous lors du Salon du CSE à la Nordev et nous vous remercions pour ce moment.
+Nous revenons vers vous concernant votre projet de [ex : Arbre de Noël / Team building / Soirée d'entreprise].
+
+Nous serions ravis de vous accompagner sur cette prestation et de vous proposer une formule adaptée à vos attentes, à votre budget ainsi qu'à vos contraintes logistiques.
+
+Afin d'avancer, nous pouvons :
+– organiser un échange rapide par téléphone
+– fixer un rendez-vous
+– ou vous transmettre directement une proposition détaillée</div>
+        <button class="btn-copy" onclick="copyMail(this)">📋 COPIER LE TEXTE</button>
+      </div>
+      <div class="mail-card">
+        <div class="mail-card-header">
+          <h4>Relance facture</h4>
+          <span class="badge badge-danger">Facturation</span>
+        </div>
+        <div class="mail-preview">Bonjour [Prénom],\n\nSauf erreur de notre part, la facture n°[NUMERO] d'un montant de [MONTANT] € datant du [DATE] est toujours en attente de règlement...</div>
+        <button class="btn-copy" onclick="copyMail(this)">📋 COPIER LE TEXTE</button>
+      </div>
+      <div class="mail-card">
+        <div class="mail-card-header">
+          <h4>Remerciement client</h4>
+          <span class="badge badge-success">Relation client</span>
+        </div>
+        <div class="mail-preview">Bonjour [Prénom],\n\nNous tenons à vous remercier chaleureusement pour la confiance que vous nous avez accordée lors de [EVENEMENT]...</div>
+        <button class="btn-copy" onclick="copyMail(this)">📋 COPIER LE TEXTE</button>
+      </div>
+      <div class="mail-card">
+        <div class="mail-card-header">
+          <h4>Compte rendu événement</h4>
+          <span class="badge badge-info">Post-event</span>
+        </div>
+        <div class="mail-preview">Bonjour [Prénom],\n\nVeuillez trouver ci-joint le compte rendu de [EVENEMENT] qui s'est déroulé le [DATE]...</div>
+        <button class="btn-copy" onclick="copyMail(this)">📋 COPIER LE TEXTE</button>
+      </div>
+      <div class="mail-card">
+        <div class="mail-card-header">
+          <h4>Demande de partenariat</h4>
+          <span class="badge badge-gold">Partenariat</span>
+        </div>
+        <div class="mail-preview">Bonjour [Prénom],\n\nJe suis [VOTRE_NOM], dirigeant de Pull Up Événements, agence spécialisée dans l'animation et l'organisation d'événements...</div>
+        <button class="btn-copy" onclick="copyMail(this)">📋 COPIER LE TEXTE</button>
+      </div>
+      <div class="mail-card">
+        <div class="mail-card-header">
+          <h4>Réponse commerciale</h4>
+          <span class="badge badge-info">Commercial</span>
+        </div>
+        <div class="mail-preview">Bonjour [Prénom],\n\nMerci pour votre demande. Nous avons bien pris note de votre projet et sommes ravis de pouvoir vous accompagner...</div>
+        <button class="btn-copy" onclick="copyMail(this)">📋 COPIER LE TEXTE</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUICK LINKS -->
+  <section class="page" id="page-links">
+    <div class="page-header"><h1>Liens rapides</h1><button class="btn-primary">+ Ajouter lien</button></div>
+    <div class="links-grid">
+      <div class="link-card">
+        <div class="link-icon" style="background:#1877F222">📘</div>
+        <div class="link-info"><strong>Facebook Pull Up</strong><span>Page officielle</span></div>
+        <button class="btn-copy-link" onclick="copyLink('https://facebook.com/pullup')">🔗 COPIER LE LIEN</button>
+      </div>
+      <div class="link-card">
+        <div class="link-icon" style="background:#E91E6322">📸</div>
+        <div class="link-info"><strong>Instagram Pull Up</strong><span>@pullup_evenements</span></div>
+        <button class="btn-copy-link" onclick="copyLink('https://instagram.com/pullup_evenements')">🔗 COPIER LE LIEN</button>
+      </div>
+      <div class="link-card">
+        <div class="link-icon" style="background:#00000022">🎵</div>
+        <div class="link-info"><strong>TikTok Pull Up</strong><span>@pullup_events</span></div>
+        <button class="btn-copy-link">🔗 COPIER LE LIEN</button>
+      </div>
+      <div class="link-card">
+        <div class="link-icon" style="background:#FF000022">▶️</div>
+        <div class="link-info"><strong>YouTube Pull Up</strong><span>Chaîne officielle</span></div>
+        <button class="btn-copy-link">🔗 COPIER LE LIEN</button>
+      </div>
+      <div class="link-card">
+        <div class="link-icon" style="background:#4285F422">📁</div>
+        <div class="link-info"><strong>Google Drive</strong><span>Documents partagés</span></div>
+        <button class="btn-copy-link">🔗 COPIER LE LIEN</button>
+      </div>
+      <div class="link-card">
+        <div class="link-icon" style="background:#00C4CC22">🎨</div>
+        <div class="link-info"><strong>Canva Pull Up</strong><span>Espace de création</span></div>
+        <button class="btn-copy-link">🔗 COPIER LE LIEN</button>
+      </div>
+      <div class="link-card">
+        <div class="link-icon" style="background:#F5C51822">🌐</div>
+        <div class="link-info"><strong>Site internet</strong><span>pullup-evenements.fr</span></div>
+        <button class="btn-copy-link">🔗 COPIER LE LIEN</button>
+      </div>
+      <div class="link-card">
+        <div class="link-icon" style="background:#4CAF5022">⭐</div>
+        <div class="link-info"><strong>Avis Google</strong><span>Laisser un avis</span></div>
+        <button class="btn-copy-link">🔗 COPIER LE LIEN</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MILEAGE -->
+  <section class="page" id="page-mileage">
+    <div class="page-header">
+      <h1>Frais kilométriques</h1>
+      <div style="display:flex;gap:10px;align-items:center">
+        <select id="mileage-month-filter" onchange="filterMileageMonth()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;font-size:.875rem">
+          <option value="">Tous les mois</option>
+          <option value="2026-01">Janvier 2026</option>
+          <option value="2026-02">Février 2026</option>
+          <option value="2026-03">Mars 2026</option>
+          <option value="2026-04">Avril 2026</option>
+          <option value="2026-05">Mai 2026</option>
+          <option value="2026-06">Juin 2026</option>
+          <option value="2026-07">Juillet 2026</option>
+          <option value="2026-08">Août 2026</option>
+          <option value="2026-09">Septembre 2026</option>
+          <option value="2026-10">Octobre 2026</option>
+          <option value="2026-11">Novembre 2026</option>
+          <option value="2026-12">Décembre 2026</option>
+        </select>
+        <button class="btn-primary" onclick="openModal('newMileage')">+ Nouvelle saisie</button>
+      </div>
+    </div>
+
+    <!-- Colonnes par personne -->
+    <div class="person-board" id="mileage-board">
+      <!-- Romain -->
+      <div class="person-col" style="--person-color:var(--color-romain)">
+        <div class="person-col-header">
+          <img src="photos/romain.jpg" class="person-col-photo" alt="Romain">
+          <div>
+            <div class="person-col-name">Romain</div>
+            <div class="person-col-role" style="font-size:.75rem;color:var(--text2)">Barème +5 000km</div>
+          </div>
+          <div style="margin-left:auto;text-align:right">
+            <div class="person-task-count" id="km-count-Romain">0 km</div>
+            <div style="font-size:.7rem;color:var(--text2)" id="km-amount-Romain">0,00 €</div>
+          </div>
+        </div>
+        <div class="person-tasks" id="mileage-Romain"></div>
+      </div>
+      <!-- Ketsia -->
+      <div class="person-col" style="--person-color:var(--color-ketsia)">
+        <div class="person-col-header">
+          <img src="photos/ketsia.jpg" class="person-col-photo" alt="Ketsia">
+          <div>
+            <div class="person-col-name">Ketsia</div>
+            <div class="person-col-role" style="font-size:.75rem;color:var(--text2)">Frais KM</div>
+          </div>
+          <div style="margin-left:auto;text-align:right">
+            <div class="person-task-count" id="km-count-Ketsia">0 km</div>
+            <div style="font-size:.7rem;color:var(--text2)" id="km-amount-Ketsia">0,00 €</div>
+          </div>
+        </div>
+        <div class="person-tasks" id="mileage-Ketsia"></div>
+      </div>
+      <!-- Flora -->
+      <div class="person-col" style="--person-color:var(--color-flora)">
+        <div class="person-col-header">
+          <img src="photos/flora.jpg" class="person-col-photo" alt="Flora">
+          <div>
+            <div class="person-col-name">Flora</div>
+            <div class="person-col-role" style="font-size:.75rem;color:var(--text2)">Frais KM</div>
+          </div>
+          <div style="margin-left:auto;text-align:right">
+            <div class="person-task-count" id="km-count-Flora">0 km</div>
+            <div style="font-size:.7rem;color:var(--text2)" id="km-amount-Flora">0,00 €</div>
+          </div>
+        </div>
+        <div class="person-tasks" id="mileage-Flora"></div>
+      </div>
+      <!-- Gloria -->
+      <div class="person-col" style="--person-color:var(--color-gloria)">
+        <div class="person-col-header">
+          <div class="person-col-avatar av-gloria">G</div>
+          <div>
+            <div class="person-col-name">Gloria</div>
+            <div class="person-col-role" style="font-size:.75rem;color:var(--text2)">Frais KM</div>
+          </div>
+          <div style="margin-left:auto;text-align:right">
+            <div class="person-task-count" id="km-count-Gloria">0 km</div>
+            <div style="font-size:.7rem;color:var(--text2)" id="km-amount-Gloria">0,00 €</div>
+          </div>
+        </div>
+        <div class="person-tasks" id="mileage-Gloria"></div>
+      </div>
+    </div>
+
+    <div class="export-btns" style="margin-top:16px">
+      <button class="btn-outline">📄 Export PDF</button>
+      <button class="btn-outline">📊 Export Excel</button>
+    </div>
+  </section>
+
+  <!-- INVENTORY -->
+  <section class="page" id="page-inventory">
+    <div class="page-header"><h1>Inventaire matériel</h1><button class="btn-primary" onclick="openModal('newInventory')">+ Ajouter matériel</button></div>
+    <div class="inventory-alerts">
+      <div class="alert-item warning">⚠ 2 articles nécessitent une vérification</div>
+      <div class="alert-item danger">🔴 1 article à réparer : Gonflable château</div>
+    </div>
+    <div class="inventory-grid">
+      <div class="inv-card">
+        <div class="inv-img">📷</div>
+        <div class="inv-info">
+          <strong>Photo Box (Kap Numérique)</strong>
+          <div class="inv-meta"><span class="inv-qty">Qté : 1</span><span class="inv-status good">Bon état</span></div>
+          <span class="inv-location">📍 Bureau • Invest. 3 000 € + 1 700 €</span>
+        </div>
+      </div>
+      <div class="inv-card">
+        <div class="inv-img">🎪</div>
+        <div class="inv-info">
+          <strong>Ventrigliss DK (Grand 💧)</strong>
+          <div class="inv-meta"><span class="inv-qty">450 € / J</span><span class="inv-status good">Disponible</span></div>
+          <span class="inv-location">📍 Dépôt Réunion</span>
+        </div>
+      </div>
+      <div class="inv-card">
+        <div class="inv-img">🐭</div>
+        <div class="inv-info">
+          <strong>Mickey et Minnie DK (Grand)</strong>
+          <div class="inv-meta"><span class="inv-qty">450 € / J</span><span class="inv-status good">Disponible</span></div>
+          <span class="inv-location">📍 Dépôt Réunion</span>
+        </div>
+      </div>
+      <div class="inv-card">
+        <div class="inv-img">🌊</div>
+        <div class="inv-info">
+          <strong>Aire de jeux Aquatique DK (Moyen 💧)</strong>
+          <div class="inv-meta"><span class="inv-qty">450 € / J</span><span class="inv-status good">Disponible</span></div>
+          <span class="inv-location">📍 Dépôt Réunion</span>
+        </div>
+      </div>
+      <div class="inv-card">
+        <div class="inv-img">🦁</div>
+        <div class="inv-info">
+          <strong>Z'Animaux Safari RF</strong>
+          <div class="inv-meta"><span class="inv-qty">200 € / J</span><span class="inv-status good">Disponible</span></div>
+          <span class="inv-location">📍 Dépôt Réunion</span>
+        </div>
+      </div>
+      <div class="inv-card">
+        <div class="inv-img">🏴‍☠️</div>
+        <div class="inv-info">
+          <strong>Bateau Pirate RF</strong>
+          <div class="inv-meta"><span class="inv-qty">200 € / J</span><span class="inv-status good">Disponible</span></div>
+          <span class="inv-location">📍 Dépôt Réunion</span>
+        </div>
+      </div>
+      <div class="inv-card">
+        <div class="inv-img">🌊</div>
+        <div class="inv-info">
+          <strong>Toboggan "Piton Grand'Anse" RF (Grand 💧)</strong>
+          <div class="inv-meta"><span class="inv-qty">200 € / J</span><span class="inv-status good">Disponible</span></div>
+          <span class="inv-location">📍 Dépôt Réunion</span>
+        </div>
+      </div>
+      <div class="inv-card">
+        <div class="inv-img">🧇</div>
+        <div class="inv-info">
+          <strong>Machine Gaufre DK (x3)</strong>
+          <div class="inv-meta"><span class="inv-qty">1,50 € / gaufre</span><span class="inv-status good">Disponible</span></div>
+          <span class="inv-location">📍 Bureau</span>
+        </div>
+      </div>
+      <div class="inv-card">
+        <div class="inv-img">🎤</div>
+        <div class="inv-info">
+          <strong>Animateur Commercial</strong>
+          <div class="inv-meta"><span class="inv-qty">40€/h achat — 55€/h vente</span><span class="inv-status good">Grille tarifaire</span></div>
+          <span class="inv-location">📍 Prestation</span>
+        </div>
+      </div>
+      <div class="inv-card">
+        <div class="inv-img">👁️</div>
+        <div class="inv-info">
+          <strong>Surveillant RF</strong>
+          <div class="inv-meta"><span class="inv-qty">80 € / J</span><span class="inv-status good">Disponible</span></div>
+          <span class="inv-location">📍 Prestation</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINANCES -->
+  <section class="page" id="page-finances">
+    <div class="page-header"><h1>Finances</h1><button class="btn-primary" onclick="openModal('newFinance')">+ Nouvelle entrée</button></div>
+
+    <!-- KPIs -->
+    <div class="finance-kpis">
+      <div class="fkpi"><span class="fkpi-val gold">98 763 €</span><span>CA 2026 (Janv–Juin)</span></div>
+      <div class="fkpi"><span class="fkpi-val success">55 199 €</span><span>Bénéfice 2026 H1</span></div>
+      <div class="fkpi"><span class="fkpi-val" style="color:var(--color-flora)">287 014 €</span><span>CA total 2025</span></div>
+      <div class="fkpi"><span class="fkpi-val danger">900 €</span><span>Mission Locale — non payé ❌</span></div>
+    </div>
+
+    <!-- Jauges objectifs -->
+    <div class="fin-gauges-row">
+      <!-- Jauge couverture charges fixes -->
+      <div class="fin-gauge-card">
+        <div class="fin-gauge-title">Couverture charges fixes 2026</div>
+        <div class="fin-gauge-subtitle">Objectif : 8 000 € × 12 = <strong>96 000 €</strong> | Bénéfice H1 réalisé : <strong>55 199 €</strong></div>
+        <div class="fin-gauge-bar-wrap">
+          <div class="fin-gauge-bar" id="gauge-charges" style="width:0%"></div>
+          <span class="fin-gauge-pct" id="gauge-charges-pct">0%</span>
+        </div>
+        <div class="fin-gauge-labels"><span>0 €</span><span>48 000 €</span><span>96 000 €</span></div>
+      </div>
+      <!-- Jauge objectif CA -->
+      <div class="fin-gauge-card">
+        <div class="fin-gauge-title">Objectif CA annuel 2026</div>
+        <div class="fin-gauge-subtitle">Objectif : <strong>300 000 €</strong> | CA réalisé à ce jour : <strong id="gauge-ca-label">112 339 €</strong></div>
+        <div class="fin-gauge-bar-wrap">
+          <div class="fin-gauge-bar fin-gauge-ca" id="gauge-ca" style="width:0%"></div>
+          <span class="fin-gauge-pct" id="gauge-ca-pct">0%</span>
+        </div>
+        <div class="fin-gauge-labels"><span>0 €</span><span>150 000 €</span><span>300 000 €</span></div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab(this,'fin-analyse')">Analyse mensuelle</button>
+      <button class="tab" onclick="switchTab(this,'fin-factures')">Factures</button>
+      <button class="tab" onclick="switchTab(this,'fin-devis')">Devis</button>
+    </div>
+
+    <!-- TAB: Analyse mensuelle -->
+    <div class="tab-content active" id="fin-analyse">
+      <div class="fin-monthly-grid">
+        <!-- 2026 -->
+        <div class="card" style="flex:2;min-width:340px">
+          <div class="card-header"><h3>2026 — Mois par mois</h3><span style="font-size:.75rem;color:var(--text2)">Charges fixes : 8 000 €/mois</span></div>
+          <table class="data-table fin-monthly-table">
+            <thead><tr><th>Mois</th><th>CA (€)</th><th>Bénéfice (€)</th><th>% marge</th><th>vs charges</th></tr></thead>
+            <tbody id="fin-monthly-2026-body"></tbody>
+            <tfoot><tr id="fin-monthly-2026-total" style="font-weight:700;border-top:2px solid var(--border)"></tr></tfoot>
+          </table>
+        </div>
+        <!-- 2025 -->
+        <div class="card" style="flex:1;min-width:280px">
+          <div class="card-header"><h3>2025 — Référence</h3><span style="font-size:.75rem;color:var(--text2)">CA total : 287 014 €</span></div>
+          <table class="data-table fin-monthly-table">
+            <thead><tr><th>Mois</th><th>CA (€)</th><th>Évol. 2026</th></tr></thead>
+            <tbody id="fin-monthly-2025-body"></tbody>
+            <tfoot><tr id="fin-monthly-2025-total" style="font-weight:700;border-top:2px solid var(--border)"></tr></tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Factures -->
+    <div class="tab-content" id="fin-factures">
+      <div class="events-table-wrap">
+        <table class="data-table" id="fin-factures-table">
+          <thead><tr><th>Type</th><th>Client</th><th>Montant</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
+          <tbody id="fin-factures-body"><tr><td colspan="6" style="text-align:center;color:var(--text2)">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: Devis -->
+    <div class="tab-content" id="fin-devis">
+      <div class="events-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>N° Devis</th><th>Client</th><th>Montant</th><th>Envoyé le</th><th>Statut</th></tr></thead>
+          <tbody>
+            <tr><td>DEV-2026</td><td>CSE IRT (TB 80 pax)</td><td>En cours</td><td>01/04/2026</td><td><span class="badge badge-gold">Envoyé ✅</span></td></tr>
+            <tr><td>DEV-2026</td><td>INSEE Réunion (Arbre Noël 700 pax)</td><td>En cours</td><td>30/03/2026</td><td><span class="badge badge-gold">Envoyé ✅</span></td></tr>
+            <tr><td>DEV-2026</td><td>Muta Mutuel (Arbre Noël 250 pax, 6 déc)</td><td>En cours</td><td>01/04/2026</td><td><span class="badge badge-gold">Envoyé ✅</span></td></tr>
+            <tr><td>DEV-2026</td><td>CSE FAVRON (TB 70 pax)</td><td>En cours</td><td>05/03/2026</td><td><span class="badge badge-gold">Envoyé ✅</span></td></tr>
+            <tr><td>DEV-2026</td><td>CSE CYCLEA (TB 200 pax + soirée 240 pax)</td><td>Fait ☑️</td><td>13/04/2026</td><td><span class="badge badge-info">Fait ☑️</span></td></tr>
+            <tr><td>DEV-2026</td><td>CSE SIDR (Arbre Noël 350 pax)</td><td>Fait ☑️</td><td>27/03/2026</td><td><span class="badge badge-info">Fait ☑️</span></td></tr>
+            <tr><td>DEV-2026</td><td>Ecole Iris Hoarau (Arbre Noël + ateliers enfants)</td><td>À envoyer</td><td>18/06/2026</td><td><span class="badge badge-danger">⚠ Urgent</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI ASSISTANT -->
+  <section class="page" id="page-ai">
+    <div class="page-header"><h1>IA Assistante Pull Up</h1></div>
+    <div class="ai-layout">
+      <div class="ai-shortcuts">
+        <h3>Actions rapides</h3>
+        <div class="ai-actions-grid">
+          <button class="ai-action-btn" onclick="sendAIPrompt('Rédige un mail professionnel de relance devis pour un client événementiel')">✉ Rédiger un mail</button>
+          <button class="ai-action-btn" onclick="sendAIPrompt('Génère un devis type pour une animation en galerie commerciale de 4h pour 200 personnes')">📄 Générer un devis</button>
+          <button class="ai-action-btn" onclick="sendAIPrompt('Prépare un compte rendu d\'événement type pour une soirée d\'entreprise')">📋 Compte rendu</button>
+          <button class="ai-action-btn" onclick="sendAIPrompt('Crée une checklist complète pour un événement Archery Tag en extérieur')">✅ Créer checklist</button>
+          <button class="ai-action-btn" onclick="sendAIPrompt('Génère une publication Facebook engageante pour annoncer une animation événementielle Pull Up')">📘 Post Facebook</button>
+          <button class="ai-action-btn" onclick="sendAIPrompt('Génère une légende Instagram percutante avec hashtags pour Pull Up Événements')">📸 Post Instagram</button>
+          <button class="ai-action-btn" onclick="sendAIPrompt('Prépare un conducteur événementiel détaillé pour une soirée d\'entreprise de 150 personnes')">🎬 Conducteur événement</button>
+          <button class="ai-action-btn" onclick="sendAIPrompt('Crée un ordre du jour pour une réunion d\'équipe hebdomadaire Pull Up Événements')">📅 Préparer réunion</button>
+        </div>
+      </div>
+      <div class="ai-chat">
+        <div class="ai-messages" id="aiMessages">
+          <div class="ai-msg assistant">
+            <div class="ai-avatar">🤖</div>
+            <div class="ai-bubble">Bonjour ! Je suis l'IA Pull Up. Comment puis-je vous aider aujourd'hui ? Utilisez les boutons rapides ou posez-moi directement votre question.</div>
+          </div>
+        </div>
+        <div class="ai-input-wrap">
+          <input type="text" id="aiInput" class="ai-input" placeholder="Posez votre question à l'IA Pull Up...">
+          <button class="btn-send-ai" onclick="sendAIMessage()">Envoyer</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REPORTS -->
+  <section class="page" id="page-reports">
+    <div class="page-header"><h1>Rapports & Statistiques</h1><button class="btn-outline">📄 Exporter</button></div>
+    <div class="report-period">
+      <label>Période :</label>
+      <select><option>Juin 2026</option><option>Mai 2026</option><option>Avril 2026</option><option>T2 2026</option><option>2026 (YTD)</option></select>
+    </div>
+    <div class="report-kpis">
+      <div class="rkpi gold"><span class="rkpi-val">~40</span><span>Événements 2026 (janv–juin)</span></div>
+      <div class="rkpi"><span class="rkpi-val">~68 500 €</span><span>CA 2026 (janv–juin)</span></div>
+      <div class="rkpi"><span class="rkpi-val">6 708 €</span><span>Charges fixes/mois</span></div>
+      <div class="rkpi"><span class="rkpi-val">18</span><span>Clients actifs 2026</span></div>
+    </div>
+    <div class="reports-grid">
+      <div class="card">
+        <h3>CA réel par mois 2026</h3>
+        <div class="bar-chart">
+          <div class="bar-group"><div class="bar" style="height:51px"></div><span>Janv</span></div>
+          <div class="bar-group"><div class="bar" style="height:24px"></div><span>Févr</span></div>
+          <div class="bar-group"><div class="bar" style="height:37px"></div><span>Mars</span></div>
+          <div class="bar-group"><div class="bar" style="height:34px"></div><span>Avr</span></div>
+          <div class="bar-group"><div class="bar gold" style="height:75px"></div><span>Mai</span></div>
+          <div class="bar-group"><div class="bar" style="height:41px"></div><span>Juin</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Top clients 2026 (CA)</h3>
+        <div class="top-clients">
+          <div class="tc-row"><span>Mercialys</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:100%"></div></div><span>~28 000 €</span></div>
+          <div class="tc-row"><span>Casabona</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:46%"></div></div><span>~13 000 €</span></div>
+          <div class="tc-row"><span>CILAM</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:31%"></div></div><span>~8 700 €</span></div>
+          <div class="tc-row"><span>MIO</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:28%"></div></div><span>~7 900 €</span></div>
+          <div class="tc-row"><span>Lolipop</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:25%"></div></div><span>~7 000 €</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Temps par collaborateur (Juin)</h3>
+        <div class="time-chart">
+          <div class="time-row"><span>Romain</span><div class="time-bar-wrap"><div class="time-bar gold" style="width:82%"></div></div><span>164h</span></div>
+          <div class="time-row"><span>Gloria</span><div class="time-bar-wrap"><div class="time-bar" style="width:74%"></div></div><span>148h</span></div>
+          <div class="time-row"><span>Ketsia</span><div class="time-bar-wrap"><div class="time-bar" style="width:68%"></div></div><span>136h</span></div>
+          <div class="time-row"><span>Flora</span><div class="time-bar-wrap"><div class="time-bar" style="width:55%"></div></div><span>110h</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Prestataires les plus utilisés</h3>
+        <div class="top-clients">
+          <div class="tc-row"><span>Traiteur Lyon Prestige</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:100%"></div></div><span>12x</span></div>
+          <div class="tc-row"><span>DJ Mike Events</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:42%"></div></div><span>5x</span></div>
+          <div class="tc-row"><span>Photobooth Studio</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:67%"></div></div><span>8x</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-newEvent">
+  <div class="modal">
+    <div class="modal-header"><h3>Nouvel événement</h3><button class="btn-icon" onclick="closeModal('newEvent')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-newEvent" class="form-grid">
+        <div class="form-group span2"><label>Nom de l'événement</label><input name="name" type="text" placeholder="Ex: Soirée d'entreprise ABC" required></div>
+        <div class="form-group"><label>Client</label><input name="client" type="text" placeholder="Nom de la société"></div>
+        <div class="form-group"><label>Date début</label><input name="event_date" type="date"></div>
+        <div class="form-group"><label>Date fin</label><input name="end_date" type="date"></div>
+        <div class="form-group"><label>Heure début</label><input name="start_time" type="time"></div>
+        <div class="form-group"><label>Heure fin</label><input name="end_time" type="time"></div>
+        <div class="form-group span2"><label>Adresse</label><input name="location" type="text" placeholder="Adresse complète"></div>
+        <div class="form-group"><label>Contact</label><input name="contact_name" type="text" placeholder="Nom du contact"></div>
+        <div class="form-group"><label>Téléphone</label><input name="contact_phone" type="tel" placeholder="06 xx xx xx xx"></div>
+        <div class="form-group"><label>Nombre participants</label><input name="participants" type="number" placeholder="0"></div>
+        <div class="form-group"><label>Budget (€ HT)</label><input name="budget" type="number" placeholder="0"></div>
+        <div class="form-group span2"><label>Notes</label><textarea name="notes" rows="3" placeholder="Notes préliminaires..."></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('newEvent')">Annuler</button>
+      <button class="btn-primary" onclick="saveNewEvent()">Créer l'événement</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-newTask">
+  <div class="modal">
+    <div class="modal-header"><h3>Nouvelle tâche</h3><button class="btn-icon" onclick="closeModal('newTask')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-newTask" class="form-grid">
+        <div class="form-group span2"><label>Titre de la tâche</label><input name="title" type="text" placeholder="Description de la tâche" required></div>
+        <div class="form-group"><label>Responsable</label><select name="assignee"><option>Romain</option><option>Ketsia</option><option>Flora</option><option>Gloria</option></select></div>
+        <div class="form-group"><label>Date limite</label><input name="due_date" type="date"></div>
+        <div class="form-group"><label>Priorité</label><select name="priority"><option>Urgent</option><option selected>Normal</option><option>Bas</option></select></div>
+        <div class="form-group span2"><label>Description</label><textarea name="description" rows="3" placeholder="Détails supplémentaires..."></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('newTask')">Annuler</button>
+      <button class="btn-primary" onclick="saveNewTask()">Créer la tâche</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MODIFIER TÂCHE -->
+<div class="modal-overlay" id="modal-editTask">
+  <div class="modal">
+    <div class="modal-header"><h3>Modifier la tâche</h3><button class="btn-icon" onclick="closeModal('editTask')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-editTask" class="form-grid">
+        <input type="hidden" name="id">
+        <div class="form-group span2"><label>Titre de la tâche</label><input name="title" type="text" required></div>
+        <div class="form-group"><label>Responsable</label>
+          <select name="assignee_name">
+            <option>Romain</option>
+            <option>Ketsia</option>
+            <option>Flora</option>
+            <option>Gloria</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Priorité</label>
+          <select name="priority">
+            <option>Urgent</option>
+            <option>Normal</option>
+            <option>Bas</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Statut</label>
+          <select name="status">
+            <option value="todo">À faire</option>
+            <option value="inprogress">En cours</option>
+            <option value="waiting">En attente</option>
+            <option value="done">Terminé</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Date limite</label><input name="due_date" type="date"></div>
+        <div class="form-group span2"><label>Description</label><textarea name="description" rows="3"></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline btn-danger-outline" onclick="deleteCurrentTask()" style="margin-right:auto">🗑 Supprimer</button>
+      <button class="btn-outline" onclick="closeModal('editTask')">Annuler</button>
+      <button class="btn-primary" onclick="saveEditTask()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MODIFIER ÉVÉNEMENT -->
+<div class="modal-overlay" id="modal-editEvent">
+  <div class="modal">
+    <div class="modal-header"><h3>Modifier l'événement</h3><button class="btn-icon" onclick="closeModal('editEvent')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-editEvent" class="form-grid">
+        <input type="hidden" name="id">
+        <div class="form-group span2"><label>Nom *</label><input name="name" type="text" required></div>
+        <div class="form-group"><label>Client</label><input name="client" type="text"></div>
+        <div class="form-group"><label>Statut</label><select name="status"><option>En préparation</option><option>Confirmé</option><option>Terminé</option><option>Annulé</option></select></div>
+        <div class="form-group"><label>Date début *</label><input name="event_date" type="date" required></div>
+        <div class="form-group"><label>Date fin</label><input name="end_date" type="date"></div>
+        <div class="form-group"><label>Heure début</label><input name="start_time" type="time"></div>
+        <div class="form-group"><label>Heure fin</label><input name="end_time" type="time"></div>
+        <div class="form-group span2"><label>Lieu</label><input name="location" type="text"></div>
+        <div class="form-group"><label>Contact</label><input name="contact_name" type="text"></div>
+        <div class="form-group"><label>Téléphone</label><input name="contact_phone" type="tel"></div>
+        <div class="form-group"><label>Participants</label><input name="participants" type="number"></div>
+        <div class="form-group"><label>Montant HT (€)</label><input name="amount_ht" type="number" step="0.01"></div>
+        <div class="form-group span2"><label>Notes</label><textarea name="notes" rows="3"></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('editEvent')">Annuler</button>
+      <button class="btn-primary" onclick="saveEditEvent()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DÉTAIL PERSONNEL -->
+<div class="modal-overlay" id="modal-personnelDetail">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <h3 id="personnelDetailTitle">Fiche collaborateur</h3>
+      <button class="btn-icon" onclick="closeModal('personnelDetail')">✕</button>
+    </div>
+    <div class="modal-body" id="personnelDetailBody" style="padding:1.5rem"></div>
+  </div>
+</div>
+
+<!-- MODAL BASE DE CONNAISSANCES -->
+<div class="modal-overlay" id="modal-newKnowledge">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header"><h3>Nouveau document</h3><button class="btn-icon" onclick="closeModal('newKnowledge')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-newKnowledge" class="form-grid">
+        <div class="form-group span2"><label>Titre *</label><input name="title" type="text" placeholder="Titre du document" required></div>
+        <div class="form-group"><label>Catégorie</label><select name="category"><option>Animation micro</option><option>Team Building</option><option>Gonflables</option><option>Logistique</option><option>Commercial</option><option>RH</option><option>Autre</option></select></div>
+        <div class="form-group"><label>Type</label><select name="type"><option value="document">Document</option><option value="checklist">Checklist</option><option value="tutorial">Tutoriel</option><option value="faq">FAQ</option></select></div>
+        <div class="form-group span2"><label>Contenu</label><textarea name="content" rows="8" placeholder="Rédigez votre document ici..." style="font-family:monospace"></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('newKnowledge')">Annuler</button>
+      <button class="btn-primary" onclick="saveNewKnowledge()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVEAU FOURNISSEUR -->
+<div class="modal-overlay" id="modal-newSupplier">
+  <div class="modal">
+    <div class="modal-header"><h3>Nouveau fournisseur</h3><button class="btn-icon" onclick="closeModal('newSupplier')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-newSupplier" class="form-grid">
+        <div class="form-group span2"><label>Nom *</label><input name="name" type="text" placeholder="Nom du fournisseur" required></div>
+        <div class="form-group"><label>Catégorie</label><select name="category"><option>Traiteur</option><option>DJ</option><option>Animateur</option><option>Hôtesse</option><option>Sonorisation</option><option>Artiste</option><option>Autre</option></select></div>
+        <div class="form-group"><label>Téléphone</label><input name="phone" type="tel" placeholder="06 xx xx xx xx"></div>
+        <div class="form-group"><label>Email</label><input name="email" type="email" placeholder="email@example.com"></div>
+        <div class="form-group"><label>Note (1-5)</label><select name="rating"><option>5</option><option selected>4</option><option>3</option><option>2</option><option>1</option></select></div>
+        <div class="form-group span2"><label>Notes</label><textarea name="notes" rows="2" placeholder="Remarques, tarifs..."></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('newSupplier')">Annuler</button>
+      <button class="btn-primary" onclick="saveNewSupplier()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVEAU CLIENT -->
+<div class="modal-overlay" id="modal-newClient">
+  <div class="modal">
+    <div class="modal-header"><h3>Nouveau client</h3><button class="btn-icon" onclick="closeModal('newClient')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-newClient" class="form-grid">
+        <div class="form-group span2"><label>Société *</label><input name="company" type="text" placeholder="Nom de la société" required></div>
+        <div class="form-group"><label>Contact</label><input name="contact_name" type="text" placeholder="Nom du contact"></div>
+        <div class="form-group"><label>Téléphone</label><input name="phone" type="tel" placeholder="06 xx xx xx xx"></div>
+        <div class="form-group"><label>Email</label><input name="email" type="email" placeholder="email@example.com"></div>
+        <div class="form-group"><label>CA généré (€)</label><input name="revenue" type="number" placeholder="0"></div>
+        <div class="form-group"><label>Potentiel</label><select name="potential"><option>Élevé</option><option selected>Moyen</option><option>Faible</option></select></div>
+        <div class="form-group"><label>Statut</label><select name="status"><option>Prospect</option><option>Actif</option><option>Relance</option><option>Inactif</option></select></div>
+        <div class="form-group span2"><label>Notes</label><textarea name="notes" rows="2" placeholder="Remarques..."></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('newClient')">Annuler</button>
+      <button class="btn-primary" onclick="saveNewClient()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FRAIS KM -->
+<div class="modal-overlay" id="modal-newMileage">
+  <div class="modal">
+    <div class="modal-header"><h3>Nouvelle saisie kilométrique</h3><button class="btn-icon" onclick="closeModal('newMileage')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-newMileage" class="form-grid">
+        <div class="form-group"><label>Date *</label><input name="trip_date" type="date" required></div>
+        <div class="form-group"><label>Collaborateur</label><select name="user_name"><option>Romain Capdepont</option><option>Ketsia</option><option>Flora Boyer</option><option>Gloria</option></select></div>
+        <div class="form-group"><label>Départ *</label><input name="departure" type="text" placeholder="Ex: Le Tampon" required></div>
+        <div class="form-group"><label>Destination *</label><input name="destination" type="text" placeholder="Ex: Cap Homard" required></div>
+        <div class="form-group"><label>Km *</label><input name="km" type="number" step="0.1" placeholder="0" required></div>
+        <div class="form-group"><label>Barème (€/km)</label><input name="rate" type="number" step="0.001" value="0.374"></div>
+        <div class="form-group span2"><label>Motif</label><input name="motif" type="text" placeholder="Ex: Repérage événement"></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('newMileage')">Annuler</button>
+      <button class="btn-primary" onclick="saveNewMileage()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL INVENTAIRE -->
+<div class="modal-overlay" id="modal-newInventory">
+  <div class="modal">
+    <div class="modal-header"><h3>Nouveau matériel</h3><button class="btn-icon" onclick="closeModal('newInventory')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-newInventory" class="form-grid">
+        <div class="form-group span2"><label>Nom *</label><input name="name" type="text" placeholder="Nom du matériel" required></div>
+        <div class="form-group"><label>Quantité</label><input name="quantity" type="number" value="1"></div>
+        <div class="form-group"><label>Emoji</label><input name="emoji" type="text" placeholder="📦" maxlength="4"></div>
+        <div class="form-group"><label>État</label><select name="condition"><option>Bon état</option><option>Vérifier</option><option>À réparer</option></select></div>
+        <div class="form-group"><label>Lieu</label><input name="location" type="text" placeholder="Bureau, Dépôt..."></div>
+        <div class="form-group"><label>Prix/jour (€)</label><input name="price_per_day" type="number" step="0.01" placeholder="0"></div>
+        <div class="form-group"><label>Prix d'achat (€)</label><input name="purchase_price" type="number" step="0.01" placeholder="0"></div>
+        <div class="form-group span2"><label>Notes</label><textarea name="notes" rows="2" placeholder="Remarques..."></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('newInventory')">Annuler</button>
+      <button class="btn-primary" onclick="saveNewInventory()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVELLE FACTURE / DEVIS -->
+<div class="modal-overlay" id="modal-newFinance">
+  <div class="modal">
+    <div class="modal-header"><h3>Nouvelle entrée financière</h3><button class="btn-icon" onclick="closeModal('newFinance')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-newFinance" class="form-grid">
+        <div class="form-group"><label>Type</label><select name="type"><option value="facture">Facture</option><option value="devis">Devis</option></select></div>
+        <div class="form-group"><label>Client *</label><input name="client" type="text" placeholder="Nom du client" required></div>
+        <div class="form-group"><label>Montant (€)</label><input name="amount" type="number" step="0.01" placeholder="0"></div>
+        <div class="form-group"><label>Date</label><input name="invoice_date" type="date"></div>
+        <div class="form-group"><label>Statut</label><select name="status"><option>En attente</option><option>Payée</option><option>En retard</option><option>Envoyé</option><option>Fait</option></select></div>
+        <div class="form-group span2"><label>Notes</label><textarea name="notes" rows="2" placeholder="Remarques..."></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('newFinance')">Annuler</button>
+      <button class="btn-primary" onclick="saveNewFinanceEntry()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+</div><!-- end #app-container -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
