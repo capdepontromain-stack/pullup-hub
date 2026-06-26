@@ -1611,6 +1611,23 @@ async function initApp() {
   subscribeToTaskAssignments();
   loadTasksBadge();
   setInterval(loadTasksBadge, 60000);
+  loadDevisBadge();
+  setInterval(loadDevisBadge, 60000);
+}
+
+async function loadDevisBadge() {
+  if (!currentUser) return;
+  const firstName = (currentProfile?.name || '').split(' ')[0];
+  if (!firstName) return;
+  const { count } = await sb.from('devis_requests')
+    .select('id', { count: 'exact', head: true })
+    .eq('assigned_to', firstName)
+    .neq('status', 'Envoyé');
+  const badge = document.getElementById('nav-badge-devis');
+  if (!badge) return;
+  const n = count || 0;
+  if (n > 0) { badge.textContent = n > 99 ? '99+' : n; badge.style.display = 'inline-flex'; }
+  else badge.style.display = 'none';
 }
 
 async function loadTasksBadge() {
