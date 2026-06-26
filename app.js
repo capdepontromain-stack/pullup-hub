@@ -427,17 +427,33 @@ function renderDashboardCA() {
   if (!container) return;
   const MONTHS = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   const TARGET = 8000;
-  const curMonth = new Date().getMonth() + 1;
   let html = '';
   for (let m = 1; m <= 12; m++) {
     const d = FINANCE_2026[m];
     if (!d || d.ca === 0) continue;
-    const pct = Math.min(100, Math.round((d.ca / TARGET) * 100));
-    const color = pct >= 100 ? '#4CAF50' : pct >= 60 ? '#F5C518' : '#FF6B9D';
+    const surplus = Math.max(0, d.ca - TARGET);
+    const basePct = Math.min(100, Math.round((Math.min(d.ca, TARGET) / TARGET) * 100));
+    // Surplus affiché sur une 2e zone max 50% supplémentaire visuellement
+    const surplusPct = surplus > 0 ? Math.min(50, Math.round((surplus / TARGET) * 100)) : 0;
+    const atteint = d.ca >= TARGET;
+    const label = atteint
+      ? `🏆 +${surplus.toLocaleString('fr-FR')} €`
+      : `${d.ca.toLocaleString('fr-FR')} €`;
+    const surplusBar = surplus > 0
+      ? `<div style="position:absolute;left:100%;top:0;bottom:0;width:${surplusPct}%;background:linear-gradient(90deg,#4CAF50,#81C784);border-radius:0 4px 4px 0;opacity:.9"></div>`
+      : '';
     html += `<div class="objective-item">
-      <div class="obj-label">${MONTHS[m]} 2026${pct >= 100 ? ' 🏆' : ''}</div>
-      <div class="obj-progress-wrap"><div class="obj-progress" style="width:${pct}%;background:${color}"></div></div>
-      <div class="obj-values"><span>${d.ca.toLocaleString('fr-FR')} €</span><span class="obj-target">/ ${TARGET.toLocaleString('fr-FR')} €</span></div>
+      <div class="obj-label" style="color:${atteint ? '#4CAF50' : 'var(--text)'}">${MONTHS[m]} 2026${atteint ? ' 🏆' : ''}</div>
+      <div class="obj-progress-wrap" style="position:relative;overflow:visible">
+        <div class="obj-progress" style="width:${basePct}%;background:${atteint ? '#4CAF50' : '#F5C518'};position:relative;z-index:1">
+          ${surplusBar}
+        </div>
+        <div style="position:absolute;right:0;top:50%;transform:translateY(-50%);width:1px;height:100%;background:var(--text3);opacity:.4"></div>
+      </div>
+      <div class="obj-values">
+        <span style="color:${atteint ? '#4CAF50' : '#F5C518'};font-weight:700">${label}</span>
+        <span class="obj-target">/ ${TARGET.toLocaleString('fr-FR')} €</span>
+      </div>
     </div>`;
   }
   container.innerHTML = html || '<p style="color:var(--text2);padding:1rem">Aucune donnée 2026</p>';
