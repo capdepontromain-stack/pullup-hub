@@ -1554,6 +1554,98 @@ async function initApp() {
   showPage(lastPage);
   if (typeof renderDashboardCA === 'function') renderDashboardCA();
   renderDashboardProspectsRelance();
+  renderDashboardDevisRequests();
+}
+
+async function loadDevisRequests() {
+  const { data, error } = await sb.from('devis_requests').select('*').order('created_at', { ascending: false });
+  if (error) { console.error(error); return; }
+  const tbody = document.getElementById('devis-requests-tbody');
+  if (!tbody) return;
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text2);padding:2rem">Aucune demande de devis pour l\'instant</td></tr>';
+    return;
+  }
+  const PRIORITY_COLOR = { 'Urgent': '#f44336', 'Normal': '#4A9EFF', 'Basse': '#aaa' };
+  const STATUS_COLOR = { 'À faire': '#FF9800', 'En cours': '#4A9EFF', 'Envoyé': '#4CAF50' };
+  tbody.innerHTML = data.map(r => {
+    const pc = PRIORITY_COLOR[r.priority] || '#aaa';
+    const sc = STATUS_COLOR[r.status] || '#aaa';
+    return `<tr>
+      <td><strong>${r.client}</strong>${r.contact_name ? '<br><span style="font-size:.78rem;color:var(--text2)">' + r.contact_name + '</span>' : ''}</td>
+      <td style="font-size:.8rem">${r.phone || '—'}${r.email ? '<br>' + r.email : ''}</td>
+      <td>${r.event_type || '—'}</td>
+      <td>${r.event_date ? new Date(r.event_date + 'T00:00:00').toLocaleDateString('fr-FR') : '—'}</td>
+      <td>${r.location || '—'}</td>
+      <td style="text-align:center">${r.guest_count || '—'}</td>
+      <td style="font-weight:700;color:var(--gold)">${r.budget_estimate ? parseFloat(r.budget_estimate).toLocaleString('fr-FR') + ' €' : '—'}</td>
+      <td><span style="background:${pc}22;color:${pc};padding:2px 8px;border-radius:10px;font-size:.75rem;font-weight:600">${r.priority}</span></td>
+      <td>
+        <select onchange="updateDevisRequestStatus('${r.id}',this)" style="background:${sc}22;color:${sc};border:1px solid ${sc}55;border-radius:10px;padding:2px 8px;font-size:.75rem;font-weight:600;cursor:pointer;outline:none">
+          ${['À faire','En cours','Envoyé'].map(s=>`<option ${r.status===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <button onclick="deleteDevisRequest('${r.id}')" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:2px 6px" title="Supprimer">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function saveDevisRequest(e) {
+  e.preventDefault();
+  const f = e.target;
+  const data = {
+    client: f.querySelector('[name=client]').value,
+    contact_name: f.querySelector('[name=contact_name]').value || null,
+    phone: f.querySelector('[name=phone]').value || null,
+    email: f.querySelector('[name=email]').value || null,
+    event_type: f.querySelector('[name=event_type]').value || null,
+    event_date: f.querySelector('[name=event_date]').value || null,
+    location: f.querySelector('[name=location]').value || null,
+    guest_count: parseInt(f.querySelector('[name=guest_count]').value) || null,
+    duration: f.querySelector('[name=duration]').value || null,
+    budget_estimate: parseFloat(f.querySelector('[name=budget_estimate]').value) || null,
+    priority: f.querySelector('[name=priority]').value,
+    status: f.querySelector('[name=status]').value,
+    services_requested: f.querySelector('[name=services_requested]').value || null,
+    catering: f.querySelector('[name=catering]').value || null,
+    decoration: f.querySelector('[name=decoration]').value || null,
+    sound_light: f.querySelector('[name=sound_light]').value || null,
+    animation: f.querySelector('[name=animation]').value || null,
+    notes: f.querySelector('[name=notes]').value || null,
+  };
+  const { error } = await sb.from('devis_requests').insert([data]);
+  if (error) { showToast('Erreur : ' + error.message); return; }
+  showToast('Demande enregistrée ✓');
+  closeModal('newDevisRequest');
+  f.reset();
+  await loadDevisRequests();
+  await renderDashboardDevisRequests();
+}
+
+async function updateDevisRequestStatus(id, selectEl) {
+  const { error } = await sb.from('devis_requests').update({ status: selectEl.value }).eq('id', id);
+  if (error) { showToast('Erreur : ' + error.message); return; }
+  showToast('Statut mis à jour ✓');
+  await renderDashboardDevisRequests();
+}
+
+async function deleteDevisRequest(id) {
+  if (!confirm('Supprimer cette demande de devis ?')) return;
+  await sb.from('devis_requests').delete().eq('id', id);
+  await loadDevisRequests();
+  await renderDashboardDevisRequests();
+}
+
+async function renderDashboardDevisRequests() {
+  const { data, error } = await sb.from('devis_requests').select('client,priority,status').not('status', 'eq', 'Envoyé');
+  if (error) return;
+  const countEl = document.getElementById('stat-devis-req-count');
+  const namesEl = document.getElementById('stat-devis-req-names');
+  const PRIORITY_EMOJI = { 'Urgent': '🔴', 'Normal': '🟡', 'Basse': '⚪' };
+  if (countEl) countEl.textContent = data.length;
+  if (namesEl) namesEl.innerHTML = data.map(r => `${PRIORITY_EMOJI[r.priority] || ''} ${r.client}`).join('<br>');
 }
 
 async function renderDashboardProspectsRelance() {

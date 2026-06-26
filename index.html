@@ -222,6 +222,14 @@
           <div id="stat-prospects-names" style="font-size:.72rem;color:var(--text2);margin-top:2px;line-height:1.4"></div>
         </div>
       </div>
+      <div class="stat-card" onclick="showPage('finances')" style="cursor:pointer">
+        <div class="stat-icon" style="background:rgba(245,197,24,.15);color:var(--gold)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-devis-req-count">0</span>
+          <span class="stat-label">Devis à établir</span>
+          <div id="stat-devis-req-names" style="font-size:.72rem;color:var(--text2);margin-top:2px;line-height:1.4"></div>
+        </div>
+      </div>
     </div>
 
     <div class="dashboard-grid">
@@ -1285,6 +1293,7 @@ Afin d'avancer, nous pouvons :
       <button class="tab" onclick="switchTab(this,'fin-factures')">Factures</button>
       <button class="tab" onclick="switchTab(this,'fin-devis')">Devis</button>
       <button class="tab" onclick="switchTab(this,'fin-creances')">Créances clients</button>
+      <button class="tab" onclick="switchTab(this,'fin-devis-requests');loadDevisRequests()">Demandes de devis</button>
     </div>
 
     <!-- TAB: Analyse mensuelle -->
@@ -1355,6 +1364,23 @@ Afin d'avancer, nous pouvons :
       </div>
     </div>
 
+    <!-- Demandes de devis -->
+    <div class="tab-content" id="fin-devis-requests" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+        <div>
+          <h3 style="margin:0">Demandes de devis à établir</h3>
+          <p style="margin:4px 0 0;font-size:.85rem;color:var(--text2)">Toutes les demandes reçues de clients ou prospects</p>
+        </div>
+        <button class="btn-primary" onclick="openModal('newDevisRequest')">+ Nouvelle demande</button>
+      </div>
+      <div class="events-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Client</th><th>Contact</th><th>Type d'événement</th><th>Date</th><th>Lieu</th><th>Invités</th><th>Budget estimé</th><th>Priorité</th><th>Statut</th><th>Actions</th></tr></thead>
+          <tbody id="devis-requests-tbody"><tr><td colspan="10" style="text-align:center;color:var(--text2);padding:2rem">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
   <!-- Modal nouvelle créance -->
   <div class="modal-overlay" id="modal-newCreance">
     <div class="modal" style="max-width:420px">
@@ -1371,6 +1397,46 @@ Afin d'avancer, nous pouvons :
       </form>
     </div>
   </div>
+
+  <!-- Modal nouvelle demande de devis -->
+  <div class="modal-overlay" id="modal-newDevisRequest">
+    <div class="modal" style="max-width:640px">
+      <div class="modal-header"><h3>Nouvelle demande de devis</h3><button class="modal-close" onclick="closeModal('newDevisRequest')">✕</button></div>
+      <form id="form-newDevisRequest" onsubmit="saveDevisRequest(event)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group"><label>Client / Société *</label><input name="client" required placeholder="Nom du client ou société"></div>
+          <div class="form-group"><label>Nom du contact</label><input name="contact_name" placeholder="Prénom Nom"></div>
+          <div class="form-group"><label>Téléphone</label><input name="phone" placeholder="0692 XX XX XX"></div>
+          <div class="form-group"><label>Email</label><input name="email" type="email" placeholder="contact@exemple.fr"></div>
+          <div class="form-group"><label>Type d'événement</label><input name="event_type" placeholder="Mariage, anniversaire, séminaire…"></div>
+          <div class="form-group"><label>Date de l'événement</label><input name="event_date" type="date"></div>
+          <div class="form-group"><label>Lieu</label><input name="location" placeholder="Ville, salle, domaine…"></div>
+          <div class="form-group"><label>Nombre d'invités</label><input name="guest_count" type="number" placeholder="ex: 150"></div>
+          <div class="form-group"><label>Durée</label><input name="duration" placeholder="ex: 1 journée, soirée, 2 jours…"></div>
+          <div class="form-group"><label>Budget estimé (€)</label><input name="budget_estimate" type="number" step="0.01" placeholder="ex: 8000"></div>
+          <div class="form-group"><label>Priorité</label>
+            <select name="priority"><option>Normal</option><option>Urgent</option><option>Basse</option></select>
+          </div>
+          <div class="form-group"><label>Statut</label>
+            <select name="status"><option>À faire</option><option>En cours</option><option>Envoyé</option></select>
+          </div>
+        </div>
+        <div class="form-group"><label>Services demandés</label><input name="services_requested" placeholder="Animation, sono, décoration, traiteur…"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group"><label>Traiteur / Restauration</label><input name="catering" placeholder="Détails traiteur"></div>
+          <div class="form-group"><label>Décoration</label><input name="decoration" placeholder="Thème, couleurs…"></div>
+          <div class="form-group"><label>Son &amp; Lumières</label><input name="sound_light" placeholder="Sono, éclairage, LED…"></div>
+          <div class="form-group"><label>Animation</label><input name="animation" placeholder="DJ, groupe, animateur…"></div>
+        </div>
+        <div class="form-group"><label>Notes / Observations</label><textarea name="notes" rows="3" placeholder="Toute autre info utile pour établir le devis…" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text1);resize:vertical"></textarea></div>
+        <div class="form-actions">
+          <button type="button" onclick="closeModal('newDevisRequest')" class="btn-secondary">Annuler</button>
+          <button type="submit" class="btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   </section>
 
   <!-- MODAL NOUVELLE FACTURE -->
