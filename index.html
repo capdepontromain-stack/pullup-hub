@@ -2118,6 +2118,15 @@ Afin d'avancer, nous pouvons :
         <div class="form-group"><label>Statut</label>
           <select name="status"><option>À faire</option><option>En cours</option><option>Envoyé</option></select>
         </div>
+        <div class="form-group" style="grid-column:1/-1"><label>👤 Assigné à (qui doit faire le devis)</label>
+          <select name="assigned_to" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text1);width:100%">
+            <option value="">— Non assigné —</option>
+            <option value="Romain">Romain</option>
+            <option value="Ketsia">Ketsia</option>
+            <option value="Flora">Flora</option>
+            <option value="Gloria">Gloria</option>
+          </select>
+        </div>
       </div>
       <div class="form-group"><label>Services demandés</label><input name="services_requested" placeholder="Animation, sono, décoration, traiteur…"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">

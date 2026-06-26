@@ -1701,9 +1701,24 @@ async function saveDevisRequest(e) {
     sound_light: f.querySelector('[name=sound_light]').value || null,
     animation: f.querySelector('[name=animation]').value || null,
     notes: f.querySelector('[name=notes]').value || null,
+    assigned_to: f.querySelector('[name=assigned_to]').value || null,
   };
-  const { error } = await sb.from('devis_requests').insert([data]);
+  const { data: inserted, error } = await sb.from('devis_requests').insert([data]).select().single();
   if (error) { showToast('Erreur : ' + error.message); return; }
+
+  // Créer une tâche pour la personne assignée
+  if (data.assigned_to) {
+    await sb.from('tasks').insert([{
+      title: `Établir devis — ${data.client}`,
+      description: data.event_type ? `${data.event_type}${data.event_date ? ' · ' + new Date(data.event_date).toLocaleDateString('fr-FR') : ''}` : null,
+      assignee_name: data.assigned_to,
+      status: 'todo',
+      priority: data.priority === 'Urgent' ? 'Urgent' : 'Normal',
+      created_at: new Date()
+    }]);
+    loadTasksBadge();
+  }
+
   showToast('Demande enregistrée ✓');
   closeModal('newDevisRequest');
   f.reset();
