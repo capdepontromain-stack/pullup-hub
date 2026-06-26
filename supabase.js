@@ -1838,14 +1838,14 @@ async function saveDevisRequest(e) {
 
   // Créer une tâche seulement pour un nouveau devis
   if (!editId && data.assigned_to) {
-    await sb.from('tasks').insert([{
+    const { error: taskError } = await sb.from('tasks').insert([{
       title: `Établir devis — ${data.client}`,
       description: data.event_type ? `${data.event_type}${data.event_date ? ' · ' + new Date(data.event_date).toLocaleDateString('fr-FR') : ''}` : null,
       assignee_name: data.assigned_to,
       status: 'todo',
       priority: data.priority === 'Urgent' ? 'Urgent' : 'Normal',
-      created_at: new Date()
     }]);
+    if (taskError) showToast('Erreur tâche : ' + taskError.message);
     loadTasksBadge();
   }
 
