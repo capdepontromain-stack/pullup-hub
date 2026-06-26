@@ -745,6 +745,148 @@ async function markInvoicePaid(id, selectEl) {
   if (!entries.error) renderCreances(entries.data);
 }
 
+// =============================================
+// PROSPECTS
+// =============================================
+const TEMP_LABELS = { froid: '❄️ Froid', tiede: '🌤 Tiède', chaud: '🔥 Chaud' };
+const TEMP_COLORS = { froid: '#4A9EFF', tiede: '#F5C518', chaud: '#FF6B9D' };
+const PROSPECT_STATUS_COLORS = {
+  'À contacter': '#9B59B6', 'Contacté': '#4A9EFF', 'Devis envoyé': '#F5C518',
+  'En attente retour': '#FF9800', 'Négociation': '#FF6B9D', 'Gagné': '#4CAF50', 'Perdu': '#f44336'
+};
+
+async function loadAndRenderProspects() {
+  const { data, error } = await sb.from('prospects').select('*').order('followup_date', { ascending: true, nullsFirst: false });
+  if (error) { console.error(error); return; }
+  renderProspects(data || []);
+}
+
+function renderProspects(prospects) {
+  const today = new Date().toISOString().slice(0, 10);
+  const chauds = prospects.filter(p => p.temperature === 'chaud' && p.status !== 'Gagné' && p.status !== 'Perdu');
+  const relances = prospects.filter(p => p.followup_date && p.followup_date <= today && p.status !== 'Gagné' && p.status !== 'Perdu');
+  const caTotal = prospects.filter(p => p.status !== 'Perdu').reduce((s, p) => s + (parseFloat(p.estimated_amount) || 0), 0);
+
+  const el = id => document.getElementById(id);
+  if (el('prospect-count')) el('prospect-count').textContent = prospects.filter(p => p.status !== 'Gagné' && p.status !== 'Perdu').length;
+  if (el('prospect-chaud')) el('prospect-chaud').textContent = chauds.length;
+  if (el('prospect-relance')) el('prospect-relance').textContent = relances.length;
+  if (el('prospect-ca-estime')) el('prospect-ca-estime').textContent = caTotal.toLocaleString('fr-FR') + ' €';
+
+  const tbody = document.getElementById('prospects-tbody');
+  if (!tbody) return;
+  if (!prospects.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text2);padding:2rem">Aucun prospect — cliquez sur "+ Nouveau prospect"</td></tr>';
+    return;
+  }
+  tbody.innerHTML = prospects.map(p => {
+    const isLate = p.followup_date && p.followup_date < today && p.status !== 'Gagné' && p.status !== 'Perdu';
+    const relanceStr = p.followup_date ? new Date(p.followup_date + 'T00:00:00').toLocaleDateString('fr-FR') : '—';
+    const statusColor = PROSPECT_STATUS_COLORS[p.status] || '#aaa';
+    const tempColor = TEMP_COLORS[p.temperature] || '#aaa';
+    return `<tr style="${isLate ? 'background:rgba(244,67,54,0.08);border-left:3px solid #f44336' : ''}">
+      <td><strong>${p.name}</strong></td>
+      <td style="font-size:.8rem">${p.contact_name || '—'}${p.phone ? '<br><span style="color:var(--text2)">' + p.phone + '</span>' : ''}</td>
+      <td style="text-align:center">${p.devis_sent === 'oui' ? '<span style="color:#4CAF50;font-size:1.1rem">✅</span>' : '<span style="color:var(--text3)">—</span>'}</td>
+      <td style="text-align:center">${p.email_sent === 'oui' ? '<span style="color:#4CAF50;font-size:1.1rem">✅</span>' : '<span style="color:var(--text3)">—</span>'}</td>
+      <td style="${isLate ? 'color:#f44336;font-weight:700' : ''}">${relanceStr}${isLate ? ' ⚠️' : ''}</td>
+      <td style="font-weight:600;color:var(--gold)">${p.estimated_amount ? parseFloat(p.estimated_amount).toLocaleString('fr-FR') + ' €' : '—'}</td>
+      <td><span style="color:${tempColor};font-weight:600">${TEMP_LABELS[p.temperature] || '—'}</span></td>
+      <td><span style="background:${statusColor}22;color:${statusColor};padding:3px 8px;border-radius:12px;font-size:.75rem;font-weight:600;white-space:nowrap">${p.status || '—'}</span></td>
+      <td style="font-size:.8rem;color:var(--text2);max-width:200px;white-space:pre-wrap">${p.notes || '—'}</td>
+      <td>
+        <button onclick="editProspect('${p.id}')" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:2px 6px" title="Modifier">✏️</button>
+        <button onclick="deleteProspect('${p.id}')" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:2px 6px" title="Supprimer">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function saveNewProspect(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = {
+    name: form.querySelector('[name=name]').value,
+    contact_name: form.querySelector('[name=contact_name]').value,
+    email: form.querySelector('[name=email]').value,
+    phone: form.querySelector('[name=phone]').value,
+    devis_sent: form.querySelector('[name=devis_sent]').value,
+    email_sent: form.querySelector('[name=email_sent]').value,
+    followup_date: form.querySelector('[name=followup_date]').value || null,
+    estimated_amount: parseFloat(form.querySelector('[name=estimated_amount]').value) || null,
+    temperature: form.querySelector('[name=temperature]').value,
+    status: form.querySelector('[name=status]').value,
+    notes: form.querySelector('[name=notes]').value,
+  };
+  const { error } = await sb.from('prospects').insert([data]);
+  if (error) { showToast('Erreur : ' + error.message); return; }
+  showToast('Prospect ajouté ✓');
+  closeModal('newProspect');
+  form.reset();
+  await loadAndRenderProspects();
+}
+
+async function deleteProspect(id) {
+  if (!confirm('Supprimer ce prospect ?')) return;
+  await sb.from('prospects').delete().eq('id', id);
+  await loadAndRenderProspects();
+}
+
+async function editProspect(id) {
+  const { data: p } = await sb.from('prospects').select('*').eq('id', id).single();
+  if (!p) return;
+  // Réutilise le modal newProspect en mode édition
+  const form = document.getElementById('form-newProspect');
+  form.querySelector('[name=name]').value = p.name || '';
+  form.querySelector('[name=contact_name]').value = p.contact_name || '';
+  form.querySelector('[name=email]').value = p.email || '';
+  form.querySelector('[name=phone]').value = p.phone || '';
+  form.querySelector('[name=devis_sent]').value = p.devis_sent || 'non';
+  form.querySelector('[name=email_sent]').value = p.email_sent || 'non';
+  form.querySelector('[name=followup_date]').value = p.followup_date || '';
+  form.querySelector('[name=estimated_amount]').value = p.estimated_amount || '';
+  form.querySelector('[name=temperature]').value = p.temperature || 'froid';
+  form.querySelector('[name=status]').value = p.status || 'À contacter';
+  form.querySelector('[name=notes]').value = p.notes || '';
+  form.dataset.editId = id;
+  document.querySelector('#modal-newProspect .modal-header h3').textContent = 'Modifier le prospect';
+  openModal('newProspect');
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const data = {
+      name: form.querySelector('[name=name]').value,
+      contact_name: form.querySelector('[name=contact_name]').value,
+      email: form.querySelector('[name=email]').value,
+      phone: form.querySelector('[name=phone]').value,
+      devis_sent: form.querySelector('[name=devis_sent]').value,
+      email_sent: form.querySelector('[name=email_sent]').value,
+      followup_date: form.querySelector('[name=followup_date]').value || null,
+      estimated_amount: parseFloat(form.querySelector('[name=estimated_amount]').value) || null,
+      temperature: form.querySelector('[name=temperature]').value,
+      status: form.querySelector('[name=status]').value,
+      notes: form.querySelector('[name=notes]').value,
+    };
+    const { error } = await sb.from('prospects').update(data).eq('id', id);
+    if (error) { showToast('Erreur : ' + error.message); return; }
+    showToast('Prospect modifié ✓');
+    closeModal('newProspect');
+    form.onsubmit = saveNewProspect;
+    form.dataset.editId = '';
+    document.querySelector('#modal-newProspect .modal-header h3').textContent = 'Nouveau prospect';
+    await loadAndRenderProspects();
+  };
+}
+
+function switchCrmTab(btn, tabId) {
+  document.getElementById('crm-clients').style.display = tabId === 'crm-clients' ? '' : 'none';
+  document.getElementById('crm-prospects').style.display = tabId === 'crm-prospects' ? '' : 'none';
+  document.getElementById('crm-btn-new-client').style.display = tabId === 'crm-clients' ? '' : 'none';
+  document.getElementById('crm-btn-new-prospect').style.display = tabId === 'crm-prospects' ? '' : 'none';
+  document.querySelectorAll('#page-crm .tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  if (tabId === 'crm-prospects') loadAndRenderProspects();
+}
+
 // Render mail templates
 function renderMailTemplates(templates) {
   const container = document.querySelector('#page-mails .mails-grid');

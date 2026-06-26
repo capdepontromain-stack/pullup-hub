@@ -819,7 +819,22 @@
 
   <!-- CRM -->
   <section class="page" id="page-crm">
-    <div class="page-header"><h1>Clients CRM</h1><button class="btn-primary" onclick="openModal('newClient')">+ Nouveau client</button></div>
+    <div class="page-header">
+      <h1 id="crm-page-title">Clients CRM</h1>
+      <div style="display:flex;gap:8px">
+        <button class="btn-primary" id="crm-btn-new-client" onclick="openModal('newClient')">+ Nouveau client</button>
+        <button class="btn-primary" id="crm-btn-new-prospect" style="display:none;background:var(--color-ketsia)" onclick="openModal('newProspect')">+ Nouveau prospect</button>
+      </div>
+    </div>
+
+    <!-- Tabs CRM -->
+    <div class="tabs" style="margin-bottom:16px">
+      <button class="tab active" onclick="switchCrmTab(this,'crm-clients')">Clients actifs</button>
+      <button class="tab" onclick="switchCrmTab(this,'crm-prospects')">Prospects</button>
+    </div>
+
+    <!-- KPIs Clients -->
+    <div id="crm-clients">
     <div class="crm-stats">
       <div class="crm-stat"><span class="crm-stat-val">18</span><span>Clients actifs</span></div>
       <div class="crm-stat"><span class="crm-stat-val gold">~68 500 €</span><span>CA 2026 (janv–juin)</span></div>
@@ -928,7 +943,66 @@
         </tbody>
       </table>
     </div>
+    </div><!-- fin #crm-clients -->
+
+    <!-- TAB PROSPECTS -->
+    <div id="crm-prospects" style="display:none">
+      <div class="crm-stats" id="prospect-stats">
+        <div class="crm-stat"><span class="crm-stat-val" id="prospect-count">0</span><span>Prospects total</span></div>
+        <div class="crm-stat"><span class="crm-stat-val gold" id="prospect-chaud">0</span><span>🔥 Chauds</span></div>
+        <div class="crm-stat"><span class="crm-stat-val" style="color:var(--color-flora)" id="prospect-relance">0</span><span>📅 Relances à faire</span></div>
+        <div class="crm-stat"><span class="crm-stat-val" style="color:#4A9EFF" id="prospect-ca-estime">0 €</span><span>CA potentiel</span></div>
+      </div>
+      <div class="events-table-wrap" style="margin-top:16px;overflow-x:auto">
+        <table class="data-table" style="min-width:900px">
+          <thead>
+            <tr>
+              <th>Prospect</th>
+              <th>Contact</th>
+              <th>Devis</th>
+              <th>Email</th>
+              <th>Date relance</th>
+              <th>CA estimé</th>
+              <th>Température</th>
+              <th>Statut</th>
+              <th>Observations</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="prospects-tbody">
+            <tr><td colspan="10" style="text-align:center;color:var(--text2);padding:2rem">Chargement…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </section>
+
+  <!-- Modal nouveau prospect -->
+  <div class="modal-overlay" id="modal-newProspect" style="display:none">
+    <div class="modal" style="max-width:540px">
+      <div class="modal-header"><h3>Nouveau prospect</h3><button class="modal-close" onclick="closeModal('newProspect')">✕</button></div>
+      <form id="form-newProspect" onsubmit="saveNewProspect(event)">
+        <div class="form-grid">
+          <div class="form-group"><label>Nom / Société *</label><input name="name" required placeholder="ex: CSE Mairie de St-Denis"></div>
+          <div class="form-group"><label>Contact</label><input name="contact_name" placeholder="Prénom Nom"></div>
+          <div class="form-group"><label>Email</label><input name="email" type="email" placeholder="contact@entreprise.fr"></div>
+          <div class="form-group"><label>Téléphone</label><input name="phone" placeholder="0692 XX XX XX"></div>
+          <div class="form-group"><label>Devis envoyé ?</label>
+            <select name="devis_sent"><option value="non">Non</option><option value="oui">Oui</option></select></div>
+          <div class="form-group"><label>Email envoyé ?</label>
+            <select name="email_sent"><option value="non">Non</option><option value="oui">Oui</option></select></div>
+          <div class="form-group"><label>Date de relance</label><input name="followup_date" type="date"></div>
+          <div class="form-group"><label>CA estimé (€)</label><input name="estimated_amount" type="number" placeholder="5000"></div>
+          <div class="form-group"><label>Température</label>
+            <select name="temperature"><option value="froid">❄️ Froid</option><option value="tiede">🌤 Tiède</option><option value="chaud">🔥 Chaud</option></select></div>
+          <div class="form-group"><label>Statut</label>
+            <select name="status"><option value="À contacter">À contacter</option><option value="Contacté">Contacté</option><option value="Devis envoyé">Devis envoyé</option><option value="En attente retour">En attente retour</option><option value="Négociation">Négociation</option><option value="Gagné">Gagné ✅</option><option value="Perdu">Perdu ❌</option></select></div>
+          <div class="form-group" style="grid-column:1/-1"><label>Observations</label><textarea name="notes" rows="3" placeholder="Notes, contexte, suite à donner…" style="width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);resize:vertical"></textarea></div>
+        </div>
+        <div class="form-actions"><button type="button" onclick="closeModal('newProspect')" class="btn-secondary">Annuler</button><button type="submit" class="btn-primary">Enregistrer</button></div>
+      </form>
+    </div>
+  </div>
 
   <!-- MAILS TEMPLATES -->
   <section class="page" id="page-mails">
