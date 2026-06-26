@@ -1666,7 +1666,8 @@ async function loadDevisRequests() {
           ${['À faire','En cours','Envoyé'].map(s=>`<option ${r.status===s?'selected':''}>${s}</option>`).join('')}
         </select>
       </td>
-      <td>
+      <td style="display:flex;gap:4px">
+        <button onclick="openEditDevis('${r.id}')" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:2px 6px" title="Modifier">✏️</button>
         <button onclick="deleteDevisRequest('${r.id}')" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:2px 6px" title="Supprimer">🗑</button>
       </td>
     </tr>`;
@@ -1677,6 +1678,34 @@ async function loadDevisRequests() {
     const el = document.getElementById(id);
     if (el) el.innerHTML = rows;
   });
+}
+
+async function openEditDevis(id) {
+  const { data: r } = await sb.from('devis_requests').select('*').eq('id', id).single();
+  if (!r) return;
+  const f = document.getElementById('form-newDevisRequest');
+  f.querySelector('[name=client]').value = r.client || '';
+  f.querySelector('[name=contact_name]').value = r.contact_name || '';
+  f.querySelector('[name=phone]').value = r.phone || '';
+  f.querySelector('[name=email]').value = r.email || '';
+  f.querySelector('[name=event_type]').value = r.event_type || '';
+  f.querySelector('[name=event_date]').value = r.event_date || '';
+  f.querySelector('[name=location]').value = r.location || '';
+  f.querySelector('[name=guest_count]').value = r.guest_count || '';
+  f.querySelector('[name=duration]').value = r.duration || '';
+  f.querySelector('[name=budget_estimate]').value = r.budget_estimate || '';
+  f.querySelector('[name=priority]').value = r.priority || 'Normal';
+  f.querySelector('[name=status]').value = r.status || 'À faire';
+  f.querySelector('[name=services_requested]').value = r.services_requested || '';
+  f.querySelector('[name=catering]').value = r.catering || '';
+  f.querySelector('[name=decoration]').value = r.decoration || '';
+  f.querySelector('[name=sound_light]').value = r.sound_light || '';
+  f.querySelector('[name=animation]').value = r.animation || '';
+  f.querySelector('[name=notes]').value = r.notes || '';
+  f.querySelector('[name=assigned_to]').value = r.assigned_to || '';
+  f.dataset.editId = id;
+  document.querySelector('#modal-newDevisRequest .modal-header h3').textContent = 'Modifier le devis';
+  openModal('newDevisRequest');
 }
 
 async function saveDevisRequest(e) {
@@ -1703,11 +1732,19 @@ async function saveDevisRequest(e) {
     notes: f.querySelector('[name=notes]').value || null,
     assigned_to: f.querySelector('[name=assigned_to]').value || null,
   };
-  const { data: inserted, error } = await sb.from('devis_requests').insert([data]).select().single();
+  const editId = f.dataset.editId;
+  let error;
+  if (editId) {
+    ({ error } = await sb.from('devis_requests').update(data).eq('id', editId));
+    delete f.dataset.editId;
+    document.querySelector('#modal-newDevisRequest .modal-header h3').textContent = 'Nouvelle demande de devis';
+  } else {
+    ({ error } = await sb.from('devis_requests').insert([data]));
+  }
   if (error) { showToast('Erreur : ' + error.message); return; }
 
-  // Créer une tâche pour la personne assignée
-  if (data.assigned_to) {
+  // Créer une tâche seulement pour un nouveau devis
+  if (!editId && data.assigned_to) {
     await sb.from('tasks').insert([{
       title: `Établir devis — ${data.client}`,
       description: data.event_type ? `${data.event_type}${data.event_date ? ' · ' + new Date(data.event_date).toLocaleDateString('fr-FR') : ''}` : null,
