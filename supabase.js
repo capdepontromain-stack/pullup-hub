@@ -1125,6 +1125,10 @@ async function initApp() {
     const roleEl = document.getElementById('user-role');
     if (nameEl) nameEl.textContent = currentProfile.name;
     if (roleEl) roleEl.textContent = currentProfile.role;
+    const initial = (currentProfile.name || '?')[0].toUpperCase();
+    const sideAvatar = document.getElementById('sidebar-user-avatar');
+    if (sideAvatar) sideAvatar.textContent = initial;
+    document.querySelectorAll('.topbar-avatar').forEach(el => el.textContent = initial);
   }
 
   // Charger toutes les données en parallèle
