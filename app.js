@@ -448,8 +448,15 @@ async function renderDashboardCA() {
 
   // Calculer total CA pour le stat dashboard
   const totalCA = rows.filter(r => r.year === 2026).reduce((s,r) => s + (parseFloat(r.ca)||0), 0);
+  const totalBenef = rows.filter(r => r.year === 2026).reduce((s,r) => s + (parseFloat(r.benef)||0), 0);
   const caStatEl = document.getElementById('stat-ca-count');
   if (caStatEl) caStatEl.textContent = totalCA.toLocaleString('fr-FR') + ' €';
+  const benefLabelEl = document.getElementById('stat-benef-label');
+  if (benefLabelEl) {
+    const sign = totalBenef >= 0 ? '+' : '';
+    benefLabelEl.textContent = `Bénéfice : ${sign}${Math.round(totalBenef).toLocaleString('fr-FR')} €`;
+    benefLabelEl.style.color = totalBenef >= 0 ? '#4CAF50' : '#f44336';
+  }
 
   const data2026 = rows.filter(r => r.year === 2026);
   const maxBenef = Math.max(TARGET, ...data2026.map(d => parseFloat(d.benef) || 0));
