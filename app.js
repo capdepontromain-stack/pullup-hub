@@ -6,6 +6,7 @@ function showPage(id) {
   if (page) page.classList.add('active');
   const navItem = document.querySelector(`[data-page="${id}"]`);
   if (navItem) navItem.classList.add('active');
+  localStorage.setItem('pullup_last_page', id);
   if (window.innerWidth <= 900) closeSidebar();
   if (id === 'events') {
     renderCalendar();

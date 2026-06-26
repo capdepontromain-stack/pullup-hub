@@ -1524,7 +1524,8 @@ async function initApp() {
   // Cache fournisseurs
   allSuppliers = await fetchSuppliers();
 
-  showPage('dashboard');
+  const lastPage = localStorage.getItem('pullup_last_page') || 'dashboard';
+  showPage(lastPage);
   if (typeof renderDashboardCA === 'function') renderDashboardCA();
 }
 
