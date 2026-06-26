@@ -2666,7 +2666,7 @@ async function requestLeaveDay(dateStr) {
         <div style="font-size:1rem;font-weight:700;margin-bottom:4px">⏱ Nombre d'heures</div>
         <div style="font-size:.85rem;color:var(--text2);margin-bottom:16px">${typeLabels[leaveType]} · ${dateLabel}</div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">
-          ${[1,2,3,4,5,6,7,8].map(h => `<button onclick="this.closest('.hours-popup').dataset.val='${h}';this.closest('.hours-popup').querySelectorAll('button.hbtn').forEach(b=>b.style.background='var(--bg3)');this.style.background='${typeColors[leaveType]}';this.style.color='${leaveType==='conge'?'#000':'#fff'}'" class="hbtn" style="background:var(--bg3);border:none;border-radius:8px;padding:10px;font-size:.9rem;font-weight:700;cursor:pointer;color:var(--text1)">${h}h</button>`).join('')}
+          ${[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16].map(h => `<button onclick="this.closest('.hours-popup').dataset.val='${h}';this.closest('.hours-popup').querySelectorAll('button.hbtn').forEach(b=>b.style.background='var(--bg3)');this.style.background='${typeColors[leaveType]}';this.style.color='${leaveType==='conge'?'#000':'#fff'}'" class="hbtn" style="background:var(--bg3);border:none;border-radius:8px;padding:10px;font-size:.9rem;font-weight:700;cursor:pointer;color:var(--text1)">${h}h</button>`).join('')}
         </div>
         <input id="hours-custom" type="number" min="0.5" max="24" step="0.5" placeholder="Autre..." style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text1);font-size:.9rem;margin-bottom:12px;box-sizing:border-box;text-align:center">
         <div style="display:flex;gap:8px">
