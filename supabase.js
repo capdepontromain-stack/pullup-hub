@@ -1491,3 +1491,208 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 });
+
+// =============================================
+// CONGÉS
+// =============================================
+let leaveViewDate = new Date();
+const LEAVE_TOTAL = 25; // jours ouvrés par an
+const LEAVE_MEMBERS = ['Romain', 'Ketsia', 'Flora', 'Gloria'];
+const LEAVE_PHOTOS = { Romain: 'photos/romain.jpg', Ketsia: 'photos/ketsia.jpg', Flora: 'photos/flora.jpg', Gloria: 'photos/gloria.jpg' };
+const LEAVE_COLORS = { Romain: 'var(--color-romain)', Ketsia: 'var(--color-ketsia)', Flora: 'var(--color-flora)', Gloria: 'var(--color-gloria)' };
+const LEAVE_COLORS_HEX = { Romain: '#F5C518', Ketsia: '#4A9EFF', Flora: '#FF6B9D', Gloria: '#9B59B6' };
+
+let allLeaves = [];
+let currentUserName = 'Romain';
+
+async function loadAndRenderLeaves() {
+  // Détecter l'utilisateur connecté
+  const { data: { user } } = await sb.auth.getUser();
+  if (user?.email) {
+    if (user.email.includes('ketsia')) currentUserName = 'Ketsia';
+    else if (user.email.includes('flora')) currentUserName = 'Flora';
+    else if (user.email.includes('gloria')) currentUserName = 'Gloria';
+    else currentUserName = 'Romain';
+  }
+
+  const year = leaveViewDate.getFullYear();
+  const { data, error } = await sb.from('leaves').select('*').gte('leave_date', year + '-01-01').lte('leave_date', year + '-12-31').order('leave_date');
+  if (error) { showToast('Erreur congés : ' + error.message); return; }
+  allLeaves = data || [];
+
+  renderLeaveCards();
+  renderLeavePending();
+  renderLeaveCalendar();
+  updateLeavesMonthLabel();
+}
+
+function updateLeavesMonthLabel() {
+  const label = document.getElementById('leaves-month-label');
+  if (label) label.textContent = leaveViewDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+}
+
+function leavePrevMonth() {
+  leaveViewDate = new Date(leaveViewDate.getFullYear(), leaveViewDate.getMonth() - 1, 1);
+  renderLeaveCalendar();
+  updateLeavesMonthLabel();
+}
+
+function leaveNextMonth() {
+  leaveViewDate = new Date(leaveViewDate.getFullYear(), leaveViewDate.getMonth() + 1, 1);
+  renderLeaveCalendar();
+  updateLeavesMonthLabel();
+}
+
+function renderLeaveCards() {
+  const container = document.getElementById('leaves-cards');
+  if (!container) return;
+  const year = leaveViewDate.getFullYear();
+  const yearLeaves = allLeaves.filter(l => l.leave_date.startsWith(year));
+
+  container.innerHTML = LEAVE_MEMBERS.map(name => {
+    const approved = yearLeaves.filter(l => l.person_name === name && l.status === 'approved').length;
+    const pending = yearLeaves.filter(l => l.person_name === name && l.status === 'pending').length;
+    const remaining = LEAVE_TOTAL - approved;
+    const pct = Math.round((approved / LEAVE_TOTAL) * 100);
+    const color = LEAVE_COLORS_HEX[name];
+    return `<div class="card" style="text-align:center;padding:1.25rem">
+      <img src="${LEAVE_PHOTOS[name]}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid ${color};margin:0 auto .75rem;display:block" onerror="this.style.display='none'">
+      <div style="font-weight:700;font-size:1rem;margin-bottom:.25rem">${name}</div>
+      <div style="font-size:2rem;font-weight:800;color:${color};line-height:1">${remaining}</div>
+      <div style="font-size:.75rem;color:var(--text2);margin-bottom:.75rem">jours restants / ${LEAVE_TOTAL}</div>
+      ${pending > 0 ? `<div style="font-size:.75rem;background:rgba(245,197,24,.15);color:var(--gold);border-radius:6px;padding:2px 8px;margin-bottom:.5rem">${pending} en attente</div>` : ''}
+      <div style="background:var(--bg3);border-radius:99px;height:6px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${color};border-radius:99px;transition:.3s"></div>
+      </div>
+      <div style="font-size:.72rem;color:var(--text3);margin-top:.3rem">${approved} pris</div>
+    </div>`;
+  }).join('');
+}
+
+function renderLeavePending() {
+  const section = document.getElementById('leaves-pending-section');
+  const list = document.getElementById('leaves-pending-list');
+  if (!section || !list) return;
+  const pending = allLeaves.filter(l => l.status === 'pending');
+  if (!pending.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  list.innerHTML = pending.map(l => {
+    const date = new Date(l.leave_date).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+    const color = LEAVE_COLORS_HEX[l.person_name];
+    const isRomain = currentUserName === 'Romain';
+    return `<div style="display:flex;align-items:center;gap:.75rem;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:.75rem 1rem">
+      <span style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0"></span>
+      <span style="font-weight:600;color:${color}">${l.person_name}</span>
+      <span style="color:var(--text);flex:1">${date}</span>
+      ${isRomain ? `
+        <button onclick="approveLeave('${l.id}')" style="background:var(--success);color:#000;border:none;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:.8rem;font-weight:600">✓ Valider</button>
+        <button onclick="rejectLeave('${l.id}')" style="background:var(--danger);color:#fff;border:none;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:.8rem">✕ Refuser</button>
+      ` : '<span style="font-size:.8rem;color:var(--gold)">En attente de validation</span>'}
+    </div>`;
+  }).join('');
+}
+
+function renderLeaveCalendar() {
+  const container = document.getElementById('leaves-calendar');
+  if (!container) return;
+
+  const year = leaveViewDate.getFullYear();
+  const month = leaveViewDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startDow = (firstDay.getDay() + 6) % 7; // lundi = 0
+
+  const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+
+  // Index leaves by date
+  const leaveByDate = {};
+  allLeaves.forEach(l => {
+    if (!leaveByDate[l.leave_date]) leaveByDate[l.leave_date] = [];
+    leaveByDate[l.leave_date].push(l);
+  });
+
+  let html = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px">
+    ${days.map(d => `<div style="text-align:center;font-size:.75rem;font-weight:600;color:var(--text2);padding:4px">${d}</div>`).join('')}
+  </div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">`;
+
+  // Cellules vides avant le premier jour
+  for (let i = 0; i < startDow; i++) {
+    html += `<div style="min-height:72px"></div>`;
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = (new Date(year, month, d).getDay() + 6) % 7;
+    const isWeekend = dow >= 5;
+    const isToday = dateStr === today;
+    const isPast = dateStr < today;
+    const leavesOnDay = leaveByDate[dateStr] || [];
+    const myLeave = leavesOnDay.find(l => l.person_name === currentUserName);
+
+    let cellStyle = `min-height:72px;border-radius:8px;padding:4px;position:relative;cursor:${isWeekend || isPast ? 'default' : 'pointer'};`;
+    cellStyle += `background:${isWeekend ? 'var(--bg)' : 'var(--bg3)'};`;
+    if (isToday) cellStyle += 'border:2px solid var(--gold);';
+    if (isWeekend) cellStyle += 'opacity:.4;';
+
+    const clickAttr = (!isWeekend && !isPast) ? `onclick="requestLeaveDay('${dateStr}')"` : '';
+
+    html += `<div style="${cellStyle}" ${clickAttr}>
+      <div style="font-size:.8rem;font-weight:${isToday?'700':'400'};color:${isToday?'var(--gold)':'var(--text2)'};margin-bottom:3px">${d}</div>
+      ${leavesOnDay.map(l => `
+        <div style="background:${LEAVE_COLORS_HEX[l.person_name]};border-radius:4px;padding:1px 5px;font-size:.68rem;font-weight:600;color:${l.person_name==='Romain'?'#000':'#fff'};margin-bottom:2px;opacity:${l.status==='pending'?'0.6':'1'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.person_name}${l.status==='pending'?' (attente)':''}">
+          ${l.person_name}${l.status==='pending'?' ⏳':''}
+        </div>`).join('')}
+    </div>`;
+  }
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+async function requestLeaveDay(dateStr) {
+  const existing = allLeaves.find(l => l.person_name === currentUserName && l.leave_date === dateStr);
+  if (existing) {
+    if (!confirm(`Annuler le congé du ${new Date(dateStr).toLocaleDateString('fr-FR')} ?`)) return;
+    await sb.from('leaves').delete().eq('id', existing.id);
+    showToast('Congé annulé');
+    await loadAndRenderLeaves();
+    return;
+  }
+  const dateLabel = new Date(dateStr).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+  if (!confirm(`Demander un congé le ${dateLabel} ?`)) return;
+
+  const { error } = await sb.from('leaves').insert({
+    person_name: currentUserName,
+    leave_date: dateStr,
+    status: currentUserName === 'Romain' ? 'approved' : 'pending'
+  });
+  if (error) { showToast('Erreur : ' + error.message); return; }
+
+  // Notification pour Romain
+  if (currentUserName !== 'Romain') {
+    await sb.from('notifications').insert({
+      type: 'leave_request',
+      title: `Congé demandé par ${currentUserName}`,
+      message: `${currentUserName} demande un congé le ${dateLabel}`,
+      read: false
+    }).catch(() => {});
+  }
+
+  showToast(currentUserName === 'Romain' ? 'Congé posé ✓' : 'Demande envoyée à Romain ✓');
+  await loadAndRenderLeaves();
+}
+
+async function approveLeave(id) {
+  await sb.from('leaves').update({ status: 'approved', approved_at: new Date() }).eq('id', id);
+  showToast('Congé validé ✓');
+  await loadAndRenderLeaves();
+}
+
+async function rejectLeave(id) {
+  if (!confirm('Refuser ce congé ?')) return;
+  await sb.from('leaves').delete().eq('id', id);
+  showToast('Congé refusé');
+  await loadAndRenderLeaves();
+}

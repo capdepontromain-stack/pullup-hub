@@ -128,6 +128,10 @@
       <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       <span>Rapports</span>
     </a>
+    <a class="nav-item" data-page="leaves">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>
+      <span>Congés</span>
+    </a>
   </nav>
 
   <div class="sidebar-user">
@@ -1378,6 +1382,32 @@ Afin d'avancer, nous pouvons :
   </section>
 
 </main>
+
+  <!-- CONGÉS -->
+  <section class="page" id="page-leaves">
+    <div class="page-header">
+      <h1>Congés</h1>
+      <div style="display:flex;gap:.5rem;align-items:center">
+        <button class="btn-outline" onclick="leavePrevMonth()">‹</button>
+        <span id="leaves-month-label" style="font-weight:600;min-width:130px;text-align:center"></span>
+        <button class="btn-outline" onclick="leaveNextMonth()">›</button>
+      </div>
+    </div>
+
+    <!-- Cartes récap -->
+    <div id="leaves-cards" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem"></div>
+
+    <!-- Demandes en attente (visible à tous, action pour Romain) -->
+    <div id="leaves-pending-section" style="margin-bottom:1.5rem;display:none">
+      <h3 style="margin-bottom:.75rem;color:var(--gold)">⏳ Demandes à valider</h3>
+      <div id="leaves-pending-list" style="display:flex;flex-direction:column;gap:.5rem"></div>
+    </div>
+
+    <!-- Calendrier -->
+    <div class="card" style="padding:1.25rem">
+      <div id="leaves-calendar"></div>
+    </div>
+  </section>
 
 <!-- MODALS -->
 <div class="modal-overlay" id="modal-newEvent">

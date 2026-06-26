@@ -12,6 +12,7 @@ function showPage(id) {
     if (typeof loadAndRenderEvents === 'function') loadAndRenderEvents();
   }
   if (id === 'finances') renderFinanceAnalyse();
+  if (id === 'leaves') loadAndRenderLeaves();
 }
 
 document.querySelectorAll('.nav-item').forEach(item => {
