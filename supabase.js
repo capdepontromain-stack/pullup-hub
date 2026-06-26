@@ -260,7 +260,7 @@ function renderEventsTable(events) {
       <td>
         <select onchange="updateEventStatus('${ev.id}', this.value)"
           style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:.8rem;cursor:pointer">
-          ${['En préparation','Confirmé','Terminé','Annulé'].map(s =>
+          ${['En préparation','Confirmé','Terminé','Annulé','Supprimé'].map(s =>
             `<option ${ev.status===s?'selected':''}>${s}</option>`
           ).join('')}
         </select>
@@ -698,7 +698,7 @@ function updateDashboardEvents(events) {
     const d = new Date(ev.event_date + 'T00:00:00');
     const day = String(d.getDate()).padStart(2,'0');
     const mon = monthNames[d.getMonth()];
-    const statusClass = {'Confirmé':'badge-gold','En préparation':'badge-warning','Terminé':'badge-info','Annulé':'badge-danger'}[ev.status] || 'badge-warning';
+    const statusClass = {'Confirmé':'badge-gold','En préparation':'badge-warning','Terminé':'badge-info','Annulé':'badge-danger','Supprimé':'badge-danger'}[ev.status] || 'badge-warning';
     return `<div class="event-item">
       <div class="event-date-badge"><span class="event-day">${day}</span><span class="event-month">${mon}</span></div>
       <div class="event-details"><strong>${ev.name}</strong><span>${ev.location || ''} ${ev.client ? '• ' + ev.client : ''}</span></div>
@@ -707,7 +707,7 @@ function updateDashboardEvents(events) {
   }).join('') || '<p style="color:var(--text2);padding:1rem;text-align:center">Aucun événement à venir</p>';
 
   const countEl = document.getElementById('stat-events-count');
-  if (countEl) countEl.textContent = events.filter(e => e.status !== 'Terminé' && e.status !== 'Annulé').length;
+  if (countEl) countEl.textContent = events.filter(e => e.status !== 'Terminé' && e.status !== 'Annulé' && e.status !== 'Supprimé').length;
 }
 
 function updateDashboardTasks(tasks) {

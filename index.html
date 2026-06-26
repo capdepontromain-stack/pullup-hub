@@ -210,10 +210,10 @@
 
     <div class="dashboard-grid">
       <!-- Upcoming events -->
-      <div class="card">
+      <div class="card" style="cursor:pointer" onclick="showPage('events')">
         <div class="card-header">
           <h3>Prochains événements</h3>
-          <button class="btn-sm" onclick="showPage('events')">Voir tout</button>
+          <span style="font-size:.8rem;color:var(--text2)">Voir tout →</span>
         </div>
         <div class="event-list" id="dash-events-list">
           <p style="color:var(--text2);text-align:center;padding:1rem">Chargement...</p>
@@ -221,10 +221,10 @@
       </div>
 
       <!-- Urgent tasks -->
-      <div class="card">
+      <div class="card" style="cursor:pointer" onclick="showPage('tasks')">
         <div class="card-header">
           <h3>Tâches urgentes</h3>
-          <button class="btn-sm" onclick="showPage('tasks')">Voir tout</button>
+          <span style="font-size:.8rem;color:var(--text2)">Voir tout →</span>
         </div>
         <div class="task-list" id="dash-tasks-list">
           <p style="color:var(--text2);text-align:center;padding:1rem">Chargement...</p>
@@ -1477,7 +1477,7 @@ Afin d'avancer, nous pouvons :
         <input type="hidden" name="id">
         <div class="form-group span2"><label>Nom *</label><input name="name" type="text" required></div>
         <div class="form-group"><label>Client</label><input name="client" type="text"></div>
-        <div class="form-group"><label>Statut</label><select name="status"><option>En préparation</option><option>Confirmé</option><option>Terminé</option><option>Annulé</option></select></div>
+        <div class="form-group"><label>Statut</label><select name="status"><option>En préparation</option><option>Confirmé</option><option>Terminé</option><option>Annulé</option><option>Supprimé</option></select></div>
         <div class="form-group"><label>Date début *</label><input name="event_date" type="date" required></div>
         <div class="form-group"><label>Date fin</label><input name="end_date" type="date"></div>
         <div class="form-group"><label>Heure début</label><input name="start_time" type="time"></div>
