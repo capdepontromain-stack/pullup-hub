@@ -319,6 +319,7 @@ function renderKanban(tasks) {
       const prioColor = prioBadge[t.priority] || prioBadge['Normal'];
       const dateStr = t.due_date ? new Date(t.due_date.split('-')).toLocaleDateString('fr-FR', {day:'numeric',month:'short'}) : '';
       card.innerHTML = `
+        ${t.photo_url ? `<img src="${t.photo_url}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:.5rem;display:block">` : ''}
         <div class="ptask-top">
           <span style="font-size:10px;font-weight:700;color:${prioColor}">${t.priority || 'Normal'}</span>
           <div style="display:flex;gap:4px;align-items:center">
@@ -352,7 +353,67 @@ function openEditTask(t) {
   form.elements['status'].value = t.status || 'todo';
   form.elements['due_date'].value = t.due_date || '';
   form.elements['description'].value = t.description || '';
+  // Reset photo input
+  const photoInput = form.querySelector('[name=photo]');
+  if (photoInput) photoInput.value = '';
+  window._editTaskPhotoRemoved = false;
+  // Show existing photo if any
+  const img = document.getElementById('edit-task-photo-img');
+  const removeBtn = document.getElementById('edit-task-photo-remove');
+  if (img && removeBtn) {
+    if (t.photo_url) {
+      img.src = t.photo_url;
+      img.style.display = 'block';
+      removeBtn.style.display = 'block';
+    } else {
+      img.src = '';
+      img.style.display = 'none';
+      removeBtn.style.display = 'none';
+    }
+  }
+  window._editTaskCurrentPhotoUrl = t.photo_url || null;
   openModal('editTask');
+}
+
+function previewNewTaskPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const preview = document.getElementById('new-task-photo-preview');
+  const img = document.getElementById('new-task-photo-img');
+  img.src = URL.createObjectURL(file);
+  preview.style.display = 'block';
+}
+function clearNewTaskPhoto() {
+  const input = document.querySelector('#form-newTask [name=photo]');
+  if (input) input.value = '';
+  document.getElementById('new-task-photo-preview').style.display = 'none';
+  document.getElementById('new-task-photo-img').src = '';
+}
+function previewEditTaskPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const img = document.getElementById('edit-task-photo-img');
+  const removeBtn = document.getElementById('edit-task-photo-remove');
+  img.src = URL.createObjectURL(file);
+  img.style.display = 'block';
+  removeBtn.style.display = 'block';
+}
+function clearEditTaskPhoto() {
+  const input = document.querySelector('#form-editTask [name=photo]');
+  if (input) input.value = '';
+  const img = document.getElementById('edit-task-photo-img');
+  const removeBtn = document.getElementById('edit-task-photo-remove');
+  img.src = ''; img.style.display = 'none'; removeBtn.style.display = 'none';
+  window._editTaskPhotoRemoved = true;
+}
+
+async function uploadTaskPhoto(file, taskId) {
+  const ext = file.name.split('.').pop();
+  const path = `${taskId}_${Date.now()}.${ext}`;
+  const { error } = await sb.storage.from('task-photos').upload(path, file, { upsert: true });
+  if (error) throw error;
+  const { data } = sb.storage.from('task-photos').getPublicUrl(path);
+  return data.publicUrl;
 }
 
 async function saveEditTask() {
@@ -366,6 +427,16 @@ async function saveEditTask() {
     due_date: form.elements['due_date'].value || null,
     description: form.elements['description'].value.trim() || null,
   };
+  // Handle photo
+  const photoInput = form.querySelector('[name=photo]');
+  const photoFile = photoInput?.files[0];
+  if (photoFile) {
+    try {
+      updates.photo_url = await uploadTaskPhoto(photoFile, currentEditTaskId);
+    } catch(e) { showToast('Erreur upload photo : ' + e.message); return; }
+  } else if (window._editTaskPhotoRemoved) {
+    updates.photo_url = null;
+  }
   const { error } = await sb.from('tasks').update(updates).eq('id', currentEditTaskId);
   if (error) { showToast('Erreur : ' + error.message); return; }
   closeModal('editTask');
@@ -811,11 +882,21 @@ async function saveNewTask() {
   };
   if (!data.title) { showToast('Titre obligatoire'); return; }
   try {
-    await createTask(data);
+    const { data: created, error } = await sb.from('tasks').insert(data).select().single();
+    if (error) throw error;
+    // Upload photo if selected
+    const photoFile = form.querySelector('[name=photo]')?.files[0];
+    if (photoFile && created) {
+      try {
+        const photoUrl = await uploadTaskPhoto(photoFile, created.id);
+        await sb.from('tasks').update({ photo_url: photoUrl }).eq('id', created.id);
+      } catch(e) { showToast('Tâche créée mais erreur photo : ' + e.message); }
+    }
     closeModal('newTask');
     await loadAndRenderTasks();
     showToast('Tâche créée !');
     form.reset();
+    clearNewTaskPhoto();
   } catch(e) { showToast('Erreur : ' + e.message); }
 }
 
