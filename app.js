@@ -449,13 +449,20 @@ async function renderDashboardCA() {
   // Calculer total CA pour le stat dashboard
   const totalCA = rows.filter(r => r.year === 2026).reduce((s,r) => s + (parseFloat(r.ca)||0), 0);
   const totalBenef = rows.filter(r => r.year === 2026).reduce((s,r) => s + (parseFloat(r.benef)||0), 0);
+  const doneMonths = rows.filter(r => r.year === 2026 && (parseFloat(r.ca)||0) > 0).length;
+  const totalChargesYTD = ((window.CHARGES_FIXES_MOIS || 8717.96) + (window.CHARGES_VARS_MOIS || 2000)) * doneMonths;
+  const benefReel = totalBenef - totalChargesYTD;
   const caStatEl = document.getElementById('stat-ca-count');
   if (caStatEl) caStatEl.textContent = totalCA.toLocaleString('fr-FR') + ' €';
   const benefLabelEl = document.getElementById('stat-benef-label');
   if (benefLabelEl) {
-    const sign = totalBenef >= 0 ? '+' : '';
-    benefLabelEl.textContent = `Bénéfice : ${sign}${Math.round(totalBenef).toLocaleString('fr-FR')} €`;
-    benefLabelEl.style.color = totalBenef >= 0 ? '#4CAF50' : '#f44336';
+    const signB = totalBenef >= 0 ? '+' : '';
+    const signC = benefReel >= 0 ? '+' : '';
+    benefLabelEl.innerHTML = `
+      <span style="color:#aaa">Bénéfice : <strong style="color:#4A9EFF">${signB}${Math.round(totalBenef).toLocaleString('fr-FR')} €</strong></span><br>
+      <span style="color:#aaa">Charges : <strong style="color:#f44336">-${Math.round(totalChargesYTD).toLocaleString('fr-FR')} €</strong></span><br>
+      <span style="color:#aaa">Bénéfice réel : <strong style="color:${benefReel >= 0 ? '#4CAF50' : '#f44336'}">${signC}${Math.round(benefReel).toLocaleString('fr-FR')} €</strong></span>`;
+    benefLabelEl.style.color = '';
   }
 
   const data2026 = rows.filter(r => r.year === 2026);
