@@ -69,7 +69,7 @@ async function deleteEvent(id) {
 // TASKS
 // =============================================
 async function fetchTasks() {
-  const { data, error } = await sb.from('tasks').select('*').order('created_at', { ascending: false });
+  const { data, error } = await sb.from('tasks').select('*, events(name, client, event_date)').order('created_at', { ascending: false });
   if (error) { console.error(error); return []; }
   return data;
 }
@@ -445,6 +445,7 @@ function renderKanban(tasks) {
         </div>
         <div class="ptask-title" style="${isDone ? 'text-decoration:line-through;color:var(--text2)' : 'font-weight:600'}">${t.title}</div>
         ${t.description ? `<div style="font-size:.78rem;color:var(--text2);margin-top:3px">${t.description}</div>` : ''}
+        ${t.events ? `<div style="margin-top:5px;display:flex;align-items:center;gap:4px;background:var(--bg4);border-radius:6px;padding:3px 7px;font-size:.72rem;color:var(--gold)">📅 ${t.events.name}${t.events.client ? ' · ' + t.events.client : ''}${t.events.event_date ? ' · ' + new Date(t.events.event_date).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}) : ''}</div>` : ''}
         <div class="ptask-status"><span style="font-size:10px;color:var(--text3)">${statusLabel[t.status] || t.status}</span></div>`;
       card.addEventListener('click', () => openEditTask(t));
       col.appendChild(card);
