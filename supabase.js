@@ -2495,8 +2495,8 @@ async function loadCharges() {
   const annee = parseInt(document.getElementById('charges-year-sel')?.value || 2026);
   const [rm, rf, rv] = await Promise.all([
     sb.from('charges_monthly').select('*').eq('year', annee).order('month'),
-    sb.from('charges_fixes').select('*').eq('actif', true).order('categorie').order('label'),
-    sb.from('charges_variables_items').select('*').eq('actif', true).order('categorie').order('label')
+    sb.from('charges_fixes').select('*').neq('actif', false).order('categorie').order('label'),
+    sb.from('charges_variables_items').select('*').neq('actif', false).order('categorie').order('label')
   ]);
   _chargesMonthly = rm.data || [];
   _chargesFixes = rf.data || [];
@@ -2511,7 +2511,7 @@ function renderChargesFixesDetail() {
   const sumEl = document.getElementById('charges-fixes-sum');
   if (!container) return;
   const total = _chargesFixes.reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
-  if (sumEl) sumEl.textContent = '— Total : ' + total.toLocaleString('fr-FR') + ' €/mois';
+  if (sumEl) sumEl.textContent = total.toLocaleString('fr-FR') + ' €';
   const byCateg = {};
   _chargesFixes.forEach(c => { if (!byCateg[c.categorie]) byCateg[c.categorie] = []; byCateg[c.categorie].push(c); });
   container.innerHTML = Object.entries(byCateg).map(([cat, items]) => `
@@ -2547,7 +2547,7 @@ async function saveChargeFixeItem(e) {
   const payload = { label: f.querySelector('[name=label]').value, categorie: f.querySelector('[name=categorie]').value, montant: parseFloat(f.querySelector('[name=montant]').value) || 0, actif: true };
   const { error } = id ? await sb.from('charges_fixes').update(payload).eq('id', id) : await sb.from('charges_fixes').insert([payload]);
   if (error) { showToast('Erreur : ' + error.message); return; }
-  const { data: allFixes } = await sb.from('charges_fixes').select('montant').eq('actif', true);
+  const { data: allFixes } = await sb.from('charges_fixes').select('montant').neq('actif', false);
   const newTotal = (allFixes || []).reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
   const annee = parseInt(document.getElementById('charges-year-sel')?.value || 2026);
   await sb.from('charges_monthly').update({ charges_fixes: newTotal }).eq('year', annee);
@@ -2561,7 +2561,7 @@ async function saveChargeFixeItem(e) {
 async function deleteChargeFixeItem(id) {
   if (!confirm('Supprimer cette charge fixe ?')) return;
   await sb.from('charges_fixes').update({ actif: false }).eq('id', id);
-  const { data: allFixes } = await sb.from('charges_fixes').select('montant').eq('actif', true);
+  const { data: allFixes } = await sb.from('charges_fixes').select('montant').neq('actif', false);
   const newTotal = (allFixes || []).reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
   const annee = parseInt(document.getElementById('charges-year-sel')?.value || 2026);
   await sb.from('charges_monthly').update({ charges_fixes: newTotal }).eq('year', annee);
@@ -2573,7 +2573,7 @@ function renderChargesVarsDetail() {
   const sumEl = document.getElementById('charges-vars-sum');
   if (!container) return;
   const total = _chargesVarsItems.reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
-  if (sumEl) sumEl.textContent = '— Total : ' + total.toLocaleString('fr-FR') + ' €/mois';
+  if (sumEl) sumEl.textContent = total.toLocaleString('fr-FR') + ' €';
   const byCateg = {};
   _chargesVarsItems.forEach(c => { if (!byCateg[c.categorie]) byCateg[c.categorie] = []; byCateg[c.categorie].push(c); });
   container.innerHTML = Object.entries(byCateg).map(([cat, items]) => `
@@ -2609,7 +2609,7 @@ async function saveChargeVariableItem(e) {
   const payload = { label: f.querySelector('[name=label]').value, categorie: f.querySelector('[name=categorie]').value, montant: parseFloat(f.querySelector('[name=montant]').value) || 0, actif: true };
   const { error } = id ? await sb.from('charges_variables_items').update(payload).eq('id', id) : await sb.from('charges_variables_items').insert([payload]);
   if (error) { showToast('Erreur : ' + error.message); return; }
-  const { data: allVars } = await sb.from('charges_variables_items').select('montant').eq('actif', true);
+  const { data: allVars } = await sb.from('charges_variables_items').select('montant').neq('actif', false);
   const newTotal = (allVars || []).reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
   const annee = parseInt(document.getElementById('charges-year-sel')?.value || 2026);
   await sb.from('charges_monthly').update({ charges_variables: newTotal }).eq('year', annee);
@@ -2623,7 +2623,7 @@ async function saveChargeVariableItem(e) {
 async function deleteChargeVariableItem(id) {
   if (!confirm('Supprimer cette charge variable ?')) return;
   await sb.from('charges_variables_items').update({ actif: false }).eq('id', id);
-  const { data: allVars } = await sb.from('charges_variables_items').select('montant').eq('actif', true);
+  const { data: allVars } = await sb.from('charges_variables_items').select('montant').neq('actif', false);
   const newTotal = (allVars || []).reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
   const annee = parseInt(document.getElementById('charges-year-sel')?.value || 2026);
   await sb.from('charges_monthly').update({ charges_variables: newTotal }).eq('year', annee);
