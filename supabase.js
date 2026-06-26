@@ -240,6 +240,19 @@ async function fetchQuickLinks() {
 // =============================================
 
 // Render events table
+// Génère une couleur pastel unique et reproductible à partir d'une chaîne
+function clientColor(str) {
+  if (!str) return { bg: 'transparent', border: 'transparent', text: 'inherit' };
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  const hue = Math.abs(hash) % 360;
+  return {
+    bg: `hsla(${hue},60%,55%,0.12)`,
+    border: `hsla(${hue},60%,55%,0.5)`,
+    text: `hsl(${hue},55%,70%)`
+  };
+}
+
 function renderEventsTable(events) {
   const tbody = document.querySelector('#page-events .data-table tbody');
   if (!tbody) return;
@@ -249,9 +262,10 @@ function renderEventsTable(events) {
   }
   tbody.innerHTML = events.map(ev => {
     const date = ev.event_date ? new Date(ev.event_date).toLocaleDateString('fr-FR') : '—';
-    return `<tr>
+    const c = clientColor(ev.client);
+    return `<tr style="border-left:3px solid ${c.border};background:${c.bg}">
       <td onclick="openEventDetailById('${ev.id}')" style="cursor:pointer"><strong>${ev.name}</strong></td>
-      <td>${ev.client || '—'}</td>
+      <td><span style="color:${c.text};font-weight:600">${ev.client || '—'}</span></td>
       <td>${date}</td>
       <td>${ev.start_time ? ev.start_time.slice(0,5) : '—'}${ev.end_time ? ' → ' + ev.end_time.slice(0,5) : ''}</td>
       <td>${ev.location || '—'}</td>
