@@ -477,6 +477,19 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .km-trip-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; }
 .km-trip-meta span:first-child { color: var(--text2); }
 
+/* Mileage focus mode */
+.km-focus-panel { width: 100%; }
+.km-focus-header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.km-focus-header select { margin-left: auto; }
+.km-focus-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+.km-stat-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; text-align: center; }
+.km-stat-val { font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
+.km-stat-label { font-size: .75rem; color: var(--text2); }
+.km-mini-month { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: .82rem; }
+.km-mini-month:last-child { border-bottom: none; }
+.km-person-card:hover { background: var(--bg3); transform: translateY(-2px); transition: .15s; }
+@media (max-width: 600px) { .km-focus-stats { grid-template-columns: repeat(2, 1fr); } }
+
 /* MODALS */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 200; align-items: center; justify-content: center; }
 .modal-overlay.open { display: flex; }

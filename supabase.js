@@ -575,85 +575,148 @@ function renderSuppliers(suppliers) {
   }).join('');
 }
 
-// Render mileage — 4 person columns
+// Render mileage — focus mode per person
 let allMileageEntries = [];
+let mileageFocusPerson = null;
+let mileageFocusMonth = null;
+
+const MILEAGE_MEMBERS = [
+  { name: 'Romain',  aliases: ['Romain', 'Romain Capdepont'], color: 'var(--color-romain)' },
+  { name: 'Ketsia',  aliases: ['Ketsia'],                     color: 'var(--color-ketsia)'  },
+  { name: 'Flora',   aliases: ['Flora', 'Flora Boyer'],        color: 'var(--color-flora)'   },
+  { name: 'Gloria',  aliases: ['Gloria'],                      color: 'var(--color-gloria)'  },
+];
+const KM_MONTH_NAMES = ['','Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+const KM_MONTH_FULL  = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 function renderMileage(entries) {
   allMileageEntries = entries || [];
-  renderMileageBoard(allMileageEntries);
+  renderMileageBoard();
 }
 
 function filterMileageMonth() {
-  const val = document.getElementById('mileage-month-filter')?.value;
-  if (!val) return renderMileageBoard(allMileageEntries);
-  const filtered = allMileageEntries.filter(e => e.trip_date && e.trip_date.startsWith(val));
-  renderMileageBoard(filtered);
+  mileageFocusMonth = document.getElementById('mileage-month-filter')?.value || null;
+  renderMileageBoard();
 }
 
-function renderMileageBoard(entries) {
-  const members = [
-    { name: 'Romain',  aliases: ['Romain', 'Romain Capdepont'] },
-    { name: 'Ketsia',  aliases: ['Ketsia'] },
-    { name: 'Flora',   aliases: ['Flora', 'Flora Boyer'] },
-    { name: 'Gloria',  aliases: ['Gloria'] },
-  ];
+function focusMileagePerson(name) {
+  mileageFocusPerson = mileageFocusPerson === name ? null : name;
+  renderMileageBoard();
+}
 
-  members.forEach(({ name, aliases }) => {
-    const col = document.getElementById('mileage-' + name);
-    const countEl = document.getElementById('km-count-' + name);
-    const amountEl = document.getElementById('km-amount-' + name);
-    if (!col) return;
+function renderMileageBoard() {
+  const board = document.getElementById('mileage-board');
+  if (!board) return;
 
-    const myEntries = entries.filter(e => aliases.some(a => (e.user_name || '').includes(a)));
-    const totalKm = myEntries.reduce((s, e) => s + (parseFloat(e.km) || 0), 0);
-    const totalAmt = myEntries.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+  if (mileageFocusPerson) {
+    // ——— FOCUS MODE : affiche une seule personne en pleine largeur ———
+    const member = MILEAGE_MEMBERS.find(m => m.name === mileageFocusPerson);
+    if (!member) return;
 
-    if (countEl) countEl.textContent = Math.round(totalKm) + ' km';
-    if (amountEl) amountEl.textContent = totalAmt.toFixed(2) + ' €';
+    const myEntries = allMileageEntries.filter(e => member.aliases.some(a => (e.user_name || '').includes(a)));
 
-    if (!myEntries.length) {
-      col.innerHTML = '<div class="ptask-empty">Aucun trajet</div>';
-      return;
-    }
+    // Construire le sélecteur de mois disponibles
+    const months = [...new Set(myEntries.map(e => e.trip_date?.slice(0,7)).filter(Boolean))].sort().reverse();
+    if (!mileageFocusMonth && months.length) mileageFocusMonth = months[0];
 
-    // Group by month
-    const byMonth = {};
-    myEntries.forEach(e => {
-      const key = e.trip_date ? e.trip_date.slice(0, 7) : '—';
-      if (!byMonth[key]) byMonth[key] = [];
-      byMonth[key].push(e);
-    });
+    const monthEntries = mileageFocusMonth
+      ? myEntries.filter(e => e.trip_date?.startsWith(mileageFocusMonth))
+      : myEntries;
 
-    col.innerHTML = Object.entries(byMonth).sort((a,b) => b[0].localeCompare(a[0])).map(([month, rows]) => {
-      const mKm = rows.reduce((s,e) => s + (parseFloat(e.km)||0), 0);
-      const mAmt = rows.reduce((s,e) => s + (parseFloat(e.amount)||0), 0);
-      const [y, m] = month.split('-');
-      const mNames = ['','Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
-      const mLabel = m ? `${mNames[parseInt(m)]} ${y}` : month;
+    const totalKm  = myEntries.reduce((s,e)=>s+(parseFloat(e.km)||0),0);
+    const totalAmt = myEntries.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+    const mKm  = monthEntries.reduce((s,e)=>s+(parseFloat(e.km)||0),0);
+    const mAmt = monthEntries.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
 
-      const trips = rows.map(e => {
-        const date = e.trip_date ? new Date(e.trip_date + 'T00:00:00').toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit'}) : '—';
-        return `<div class="km-trip">
-          <div class="km-trip-date">${date}</div>
-          <div class="km-trip-route">${e.departure || ''}${e.destination ? ' → ' + e.destination : ''}</div>
-          <div class="km-trip-motif">${e.motif || ''}</div>
-          <div class="km-trip-meta">
-            <span>${Math.round(e.km || 0)} km</span>
-            <span style="color:var(--person-color);font-weight:600">${(parseFloat(e.amount)||0).toFixed(2)} €</span>
-            <button class="btn-icon" style="font-size:11px;padding:2px 4px" onclick="deleteMileageById('${e.id}')">🗑</button>
+    const monthOpts = months.map(k => {
+      const [y,m] = k.split('-');
+      const label = `${KM_MONTH_FULL[parseInt(m)]} ${y}`;
+      return `<option value="${k}" ${k===mileageFocusMonth?'selected':''}>${label}</option>`;
+    }).join('');
+
+    const trips = monthEntries.map(e => {
+      const date = e.trip_date ? new Date(e.trip_date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}) : '—';
+      return `<tr>
+        <td style="color:var(--text2);white-space:nowrap">${date}</td>
+        <td>${e.motif || ''}</td>
+        <td>${e.departure||''}</td>
+        <td>${e.destination||''}</td>
+        <td style="text-align:right;font-weight:600">${Math.round(e.km||0)} km</td>
+        <td style="text-align:right;color:${member.color};font-weight:700">${(parseFloat(e.amount)||0).toFixed(2)} €</td>
+        <td><button class="btn-icon" style="font-size:11px" onclick="deleteMileageById('${e.id}')">🗑</button></td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="7" style="color:var(--text2);text-align:center;padding:1.5rem">Aucun trajet ce mois</td></tr>`;
+
+    board.innerHTML = `
+      <div class="km-focus-panel" style="--person-color:${member.color}">
+        <div class="km-focus-header">
+          <button class="btn-outline" style="font-size:.8rem;padding:6px 12px" onclick="focusMileagePerson('${member.name}')">← Retour</button>
+          <div style="display:flex;align-items:center;gap:12px">
+            <img src="photos/${member.name.toLowerCase()}.jpg" class="person-col-photo" alt="${member.name}" style="width:44px;height:44px">
+            <div>
+              <div style="font-weight:700;font-size:1.1rem">${member.name}</div>
+              <div style="font-size:.8rem;color:var(--text2)">Total 2026 : ${Math.round(totalKm)} km · ${totalAmt.toFixed(2)} €</div>
+            </div>
           </div>
-        </div>`;
-      }).join('');
-
-      return `<div class="km-month-group">
-        <div class="km-month-header">
-          <span>${mLabel}</span>
-          <span style="color:var(--person-color);font-weight:700">${Math.round(mKm)} km · ${mAmt.toFixed(2)} €</span>
+          <select onchange="mileageFocusMonth=this.value;renderMileageBoard()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 14px;font-size:.875rem">
+            ${monthOpts}
+          </select>
         </div>
-        ${trips}
+        <div class="km-focus-stats">
+          <div class="km-stat-card"><div class="km-stat-val" style="color:${member.color}">${Math.round(mKm)} km</div><div class="km-stat-label">Ce mois</div></div>
+          <div class="km-stat-card"><div class="km-stat-val" style="color:${member.color}">${mAmt.toFixed(2)} €</div><div class="km-stat-label">Remboursement</div></div>
+          <div class="km-stat-card"><div class="km-stat-val">${monthEntries.length}</div><div class="km-stat-label">Trajets</div></div>
+          <div class="km-stat-card"><div class="km-stat-val">${monthEntries.length ? Math.round(mKm/monthEntries.length) : 0} km</div><div class="km-stat-label">Moy. / trajet</div></div>
+        </div>
+        <div class="events-table-wrap" style="margin-top:8px">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Motif</th><th>Départ</th><th>Destination</th><th style="text-align:right">Km</th><th style="text-align:right">Montant</th><th></th></tr></thead>
+            <tbody>${trips}</tbody>
+          </table>
+        </div>
+      </div>`;
+  } else {
+    // ——— VUE GRILLE : 4 cartes cliquables ———
+    const filterMonth = mileageFocusMonth;
+    const entries = filterMonth ? allMileageEntries.filter(e => e.trip_date?.startsWith(filterMonth)) : allMileageEntries;
+
+    board.innerHTML = MILEAGE_MEMBERS.map(member => {
+      const myEntries = entries.filter(e => member.aliases.some(a => (e.user_name||'').includes(a)));
+      const totalKm  = myEntries.reduce((s,e)=>s+(parseFloat(e.km)||0),0);
+      const totalAmt = myEntries.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+
+      // Résumé par mois (dans vue grille, max 3 mois visibles)
+      const byMonth = {};
+      myEntries.forEach(e => {
+        const k = e.trip_date?.slice(0,7) || '—';
+        if (!byMonth[k]) byMonth[k] = { km:0, amt:0 };
+        byMonth[k].km  += parseFloat(e.km)||0;
+        byMonth[k].amt += parseFloat(e.amount)||0;
+      });
+      const monthRows = Object.entries(byMonth).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,6).map(([k,v]) => {
+        const [y,m] = k.split('-');
+        return `<div class="km-mini-month">
+          <span>${KM_MONTH_NAMES[parseInt(m)||0]} ${y}</span>
+          <span style="color:${member.color};font-weight:600">${Math.round(v.km)} km · ${v.amt.toFixed(0)} €</span>
+        </div>`;
+      }).join('') || '<div style="color:var(--text2);font-size:.8rem;padding:.5rem 0">Aucun trajet</div>';
+
+      return `<div class="person-col km-person-card" style="--person-color:${member.color};cursor:pointer" onclick="focusMileagePerson('${member.name}')">
+        <div class="person-col-header">
+          <img src="photos/${member.name.toLowerCase()}.jpg" class="person-col-photo" alt="${member.name}">
+          <div>
+            <div class="person-col-name">${member.name}</div>
+            <div style="font-size:.75rem;color:var(--text2)">Cliquer pour détail</div>
+          </div>
+          <div style="margin-left:auto;text-align:right">
+            <div class="person-task-count" style="color:${member.color}">${Math.round(totalKm)} km</div>
+            <div style="font-size:.7rem;color:var(--text2)">${totalAmt.toFixed(2)} €</div>
+          </div>
+        </div>
+        <div class="person-tasks" style="padding:8px 0">${monthRows}</div>
       </div>`;
     }).join('');
-  });
+  }
 }
 
 // Render finances
