@@ -415,7 +415,7 @@ const FINANCE_2026 = {
 
 const MNAMES_FR = ['','Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 const CHARGES_FIXES_MOIS = 8000;
-const OBJECTIF_CA_ANNUEL = 300000;
+const OBJECTIF_CA_ANNUEL = 96000; // 8 000 € × 12 mois
 
 function fmt(n) {
   return n > 0 ? n.toLocaleString('fr-FR') + ' €' : '—';
@@ -456,7 +456,7 @@ function renderFinanceAnalyse() {
       : '<span class="fin-evol-neu">—</span>';
 
     // mini bar behind CA cell
-    const barPct = Math.min(100, Math.round((d26.ca / 40000) * 100));
+    const barPct = Math.min(100, Math.round((d26.ca / 8000) * 100));
     const caCell = d26.ca > 0
       ? `<td style="position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:${barPct}%;background:var(--gold);opacity:.12;border-radius:3px"></div><span style="position:relative">${fmt(d26.ca)}</span></td>`
       : `<td class="${rowClass}">—</td>`;
