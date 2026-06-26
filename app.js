@@ -16,6 +16,8 @@ function showPage(id) {
   if (id === 'dashboard') renderDashboardCA().catch(console.error);
   if (id === 'leaves') loadAndRenderLeaves();
   if (id === 'flora') loadAndRenderFlora();
+  if (id === 'charges' && typeof loadCharges === 'function') loadCharges();
+  if (id === 'devis-requests' && typeof loadDevisRequests === 'function') loadDevisRequests();
 }
 
 document.querySelectorAll('.nav-item').forEach(item => {
