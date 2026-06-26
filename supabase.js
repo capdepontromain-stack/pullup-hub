@@ -1987,3 +1987,149 @@ async function rejectLeave(id) {
   showToast('Congé refusé');
   await loadAndRenderLeaves();
 }
+
+// =============================================
+// SUIVI FLORA
+// =============================================
+let floraViewDate = new Date();
+
+const FLORA_DAY_TYPES = {
+  bureau:    { label: '🏢 Bureau',          color: '#4A9EFF' },
+  terrain:   { label: '🏕 Terrain',         color: '#F5C518' },
+  formation: { label: '📚 Formation',       color: '#9B59B6' },
+  conge:     { label: '🏖 Congé',           color: '#FF6B9D' },
+  fermeture: { label: '🔒 Ferm. agence',    color: '#FF9800' },
+  repos:     { label: '😴 Repos',           color: 'var(--text3)' },
+};
+
+async function loadAndRenderFlora() {
+  const y = floraViewDate.getFullYear();
+  const m = floraViewDate.getMonth();
+  const label = document.getElementById('flora-month-label');
+  if (label) label.textContent = floraViewDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+  const from = `${y}-${String(m+1).padStart(2,'0')}-01`;
+  const to   = `${y}-${String(m+1).padStart(2,'0')}-${new Date(y,m+1,0).getDate()}`;
+
+  const { data } = await sb.from('flora_timesheet').select('*').gte('date', from).lte('date', to);
+  const byDate = {};
+  (data || []).forEach(r => { byDate[r.date] = r; });
+
+  renderFloraTable(y, m, byDate);
+}
+
+function renderFloraTable(year, month, byDate) {
+  const tbody = document.getElementById('flora-tbody');
+  if (!tbody) return;
+
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const dayNames = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+  const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+  let html = '';
+  let totalHours = 0, totalExtra = 0, totalConge = 0, totalKm = 0;
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = new Date(year, month, d).getDay();
+    const isWeekend = dow === 0 || dow === 6;
+    const r = byDate[dateStr];
+
+    const dayType = r?.day_type || (isWeekend ? 'repos' : null);
+    const cfg = FLORA_DAY_TYPES[dayType] || {};
+    const rowBg = isWeekend ? 'background:var(--bg2)' : '';
+    const hours = r?.hours || '';
+    const extra = r?.extra_hours || '';
+    const conge = r?.leave_days || '';
+    const km = r?.km_indemnity || '';
+
+    if (hours) totalHours += parseFloat(hours);
+    if (extra) totalExtra += parseFloat(extra);
+    if (conge) totalConge += parseFloat(conge);
+    if (km) totalKm += parseFloat(km);
+
+    html += `<tr style="${rowBg};cursor:pointer" onclick="openFloraDay('${dateStr}')">
+      <td style="font-weight:600;color:${isWeekend?'var(--text3)':'var(--text)'}">${dayNames[dow]} ${d}</td>
+      <td>${cfg.label ? `<span style="color:${cfg.color};font-weight:600">${cfg.label}</span>` : '<span style="color:var(--text3)">—</span>'}</td>
+      <td>${hours ? hours + 'h' : '—'}</td>
+      <td>${extra ? '<span style="color:var(--gold)">+'+extra+'h</span>' : '—'}</td>
+      <td>${conge ? '<span style="color:var(--color-flora)">'+conge+'j</span>' : '—'}</td>
+      <td style="text-align:center">${r?.agency_closed ? '🔒' : '—'}</td>
+      <td style="font-size:.8rem;color:var(--text2)">${r?.trips || '—'}</td>
+      <td>${km ? km.toLocaleString('fr-FR')+'€' : '—'}</td>
+      <td style="font-size:.8rem;color:var(--text2)">${r?.external_service || '—'}</td>
+      <td style="font-size:.8rem;color:var(--text2);max-width:160px">${r?.notes || '—'}</td>
+    </tr>`;
+  }
+
+  // Ligne total
+  html += `<tr style="font-weight:700;border-top:2px solid var(--border);background:var(--bg3)">
+    <td>TOTAL</td>
+    <td></td>
+    <td style="color:var(--color-flora)">${totalHours.toFixed(1)}h</td>
+    <td style="color:var(--gold)">${totalExtra > 0 ? '+'+totalExtra.toFixed(1)+'h' : '—'}</td>
+    <td style="color:#4A9EFF">${totalConge > 0 ? totalConge+'j' : '—'}</td>
+    <td></td><td></td>
+    <td style="color:#9B59B6">${totalKm > 0 ? totalKm.toLocaleString('fr-FR')+'€' : '—'}</td>
+    <td></td><td></td>
+  </tr>`;
+
+  tbody.innerHTML = html;
+
+  // KPIs
+  const h = id => document.getElementById(id);
+  if (h('fkpi-hours')) h('fkpi-hours').textContent = totalHours.toFixed(1) + 'h';
+  if (h('fkpi-extra')) h('fkpi-extra').textContent = totalExtra > 0 ? '+' + totalExtra.toFixed(1) + 'h' : '0h';
+  if (h('fkpi-conge')) h('fkpi-conge').textContent = totalConge + 'j';
+  if (h('fkpi-km')) h('fkpi-km').textContent = totalKm.toLocaleString('fr-FR') + ' €';
+}
+
+function floraNav(dir) {
+  floraViewDate = new Date(floraViewDate.getFullYear(), floraViewDate.getMonth() + dir, 1);
+  loadAndRenderFlora();
+}
+
+function openFloraDay(dateStr) {
+  const form = document.getElementById('form-floraDay');
+  if (!form) return;
+  form.reset();
+  form.querySelector('[name=date]').value = dateStr;
+  const d = new Date(dateStr + 'T00:00:00');
+  document.getElementById('flora-modal-title').textContent =
+    d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  // Pré-remplir si données existantes
+  sb.from('flora_timesheet').select('*').eq('date', dateStr).single().then(({ data: r }) => {
+    if (!r) return;
+    form.querySelector('[name=day_type]').value = r.day_type || 'bureau';
+    form.querySelector('[name=hours]').value = r.hours || '';
+    form.querySelector('[name=extra_hours]').value = r.extra_hours || '';
+    form.querySelector('[name=leave_days]').value = r.leave_days || '';
+    form.querySelector('[name=trips]').value = r.trips || '';
+    form.querySelector('[name=km_indemnity]').value = r.km_indemnity || '';
+    form.querySelector('[name=external_service]').value = r.external_service || '';
+    form.querySelector('[name=notes]').value = r.notes || '';
+  });
+  openModal('floraDay');
+}
+
+async function saveFloraDay(e) {
+  e.preventDefault();
+  const form = e.target;
+  const dateStr = form.querySelector('[name=date]').value;
+  const data = {
+    date: dateStr,
+    day_type: form.querySelector('[name=day_type]').value,
+    hours: parseFloat(form.querySelector('[name=hours]').value) || null,
+    extra_hours: parseFloat(form.querySelector('[name=extra_hours]').value) || 0,
+    leave_days: parseFloat(form.querySelector('[name=leave_days]').value) || 0,
+    trips: form.querySelector('[name=trips]').value || null,
+    km_indemnity: parseFloat(form.querySelector('[name=km_indemnity]').value) || 0,
+    external_service: form.querySelector('[name=external_service]').value || null,
+    notes: form.querySelector('[name=notes]').value || null,
+  };
+  const { error } = await sb.from('flora_timesheet').upsert([data], { onConflict: 'date' });
+  if (error) { showToast('Erreur : ' + error.message); return; }
+  showToast('Enregistré ✓');
+  closeModal('floraDay');
+  await loadAndRenderFlora();
+}

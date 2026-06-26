@@ -132,6 +132,10 @@
       <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>
       <span>Congés</span>
     </a>
+    <a class="nav-item" data-page="flora">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <span>Suivi Flora</span>
+    </a>
   </nav>
 
   <div class="sidebar-user">
@@ -1525,6 +1529,86 @@ Afin d'avancer, nous pouvons :
       <div id="leaves-calendar"></div>
     </div>
   </section>
+
+  <!-- SUIVI FLORA -->
+  <section class="page" id="page-flora">
+    <div class="page-header" style="flex-wrap:wrap;gap:12px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <img src="photos/flora.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--color-flora)">
+        <div>
+          <h1 style="margin:0">Suivi Flora Boyer</h1>
+          <span style="font-size:.8rem;color:var(--text2)">Alternante — heures, congés, trajets</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn-icon" onclick="floraNav(-1)">‹</button>
+        <span id="flora-month-label" style="font-weight:700;font-size:1rem;min-width:140px;text-align:center"></span>
+        <button class="btn-icon" onclick="floraNav(1)">›</button>
+      </div>
+    </div>
+
+    <!-- KPIs du mois -->
+    <div class="crm-stats" id="flora-kpis" style="margin-bottom:16px">
+      <div class="crm-stat"><span class="crm-stat-val" id="fkpi-hours" style="color:var(--color-flora)">0h</span><span>Heures travaillées</span></div>
+      <div class="crm-stat"><span class="crm-stat-val gold" id="fkpi-extra">0h</span><span>Heures supp.</span></div>
+      <div class="crm-stat"><span class="crm-stat-val" style="color:#4A9EFF" id="fkpi-conge">0j</span><span>Congés pris</span></div>
+      <div class="crm-stat"><span class="crm-stat-val" style="color:#9B59B6" id="fkpi-km">0 €</span><span>Indemnités km</span></div>
+    </div>
+
+    <!-- Tableau jours -->
+    <div class="events-table-wrap">
+      <table class="data-table" id="flora-table">
+        <thead>
+          <tr>
+            <th style="width:80px">Jour</th>
+            <th>Type de journée</th>
+            <th>Heures</th>
+            <th>H. supp</th>
+            <th>Congé</th>
+            <th>Ferm. agence</th>
+            <th>Trajets</th>
+            <th>Ind. km (€)</th>
+            <th>Prestation ext.</th>
+            <th>Commentaires</th>
+          </tr>
+        </thead>
+        <tbody id="flora-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Modal édition jour Flora -->
+  <div class="modal-overlay" id="modal-floraDay" style="display:none">
+    <div class="modal" style="max-width:480px">
+      <div class="modal-header"><h3 id="flora-modal-title">Modifier le jour</h3><button class="modal-close" onclick="closeModal('floraDay')">✕</button></div>
+      <form id="form-floraDay" onsubmit="saveFloraDay(event)">
+        <input type="hidden" name="date">
+        <div class="form-grid">
+          <div class="form-group"><label>Type de journée</label>
+            <select name="day_type">
+              <option value="bureau">🏢 Bureau</option>
+              <option value="terrain">🏕 Terrain</option>
+              <option value="formation">📚 Formation</option>
+              <option value="conge">🏖 Congé</option>
+              <option value="fermeture">🔒 Fermeture agence</option>
+              <option value="repos">😴 Repos / Week-end</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Heures effectuées</label><input name="hours" type="number" step="0.25" placeholder="ex: 7.5"></div>
+          <div class="form-group"><label>Heures supplémentaires</label><input name="extra_hours" type="number" step="0.25" placeholder="ex: 1"></div>
+          <div class="form-group"><label>Jours de congé</label><input name="leave_days" type="number" step="0.5" placeholder="ex: 1"></div>
+          <div class="form-group"><label>Trajets</label><input name="trips" placeholder="ex: Aller-retour St-Denis"></div>
+          <div class="form-group"><label>Indemnité km (€)</label><input name="km_indemnity" type="number" step="0.01" placeholder="ex: 12.50"></div>
+          <div class="form-group" style="grid-column:1/-1"><label>Prestation externe</label><input name="external_service" placeholder="ex: Casabona"></div>
+          <div class="form-group" style="grid-column:1/-1"><label>Commentaires</label><textarea name="notes" rows="2" style="width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);resize:vertical"></textarea></div>
+        </div>
+        <div class="form-actions">
+          <button type="button" onclick="closeModal('floraDay')" class="btn-secondary">Annuler</button>
+          <button type="submit" class="btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
 <!-- MODALS -->
 <div class="modal-overlay" id="modal-newEvent">

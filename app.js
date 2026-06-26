@@ -14,6 +14,7 @@ function showPage(id) {
   if (id === 'finances') renderFinanceAnalyse();
   if (id === 'dashboard') renderDashboardCA();
   if (id === 'leaves') loadAndRenderLeaves();
+  if (id === 'flora') loadAndRenderFlora();
 }
 
 document.querySelectorAll('.nav-item').forEach(item => {
