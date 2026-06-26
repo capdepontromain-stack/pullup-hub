@@ -2476,16 +2476,16 @@ function updateLeavesMonthLabel() {
   if (label) label.textContent = leaveViewDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 }
 
-function leavePrevMonth() {
+async function leavePrevMonth() {
   leaveViewDate = new Date(leaveViewDate.getFullYear(), leaveViewDate.getMonth() - 1, 1);
-  renderLeaveCalendar();
   updateLeavesMonthLabel();
+  await loadAndRenderLeaves();
 }
 
-function leaveNextMonth() {
+async function leaveNextMonth() {
   leaveViewDate = new Date(leaveViewDate.getFullYear(), leaveViewDate.getMonth() + 1, 1);
-  renderLeaveCalendar();
   updateLeavesMonthLabel();
+  await loadAndRenderLeaves();
 }
 
 function renderLeaveCards() {
@@ -2586,8 +2586,8 @@ function renderLeaveCalendar() {
     html += `<div style="${cellStyle}" ${clickAttr}>
       <div style="font-size:.8rem;font-weight:${isToday?'700':'400'};color:${isToday?'var(--gold)':'var(--text2)'};margin-bottom:3px">${d}</div>
       ${leavesOnDay.map(l => `
-        <div style="background:${LEAVE_COLORS_HEX[l.person_name]};border-radius:4px;padding:1px 5px;font-size:.68rem;font-weight:600;color:${l.person_name==='Romain'?'#000':'#fff'};margin-bottom:2px;opacity:${l.status==='pending'?'0.6':'1'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.person_name}${l.status==='pending'?' (attente)':''}">
-          ${l.person_name}${l.status==='pending'?' ⏳':''}
+        <div style="background:${l.leave_type==='maladie'?'#4A9EFF':LEAVE_COLORS_HEX[l.person_name]};border-radius:4px;padding:1px 5px;font-size:.68rem;font-weight:600;color:${l.leave_type==='maladie'?'#fff':(l.person_name==='Romain'?'#000':'#fff')};margin-bottom:2px;opacity:${l.status==='pending'?'0.6':'1'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.person_name}${l.leave_type==='maladie'?' 🤒':' 🏖'}${l.status==='pending'?' (attente)':''}">
+          ${l.leave_type==='maladie'?'🤒':'🏖'} ${l.person_name}${l.status==='pending'?' ⏳':''}
         </div>`).join('')}
     </div>`;
   }
@@ -2599,18 +2599,39 @@ function renderLeaveCalendar() {
 async function requestLeaveDay(dateStr) {
   const existing = allLeaves.find(l => l.person_name === currentUserName && l.leave_date === dateStr);
   if (existing) {
-    if (!confirm(`Annuler le congé du ${new Date(dateStr).toLocaleDateString('fr-FR')} ?`)) return;
+    if (!confirm(`Annuler le ${existing.leave_type === 'maladie' ? 'congé maladie' : 'congé'} du ${new Date(dateStr).toLocaleDateString('fr-FR')} ?`)) return;
     await sb.from('leaves').delete().eq('id', existing.id);
     showToast('Congé annulé');
     await loadAndRenderLeaves();
     return;
   }
-  const dateLabel = new Date(dateStr).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
-  if (!confirm(`Demander un congé le ${dateLabel} ?`)) return;
+  const dateLabel = new Date(dateStr + 'T00:00:00').toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+
+  // Popup de choix type
+  const leaveType = await new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+    overlay.innerHTML = `
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px;width:300px;text-align:center">
+        <div style="font-size:1rem;font-weight:700;margin-bottom:6px">📅 ${dateLabel}</div>
+        <div style="font-size:.85rem;color:var(--text2);margin-bottom:20px">Quel type d'absence ?</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button id="lchoice-conge" style="background:var(--gold);color:#000;border:none;border-radius:10px;padding:12px;font-size:.95rem;font-weight:700;cursor:pointer">🏖 Congé</button>
+          <button id="lchoice-maladie" style="background:#4A9EFF;color:#fff;border:none;border-radius:10px;padding:12px;font-size:.95rem;font-weight:700;cursor:pointer">🤒 Maladie</button>
+          <button id="lchoice-cancel" style="background:var(--bg3);color:var(--text2);border:none;border-radius:10px;padding:10px;font-size:.85rem;cursor:pointer">Annuler</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#lchoice-conge').onclick = () => { document.body.removeChild(overlay); resolve('conge'); };
+    overlay.querySelector('#lchoice-maladie').onclick = () => { document.body.removeChild(overlay); resolve('maladie'); };
+    overlay.querySelector('#lchoice-cancel').onclick = () => { document.body.removeChild(overlay); resolve(null); };
+  });
+  if (!leaveType) return;
 
   const { error } = await sb.from('leaves').insert({
     person_name: currentUserName,
     leave_date: dateStr,
+    leave_type: leaveType,
     status: currentUserName === 'Romain' ? 'approved' : 'pending'
   });
   if (error) { showToast('Erreur : ' + error.message); return; }
