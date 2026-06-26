@@ -1618,6 +1618,7 @@ async function loadTasksBadge() {
     .select('id', { count: 'exact', head: true })
     .neq('statut', 'fait')
     .ilike('nom_du_responsable', `%${myName}%`);
+  console.log('tasks badge:', myName, count);
   const badge = document.getElementById('nav-badge-tasks');
   if (!badge) return;
   const n = count || 0;
