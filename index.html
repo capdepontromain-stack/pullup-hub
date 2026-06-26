@@ -2099,7 +2099,7 @@ Afin d'avancer, nous pouvons :
 <!-- Modal nouvelle demande de devis (hors sections pour toujours visible) -->
 <div class="modal-overlay" id="modal-newDevisRequest">
   <div class="modal" style="max-width:640px">
-    <div class="modal-header"><h3>Nouvelle demande de devis</h3><button class="modal-close" onclick="closeModal('newDevisRequest')">✕</button></div>
+    <div class="modal-header"><h3>Nouvelle demande de devis</h3><span id="devis-autosave-indicator" style="font-size:.75rem;color:#4CAF50;font-weight:600;margin-left:8px"></span><button class="modal-close" onclick="closeModal('newDevisRequest')">✕</button></div>
     <form id="form-newDevisRequest" onsubmit="saveDevisRequest(event)">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div class="form-group"><label>Client / Société *</label><input name="client" required placeholder="Nom du client ou société"></div>

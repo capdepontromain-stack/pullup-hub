@@ -1681,6 +1681,30 @@ async function loadDevisRequests() {
   });
 }
 
+function extractDevisFormData(f) {
+  return {
+    client: f.querySelector('[name=client]').value,
+    contact_name: f.querySelector('[name=contact_name]').value || null,
+    phone: f.querySelector('[name=phone]').value || null,
+    email: f.querySelector('[name=email]').value || null,
+    event_type: f.querySelector('[name=event_type]').value || null,
+    event_date: f.querySelector('[name=event_date]').value || null,
+    location: f.querySelector('[name=location]').value || null,
+    guest_count: parseInt(f.querySelector('[name=guest_count]').value) || null,
+    duration: f.querySelector('[name=duration]').value || null,
+    budget_estimate: parseFloat(f.querySelector('[name=budget_estimate]').value) || null,
+    priority: f.querySelector('[name=priority]').value,
+    status: f.querySelector('[name=status]').value,
+    services_requested: f.querySelector('[name=services_requested]').value || null,
+    catering: f.querySelector('[name=catering]').value || null,
+    decoration: f.querySelector('[name=decoration]').value || null,
+    sound_light: f.querySelector('[name=sound_light]').value || null,
+    animation: f.querySelector('[name=animation]').value || null,
+    notes: f.querySelector('[name=notes]').value || null,
+    assigned_to: f.querySelector('[name=assigned_to]').value || null,
+  };
+}
+
 async function openEditDevis(id) {
   const { data: r } = await sb.from('devis_requests').select('*').eq('id', id).single();
   if (!r) return;
@@ -1707,6 +1731,27 @@ async function openEditDevis(id) {
   f.dataset.editId = id;
   document.querySelector('#modal-newDevisRequest .modal-header h3').textContent = 'Modifier le devis';
   openModal('newDevisRequest');
+
+  // Auto-save à chaque changement
+  let autoSaveTimer;
+  const autoSave = () => {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(async () => {
+      if (!f.dataset.editId) return;
+      const data = extractDevisFormData(f);
+      await sb.from('devis_requests').update(data).eq('id', f.dataset.editId);
+      const indicator = document.getElementById('devis-autosave-indicator');
+      if (indicator) { indicator.textContent = '✓ Sauvegardé'; setTimeout(() => { indicator.textContent = ''; }, 2000); }
+      await loadDevisRequests();
+    }, 800);
+  };
+  f.querySelectorAll('input,select,textarea').forEach(el => {
+    el.removeEventListener('input', el._autoSave);
+    el.removeEventListener('change', el._autoSave);
+    el._autoSave = autoSave;
+    el.addEventListener('input', autoSave);
+    el.addEventListener('change', autoSave);
+  });
 }
 
 async function saveDevisRequest(e) {
