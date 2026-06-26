@@ -1283,19 +1283,50 @@ async function saveEditEvent() {
 let allNotifications = [];
 
 async function loadNotifications() {
-  const today = new Date().toISOString().slice(0,10);
-  const [{ data: tasks }, { data: events }, { data: finances }] = await Promise.all([
-    sb.from('tasks').select('*').neq('status','done').order('created_at', { ascending: false }).limit(10),
-    sb.from('events').select('*').gte('event_date', today).order('event_date').limit(5),
-    sb.from('finances').select('*').eq('status','En attente').limit(5)
-  ]);
-  allNotifications = [
-    ...(tasks||[]).filter(t => t.priority === 'Urgent').map(t => ({ type:'urgent', text: `🔴 Tâche urgente : ${t.title}`, action: () => showPage('tasks') })),
-    ...(events||[]).slice(0,3).map(e => ({ type:'event', text: `📅 Événement : ${e.name} — ${new Date(e.event_date+'T00:00:00').toLocaleDateString('fr-FR')}`, action: () => showPage('events') })),
-    ...(finances||[]).slice(0,3).map(f => ({ type:'finance', text: `💰 Facture en attente : ${f.client} — ${f.amount ? f.amount.toLocaleString('fr-FR') + ' €' : '?'}`, action: () => showPage('finances') }))
+  const myName = currentProfile?.name || '';
+  const isRomain = myName === 'Romain';
+  // Canal DM de l'utilisateur (messages privés reçus)
+  const dmChannel = 'dm-' + myName.toLowerCase();
+
+  const promises = [
+    // Tâches assignées à moi, non terminées
+    sb.from('tasks').select('*').neq('status','done').ilike('assignee', `%${myName}%`),
+    // Messages privés reçus dans mon canal DM (dernières 24h)
+    sb.from('messages').select('*').eq('channel', dmChannel).order('created_at', { ascending: false }).limit(10),
   ];
+  if (isRomain) {
+    // Congés en attente à valider
+    promises.push(sb.from('leaves').select('*').eq('status','pending'));
+  }
+
+  const results = await Promise.all(promises);
+  const myTasks = results[0]?.data || [];
+  const myDMs = (results[1]?.data || []).filter(m => m.author_name !== myName); // seulement ceux des autres
+  const pendingLeaves = isRomain ? (results[2]?.data || []) : [];
+
+  allNotifications = [
+    ...myTasks.map(t => ({
+      type: 'task',
+      text: `📋 Tâche : ${t.title}${t.priority === 'Urgent' ? ' 🔴' : ''}`,
+      action: () => showPage('tasks')
+    })),
+    ...myDMs.map(m => ({
+      type: 'message',
+      text: `💬 Message de ${m.author_name} : "${m.content.slice(0, 50)}${m.content.length > 50 ? '…' : ''}"`,
+      action: () => { showPage('messages'); switchChannel(dmChannel); }
+    })),
+    ...pendingLeaves.map(l => ({
+      type: 'leave',
+      text: `🏖 Congé à valider : ${l.person_name} — ${new Date(l.leave_date).toLocaleDateString('fr-FR')}`,
+      action: () => showPage('leaves')
+    }))
+  ];
+
   const badge = document.getElementById('notifBadge');
-  if (badge) badge.textContent = allNotifications.length;
+  if (badge) {
+    badge.textContent = allNotifications.length || '';
+    badge.style.display = allNotifications.length ? 'flex' : 'none';
+  }
   renderNotifPanel();
 }
 
