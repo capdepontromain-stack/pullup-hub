@@ -499,4 +499,9 @@ function renderFinanceAnalyse() {
   }, 120);
 }
 
+// PWA Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
+
 // Init géré par supabase.js (boot → login ou app)
