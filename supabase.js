@@ -2464,154 +2464,76 @@ async function saveFloraDay(e) {
 // CHARGES
 // =============================================
 
-let _chargesFixes = [];
-let _chargesVars = [];
+const MOIS_LABELS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+let _chargesMonthly = [];
 
 async function loadCharges() {
-  const [rf, rv] = await Promise.all([
-    sb.from('charges_fixes').select('*').eq('actif', true).order('categorie').order('label'),
-    sb.from('charges_variables').select('*').order('categorie').order('label')
-  ]);
-  _chargesFixes = rf.data || [];
-  _chargesVars = rv.data || [];
-
-  // Set current month/year as default
-  const now = new Date();
-  const mSel = document.getElementById('charges-month');
-  const ySel = document.getElementById('charges-year');
-  if (mSel && !mSel.dataset.init) { mSel.value = now.getMonth() + 1; mSel.dataset.init = '1'; }
-  if (ySel && !ySel.dataset.init) { ySel.value = now.getFullYear(); ySel.dataset.init = '1'; }
-
-  renderChargesSummary();
+  const annee = parseInt(document.getElementById('charges-year-sel')?.value || 2026);
+  const { data, error } = await sb.from('charges_monthly').select('*').eq('year', annee).order('month');
+  if (error) { console.error(error); return; }
+  _chargesMonthly = data || [];
+  renderChargesMonthly(annee);
 }
 
-function renderChargesSummary() {
-  const mois = parseInt(document.getElementById('charges-month')?.value || new Date().getMonth() + 1);
-  const annee = parseInt(document.getElementById('charges-year')?.value || new Date().getFullYear());
+function renderChargesMonthly(annee) {
+  const tbody = document.getElementById('charges-monthly-tbody');
+  if (!tbody) return;
 
-  // Charges fixes
-  const totalFixes = _chargesFixes.reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
-  const fixesEl = document.getElementById('charges-fixes-tbody');
-  const fixesTotalEl = document.getElementById('charges-fixes-total');
-  if (fixesTotalEl) fixesTotalEl.textContent = '— ' + totalFixes.toLocaleString('fr-FR') + ' €/mois';
-  if (fixesEl) {
-    fixesEl.innerHTML = _chargesFixes.length ? _chargesFixes.map(c => `
-      <tr>
-        <td><strong>${c.label}</strong></td>
-        <td style="color:var(--text2);font-size:.8rem">${c.categorie}</td>
-        <td style="font-weight:700;color:#f44336">${parseFloat(c.montant).toLocaleString('fr-FR')} €</td>
-        <td>
-          <button onclick="editChargeFixe('${c.id}')" style="background:none;border:none;cursor:pointer;padding:2px 4px">✏️</button>
-          <button onclick="deleteChargeFixe('${c.id}')" style="background:none;border:none;cursor:pointer;padding:2px 4px">🗑</button>
-        </td>
-      </tr>`).join('') :
-      '<tr><td colspan="4" style="text-align:center;color:var(--text2);padding:1rem">Aucune charge fixe</td></tr>';
-  }
+  let totalFixes = 0, totalVars = 0;
 
-  // Charges variables du mois sélectionné
-  const varsMonth = _chargesVars.filter(c => c.mois === mois && c.annee === annee);
-  const totalVars = varsMonth.reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
-  const varsEl = document.getElementById('charges-vars-tbody');
-  const varsTotalEl = document.getElementById('charges-vars-total');
-  if (varsTotalEl) varsTotalEl.textContent = '— ' + totalVars.toLocaleString('fr-FR') + ' €';
-  if (varsEl) {
-    varsEl.innerHTML = varsMonth.length ? varsMonth.map(c => `
-      <tr>
-        <td><strong>${c.label}</strong></td>
-        <td style="color:var(--text2);font-size:.8rem">${c.categorie}</td>
-        <td style="font-weight:700;color:#4A9EFF">${parseFloat(c.montant).toLocaleString('fr-FR')} €</td>
-        <td>
-          <button onclick="editChargeVariable('${c.id}')" style="background:none;border:none;cursor:pointer;padding:2px 4px">✏️</button>
-          <button onclick="deleteChargeVariable('${c.id}')" style="background:none;border:none;cursor:pointer;padding:2px 4px">🗑</button>
-        </td>
-      </tr>`).join('') :
-      '<tr><td colspan="4" style="text-align:center;color:var(--text2);padding:1rem">Aucune charge variable ce mois</td></tr>';
-  }
+  tbody.innerHTML = MOIS_LABELS.map((label, i) => {
+    const mois = i + 1;
+    const row = _chargesMonthly.find(r => r.month === mois) || { charges_fixes: 0, charges_variables: 0 };
+    const fixes = parseFloat(row.charges_fixes) || 0;
+    const vars = parseFloat(row.charges_variables) || 0;
+    const total = fixes + vars;
+    totalFixes += fixes;
+    totalVars += vars;
+    return `<tr>
+      <td style="font-weight:600">${label}</td>
+      <td class="fin-editable" onclick="editChargeCell(${annee},${mois},'charges_fixes',${fixes})"
+          style="color:#f44336;font-weight:700;cursor:pointer">${fixes.toLocaleString('fr-FR')} €</td>
+      <td class="fin-editable" onclick="editChargeCell(${annee},${mois},'charges_variables',${vars})"
+          style="color:#4A9EFF;font-weight:700;cursor:pointer">${vars.toLocaleString('fr-FR')} €</td>
+      <td style="color:var(--gold);font-weight:700">${total.toLocaleString('fr-FR')} €</td>
+    </tr>`;
+  }).join('');
 
-  // Total badge
-  const total = totalFixes + totalVars;
-  const badge = document.getElementById('charges-total-badge');
-  if (badge) badge.textContent = 'Total ' + ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'][mois-1] + ' : ' + total.toLocaleString('fr-FR') + ' €';
+  const annualTotal = totalFixes + totalVars;
+  const el = id => document.getElementById(id);
+  if (el('charges-annual-fixes')) el('charges-annual-fixes').textContent = totalFixes.toLocaleString('fr-FR') + ' €';
+  if (el('charges-annual-vars')) el('charges-annual-vars').textContent = totalVars.toLocaleString('fr-FR') + ' €';
+  if (el('charges-annual-total')) el('charges-annual-total').textContent = annualTotal.toLocaleString('fr-FR') + ' €';
 }
 
-async function saveChargeFixe(e) {
-  e.preventDefault();
-  const f = e.target;
-  const id = f.querySelector('[name=id]').value;
-  const payload = {
-    label: f.querySelector('[name=label]').value,
-    categorie: f.querySelector('[name=categorie]').value,
-    montant: parseFloat(f.querySelector('[name=montant]').value) || 0,
-    actif: true
+function editChargeCell(year, month, field, currentVal) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+  const label = field === 'charges_fixes' ? 'Charges fixes' : 'Charges variables';
+  const moisLabel = MOIS_LABELS[month - 1];
+  overlay.innerHTML = `
+    <div style="background:var(--bg2);border-radius:16px;padding:24px;width:320px;box-shadow:0 8px 32px rgba(0,0,0,.4)">
+      <h3 style="margin:0 0 16px">${label} — ${moisLabel} ${year}</h3>
+      <input id="charge-cell-input" type="number" step="0.01" value="${currentVal}"
+        style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text1);font-size:1rem;margin-bottom:16px">
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button onclick="this.closest('div[style]').remove()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 16px;color:var(--text1);cursor:pointer">Annuler</button>
+        <button id="charge-cell-save" class="btn-primary">Enregistrer</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const input = overlay.querySelector('#charge-cell-input');
+  input.focus(); input.select();
+  const save = async () => {
+    const val = input.value.trim() === '' ? 0 : (parseFloat(input.value) || 0);
+    const { error } = await sb.from('charges_monthly')
+      .upsert({ year, month, [field]: val }, { onConflict: 'year,month' });
+    if (error) { showToast('Erreur : ' + error.message); return; }
+    overlay.remove();
+    showToast('Sauvegardé ✓');
+    await loadCharges();
   };
-  const { error } = id
-    ? await sb.from('charges_fixes').update(payload).eq('id', id)
-    : await sb.from('charges_fixes').insert([payload]);
-  if (error) { showToast('Erreur : ' + error.message); return; }
-  showToast('Enregistré ✓');
-  closeModal('newChargeFixe');
-  f.reset(); f.querySelector('[name=id]').value = '';
-  document.getElementById('modal-charge-fixe-title').textContent = 'Nouvelle charge fixe';
-  await loadCharges();
-}
-
-function editChargeFixe(id) {
-  const c = _chargesFixes.find(x => x.id === id);
-  if (!c) return;
-  const f = document.getElementById('form-newChargeFixe');
-  f.querySelector('[name=id]').value = c.id;
-  f.querySelector('[name=label]').value = c.label;
-  f.querySelector('[name=categorie]').value = c.categorie;
-  f.querySelector('[name=montant]').value = c.montant;
-  document.getElementById('modal-charge-fixe-title').textContent = 'Modifier charge fixe';
-  openModal('newChargeFixe');
-}
-
-async function deleteChargeFixe(id) {
-  if (!confirm('Supprimer cette charge fixe ?')) return;
-  await sb.from('charges_fixes').update({ actif: false }).eq('id', id);
-  await loadCharges();
-}
-
-async function saveChargeVariable(e) {
-  e.preventDefault();
-  const f = e.target;
-  const id = f.querySelector('[name=id]').value;
-  const mois = parseInt(document.getElementById('charges-month').value);
-  const annee = parseInt(document.getElementById('charges-year').value);
-  const payload = {
-    label: f.querySelector('[name=label]').value,
-    categorie: f.querySelector('[name=categorie]').value,
-    montant: parseFloat(f.querySelector('[name=montant]').value) || 0,
-    mois, annee
-  };
-  const { error } = id
-    ? await sb.from('charges_variables').update(payload).eq('id', id)
-    : await sb.from('charges_variables').insert([payload]);
-  if (error) { showToast('Erreur : ' + error.message); return; }
-  showToast('Enregistré ✓');
-  closeModal('newChargeVariable');
-  f.reset(); f.querySelector('[name=id]').value = '';
-  document.getElementById('modal-charge-var-title').textContent = 'Nouvelle charge variable';
-  await loadCharges();
-}
-
-function editChargeVariable(id) {
-  const mois = parseInt(document.getElementById('charges-month').value);
-  const annee = parseInt(document.getElementById('charges-year').value);
-  const c = _chargesVars.find(x => x.id === id && x.mois === mois && x.annee === annee);
-  if (!c) return;
-  const f = document.getElementById('form-newChargeVariable');
-  f.querySelector('[name=id]').value = c.id;
-  f.querySelector('[name=label]').value = c.label;
-  f.querySelector('[name=categorie]').value = c.categorie;
-  f.querySelector('[name=montant]').value = c.montant;
-  document.getElementById('modal-charge-var-title').textContent = 'Modifier charge variable';
-  openModal('newChargeVariable');
-}
-
-async function deleteChargeVariable(id) {
-  if (!confirm('Supprimer cette charge variable ?')) return;
-  await sb.from('charges_variables').delete().eq('id', id);
-  await loadCharges();
+  overlay.querySelector('#charge-cell-save').onclick = save;
+  input.onkeydown = e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') overlay.remove(); };
 }

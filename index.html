@@ -1970,97 +1970,34 @@ Afin d'avancer, nous pouvons :
 
   <!-- PAGE CHARGES -->
   <section class="page" id="page-charges" style="padding-top:80px">
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:24px">
       <h1 style="margin:0;font-size:1.4rem">💸 Charges</h1>
-    </div>
-
-    <!-- Sélecteur mois/année -->
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
-      <select id="charges-month" onchange="renderChargesSummary()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text1);font-size:.9rem">
-        <option value="1">Janvier</option><option value="2">Février</option><option value="3">Mars</option>
-        <option value="4">Avril</option><option value="5">Mai</option><option value="6">Juin</option>
-        <option value="7">Juillet</option><option value="8">Août</option><option value="9">Septembre</option>
-        <option value="10">Octobre</option><option value="11">Novembre</option><option value="12">Décembre</option>
-      </select>
-      <select id="charges-year" onchange="renderChargesSummary()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text1);font-size:.9rem">
+      <select id="charges-year-sel" onchange="loadCharges()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text1);font-size:.9rem">
         <option value="2025">2025</option><option value="2026" selected>2026</option>
       </select>
-      <div id="charges-total-badge" style="background:rgba(244,67,54,.15);color:#f44336;border-radius:10px;padding:8px 16px;font-weight:700;font-size:1rem"></div>
     </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex-wrap:wrap" id="charges-grid">
-
-      <!-- FIXES -->
-      <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <h3 style="margin:0">🔒 Charges fixes <span id="charges-fixes-total" style="font-size:.85rem;color:var(--gold);font-weight:600"></span></h3>
-          <button class="btn-primary" style="font-size:.8rem;padding:5px 12px" onclick="openModal('newChargeFixe')">+ Ajouter</button>
-        </div>
-        <table class="data-table" style="font-size:.85rem">
-          <thead><tr><th>Libellé</th><th>Catégorie</th><th>Montant/mois</th><th></th></tr></thead>
-          <tbody id="charges-fixes-tbody"></tbody>
-        </table>
-      </div>
-
-      <!-- VARIABLES -->
-      <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <h3 style="margin:0">📊 Charges variables <span id="charges-vars-total" style="font-size:.85rem;color:#4A9EFF;font-weight:600"></span></h3>
-          <button class="btn-primary" style="font-size:.8rem;padding:5px 12px;background:var(--color-ketsia)" onclick="openModal('newChargeVariable')">+ Ajouter</button>
-        </div>
-        <table class="data-table" style="font-size:.85rem">
-          <thead><tr><th>Libellé</th><th>Catégorie</th><th>Montant</th><th></th></tr></thead>
-          <tbody id="charges-vars-tbody"></tbody>
-        </table>
-      </div>
-
+    <div class="card" style="overflow-x:auto">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Mois</th>
+            <th style="color:#f44336">Charges fixes</th>
+            <th style="color:#4A9EFF">Charges variables</th>
+            <th style="color:var(--gold)">Total</th>
+          </tr>
+        </thead>
+        <tbody id="charges-monthly-tbody"></tbody>
+        <tfoot>
+          <tr style="font-weight:700;border-top:2px solid var(--border)">
+            <td>TOTAL ANNUEL</td>
+            <td id="charges-annual-fixes" style="color:#f44336"></td>
+            <td id="charges-annual-vars" style="color:#4A9EFF"></td>
+            <td id="charges-annual-total" style="color:var(--gold)"></td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
   </section>
-
-  <!-- Modal nouvelle charge fixe -->
-  <div class="modal-overlay" id="modal-newChargeFixe">
-    <div class="modal" style="max-width:440px">
-      <div class="modal-header"><h3 id="modal-charge-fixe-title">Nouvelle charge fixe</h3><button class="modal-close" onclick="closeModal('newChargeFixe')">✕</button></div>
-      <form id="form-newChargeFixe" onsubmit="saveChargeFixe(event)">
-        <input type="hidden" name="id">
-        <div class="form-group"><label>Libellé *</label><input name="label" required placeholder="ex: Loyer, Assurance..."></div>
-        <div class="form-group"><label>Catégorie</label>
-          <select name="categorie">
-            <option>Salaires</option><option>Immobilier</option><option>Assurances</option>
-            <option>Communication</option><option>Informatique</option><option>Administratif</option>
-            <option>Transport</option><option>Charges locales</option><option>Autre</option>
-          </select>
-        </div>
-        <div class="form-group"><label>Montant mensuel (€) *</label><input name="montant" type="number" step="0.01" required placeholder="ex: 500"></div>
-        <div class="form-actions">
-          <button type="button" onclick="closeModal('newChargeFixe')" class="btn-secondary">Annuler</button>
-          <button type="submit" class="btn-primary">Enregistrer</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Modal nouvelle charge variable -->
-  <div class="modal-overlay" id="modal-newChargeVariable">
-    <div class="modal" style="max-width:440px">
-      <div class="modal-header"><h3 id="modal-charge-var-title">Nouvelle charge variable</h3><button class="modal-close" onclick="closeModal('newChargeVariable')">✕</button></div>
-      <form id="form-newChargeVariable" onsubmit="saveChargeVariable(event)">
-        <input type="hidden" name="id">
-        <div class="form-group"><label>Libellé *</label><input name="label" required placeholder="ex: Fournitures événement..."></div>
-        <div class="form-group"><label>Catégorie</label>
-          <select name="categorie">
-            <option>Déplacements</option><option>Fournitures</option><option>Sous-traitance</option>
-            <option>Restauration</option><option>Marketing</option><option>Formation</option><option>Autre</option>
-          </select>
-        </div>
-        <div class="form-group"><label>Montant (€) *</label><input name="montant" type="number" step="0.01" required placeholder="ex: 200"></div>
-        <div class="form-actions">
-          <button type="button" onclick="closeModal('newChargeVariable')" class="btn-secondary">Annuler</button>
-          <button type="submit" class="btn-primary">Enregistrer</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
 </div><!-- end #app-container -->
 
