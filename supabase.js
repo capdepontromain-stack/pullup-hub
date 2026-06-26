@@ -2494,17 +2494,23 @@ function renderLeaveCards() {
   const year = leaveViewDate.getFullYear();
   const yearLeaves = allLeaves.filter(l => l.leave_date.startsWith(year));
 
+  const monthLeaves = allLeaves.filter(l => l.leave_date.startsWith(`${leaveViewDate.getFullYear()}-${String(leaveViewDate.getMonth()+1).padStart(2,'0')}`));
+
   container.innerHTML = LEAVE_MEMBERS.map(name => {
     const approved = yearLeaves.filter(l => l.person_name === name && l.status === 'approved').length;
     const pending = yearLeaves.filter(l => l.person_name === name && l.status === 'pending').length;
     const remaining = LEAVE_TOTAL - approved;
     const pct = Math.round((approved / LEAVE_TOTAL) * 100);
     const color = LEAVE_COLORS_HEX[name];
+    const monthHours = monthLeaves.filter(l => l.person_name === name).reduce((s, l) => s + (parseFloat(l.hours) || 0), 0);
+    const yearHours = yearLeaves.filter(l => l.person_name === name).reduce((s, l) => s + (parseFloat(l.hours) || 0), 0);
     return `<div class="card" style="text-align:center;padding:1.25rem">
       <img src="${LEAVE_PHOTOS[name]}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid ${color};margin:0 auto .75rem;display:block" onerror="this.style.display='none'">
       <div style="font-weight:700;font-size:1rem;margin-bottom:.25rem">${name}</div>
       <div style="font-size:2rem;font-weight:800;color:${color};line-height:1">${remaining}</div>
       <div style="font-size:.75rem;color:var(--text2);margin-bottom:.75rem">jours restants / ${LEAVE_TOTAL}</div>
+      ${monthHours > 0 ? `<div style="font-size:.78rem;color:var(--text2);margin-bottom:4px">Ce mois : <strong style="color:${color}">${monthHours}h</strong></div>` : ''}
+      ${yearHours > 0 ? `<div style="font-size:.75rem;color:var(--text3);margin-bottom:.5rem">Cette année : <strong>${yearHours}h</strong></div>` : ''}
       ${pending > 0 ? `<div style="font-size:.75rem;background:rgba(245,197,24,.15);color:var(--gold);border-radius:6px;padding:2px 8px;margin-bottom:.5rem">${pending} en attente</div>` : ''}
       <div style="background:var(--bg3);border-radius:99px;height:6px;overflow:hidden">
         <div style="height:100%;width:${pct}%;background:${color};border-radius:99px;transition:.3s"></div>
@@ -2599,8 +2605,8 @@ function renderLeaveCalendar() {
         const bg = typeColors[l.leave_type] || LEAVE_COLORS_HEX[l.person_name];
         const icon = typeIcons[l.leave_type] || '🏖';
         const textColor = (l.leave_type === 'conge' && l.person_name === 'Romain') ? '#000' : '#fff';
-        return `<div style="background:${bg};border-radius:4px;padding:1px 5px;font-size:.68rem;font-weight:600;color:${textColor};margin-bottom:2px;opacity:${l.status==='pending'?'0.6':'1'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.person_name} ${icon}${l.status==='pending'?' (attente)':''}">
-          ${icon} ${l.person_name}${l.status==='pending'?' ⏳':''}
+        return `<div style="background:${bg};border-radius:4px;padding:1px 5px;font-size:.68rem;font-weight:600;color:${textColor};margin-bottom:2px;opacity:${l.status==='pending'?'0.6':'1'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.person_name} ${icon}${l.hours?` · ${l.hours}h`:''}${l.status==='pending'?' (attente)':''}">
+          ${icon} ${l.person_name}${l.hours ? ` <span style="opacity:.8">${l.hours}h</span>` : ''}${l.status==='pending'?' ⏳':''}
         </div>`;
       }).join('')}
     </div>`;
@@ -2621,7 +2627,7 @@ async function requestLeaveDay(dateStr) {
   }
   const dateLabel = new Date(dateStr + 'T00:00:00').toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
 
-  // Popup de choix type
+  // Popup étape 1 : choix du type
   const leaveType = await new Promise(resolve => {
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
@@ -2639,19 +2645,52 @@ async function requestLeaveDay(dateStr) {
         </div>
       </div>`;
     document.body.appendChild(overlay);
-    overlay.querySelector('#lchoice-conge').onclick = () => { document.body.removeChild(overlay); resolve('conge'); };
-    overlay.querySelector('#lchoice-maladie').onclick = () => { document.body.removeChild(overlay); resolve('maladie'); };
-    overlay.querySelector('#lchoice-formation').onclick = () => { document.body.removeChild(overlay); resolve('formation'); };
-    overlay.querySelector('#lchoice-bureau').onclick = () => { document.body.removeChild(overlay); resolve('bureau'); };
-    overlay.querySelector('#lchoice-evenement').onclick = () => { document.body.removeChild(overlay); resolve('evenement'); };
-    overlay.querySelector('#lchoice-cancel').onclick = () => { document.body.removeChild(overlay); resolve(null); };
+    const cleanup = (val) => { document.body.removeChild(overlay); resolve(val); };
+    overlay.querySelector('#lchoice-conge').onclick = () => cleanup('conge');
+    overlay.querySelector('#lchoice-maladie').onclick = () => cleanup('maladie');
+    overlay.querySelector('#lchoice-formation').onclick = () => cleanup('formation');
+    overlay.querySelector('#lchoice-bureau').onclick = () => cleanup('bureau');
+    overlay.querySelector('#lchoice-evenement').onclick = () => cleanup('evenement');
+    overlay.querySelector('#lchoice-cancel').onclick = () => cleanup(null);
   });
   if (!leaveType) return;
+
+  // Popup étape 2 : nombre d'heures
+  const typeLabels = { conge:'Congé', maladie:'Maladie', formation:'Formation', bureau:'Bureau', evenement:'Événement' };
+  const typeColors = { conge:'var(--gold)', maladie:'#4A9EFF', formation:'#9B59B6', bureau:'#4CAF50', evenement:'#FF6B9D' };
+  const hours = await new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+    overlay.innerHTML = `
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px;width:300px;text-align:center">
+        <div style="font-size:1rem;font-weight:700;margin-bottom:4px">⏱ Nombre d'heures</div>
+        <div style="font-size:.85rem;color:var(--text2);margin-bottom:16px">${typeLabels[leaveType]} · ${dateLabel}</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">
+          ${[1,2,3,4,5,6,7,8].map(h => `<button onclick="this.closest('.hours-popup').dataset.val='${h}';this.closest('.hours-popup').querySelectorAll('button.hbtn').forEach(b=>b.style.background='var(--bg3)');this.style.background='${typeColors[leaveType]}';this.style.color='${leaveType==='conge'?'#000':'#fff'}'" class="hbtn" style="background:var(--bg3);border:none;border-radius:8px;padding:10px;font-size:.9rem;font-weight:700;cursor:pointer;color:var(--text1)">${h}h</button>`).join('')}
+        </div>
+        <input id="hours-custom" type="number" min="0.5" max="24" step="0.5" placeholder="Autre..." style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text1);font-size:.9rem;margin-bottom:12px;box-sizing:border-box;text-align:center">
+        <div style="display:flex;gap:8px">
+          <button id="hours-cancel" style="flex:1;background:var(--bg3);color:var(--text2);border:none;border-radius:8px;padding:10px;cursor:pointer">Annuler</button>
+          <button id="hours-ok" style="flex:2;background:${typeColors[leaveType]};color:${leaveType==='conge'?'#000':'#fff'};border:none;border-radius:8px;padding:10px;font-weight:700;cursor:pointer">Confirmer</button>
+        </div>
+      </div>`;
+    const inner = overlay.querySelector('div > div');
+    inner.classList.add('hours-popup');
+    document.body.appendChild(overlay);
+    overlay.querySelector('#hours-ok').onclick = () => {
+      const selected = parseFloat(inner.dataset.val || overlay.querySelector('#hours-custom').value);
+      document.body.removeChild(overlay);
+      resolve(isNaN(selected) ? null : selected);
+    };
+    overlay.querySelector('#hours-cancel').onclick = () => { document.body.removeChild(overlay); resolve(null); };
+  });
+  if (!hours) return;
 
   const { error } = await sb.from('leaves').insert({
     person_name: currentUserName,
     leave_date: dateStr,
     leave_type: leaveType,
+    hours: hours,
     status: currentUserName === 'Romain' ? 'approved' : 'pending'
   });
   if (error) { showToast('Erreur : ' + error.message); return; }
