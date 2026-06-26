@@ -2497,7 +2497,7 @@ function renderLeaveCards() {
   const monthLeaves = allLeaves.filter(l => l.leave_date.startsWith(`${leaveViewDate.getFullYear()}-${String(leaveViewDate.getMonth()+1).padStart(2,'0')}`));
 
   container.innerHTML = LEAVE_MEMBERS.map(name => {
-    const approved = yearLeaves.filter(l => l.person_name === name && l.status === 'approved').length;
+    const approved = yearLeaves.filter(l => l.person_name === name && l.status === 'approved' && (!l.leave_type || l.leave_type === 'conge')).length;
     const pending = yearLeaves.filter(l => l.person_name === name && l.status === 'pending').length;
     const remaining = LEAVE_TOTAL - approved;
     const pct = Math.round((approved / LEAVE_TOTAL) * 100);
