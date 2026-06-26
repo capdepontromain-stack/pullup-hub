@@ -1606,6 +1606,27 @@ async function initApp() {
   setInterval(loadUnreadCounts, 30000);
   await requestNotificationPermission();
   subscribeToTaskAssignments();
+  loadTasksBadge();
+  setInterval(loadTasksBadge, 60000);
+}
+
+async function loadTasksBadge() {
+  if (!currentUser) return;
+  const myName = currentProfile?.name || '';
+  if (!myName) return;
+  const { count } = await sb.from('tasks')
+    .select('id', { count: 'exact', head: true })
+    .neq('status', 'done')
+    .ilike('assignee', `%${myName}%`);
+  const badge = document.getElementById('nav-badge-tasks');
+  if (!badge) return;
+  const n = count || 0;
+  if (n > 0) {
+    badge.textContent = n > 99 ? '99+' : n;
+    badge.style.display = 'inline-flex';
+  } else {
+    badge.style.display = 'none';
+  }
 }
 
 async function loadDevisRequests() {
