@@ -7,7 +7,6 @@ function showPage(id) {
   const navItem = document.querySelector(`[data-page="${id}"]`);
   if (navItem) navItem.classList.add('active');
   localStorage.setItem('pullup_last_page', id);
-  if (window.innerWidth <= 900) closeSidebar();
   if (id === 'events') {
     renderCalendar();
     if (typeof loadAndRenderEvents === 'function') loadAndRenderEvents();
@@ -21,7 +20,10 @@ function showPage(id) {
 }
 
 document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', () => showPage(item.dataset.page));
+  item.addEventListener('click', () => {
+    showPage(item.dataset.page);
+    if (window.innerWidth <= 900) closeSidebar();
+  });
 });
 
 // Sidebar mobile
