@@ -97,9 +97,11 @@ function renderCalendar() {
   const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
   let html = `<div class="cal-header">
-    <button class="btn-icon" onclick="calNav(-1)">‹</button>
-    <h3>${monthNames[month]} ${year}</h3>
-    <button class="btn-icon" onclick="calNav(1)">›</button>
+    <div class="cal-month-nav">
+      <button class="btn-icon" onclick="calNav(-1)">‹</button>
+      <h3>${monthNames[month]} ${year}</h3>
+      <button class="btn-icon" onclick="calNav(1)">›</button>
+    </div>
   </div>`;
   html += '<div class="cal-grid">';
   ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].forEach(d => html += `<div class="cal-day-name">${d}</div>`);
