@@ -29,6 +29,8 @@ const menuBtn = document.getElementById('menuBtn');
 const sidebar = document.getElementById('sidebar');
 menuBtn.addEventListener('click', () => sidebar.classList.toggle('open'));
 function closeSidebar() { sidebar.classList.remove('open'); }
+// Ouvre le menu au démarrage sur mobile
+if (window.innerWidth <= 900) sidebar.classList.add('open');
 
 // Date
 const d = new Date();
