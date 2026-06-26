@@ -590,8 +590,9 @@ function renderMessages(messages) {
       <div class="chat-bubble">
         ${!isMine ? `<div class="chat-name">${m.author_name}</div>` : ''}
         <div class="chat-text">${m.content}</div>
-        <div class="chat-time">${time}${canDelete ? ` <span class="msg-delete" onclick="deleteMessage('${m.id}')">🗑</span>` : ''}</div>
+        <div class="chat-time">${time}</div>
       </div>
+      ${canDelete ? `<button class="msg-delete-btn" onclick="deleteMessage('${m.id}')" title="Supprimer">✕</button>` : ''}
     </div>`;
   }).join('');
   container.scrollTop = container.scrollHeight;

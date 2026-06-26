@@ -293,6 +293,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .chat-input::placeholder { color: var(--text3); }
 .msg-delete { opacity: 0; cursor: pointer; font-size: .75rem; margin-left: 6px; transition: opacity .15s; }
 .chat-msg:hover .msg-delete { opacity: 1; }
+.msg-delete-btn { opacity: 0; background: none; border: none; color: var(--text3); font-size: .75rem; cursor: pointer; padding: 2px 5px; border-radius: 4px; align-self: center; transition: opacity .15s, color .15s; flex-shrink: 0; }
+.chat-msg:hover .msg-delete-btn { opacity: 1; }
+.msg-delete-btn:hover { color: #f44336; }
 .msg-mobile-nav { display: none; overflow-x: auto; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--bg2); scrollbar-width: none; }
 .msg-mobile-nav::-webkit-scrollbar { display: none; }
 .msg-mobile-btn { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; padding: 6px 10px; border-radius: 10px; border: none; background: var(--bg3); color: var(--text2); font-size: .7rem; transition: background .15s; }
