@@ -565,7 +565,7 @@ function editFinanceCell(year, month, field, currentVal) {
   const input = overlay.querySelector('#fin-edit-input');
   input.focus(); input.select();
   const save = async () => {
-    const val = parseFloat(input.value) || 0;
+    const val = input.value.trim() === '' ? null : (parseFloat(input.value) ?? 0);
     try {
       await upsertFinanceMonthly(year, month, field, val);
       overlay.remove();
