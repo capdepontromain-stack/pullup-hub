@@ -2495,12 +2495,15 @@ async function loadCharges() {
   const annee = parseInt(document.getElementById('charges-year-sel')?.value || 2026);
   const [rm, rf, rv] = await Promise.all([
     sb.from('charges_monthly').select('*').eq('year', annee).order('month'),
-    sb.from('charges_fixes').select('*').neq('actif', false).order('categorie').order('label'),
-    sb.from('charges_variables_items').select('*').neq('actif', false).order('categorie').order('label')
+    sb.from('charges_fixes').select('*').order('categorie').order('label'),
+    sb.from('charges_variables_items').select('*').order('categorie').order('label')
   ]);
+  if (rf.error) console.error('charges_fixes error:', rf.error);
+  if (rv.error) console.error('charges_variables_items error:', rv.error);
   _chargesMonthly = rm.data || [];
   _chargesFixes = rf.data || [];
   _chargesVarsItems = rv.data || [];
+  console.log('charges_fixes:', _chargesFixes.length, 'items | charges_variables_items:', _chargesVarsItems.length, 'items');
   renderChargesMonthly(annee);
   renderChargesFixesDetail();
   renderChargesVarsDetail();
@@ -2547,7 +2550,7 @@ async function saveChargeFixeItem(e) {
   const payload = { label: f.querySelector('[name=label]').value, categorie: f.querySelector('[name=categorie]').value, montant: parseFloat(f.querySelector('[name=montant]').value) || 0, actif: true };
   const { error } = id ? await sb.from('charges_fixes').update(payload).eq('id', id) : await sb.from('charges_fixes').insert([payload]);
   if (error) { showToast('Erreur : ' + error.message); return; }
-  const { data: allFixes } = await sb.from('charges_fixes').select('montant').neq('actif', false);
+  const { data: allFixes } = await sb.from('charges_fixes').select('montant');
   const newTotal = (allFixes || []).reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
   const annee = parseInt(document.getElementById('charges-year-sel')?.value || 2026);
   await sb.from('charges_monthly').update({ charges_fixes: newTotal }).eq('year', annee);
@@ -2561,7 +2564,7 @@ async function saveChargeFixeItem(e) {
 async function deleteChargeFixeItem(id) {
   if (!confirm('Supprimer cette charge fixe ?')) return;
   await sb.from('charges_fixes').update({ actif: false }).eq('id', id);
-  const { data: allFixes } = await sb.from('charges_fixes').select('montant').neq('actif', false);
+  const { data: allFixes } = await sb.from('charges_fixes').select('montant');
   const newTotal = (allFixes || []).reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
   const annee = parseInt(document.getElementById('charges-year-sel')?.value || 2026);
   await sb.from('charges_monthly').update({ charges_fixes: newTotal }).eq('year', annee);
@@ -2609,7 +2612,7 @@ async function saveChargeVariableItem(e) {
   const payload = { label: f.querySelector('[name=label]').value, categorie: f.querySelector('[name=categorie]').value, montant: parseFloat(f.querySelector('[name=montant]').value) || 0, actif: true };
   const { error } = id ? await sb.from('charges_variables_items').update(payload).eq('id', id) : await sb.from('charges_variables_items').insert([payload]);
   if (error) { showToast('Erreur : ' + error.message); return; }
-  const { data: allVars } = await sb.from('charges_variables_items').select('montant').neq('actif', false);
+  const { data: allVars } = await sb.from('charges_variables_items').select('montant');
   const newTotal = (allVars || []).reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
   const annee = parseInt(document.getElementById('charges-year-sel')?.value || 2026);
   await sb.from('charges_monthly').update({ charges_variables: newTotal }).eq('year', annee);
@@ -2623,7 +2626,7 @@ async function saveChargeVariableItem(e) {
 async function deleteChargeVariableItem(id) {
   if (!confirm('Supprimer cette charge variable ?')) return;
   await sb.from('charges_variables_items').update({ actif: false }).eq('id', id);
-  const { data: allVars } = await sb.from('charges_variables_items').select('montant').neq('actif', false);
+  const { data: allVars } = await sb.from('charges_variables_items').select('montant');
   const newTotal = (allVars || []).reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
   const annee = parseInt(document.getElementById('charges-year-sel')?.value || 2026);
   await sb.from('charges_monthly').update({ charges_variables: newTotal }).eq('year', annee);
