@@ -1558,6 +1558,7 @@ async function initApp() {
   renderDashboardDevisRequests();
   loadUnreadCounts();
   setInterval(loadUnreadCounts, 30000);
+  requestNotificationPermission();
 }
 
 async function loadDevisRequests() {
@@ -1989,6 +1990,10 @@ async function switchChannel(channel) {
     const container = document.getElementById('chatMessages');
     if (!container) return;
     const isMine = msg.author_name === (currentProfile?.name || currentUser?.email);
+    if (!isMine) {
+      showMessageNotification(msg);
+      loadUnreadCounts();
+    }
     const time = new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     const div = document.createElement('div');
     div.className = `chat-msg ${isMine ? 'mine' : ''}`;
@@ -2001,6 +2006,32 @@ async function switchChannel(channel) {
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
   });
+}
+
+function showMessageNotification(msg) {
+  if (Notification.permission !== 'granted') return;
+  const channelLabels = { general: '# général', annonces: '# annonces', 'dm-romain': 'MP Romain', 'dm-ketsia': 'MP Ketsia', 'dm-flora': 'MP Flora', 'dm-gloria': 'MP Gloria' };
+  const label = channelLabels[msg.channel] || msg.channel;
+  const notif = new Notification(`${msg.author_name} — ${label}`, {
+    body: msg.content,
+    icon: '/logo-192.png',
+    badge: '/logo-192.png',
+    tag: msg.channel,
+    renotify: true
+  });
+  notif.onclick = () => {
+    window.focus();
+    switchChannel(msg.channel);
+    document.querySelectorAll('.channel-item').forEach(i => i.classList.toggle('active', i.dataset.channel === msg.channel));
+    notif.close();
+  };
+}
+
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    await Notification.requestPermission();
+  }
 }
 
 // =============================================
