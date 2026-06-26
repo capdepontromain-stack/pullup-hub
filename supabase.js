@@ -1552,6 +1552,7 @@ async function initApp() {
 
   const lastPage = localStorage.getItem('pullup_last_page') || 'dashboard';
   showPage(lastPage);
+  await loadChargesGlobales();
   if (typeof renderDashboardCA === 'function') renderDashboardCA();
   renderDashboardProspectsRelance();
   renderDashboardDevisRequests();
@@ -1657,6 +1658,26 @@ async function renderDashboardDevisRequests() {
   const PRIORITY_EMOJI = { 'Urgent': '🔴', 'Normal': '🟡', 'Basse': '⚪' };
   if (countEl) countEl.textContent = data.length;
   if (namesEl) namesEl.innerHTML = data.map(r => `${PRIORITY_EMOJI[r.priority] || ''} ${r.client}`).join('<br>');
+}
+
+async function loadChargesGlobales() {
+  const annee = new Date().getFullYear();
+  const curMonth = new Date().getMonth() + 1;
+  const { data } = await sb.from('charges_monthly').select('charges_fixes,charges_variables').eq('year', annee).eq('month', curMonth).single();
+  if (data) {
+    if (typeof CHARGES_FIXES_MOIS !== 'undefined') {
+      window.CHARGES_FIXES_MOIS = parseFloat(data.charges_fixes) || 8717.96;
+      window.CHARGES_VARS_MOIS  = parseFloat(data.charges_variables) || 2000;
+      window.OBJECTIF_CA_ANNUEL = window.CHARGES_FIXES_MOIS * 12;
+    }
+    // Met à jour les textes statiques dans la page Finance
+    document.querySelectorAll('[data-charges-label]').forEach(el => {
+      el.textContent = (window.CHARGES_FIXES_MOIS || 8717.96).toLocaleString('fr-FR') + ' €/mois';
+    });
+    // KPI rapports
+    const kpiEl = document.getElementById('rkpi-charges');
+    if (kpiEl) kpiEl.textContent = (window.CHARGES_FIXES_MOIS || 8717.96).toLocaleString('fr-FR') + ' €';
+  }
 }
 
 async function renderDashboardProspectsRelance() {

@@ -420,8 +420,9 @@ const FINANCE_2026 = {
 };
 
 const MNAMES_FR = ['','Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
-const CHARGES_FIXES_MOIS = 8000;
-const OBJECTIF_CA_ANNUEL = 96000; // 8 000 € × 12 mois
+let CHARGES_FIXES_MOIS = 8717.96;   // mis à jour dynamiquement depuis Supabase
+let CHARGES_VARS_MOIS  = 2000;
+let OBJECTIF_CA_ANNUEL = CHARGES_FIXES_MOIS * 12;
 
 function fmt(n) {
   return n > 0 ? n.toLocaleString('fr-FR') + ' €' : '—';
@@ -513,7 +514,7 @@ async function renderFinanceAnalyse() {
       ? `<span class="${vsCharges >= 0 ? 'fin-evol-up' : 'fin-evol-down'}">${vsCharges >= 0 ? '+' : ''}${Math.round(vsCharges).toLocaleString('fr-FR')} €</span>`
       : '<span class="fin-evol-neu">—</span>';
 
-    const barPct = Math.min(100, Math.round((ca26 / 8000) * 100));
+    const barPct = Math.min(100, Math.round((ca26 / (window.CHARGES_FIXES_MOIS || 8717.96)) * 100));
 
     html26 += `<tr class="${rowClass}">
       <td><strong>${MNAMES_FR[m]}</strong></td>
