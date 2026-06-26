@@ -756,16 +756,16 @@
 
   <!-- CRM -->
   <section class="page" id="page-crm">
-    <div class="page-header">
-      <h1 id="crm-page-title">Clients CRM</h1>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      <h1 style="margin:0;font-size:1.4rem">Clients CRM</h1>
       <button class="btn-primary" id="crm-btn-new-client" onclick="openModal('newClient')">+ Nouveau client</button>
+      <button class="btn-primary" id="crm-btn-new-prospect" style="display:none;background:var(--color-ketsia)" onclick="openModal('newProspect')">+ Nouveau prospect</button>
     </div>
 
     <!-- Tabs CRM -->
-    <div class="tabs" style="margin-bottom:16px;display:flex;align-items:center;gap:12px">
+    <div class="tabs" style="margin-bottom:16px">
       <button class="tab active" onclick="switchCrmTab(this,'crm-clients')">Clients actifs</button>
       <button class="tab" onclick="switchCrmTab(this,'crm-prospects')">Prospects</button>
-      <button class="btn-primary" id="crm-btn-new-prospect" style="display:none;background:var(--color-ketsia);margin-left:4px" onclick="openModal('newProspect')">+ Nouveau prospect</button>
     </div>
 
     <!-- KPIs Clients -->
