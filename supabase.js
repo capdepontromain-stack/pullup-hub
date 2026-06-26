@@ -833,6 +833,8 @@ function renderFinances(entries) {
 // Render créances clients (factures impayées)
 function renderCreances(entries) {
   const impayees = entries.filter(e => e.type === 'facture' && e.status !== 'Payée');
+  const statEl = document.getElementById('stat-creances-count');
+  if (statEl) statEl.textContent = impayees.length;
   const total = impayees.reduce((s, f) => s + (parseFloat(f.amount) || 0), 0);
 
   const totalEl = document.getElementById('creances-total');
