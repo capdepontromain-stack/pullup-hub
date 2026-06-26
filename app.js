@@ -11,7 +11,7 @@ function showPage(id) {
     renderCalendar();
     if (typeof loadAndRenderEvents === 'function') loadAndRenderEvents();
   }
-  if (id === 'finances') renderFinanceAnalyse();
+  if (id === 'finances') renderFinanceAnalyse().catch(console.error);
   if (id === 'dashboard') renderDashboardCA();
   if (id === 'leaves') loadAndRenderLeaves();
   if (id === 'flora') loadAndRenderFlora();
@@ -457,64 +457,74 @@ function renderDashboardCA() {
   container.innerHTML = html || '<p style="color:var(--text2);padding:1rem">Aucune donnée 2026</p>';
 }
 
-function renderFinanceAnalyse() {
+let _finMonthlyData = {}; // cache: { '2026-1': {ca,benef}, ... }
+
+async function renderFinanceAnalyse() {
   const body26 = document.getElementById('fin-monthly-2026-body');
   const foot26 = document.getElementById('fin-monthly-2026-total');
   const body25 = document.getElementById('fin-monthly-2025-body');
   const foot25 = document.getElementById('fin-monthly-2025-total');
   if (!body26) return;
 
+  // Load from Supabase
+  const rows = await fetchFinanceMonthly();
+  _finMonthlyData = {};
+  rows.forEach(r => { _finMonthlyData[`${r.year}-${r.month}`] = r; });
+
+  // Fallback to static if table empty
+  const get = (year, month) => _finMonthlyData[`${year}-${month}`] || FINANCE_2026[month] || { ca:0, benef:0 };
+
   const now = new Date();
   const curMonth = now.getMonth() + 1;
-
-  let total26ca = 0, total26ben = 0;
-  let total25ca = 0;
+  let total26ca = 0, total26ben = 0, total25ca = 0;
   let html26 = '', html25 = '';
 
   for (let m = 1; m <= 12; m++) {
-    const d26 = FINANCE_2026[m];
-    const d25 = FINANCE_2025[m];
-    const isFuture = m > curMonth && !d26.ca;
+    const d26 = get(2026, m);
+    const d25 = get(2025, m);
+    const ca26  = parseFloat(d26.ca)   || 0;
+    const ben26 = parseFloat(d26.benef)|| 0;
+    const ca25  = parseFloat(d25.ca)   || 0;
+
+    const isFuture = m > curMonth && !ca26;
     const rowClass = isFuture ? 'month-future' : 'month-done';
+    total26ca += ca26; total26ben += ben26; total25ca += ca25;
 
-    total26ca += d26.ca;
-    total26ben += d26.benef;
-    total25ca += d25.ca;
-
-    // % marge
-    const marge = d26.ca > 0 ? Math.round((d26.benef / d26.ca) * 100) : 0;
-    const margeClass = marge >= 50 ? 'fin-margin-ok' : marge >= 30 ? 'fin-margin-warn' : (d26.ca > 0 ? 'fin-margin-bad' : '');
-
-    // vs charges (bénéfice - charges fixes)
-    const vsCharges = d26.benef - CHARGES_FIXES_MOIS;
-    const vsStr = d26.benef > 0
+    const marge = ca26 > 0 ? Math.round((ben26 / ca26) * 100) : 0;
+    const margeClass = marge >= 50 ? 'fin-margin-ok' : marge >= 30 ? 'fin-margin-warn' : (ca26 > 0 ? 'fin-margin-bad' : '');
+    const vsCharges = ben26 - CHARGES_FIXES_MOIS;
+    const vsStr = ben26 > 0
       ? `<span class="${vsCharges >= 0 ? 'fin-evol-up' : 'fin-evol-down'}">${vsCharges >= 0 ? '+' : ''}${Math.round(vsCharges).toLocaleString('fr-FR')} €</span>`
       : '<span class="fin-evol-neu">—</span>';
 
-    // mini bar behind CA cell
-    const barPct = Math.min(100, Math.round((d26.ca / 8000) * 100));
-    const caCell = d26.ca > 0
-      ? `<td style="position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:${barPct}%;background:var(--gold);opacity:.12;border-radius:3px"></div><span style="position:relative">${fmt(d26.ca)}</span></td>`
-      : `<td class="${rowClass}">—</td>`;
+    const barPct = Math.min(100, Math.round((ca26 / 8000) * 100));
 
     html26 += `<tr class="${rowClass}">
       <td><strong>${MNAMES_FR[m]}</strong></td>
-      ${caCell}
-      <td class="${margeClass}">${d26.benef > 0 ? fmt(d26.benef) : '—'}</td>
+      <td class="fin-editable" onclick="editFinanceCell(2026,${m},'ca',${ca26})" style="position:relative;cursor:pointer" title="Cliquer pour modifier">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:${barPct}%;background:var(--gold);opacity:.12;border-radius:3px"></div>
+        <span style="position:relative">${ca26 > 0 ? fmt(ca26) : '<span style="color:var(--text2)">—</span>'}</span>
+      </td>
+      <td class="fin-editable ${margeClass}" onclick="editFinanceCell(2026,${m},'benef',${ben26})" style="cursor:pointer" title="Cliquer pour modifier">
+        ${ben26 > 0 ? fmt(ben26) : '<span style="color:var(--text2)">—</span>'}
+      </td>
       <td class="${margeClass}">${marge > 0 ? marge + '%' : '—'}</td>
       <td>${vsStr}</td>
     </tr>`;
 
-    // 2025 with evolution vs 2026
     let evol = '';
-    if (d25.ca > 0 && d26.ca > 0) {
-      const diff = Math.round(d26.ca - d25.ca);
-      const pct = Math.round((diff / d25.ca) * 100);
+    if (ca25 > 0 && ca26 > 0) {
+      const diff = Math.round(ca26 - ca25);
+      const pct = Math.round((diff / ca25) * 100);
       evol = `<span class="${diff >= 0 ? 'fin-evol-up' : 'fin-evol-down'}">${diff >= 0 ? '+' : ''}${pct}%</span>`;
-    } else if (d26.ca > 0 && d25.ca === 0) {
+    } else if (ca26 > 0 && ca25 === 0) {
       evol = `<span class="fin-evol-up">Nouveau</span>`;
     }
-    html25 += `<tr><td><strong>${MNAMES_FR[m]}</strong></td><td>${fmt(d25.ca)}</td><td>${evol}</td></tr>`;
+    html25 += `<tr><td><strong>${MNAMES_FR[m]}</strong></td>
+      <td class="fin-editable" onclick="editFinanceCell(2025,${m},'ca',${ca25})" style="cursor:pointer" title="Cliquer pour modifier">
+        ${ca25 > 0 ? fmt(ca25) : '<span style="color:var(--text2)">—</span>'}
+      </td>
+      <td>${evol}</td></tr>`;
   }
 
   body26.innerHTML = html26;
@@ -522,20 +532,49 @@ function renderFinanceAnalyse() {
   foot26.innerHTML = `<td>TOTAL</td><td><strong>${total26ca.toLocaleString('fr-FR')} €</strong></td><td><strong>${total26ben.toLocaleString('fr-FR')} €</strong></td><td><strong>${total26ca > 0 ? Math.round((total26ben/total26ca)*100) + '%' : '—'}</strong></td><td></td>`;
   foot25.innerHTML = `<td>TOTAL</td><td><strong>${total25ca.toLocaleString('fr-FR')} €</strong></td><td></td>`;
 
-  // Animate gauges
   const chargesPct = Math.min(100, Math.round((total26ben / (CHARGES_FIXES_MOIS * 12)) * 100));
   const caPct = Math.min(100, Math.round((total26ca / OBJECTIF_CA_ANNUEL) * 100));
-
   setTimeout(() => {
-    const gc = document.getElementById('gauge-charges');
-    const gcp = document.getElementById('gauge-charges-pct');
-    const gca = document.getElementById('gauge-ca');
-    const gcap = document.getElementById('gauge-ca-pct');
-    if (gc) { gc.style.width = chargesPct + '%'; gcp.textContent = chargesPct + '%'; }
-    if (gca) { gca.style.width = caPct + '%'; gcap.textContent = caPct + '%'; }
+    const gc = document.getElementById('gauge-charges'); const gcp = document.getElementById('gauge-charges-pct');
+    const gca = document.getElementById('gauge-ca');    const gcap = document.getElementById('gauge-ca-pct');
+    if (gc)  { gc.style.width  = chargesPct + '%'; if(gcp) gcp.textContent = chargesPct + '%'; }
+    if (gca) { gca.style.width = caPct + '%';      if(gcap) gcap.textContent = caPct + '%'; }
     const caLabel = document.getElementById('gauge-ca-label');
     if (caLabel) caLabel.textContent = total26ca.toLocaleString('fr-FR') + ' €';
   }, 120);
+}
+
+function editFinanceCell(year, month, field, currentVal) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center';
+  const label = field === 'ca' ? 'CA' : 'Bénéfice';
+  const MONTHS_FR = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  overlay.innerHTML = `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px 28px;min-width:300px;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+      <div style="font-weight:700;font-size:1rem;margin-bottom:16px">Modifier — ${MONTHS_FR[month]} ${year}</div>
+      <label style="font-size:.85rem;color:var(--text2);display:block;margin-bottom:6px">${label} (€)</label>
+      <input id="fin-edit-input" type="number" step="1" value="${currentVal || ''}" placeholder="0"
+        style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-size:1rem;margin-bottom:16px;box-sizing:border-box">
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button onclick="this.closest('[style*=fixed]').remove()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 16px;cursor:pointer">Annuler</button>
+        <button id="fin-edit-save" style="background:var(--gold);color:#000;border:none;border-radius:8px;padding:8px 18px;font-weight:700;cursor:pointer">Enregistrer</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const input = overlay.querySelector('#fin-edit-input');
+  input.focus(); input.select();
+  const save = async () => {
+    const val = parseFloat(input.value) || 0;
+    try {
+      await upsertFinanceMonthly(year, month, field, val);
+      overlay.remove();
+      showToast('Sauvegardé ✓');
+      renderFinanceAnalyse();
+      if (year === 2026) renderDashboardCA();
+    } catch(err) { showToast('Erreur : ' + err.message); }
+  };
+  overlay.querySelector('#fin-edit-save').addEventListener('click', save);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') overlay.remove(); });
 }
 
 // PWA Service Worker

@@ -1353,9 +1353,12 @@ Afin d'avancer, nous pouvons :
 
     <!-- TAB: Factures -->
     <div class="tab-content" id="fin-factures">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+        <button class="btn-primary" onclick="openModal('newFacture')">+ Nouvelle facture</button>
+      </div>
       <div class="events-table-wrap">
-        <table class="data-table" id="fin-factures-table">
-          <thead><tr><th>Type</th><th>Client</th><th>Montant</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
+        <table class="data-table">
+          <thead><tr><th>Client</th><th>Montant</th><th>Date</th><th>Description</th><th>Statut</th><th></th></tr></thead>
           <tbody id="fin-factures-body"><tr><td colspan="6" style="text-align:center;color:var(--text2)">Chargement…</td></tr></tbody>
         </table>
       </div>
@@ -1363,18 +1366,13 @@ Afin d'avancer, nous pouvons :
 
     <!-- TAB: Devis -->
     <div class="tab-content" id="fin-devis">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+        <button class="btn-primary" onclick="openModal('newDevis')">+ Nouveau devis</button>
+      </div>
       <div class="events-table-wrap">
         <table class="data-table">
-          <thead><tr><th>N° Devis</th><th>Client</th><th>Montant</th><th>Envoyé le</th><th>Statut</th></tr></thead>
-          <tbody>
-            <tr><td>DEV-2026</td><td>CSE IRT (TB 80 pax)</td><td>En cours</td><td>01/04/2026</td><td><span class="badge badge-gold">Envoyé ✅</span></td></tr>
-            <tr><td>DEV-2026</td><td>INSEE Réunion (Arbre Noël 700 pax)</td><td>En cours</td><td>30/03/2026</td><td><span class="badge badge-gold">Envoyé ✅</span></td></tr>
-            <tr><td>DEV-2026</td><td>Muta Mutuel (Arbre Noël 250 pax, 6 déc)</td><td>En cours</td><td>01/04/2026</td><td><span class="badge badge-gold">Envoyé ✅</span></td></tr>
-            <tr><td>DEV-2026</td><td>CSE FAVRON (TB 70 pax)</td><td>En cours</td><td>05/03/2026</td><td><span class="badge badge-gold">Envoyé ✅</span></td></tr>
-            <tr><td>DEV-2026</td><td>CSE CYCLEA (TB 200 pax + soirée 240 pax)</td><td>Fait ☑️</td><td>13/04/2026</td><td><span class="badge badge-info">Fait ☑️</span></td></tr>
-            <tr><td>DEV-2026</td><td>CSE SIDR (Arbre Noël 350 pax)</td><td>Fait ☑️</td><td>27/03/2026</td><td><span class="badge badge-info">Fait ☑️</span></td></tr>
-            <tr><td>DEV-2026</td><td>Ecole Iris Hoarau (Arbre Noël + ateliers enfants)</td><td>À envoyer</td><td>18/06/2026</td><td><span class="badge badge-danger">⚠ Urgent</span></td></tr>
-          </tbody>
+          <thead><tr><th>Client</th><th>Montant</th><th>Date envoi</th><th>Description</th><th>Statut</th><th></th></tr></thead>
+          <tbody id="fin-devis-body"><tr><td colspan="6" style="text-align:center;color:var(--text2)">Chargement…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -1414,6 +1412,50 @@ Afin d'avancer, nous pouvons :
     </div>
   </div>
   </section>
+
+  <!-- MODAL NOUVELLE FACTURE -->
+  <div class="modal-overlay" id="modal-newFacture" style="display:none">
+    <div class="modal" style="max-width:460px">
+      <div class="modal-header"><h3>Nouvelle facture</h3><button class="modal-close" onclick="closeModal('newFacture')">✕</button></div>
+      <form id="form-newFacture" onsubmit="saveNewFacture(event)">
+        <div class="form-group"><label>Client *</label><input name="client" required placeholder="Nom du client"></div>
+        <div class="form-group"><label>Montant (€)</label><input name="amount" type="number" step="0.01" placeholder="ex: 2500"></div>
+        <div class="form-group"><label>Date de facturation</label><input name="invoice_date" type="date"></div>
+        <div class="form-group"><label>Description</label><input name="notes" placeholder="ex: Prestation team building mai 2026"></div>
+        <div class="form-group"><label>Statut</label>
+          <select name="status" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;width:100%">
+            <option>En attente</option><option>Payée</option><option>En retard</option><option>Non payé</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="button" onclick="closeModal('newFacture')" class="btn-secondary">Annuler</button>
+          <button type="submit" class="btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL NOUVEAU DEVIS -->
+  <div class="modal-overlay" id="modal-newDevis" style="display:none">
+    <div class="modal" style="max-width:460px">
+      <div class="modal-header"><h3>Nouveau devis</h3><button class="modal-close" onclick="closeModal('newDevis')">✕</button></div>
+      <form id="form-newDevis" onsubmit="saveNewDevis(event)">
+        <div class="form-group"><label>Client *</label><input name="client" required placeholder="Nom du client"></div>
+        <div class="form-group"><label>Montant estimé (€)</label><input name="amount" type="number" step="0.01" placeholder="ex: 3500"></div>
+        <div class="form-group"><label>Date d'envoi</label><input name="invoice_date" type="date"></div>
+        <div class="form-group"><label>Description</label><input name="notes" placeholder="ex: TB 80 pax + soirée"></div>
+        <div class="form-group"><label>Statut</label>
+          <select name="status" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;width:100%">
+            <option>Envoyé</option><option>Fait</option><option>En attente</option><option>⚠ Urgent</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="button" onclick="closeModal('newDevis')" class="btn-secondary">Annuler</button>
+          <button type="submit" class="btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- AI ASSISTANT -->
   <section class="page" id="page-ai">

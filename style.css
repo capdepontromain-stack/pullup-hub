@@ -418,6 +418,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .fin-margin-ok { color: var(--success); }
 .fin-margin-warn { color: #f5a623; }
 .fin-margin-bad { color: var(--danger); }
+.fin-editable { cursor:pointer; transition:.15s; }
+.fin-editable:hover { background:rgba(245,197,24,.12) !important; outline:1px dashed var(--gold); }
 
 /* AI */
 .ai-layout { display: grid; grid-template-columns: 280px 1fr; gap: 20px; height: calc(100vh - 180px); min-height: 400px; }

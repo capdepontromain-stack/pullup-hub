@@ -208,6 +208,69 @@ async function createFinance(entry) {
   return data;
 }
 
+async function fetchFinanceMonthly() {
+  const { data, error } = await sb.from('finance_monthly').select('*').order('year').order('month');
+  if (error) { console.error(error); return []; }
+  return data;
+}
+
+async function upsertFinanceMonthly(year, month, field, value) {
+  const update = { year, month, [field]: parseFloat(value) || 0 };
+  const { error } = await sb.from('finance_monthly').upsert(update, { onConflict: 'year,month' });
+  if (error) throw error;
+}
+
+async function saveNewFacture(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = {
+    type: 'facture',
+    client:       form.querySelector('[name=client]').value,
+    amount:       parseFloat(form.querySelector('[name=amount]').value) || null,
+    invoice_date: form.querySelector('[name=invoice_date]').value || null,
+    status:       form.querySelector('[name=status]').value || 'En attente',
+    notes:        form.querySelector('[name=notes]')?.value || null,
+  };
+  try {
+    await createFinance(data);
+    showToast('Facture ajoutée ✓');
+    closeModal('newFacture');
+    form.reset();
+    const entries = await fetchFinances();
+    renderFinances(entries);
+  } catch(err) { showToast('Erreur : ' + err.message); }
+}
+
+async function saveNewDevis(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = {
+    type: 'devis',
+    client:       form.querySelector('[name=client]').value,
+    amount:       parseFloat(form.querySelector('[name=amount]').value) || null,
+    invoice_date: form.querySelector('[name=invoice_date]').value || null,
+    status:       form.querySelector('[name=status]').value || 'Envoyé',
+    notes:        form.querySelector('[name=notes]')?.value || null,
+  };
+  try {
+    await createFinance(data);
+    showToast('Devis ajouté ✓');
+    closeModal('newDevis');
+    form.reset();
+    const entries = await fetchFinances();
+    renderFinances(entries);
+  } catch(err) { showToast('Erreur : ' + err.message); }
+}
+
+async function deleteFinanceEntry(id) {
+  if (!confirm('Supprimer cette entrée ?')) return;
+  const { error } = await sb.from('finances').delete().eq('id', id);
+  if (error) { showToast('Erreur : ' + error.message); return; }
+  showToast('Supprimé ✓');
+  const entries = await fetchFinances();
+  renderFinances(entries);
+}
+
 // =============================================
 // INVENTORY
 // =============================================
@@ -723,42 +786,46 @@ function renderMileageBoard() {
 function renderFinances(entries) {
   renderCreances(entries);
   const factures = entries.filter(e => e.type === 'facture');
-  const devis = entries.filter(e => e.type === 'devis');
+  const devis    = entries.filter(e => e.type === 'devis');
 
-  const facturesTbody = document.querySelector('#fin-factures .data-table tbody');
+  const facturesTbody = document.getElementById('fin-factures-body');
   if (facturesTbody) {
-    facturesTbody.innerHTML = factures.map(f => {
-      const statusClass = { 'Payée': 'badge-success', 'En attente': 'badge-warning', 'En retard': 'badge-danger', 'Non payé': 'badge-danger' }[f.status] || 'badge-warning';
+    facturesTbody.innerHTML = factures.length ? factures.map(f => {
+      const statusColors = { 'Payée':'#4CAF50','En attente':'#F5C518','En retard':'#f44336','Non payé':'#f44336' };
+      const sc = statusColors[f.status] || 'var(--text2)';
       return `<tr>
-        <td>—</td>
         <td>${f.client || '—'}</td>
-        <td>${f.amount ? f.amount.toLocaleString('fr-FR') + ' €' : '—'}</td>
+        <td style="font-weight:700">${f.amount ? parseFloat(f.amount).toLocaleString('fr-FR') + ' €' : '—'}</td>
         <td>${f.invoice_date ? new Date(f.invoice_date).toLocaleDateString('fr-FR') : '—'}</td>
-        <td>—</td>
+        <td>${f.notes || '—'}</td>
         <td>
-          <select onchange="updateFinanceStatus('${f.id}', this.value)" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:.8rem;cursor:pointer;">
-            ${['En attente','Payée','En retard','Non payé'].map(s => `<option ${f.status===s?'selected':''}>${s}</option>`).join('')}
+          <select onchange="updateFinanceStatus('${f.id}', this.value)" style="background:var(--bg3);color:${sc};border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:.8rem;font-weight:600">
+            ${['En attente','Payée','En retard','Non payé'].map(s=>`<option ${f.status===s?'selected':''}>${s}</option>`).join('')}
           </select>
         </td>
+        <td><button class="btn-icon" onclick="deleteFinanceEntry('${f.id}')" title="Supprimer">🗑</button></td>
       </tr>`;
-    }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">Aucune facture — cliquez sur "+ Nouvelle facture" pour commencer</td></tr>';
+    }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">Aucune facture — cliquez sur "+ Nouvelle facture"</td></tr>';
   }
 
-  const devisTbody = document.querySelector('#fin-devis .data-table tbody');
+  const devisTbody = document.getElementById('fin-devis-body');
   if (devisTbody) {
-    devisTbody.innerHTML = devis.map(d => {
+    devisTbody.innerHTML = devis.length ? devis.map(d => {
+      const statusColors = { 'Envoyé':'#F5C518','Fait':'#4CAF50','En attente':'var(--text2)','⚠ Urgent':'#f44336' };
+      const sc = statusColors[d.status] || 'var(--text2)';
       return `<tr>
-        <td>—</td>
         <td>${d.client || '—'}</td>
-        <td>${d.amount ? d.amount.toLocaleString('fr-FR') + ' €' : 'En cours'}</td>
+        <td style="font-weight:700">${d.amount ? parseFloat(d.amount).toLocaleString('fr-FR') + ' €' : 'En cours'}</td>
         <td>${d.invoice_date ? new Date(d.invoice_date).toLocaleDateString('fr-FR') : '—'}</td>
+        <td>${d.notes || '—'}</td>
         <td>
-          <select onchange="updateFinanceStatus('${d.id}', this.value)" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:.8rem;cursor:pointer;">
-            ${['Envoyé','Fait','En attente'].map(s => `<option ${d.status===s?'selected':''}>${s}</option>`).join('')}
+          <select onchange="updateFinanceStatus('${d.id}', this.value)" style="background:var(--bg3);color:${sc};border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:.8rem;font-weight:600">
+            ${['Envoyé','Fait','En attente','⚠ Urgent'].map(s=>`<option ${d.status===s?'selected':''}>${s}</option>`).join('')}
           </select>
         </td>
+        <td><button class="btn-icon" onclick="deleteFinanceEntry('${d.id}')" title="Supprimer">🗑</button></td>
       </tr>`;
-    }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text2);padding:2rem">Aucun devis — cliquez sur "+ Nouvelle facture" pour commencer</td></tr>';
+    }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">Aucun devis — cliquez sur "+ Nouveau devis"</td></tr>';
   }
 }
 
