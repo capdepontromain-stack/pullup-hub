@@ -147,6 +147,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/><circle cx="15" cy="15" r="2.5" fill="currentColor" stroke="none" opacity=".7"/><line x1="15" y1="6" x2="15" y2="6.01" stroke-width="3" stroke-linecap="round"/></svg>
       <span>Éditorial</span>
     </a>
+    <a class="nav-item" data-page="improvements">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
+      <span>Améliorations</span>
+    </a>
   </nav>
 
   <div class="sidebar-user">
@@ -2110,6 +2114,57 @@ Afin d'avancer, nous pouvons :
       </div>
     </div>
   </section>
+
+  <!-- ===== AMÉLIORATIONS HUB ===== -->
+  <section class="page" id="page-improvements">
+    <div class="page-header">
+      <h1>💡 Améliorations Hub</h1>
+      <button class="btn-primary" onclick="openModal('newImprovement')">+ Suggérer une amélioration</button>
+    </div>
+
+    <!-- Filtres statut -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+      <button class="editorial-filter active" onclick="filterImprovements(this,'all')">Toutes</button>
+      <button class="editorial-filter" onclick="filterImprovements(this,'idea')">💡 Idées</button>
+      <button class="editorial-filter" onclick="filterImprovements(this,'todo')">🔧 À faire</button>
+      <button class="editorial-filter" onclick="filterImprovements(this,'done')">✅ Faites</button>
+    </div>
+
+    <div id="improvements-list" style="display:flex;flex-direction:column;gap:12px"></div>
+  </section>
+
+  <!-- Modal nouvelle amélioration -->
+  <div class="modal-overlay" id="modal-newImprovement">
+    <div class="modal" style="max-width:520px">
+      <div class="modal-header">
+        <h3 id="improv-modal-title">Nouvelle amélioration</h3>
+        <button class="modal-close" onclick="closeModal('newImprovement')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Titre</label>
+          <input type="text" id="improv-title" class="form-control" placeholder="Ex: Ajouter un bouton export PDF…">
+        </div>
+        <div class="form-group">
+          <label>Description détaillée</label>
+          <textarea id="improv-desc" class="form-control" rows="5" placeholder="Décris l'amélioration, pourquoi c'est utile, comment tu imagines que ça fonctionne…"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Priorité</label>
+          <select id="improv-priority" class="form-control">
+            <option value="normal">Normal</option>
+            <option value="high">🔥 Urgent / Important</option>
+            <option value="low">Plus tard</option>
+          </select>
+        </div>
+        <input type="hidden" id="improv-edit-id">
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" onclick="closeModal('newImprovement')">Annuler</button>
+        <button class="btn-primary" onclick="saveImprovement()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ===== CALENDRIER ÉDITORIAL ===== -->
   <section class="page" id="page-editorial">

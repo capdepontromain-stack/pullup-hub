@@ -22,6 +22,7 @@ function showPage(id) {
   if (id === 'devis-requests' && typeof loadDevisRequests === 'function') loadDevisRequests();
   if (id === 'personnel' && typeof loadPersonnelLeaveStats === 'function') loadPersonnelLeaveStats();
   if (id === 'editorial' && typeof loadAndRenderEditorial === 'function') loadAndRenderEditorial();
+  if (id === 'improvements' && typeof loadImprovements === 'function') loadImprovements();
 }
 
 document.querySelectorAll('.nav-item').forEach(item => {

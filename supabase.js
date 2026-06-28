@@ -3495,3 +3495,103 @@ async function saveEditorialPost() {
   await loadAndRenderEditorial();
   showToast(id ? 'Publication mise à jour' : 'Publication créée');
 }
+
+// ===== AMÉLIORATIONS HUB =====
+let allImprovements = [];
+let improvFilterStatus = 'all';
+
+const IMPROV_PRIORITY = { high:'🔥 Urgent', normal:'Normal', low:'Plus tard' };
+const IMPROV_STATUS = { idea:'💡 Idée', todo:'🔧 À faire', done:'✅ Fait' };
+const IMPROV_STATUS_COLORS = { idea:'#F5C518', todo:'#4A9EFF', done:'#4CAF50' };
+
+async function loadImprovements() {
+  const { data } = await sb.from('improvements').select('*').order('created_at', { ascending: false });
+  allImprovements = data || [];
+  renderImprovements();
+}
+
+function filterImprovements(btn, status) {
+  document.querySelectorAll('#page-improvements .editorial-filter').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  improvFilterStatus = status;
+  renderImprovements();
+}
+
+function renderImprovements() {
+  const list = document.getElementById('improvements-list');
+  if (!list) return;
+  const filtered = improvFilterStatus === 'all' ? allImprovements : allImprovements.filter(i => i.status === improvFilterStatus);
+  if (!filtered.length) {
+    list.innerHTML = '<div style="text-align:center;color:var(--text3);padding:3rem">Aucune suggestion pour l\'instant</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(item => {
+    const sc = IMPROV_STATUS_COLORS[item.status] || 'var(--text2)';
+    const date = item.created_at ? new Date(item.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' }) : '';
+    return `<div style="background:var(--bg3);border:1px solid var(--border);border-left:3px solid ${sc};border-radius:10px;padding:16px 18px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+            <span style="font-weight:700;font-size:.95rem">${item.title}</span>
+            ${item.priority === 'high' ? '<span style="font-size:.72rem;background:#e74c3c22;color:#e74c3c;border-radius:4px;padding:2px 7px;font-weight:700">🔥 Urgent</span>' : ''}
+          </div>
+          ${item.description ? `<div style="font-size:.85rem;color:var(--text2);white-space:pre-wrap;line-height:1.5">${item.description}</div>` : ''}
+          <div style="margin-top:8px;font-size:.75rem;color:var(--text3)">Par <strong style="color:var(--text2)">${item.author || '—'}</strong> · ${date}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+          <select onchange="updateImprovementStatus('${item.id}', this.value)"
+            style="background:var(--bg4);color:${sc};border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:.78rem;font-weight:600;cursor:pointer">
+            ${Object.entries(IMPROV_STATUS).map(([v,l]) => `<option value="${v}" ${item.status===v?'selected':''}>${l}</option>`).join('')}
+          </select>
+          <div style="display:flex;gap:6px">
+            <button onclick="openEditImprovement('${item.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:.8rem">✏️</button>
+            <button onclick="deleteImprovement('${item.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:.8rem">🗑</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function saveImprovement() {
+  const id = document.getElementById('improv-edit-id').value;
+  const title = document.getElementById('improv-title').value.trim();
+  const description = document.getElementById('improv-desc').value.trim();
+  const priority = document.getElementById('improv-priority').value;
+  if (!title) { showToast('Le titre est requis'); return; }
+  const payload = { title, description, priority, status: id ? undefined : 'idea', author: currentUserName || 'Équipe' };
+  if (!id) payload.status = 'idea';
+  if (id) {
+    delete payload.status;
+    await sb.from('improvements').update({ title, description, priority }).eq('id', id);
+  } else {
+    await sb.from('improvements').insert(payload);
+  }
+  closeModal('newImprovement');
+  await loadImprovements();
+  showToast(id ? 'Amélioration mise à jour' : 'Suggestion enregistrée !');
+}
+
+function openEditImprovement(id) {
+  const item = allImprovements.find(i => i.id == id);
+  if (!item) return;
+  document.getElementById('improv-edit-id').value = id;
+  document.getElementById('improv-modal-title').textContent = 'Modifier la suggestion';
+  document.getElementById('improv-title').value = item.title || '';
+  document.getElementById('improv-desc').value = item.description || '';
+  document.getElementById('improv-priority').value = item.priority || 'normal';
+  openModal('newImprovement');
+}
+
+async function updateImprovementStatus(id, status) {
+  await sb.from('improvements').update({ status }).eq('id', id);
+  const item = allImprovements.find(i => i.id == id);
+  if (item) item.status = status;
+  renderImprovements();
+}
+
+async function deleteImprovement(id) {
+  if (!confirm('Supprimer cette suggestion ?')) return;
+  await sb.from('improvements').delete().eq('id', id);
+  await loadImprovements();
+}
