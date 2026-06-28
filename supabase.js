@@ -989,6 +989,7 @@ function renderFinances(entries) {
       return `<tr style="cursor:pointer" onclick="openEditFacture('${f.id}')" title="Cliquer pour modifier">
         <td>${f.client || '—'}</td>
         <td style="font-weight:700">${f.amount ? parseFloat(f.amount).toLocaleString('fr-FR') + ' €' : '—'}</td>
+        <td style="color:#4CAF50;font-weight:700">${f.benef ? parseFloat(f.benef).toLocaleString('fr-FR') + ' €' : '—'}</td>
         <td>${f.invoice_date ? new Date(f.invoice_date).toLocaleDateString('fr-FR') : '—'}</td>
         <td>${f.notes || '—'}</td>
         <td onclick="event.stopPropagation()">
