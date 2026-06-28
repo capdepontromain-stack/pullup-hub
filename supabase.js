@@ -259,6 +259,11 @@ function openEditFacture(id) {
   form.querySelector('[name=invoice_date]').value = f.invoice_date || '';
   form.querySelector('[name=notes]').value = f.notes || '';
   form.querySelector('[name=status]').value = f.status || 'En attente';
+  form.querySelector('[name=facture_file]').value = '';
+  const cur = document.getElementById('facture-file-current');
+  if (cur) cur.innerHTML = f.file_url
+    ? `Fichier actuel : <a href="${f.file_url}" target="_blank" style="color:var(--gold)">voir le document</a>`
+    : '';
   form.dataset.editId = id;
   document.querySelector('#modal-newFacture .modal-header h3').textContent = 'Modifier la facture';
   openModal('newFacture');
@@ -280,6 +285,19 @@ async function saveNewFacture(e) {
     notes:        form.querySelector('[name=notes]')?.value || null,
   };
   try {
+    let fileUrl = null;
+    const fileInput = form.querySelector('[name=facture_file]');
+    if (fileInput?.files?.length) {
+      const file = fileInput.files[0];
+      const ext = file.name.split('.').pop();
+      const path = `factures/${Date.now()}_${data.client.replace(/\s+/g,'_')}.${ext}`;
+      const { error: upErr } = await sb.storage.from('factures').upload(path, file, { upsert: true });
+      if (!upErr) {
+        const { data: urlData } = sb.storage.from('factures').getPublicUrl(path);
+        fileUrl = urlData?.publicUrl;
+        data.file_url = fileUrl;
+      }
+    }
     if (editId) {
       await sb.from('finances').update(data).eq('id', editId);
       form.dataset.editId = '';
@@ -1009,7 +1027,10 @@ function renderFinances(entries) {
                 ${['En attente','Payée','En retard','Non payé'].map(s=>`<option ${f.status===s?'selected':''}>${s}</option>`).join('')}
               </select>
             </td>
-            <td onclick="event.stopPropagation()"><button class="btn-icon" onclick="deleteFinanceEntry('${f.id}')" title="Supprimer">🗑</button></td>
+            <td onclick="event.stopPropagation()">
+              ${f.file_url ? `<a href="${f.file_url}" target="_blank" title="Voir la facture" style="margin-right:6px;font-size:1.1rem;text-decoration:none">📄</a>` : ''}
+              <button class="btn-icon" onclick="deleteFinanceEntry('${f.id}')" title="Supprimer">🗑</button>
+            </td>
           </tr>`;
         }).join('');
         return `<tr><td colspan="7" style="padding:1rem 0 .3rem;font-weight:700;font-size:.85rem;color:var(--gold);letter-spacing:.05em;border-bottom:1px solid var(--border);text-transform:uppercase">${label}</td></tr>${rows}`;
