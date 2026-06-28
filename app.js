@@ -693,16 +693,35 @@ async function renderFinanceAnalyse() {
   foot26.innerHTML = `<td>TOTAL</td><td><strong>${total26ca.toLocaleString('fr-FR')} €</strong></td><td><strong>${total26ben.toLocaleString('fr-FR')} €</strong></td><td><strong>${total26ca > 0 ? Math.round((total26ben/total26ca)*100) + '%' : '—'}</strong></td><td></td>`;
   foot25.innerHTML = `<td>TOTAL</td><td><strong>${total25ca.toLocaleString('fr-FR')} €</strong></td><td></td>`;
 
-  const totalChargesMois = (window.CHARGES_FIXES_MOIS || 8717.96) + (window.CHARGES_VARS_MOIS || 2000);
-  const chargesPct = Math.min(100, Math.round((total26ben / (totalChargesMois * 12)) * 100));
-  const caPct = Math.min(100, Math.round((total26ca / OBJECTIF_CA_ANNUEL) * 100));
+  // Récupérer le total annuel des charges depuis Supabase
+  const [rfRes, rvRes] = await Promise.all([
+    sb.from('charges_fixes').select('montant'),
+    sb.from('charges_variables_items').select('montant'),
+  ]);
+  const totalChargesFixes = (rfRes.data || []).reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
+  const totalChargesVars  = (rvRes.data  || []).reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
+  const totalChargesMoisReel = totalChargesFixes + totalChargesVars;
+  const totalChargesAnnuel = totalChargesMoisReel * 12;
+
+  const chargesPct = totalChargesAnnuel > 0 ? Math.min(100, Math.round((total26ben / totalChargesAnnuel) * 100)) : 0;
+  const caPct      = totalChargesAnnuel > 0 ? Math.min(100, Math.round((total26ca  / totalChargesAnnuel) * 100)) : 0;
+  const half       = Math.round(totalChargesAnnuel / 2);
+
+  // Mettre à jour les textes de la jauge
+  const gSub1 = document.getElementById('gauge-charges-subtitle');
+  if (gSub1) gSub1.innerHTML = `Total charges : <strong>${totalChargesMoisReel.toLocaleString('fr-FR')} €/mois × 12 = ${totalChargesAnnuel.toLocaleString('fr-FR')} €</strong> | Bénéfice réalisé : <strong>${total26ben.toLocaleString('fr-FR')} €</strong>`;
+  const gSub2 = document.getElementById('gauge-ca-subtitle');
+  if (gSub2) gSub2.innerHTML = `Seuil annuel : <strong>${totalChargesAnnuel.toLocaleString('fr-FR')} €</strong> | CA réalisé à ce jour : <strong id="gauge-ca-label">${total26ca.toLocaleString('fr-FR')} €</strong>`;
+
+  // Labels milieu et fin des jauges
+  document.querySelectorAll('.gauge-label-half').forEach(el => el.textContent = half.toLocaleString('fr-FR') + ' €');
+  document.querySelectorAll('.gauge-label-full').forEach(el => el.textContent = totalChargesAnnuel.toLocaleString('fr-FR') + ' €');
+
   setTimeout(() => {
-    const gc = document.getElementById('gauge-charges'); const gcp = document.getElementById('gauge-charges-pct');
-    const gca = document.getElementById('gauge-ca');    const gcap = document.getElementById('gauge-ca-pct');
-    if (gc)  { gc.style.width  = chargesPct + '%'; if(gcp) gcp.textContent = chargesPct + '%'; }
-    if (gca) { gca.style.width = caPct + '%';      if(gcap) gcap.textContent = caPct + '%'; }
-    const caLabel = document.getElementById('gauge-ca-label');
-    if (caLabel) caLabel.textContent = total26ca.toLocaleString('fr-FR') + ' €';
+    const gc  = document.getElementById('gauge-charges'); const gcp  = document.getElementById('gauge-charges-pct');
+    const gca = document.getElementById('gauge-ca');      const gcap = document.getElementById('gauge-ca-pct');
+    if (gc)  { gc.style.width  = chargesPct + '%'; if (gcp)  gcp.textContent  = chargesPct + '%'; }
+    if (gca) { gca.style.width = caPct + '%';      if (gcap) gcap.textContent = caPct + '%'; }
   }, 120);
 }
 
