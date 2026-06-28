@@ -1201,6 +1201,23 @@ Afin d'avancer, nous pouvons :
       </div>
     </div>
 
+    <!-- Calendrier kilométrique -->
+    <div style="margin-top:24px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn-icon" onclick="mileageCalNav(-1)">‹</button>
+        <span id="mileage-cal-label" style="font-weight:700;font-size:1rem;min-width:150px;text-align:center"></span>
+        <button class="btn-icon" onclick="mileageCalNav(1)">›</button>
+        <div style="display:flex;gap:6px;margin-left:8px">
+          <button class="mileage-person-btn active" data-person="Tous" onclick="setMileagePerson(this,'Tous')">Tous</button>
+          <button class="mileage-person-btn" data-person="Romain Capdepont" onclick="setMileagePerson(this,'Romain Capdepont')">Romain</button>
+          <button class="mileage-person-btn" data-person="Ketsia" onclick="setMileagePerson(this,'Ketsia')">Ketsia</button>
+          <button class="mileage-person-btn" data-person="Flora Boyer" onclick="setMileagePerson(this,'Flora Boyer')">Flora</button>
+          <button class="mileage-person-btn" data-person="Gloria" onclick="setMileagePerson(this,'Gloria')">Gloria</button>
+        </div>
+      </div>
+      <div id="mileage-calendar"></div>
+    </div>
+
     <div class="export-btns" style="margin-top:16px">
       <button class="btn-outline">📄 Export PDF</button>
       <button class="btn-outline">📊 Export Excel</button>

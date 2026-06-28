@@ -1584,10 +1584,17 @@ async function saveNewMileage() {
   };
   if (!data.trip_date || !data.km) { showToast('Date et km obligatoires'); return; }
   try {
-    await createMileage(data);
+    const editId = form.dataset?.editId;
+    if (editId) {
+      await sb.from('mileage').update(data).eq('id', editId);
+      form.dataset.editId = '';
+    } else {
+      await createMileage(data);
+    }
     closeModal('newMileage');
     await loadAndRenderMileage();
-    showToast('Frais enregistrés !');
+    if (typeof loadMileageCalendar === 'function') loadMileageCalendar();
+    showToast(editId ? 'Trajet modifié !' : 'Frais enregistrés !');
     form.reset();
   } catch(e) { showToast('Erreur : ' + e.message); }
 }
@@ -3594,4 +3601,117 @@ async function deleteImprovement(id) {
   if (!confirm('Supprimer cette suggestion ?')) return;
   await sb.from('improvements').delete().eq('id', id);
   await loadImprovements();
+}
+
+// ===== CALENDRIER KILOMÉTRIQUE =====
+let mileageCalDate = new Date();
+let mileageCalPerson = 'Tous';
+let _allMileageTrips = [];
+
+const PERSON_COLORS = {
+  'Romain Capdepont': '#F5C518',
+  'Ketsia': '#4A9EFF',
+  'Flora Boyer': '#FF6B9D',
+  'Gloria': '#9B59B6',
+};
+
+async function loadMileageCalendar() {
+  const year = mileageCalDate.getFullYear();
+  const month = mileageCalDate.getMonth();
+  const firstDay = `${year}-${String(month+1).padStart(2,'0')}-01`;
+  const lastDay = new Date(year, month+1, 0).toISOString().slice(0,10);
+  const { data } = await sb.from('mileage').select('*').gte('trip_date', firstDay).lte('trip_date', lastDay).order('trip_date');
+  _allMileageTrips = data || [];
+  renderMileageCalendar();
+}
+
+function setMileagePerson(btn, person) {
+  document.querySelectorAll('.mileage-person-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  mileageCalPerson = person;
+  renderMileageCalendar();
+}
+
+function mileageCalNav(dir) {
+  mileageCalDate.setMonth(mileageCalDate.getMonth() + dir);
+  loadMileageCalendar();
+}
+
+function renderMileageCalendar() {
+  const year = mileageCalDate.getFullYear();
+  const month = mileageCalDate.getMonth();
+  const label = mileageCalDate.toLocaleDateString('fr-FR', { month:'long', year:'numeric' });
+  const el = document.getElementById('mileage-cal-label');
+  if (el) el.textContent = label.charAt(0).toUpperCase() + label.slice(1);
+
+  const cal = document.getElementById('mileage-calendar');
+  if (!cal) return;
+
+  const filtered = mileageCalPerson === 'Tous' ? _allMileageTrips : _allMileageTrips.filter(t => t.user_name === mileageCalPerson);
+
+  const firstOfMonth = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  let startDow = firstOfMonth.getDay();
+  startDow = startDow === 0 ? 6 : startDow - 1;
+  const todayStr = new Date().toISOString().slice(0,10);
+
+  const days = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  let html = `<div class="km-cal-grid">${days.map(d=>`<div class="km-day-name">${d}</div>`).join('')}`;
+
+  for (let i = 0; i < startDow; i++) html += `<div class="km-day other-month"></div>`;
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = dateStr === todayStr;
+    const trips = filtered.filter(t => t.trip_date === dateStr);
+    const pillsHtml = trips.slice(0,3).map(t => {
+      const col = PERSON_COLORS[t.user_name] || 'var(--gold)';
+      const label = `${t.km}km${t.departure ? ' · ' + t.departure + '→' + (t.destination||'') : ''}${t.motif ? ' · ' + t.motif : ''}`;
+      return `<div class="km-trip-pill" style="border-color:${col}" title="${label}" onclick="event.stopPropagation();openEditMileage('${t.id}')">${label}</div>`;
+    }).join('');
+    const more = trips.length > 3 ? `<div style="font-size:.62rem;color:var(--text3)">+${trips.length-3} autres</div>` : '';
+
+    html += `<div class="km-day${isToday?' today':''}" onclick="openNewMileageOnDate('${dateStr}')">
+      <div class="km-day-num">${d}${trips.length ? `<span style="font-size:.6rem;color:var(--gold);margin-left:4px">${trips.reduce((s,t)=>s+(parseFloat(t.km)||0),0)}km</span>` : ''}</div>
+      ${pillsHtml}${more}
+    </div>`;
+  }
+
+  const total = startDow + daysInMonth;
+  const rem = total % 7;
+  if (rem) for (let i = 0; i < 7 - rem; i++) html += `<div class="km-day other-month"></div>`;
+  html += '</div>';
+  cal.innerHTML = html;
+}
+
+function openNewMileageOnDate(dateStr) {
+  const f = document.getElementById('form-newMileage');
+  if (!f) return;
+  f.reset();
+  f.querySelector('[name=trip_date]').value = dateStr;
+  if (mileageCalPerson !== 'Tous') {
+    const sel = f.querySelector('[name=user_name]');
+    if (sel) sel.value = mileageCalPerson;
+  }
+  // Vider l'id d'édition si existant
+  if (f.dataset) f.dataset.editId = '';
+  document.querySelector('#modal-newMileage .modal-header h3').textContent = 'Nouvelle saisie kilométrique';
+  openModal('newMileage');
+}
+
+function openEditMileage(id) {
+  const trip = _allMileageTrips.find(t => t.id == id);
+  if (!trip) return;
+  const f = document.getElementById('form-newMileage');
+  if (!f) return;
+  f.querySelector('[name=trip_date]').value = trip.trip_date || '';
+  f.querySelector('[name=user_name]').value = trip.user_name || '';
+  f.querySelector('[name=departure]').value = trip.departure || '';
+  f.querySelector('[name=destination]').value = trip.destination || '';
+  f.querySelector('[name=km]').value = trip.km || '';
+  f.querySelector('[name=rate]').value = trip.rate || 0.374;
+  f.querySelector('[name=motif]').value = trip.motif || '';
+  f.dataset.editId = id;
+  document.querySelector('#modal-newMileage .modal-header h3').textContent = 'Modifier le trajet';
+  openModal('newMileage');
 }

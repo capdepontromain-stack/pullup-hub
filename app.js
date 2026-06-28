@@ -19,6 +19,7 @@ function showPage(id) {
   if (id === 'leaves') loadAndRenderLeaves();
   if (id === 'flora') loadAndRenderFlora();
   if (id === 'charges' && typeof loadCharges === 'function') loadCharges();
+  if (id === 'mileage' && typeof loadMileageCalendar === 'function') loadMileageCalendar();
   if (id === 'devis-requests' && typeof loadDevisRequests === 'function') loadDevisRequests();
   if (id === 'personnel' && typeof loadPersonnelLeaveStats === 'function') loadPersonnelLeaveStats();
   if (id === 'editorial' && typeof loadAndRenderEditorial === 'function') loadAndRenderEditorial();
