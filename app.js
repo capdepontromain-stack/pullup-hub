@@ -21,6 +21,7 @@ function showPage(id) {
   if (id === 'charges' && typeof loadCharges === 'function') loadCharges();
   if (id === 'devis-requests' && typeof loadDevisRequests === 'function') loadDevisRequests();
   if (id === 'personnel' && typeof loadPersonnelLeaveStats === 'function') loadPersonnelLeaveStats();
+  if (id === 'editorial' && typeof loadAndRenderEditorial === 'function') loadAndRenderEditorial();
 }
 
 document.querySelectorAll('.nav-item').forEach(item => {

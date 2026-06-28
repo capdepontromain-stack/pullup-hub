@@ -3364,3 +3364,134 @@ function editChargeCell(year, month, field, currentVal) {
   overlay.querySelector('#charge-cell-save').onclick = save;
   input.onkeydown = e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') overlay.remove(); };
 }
+// ===== CALENDRIER ÉDITORIAL =====
+let editorialViewDate = new Date();
+let allEditorialPosts = [];
+let editorialFilterNet = 'all';
+
+const ED_NET_COLORS = {
+  Instagram: { bg:'#E1306C', text:'#fff' },
+  Facebook:  { bg:'#1877F2', text:'#fff' },
+  LinkedIn:  { bg:'#0077B5', text:'#fff' },
+  TikTok:    { bg:'#010101', text:'#fff' },
+  Email:     { bg:'#F5C518', text:'#000' },
+};
+
+const ED_STATUS_ICONS = { idee:'💡', redaction:'✍️', pret:'✅', publie:'🚀' };
+
+async function loadAndRenderEditorial() {
+  const year = editorialViewDate.getFullYear();
+  const month = editorialViewDate.getMonth();
+  const firstDay = `${year}-${String(month+1).padStart(2,'0')}-01`;
+  const lastDay = new Date(year, month+1, 0).toISOString().slice(0,10);
+  const { data } = await sb.from('editorial_posts').select('*').gte('publish_date', firstDay).lte('publish_date', lastDay).order('publish_date');
+  allEditorialPosts = data || [];
+  renderEditorialCalendar();
+}
+
+function renderEditorialCalendar() {
+  const year = editorialViewDate.getFullYear();
+  const month = editorialViewDate.getMonth();
+  const label = editorialViewDate.toLocaleDateString('fr-FR', { month:'long', year:'numeric' });
+  const el = document.getElementById('editorial-month-label');
+  if (el) el.textContent = label.charAt(0).toUpperCase() + label.slice(1);
+
+  const filtered = editorialFilterNet === 'all' ? allEditorialPosts : allEditorialPosts.filter(p => p.network === editorialFilterNet);
+
+  const cal = document.getElementById('editorial-calendar');
+  if (!cal) return;
+
+  const firstOfMonth = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  let startDow = firstOfMonth.getDay(); // 0=Sun
+  startDow = (startDow === 0) ? 6 : startDow - 1; // Lun=0
+
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0,10);
+
+  const days = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  let html = `<div class="ed-calendar-grid">${days.map(d=>`<div class="ed-day-name">${d}</div>`).join('')}`;
+
+  // Jours vides au début
+  for (let i = 0; i < startDow; i++) html += `<div class="ed-day other-month"></div>`;
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = dateStr === todayStr;
+    const posts = filtered.filter(p => p.publish_date === dateStr);
+    const pillsHtml = posts.slice(0,3).map(p => {
+      const col = ED_NET_COLORS[p.network] || { bg:'var(--bg4)', text:'var(--text)' };
+      return `<div class="ed-post-pill" style="background:${col.bg};color:${col.text}" onclick="event.stopPropagation();openEditorialModal('${p.id}')" title="${p.title||p.network}">${ED_STATUS_ICONS[p.status]||''} ${p.title || p.network}</div>`;
+    }).join('');
+    const more = posts.length > 3 ? `<div style="font-size:.6rem;color:var(--text3)">+${posts.length-3} autres</div>` : '';
+    html += `<div class="ed-day${isToday?' today':''}" onclick="openEditorialModal(null,'${dateStr}')">
+      <div class="ed-day-num">${d}</div>
+      ${pillsHtml}${more}
+    </div>`;
+  }
+
+  // Jours vides à la fin
+  const total = startDow + daysInMonth;
+  const rem = total % 7;
+  if (rem) for (let i = 0; i < 7 - rem; i++) html += `<div class="ed-day other-month"></div>`;
+
+  html += '</div>';
+  cal.innerHTML = html;
+}
+
+function editorialNav(dir) {
+  editorialViewDate.setMonth(editorialViewDate.getMonth() + dir);
+  loadAndRenderEditorial();
+}
+
+function setEditorialFilter(btn, net) {
+  document.querySelectorAll('.editorial-filter').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  editorialFilterNet = net;
+  renderEditorialCalendar();
+}
+
+function openEditorialModal(id, prefillDate) {
+  document.getElementById('ed-edit-id').value = id || '';
+  document.getElementById('editorial-modal-title').textContent = id ? 'Modifier la publication' : 'Nouvelle publication';
+  if (id) {
+    const post = allEditorialPosts.find(p => p.id == id);
+    if (post) {
+      document.getElementById('ed-date').value = post.publish_date || '';
+      document.getElementById('ed-network').value = post.network || 'Instagram';
+      document.getElementById('ed-title').value = post.title || '';
+      document.getElementById('ed-content').value = post.content || '';
+      document.getElementById('ed-status').value = post.status || 'idee';
+      document.getElementById('ed-assignee').value = post.assignee || '';
+    }
+  } else {
+    document.getElementById('ed-date').value = prefillDate || '';
+    document.getElementById('ed-network').value = 'Instagram';
+    document.getElementById('ed-title').value = '';
+    document.getElementById('ed-content').value = '';
+    document.getElementById('ed-status').value = 'idee';
+    document.getElementById('ed-assignee').value = '';
+  }
+  openModal('editorial');
+}
+
+async function saveEditorialPost() {
+  const id = document.getElementById('ed-edit-id').value;
+  const payload = {
+    publish_date: document.getElementById('ed-date').value,
+    network:      document.getElementById('ed-network').value,
+    title:        document.getElementById('ed-title').value,
+    content:      document.getElementById('ed-content').value,
+    status:       document.getElementById('ed-status').value,
+    assignee:     document.getElementById('ed-assignee').value || null,
+  };
+  if (!payload.publish_date || !payload.title) { showToast('Date et titre requis'); return; }
+  if (id) {
+    await sb.from('editorial_posts').update(payload).eq('id', id);
+  } else {
+    await sb.from('editorial_posts').insert(payload);
+  }
+  closeModal('editorial');
+  await loadAndRenderEditorial();
+  showToast(id ? 'Publication mise à jour' : 'Publication créée');
+}

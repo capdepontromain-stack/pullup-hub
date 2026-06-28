@@ -143,6 +143,10 @@
       <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>
       <span>Congés</span>
     </a>
+    <a class="nav-item" data-page="editorial">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/><circle cx="15" cy="15" r="2.5" fill="currentColor" stroke="none" opacity=".7"/><line x1="15" y1="6" x2="15" y2="6.01" stroke-width="3" stroke-linecap="round"/></svg>
+      <span>Éditorial</span>
+    </a>
     <a class="nav-item" data-page="flora">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
       <span>Suivi Flora</span>
@@ -2110,6 +2114,92 @@ Afin d'avancer, nous pouvons :
       </div>
     </div>
   </section>
+
+  <!-- ===== CALENDRIER ÉDITORIAL ===== -->
+  <section class="page" id="page-editorial">
+    <div class="page-header">
+      <h1>Calendrier éditorial</h1>
+      <button class="btn-primary" onclick="openEditorialModal()">+ Nouvelle publication</button>
+    </div>
+
+    <!-- Navigation mois -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <button class="btn-icon" onclick="editorialNav(-1)">‹</button>
+      <span id="editorial-month-label" style="font-weight:700;font-size:1.1rem;min-width:160px;text-align:center"></span>
+      <button class="btn-icon" onclick="editorialNav(1)">›</button>
+    </div>
+
+    <!-- Filtres réseau -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px" id="editorial-filters">
+      <button class="editorial-filter active" data-net="all" onclick="setEditorialFilter(this,'all')">Tous</button>
+      <button class="editorial-filter" data-net="Instagram" onclick="setEditorialFilter(this,'Instagram')">📸 Instagram</button>
+      <button class="editorial-filter" data-net="Facebook" onclick="setEditorialFilter(this,'Facebook')">📘 Facebook</button>
+      <button class="editorial-filter" data-net="LinkedIn" onclick="setEditorialFilter(this,'LinkedIn')">💼 LinkedIn</button>
+      <button class="editorial-filter" data-net="TikTok" onclick="setEditorialFilter(this,'TikTok')">🎵 TikTok</button>
+      <button class="editorial-filter" data-net="Email" onclick="setEditorialFilter(this,'Email')">✉️ Email</button>
+    </div>
+
+    <!-- Calendrier -->
+    <div id="editorial-calendar"></div>
+  </section>
+
+  <!-- Modal publication -->
+  <div class="modal-overlay" id="modal-editorial">
+    <div class="modal" style="max-width:560px">
+      <div class="modal-header">
+        <h3 id="editorial-modal-title">Nouvelle publication</h3>
+        <button class="modal-close" onclick="closeModal('editorial')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Date de publication</label>
+          <input type="date" id="ed-date" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Réseau</label>
+          <select id="ed-network" class="form-control">
+            <option>Instagram</option>
+            <option>Facebook</option>
+            <option>LinkedIn</option>
+            <option>TikTok</option>
+            <option>Email</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Titre / Sujet</label>
+          <input type="text" id="ed-title" class="form-control" placeholder="Ex: Stories soirée mariage…">
+        </div>
+        <div class="form-group">
+          <label>Contenu / Légende</label>
+          <textarea id="ed-content" class="form-control" rows="4" placeholder="Texte de la publication…"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Statut</label>
+          <select id="ed-status" class="form-control">
+            <option value="idee">💡 Idée</option>
+            <option value="redaction">✍️ En rédaction</option>
+            <option value="pret">✅ Prêt à publier</option>
+            <option value="publie">🚀 Publié</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Assigné à</label>
+          <select id="ed-assignee" class="form-control">
+            <option value="">— Personne —</option>
+            <option>Romain</option>
+            <option>Ketsia</option>
+            <option>Flora</option>
+            <option>Gloria</option>
+          </select>
+        </div>
+        <input type="hidden" id="ed-edit-id">
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" onclick="closeModal('editorial')">Annuler</button>
+        <button class="btn-primary" onclick="saveEditorialPost()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
 
 </div><!-- end #app-container -->
 
