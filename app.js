@@ -647,27 +647,17 @@ function focusPersonCol(name) {
   if (_focusedCol === name) {
     // Retour à la vue normale
     _focusedCol = null;
-    board.querySelectorAll('.person-col').forEach(c => {
-      c.style.display = '';
-      c.style.flex = '';
-      c.style.minWidth = '';
-    });
+    board.classList.remove('focus-mode');
+    board.querySelectorAll('.person-col').forEach(c => { c.style.display = ''; });
     const btn = document.getElementById('tasks-focus-back');
     if (btn) btn.remove();
-    board.style.display = '';
   } else {
-    // Mode focus
+    // Mode focus grille
     _focusedCol = name;
+    board.classList.add('focus-mode');
     board.querySelectorAll('.person-col').forEach(c => {
-      if (c.id === 'col-' + name) {
-        c.style.flex = '1';
-        c.style.minWidth = '0';
-        c.style.display = '';
-      } else {
-        c.style.display = 'none';
-      }
+      c.style.display = (c.id === 'col-' + name) ? '' : 'none';
     });
-    board.style.display = 'flex';
     // Bouton retour
     if (!document.getElementById('tasks-focus-back')) {
       const btn = document.createElement('button');

@@ -262,6 +262,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .person-col-role { font-size: 11px; color: var(--text2); }
 .person-task-count { margin-left: auto; background: var(--person-color, var(--gold)); color: #000; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; flex-shrink: 0; }
 .person-tasks { display: flex; flex-direction: column; gap: 8px; min-height: 40px; }
+/* Mode focus plein écran : grille 3 colonnes */
+.person-board.focus-mode { display: flex; }
+.person-board.focus-mode .person-col { flex: 1; min-width: 0; }
+.person-board.focus-mode .person-tasks { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; align-items: start; }
+.person-board.focus-mode .ptask-card { height: 100%; box-sizing: border-box; }
+@media (max-width: 700px) { .person-board.focus-mode .person-tasks { grid-template-columns: 1fr 1fr; } }
 .ptask-card { background: var(--bg2); border: 1px solid var(--border); border-left: 3px solid var(--person-color, var(--gold)); border-radius: 8px; padding: 10px 12px; }
 .ptask-card:hover { border-color: var(--person-color, var(--gold)); }
 .ptask-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
