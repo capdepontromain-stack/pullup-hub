@@ -703,19 +703,22 @@ async function renderFinanceAnalyse() {
   const totalChargesMoisReel = totalChargesFixes + totalChargesVars;
   const totalChargesAnnuel = totalChargesMoisReel * 12;
 
-  const chargesPct = totalChargesAnnuel > 0 ? Math.min(100, Math.round((total26ben / totalChargesAnnuel) * 100)) : 0;
-  const caPct      = totalChargesAnnuel > 0 ? Math.min(100, Math.round((total26ca  / totalChargesAnnuel) * 100)) : 0;
-  const half       = Math.round(totalChargesAnnuel / 2);
+  const OBJECTIF_CA = 300000;
 
-  // Mettre à jour les textes de la jauge
+  const chargesPct = totalChargesAnnuel > 0 ? Math.min(100, Math.round((total26ben / totalChargesAnnuel) * 100)) : 0;
+  const caPct      = Math.min(100, Math.round((total26ca / OBJECTIF_CA) * 100));
+
+  // Jauge 1 : bénéfice vs charges
   const gSub1 = document.getElementById('gauge-charges-subtitle');
   if (gSub1) gSub1.innerHTML = `Total charges : <strong>${totalChargesMoisReel.toLocaleString('fr-FR')} €/mois × 12 = ${totalChargesAnnuel.toLocaleString('fr-FR')} €</strong> | Bénéfice réalisé : <strong>${total26ben.toLocaleString('fr-FR')} €</strong>`;
-  const gSub2 = document.getElementById('gauge-ca-subtitle');
-  if (gSub2) gSub2.innerHTML = `Seuil annuel : <strong>${totalChargesAnnuel.toLocaleString('fr-FR')} €</strong> | CA réalisé à ce jour : <strong id="gauge-ca-label">${total26ca.toLocaleString('fr-FR')} €</strong>`;
+  document.querySelectorAll('.gauge-label-half-charges').forEach(el => el.textContent = Math.round(totalChargesAnnuel / 2).toLocaleString('fr-FR') + ' €');
+  document.querySelectorAll('.gauge-label-full-charges').forEach(el => el.textContent = totalChargesAnnuel.toLocaleString('fr-FR') + ' €');
 
-  // Labels milieu et fin des jauges
-  document.querySelectorAll('.gauge-label-half').forEach(el => el.textContent = half.toLocaleString('fr-FR') + ' €');
-  document.querySelectorAll('.gauge-label-full').forEach(el => el.textContent = totalChargesAnnuel.toLocaleString('fr-FR') + ' €');
+  // Jauge 2 : CA réalisé vs objectif 300 000 €
+  const gSub2 = document.getElementById('gauge-ca-subtitle');
+  if (gSub2) gSub2.innerHTML = `Objectif annuel : <strong>300 000 €</strong> | CA réalisé à ce jour : <strong>${total26ca.toLocaleString('fr-FR')} €</strong>`;
+  document.querySelectorAll('.gauge-label-half-ca').forEach(el => el.textContent = '150 000 €');
+  document.querySelectorAll('.gauge-label-full-ca').forEach(el => el.textContent = '300 000 €');
 
   setTimeout(() => {
     const gc  = document.getElementById('gauge-charges'); const gcp  = document.getElementById('gauge-charges-pct');
