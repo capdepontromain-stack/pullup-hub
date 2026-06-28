@@ -1695,7 +1695,17 @@ Afin d'avancer, nous pouvons :
     <div class="modal-body">
       <form id="form-newTask" class="form-grid">
         <div class="form-group span2"><label>Titre de la tâche</label><input name="title" type="text" placeholder="Description de la tâche" required></div>
-        <div class="form-group"><label>Responsable</label><select name="assignee"><option>Romain</option><option>Ketsia</option><option>Flora</option><option>Gloria</option></select></div>
+        <div class="form-group span2"><label>Responsable(s)</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px">
+            <button type="button" onclick="toggleAllTaskAssignees(this)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:.8rem;cursor:pointer;color:var(--text2)">👥 Toute l'équipe</button>
+          </div>
+          <div id="new-task-assignees" style="display:flex;flex-wrap:wrap;gap:8px">
+            <label style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem"><input type="checkbox" name="assignees" value="Romain" style="accent-color:var(--gold)"> Romain</label>
+            <label style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem"><input type="checkbox" name="assignees" value="Ketsia" style="accent-color:#4A9EFF"> Ketsia</label>
+            <label style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem"><input type="checkbox" name="assignees" value="Flora" style="accent-color:#FF6B9D"> Flora</label>
+            <label style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem"><input type="checkbox" name="assignees" value="Gloria" style="accent-color:#9B59B6"> Gloria</label>
+          </div>
+        </div>
         <div class="form-group"><label>Date limite</label><input name="due_date" type="date"></div>
         <div class="form-group"><label>Priorité</label><select name="priority"><option>Urgent</option><option selected>Normal</option><option>Bas</option></select></div>
         <div class="form-group span2"><label>Description</label><textarea name="description" rows="3" placeholder="Détails supplémentaires..."></textarea></div>
@@ -1727,13 +1737,16 @@ Afin d'avancer, nous pouvons :
       <form id="form-editTask" class="form-grid">
         <input type="hidden" name="id">
         <div class="form-group span2"><label>Titre de la tâche</label><input name="title" type="text" required></div>
-        <div class="form-group"><label>Responsable</label>
-          <select name="assignee_name">
-            <option>Romain</option>
-            <option>Ketsia</option>
-            <option>Flora</option>
-            <option>Gloria</option>
-          </select>
+        <div class="form-group span2"><label>Responsable(s)</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px">
+            <button type="button" onclick="toggleAllTaskAssignees(this)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:.8rem;cursor:pointer;color:var(--text2)">👥 Toute l'équipe</button>
+          </div>
+          <div id="edit-task-assignees" style="display:flex;flex-wrap:wrap;gap:8px">
+            <label style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem"><input type="checkbox" name="assignees" value="Romain" style="accent-color:var(--gold)"> Romain</label>
+            <label style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem"><input type="checkbox" name="assignees" value="Ketsia" style="accent-color:#4A9EFF"> Ketsia</label>
+            <label style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem"><input type="checkbox" name="assignees" value="Flora" style="accent-color:#FF6B9D"> Flora</label>
+            <label style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem"><input type="checkbox" name="assignees" value="Gloria" style="accent-color:#9B59B6"> Gloria</label>
+          </div>
         </div>
         <div class="form-group"><label>Priorité</label>
           <select name="priority">

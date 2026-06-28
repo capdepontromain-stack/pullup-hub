@@ -464,7 +464,10 @@ function openEditTask(t) {
     const statusMap = { faire: 'todo', fait: 'done', inprogress: 'inprogress', waiting: 'waiting', done: 'done', todo: 'todo' };
     form.elements['id'].value = t.id || '';
     form.elements['title'].value = t.title || '';
-    form.elements['assignee_name'].value = t.assignee_name || 'Romain';
+    // Cocher la bonne personne dans les checkboxes
+    form.querySelectorAll('[name=assignees]').forEach(c => {
+      c.checked = c.value === (t.assignee_name || 'Romain');
+    });
     form.elements['priority'].value = t.priority || 'Normal';
     form.elements['status'].value = statusMap[t.status] || 'todo';
     form.elements['due_date'].value = t.due_date || '';
@@ -536,9 +539,10 @@ async function uploadTaskPhoto(file, taskId) {
 async function saveEditTask() {
   const form = document.getElementById('form-editTask');
   if (!form || !currentEditTaskId) return;
-  const updates = {
+  const assignees = [...form.querySelectorAll('[name=assignees]:checked')].map(c => c.value);
+  if (!assignees.length) { showToast('Sélectionne au moins une personne'); return; }
+  const baseUpdates = {
     title: form.elements['title'].value.trim(),
-    assignee_name: form.elements['assignee_name'].value,
     priority: form.elements['priority'].value,
     status: form.elements['status'].value,
     due_date: form.elements['due_date'].value || null,
@@ -549,17 +553,23 @@ async function saveEditTask() {
   const photoFile = photoInput?.files[0];
   if (photoFile) {
     try {
-      updates.photo_url = await uploadTaskPhoto(photoFile, currentEditTaskId);
+      baseUpdates.photo_url = await uploadTaskPhoto(photoFile, currentEditTaskId);
     } catch(e) { showToast('Erreur upload photo : ' + e.message); return; }
   } else if (window._editTaskPhotoRemoved) {
-    updates.photo_url = null;
+    baseUpdates.photo_url = null;
   }
-  const { error } = await sb.from('tasks').update(updates).eq('id', currentEditTaskId);
+  // Update current task with first assignee, create new tasks for others
+  const { error } = await sb.from('tasks').update({ ...baseUpdates, assignee_name: assignees[0] }).eq('id', currentEditTaskId);
   if (error) { showToast('Erreur : ' + error.message); return; }
+  for (let i = 1; i < assignees.length; i++) {
+    await sb.from('tasks').insert({ ...baseUpdates, assignee_name: assignees[i], status: 'todo' });
+  }
   closeModal('editTask');
   await loadAndRenderTasks();
-  showToast('Tâche mise à jour ✓');
+  loadTasksBadge();
+  showToast(assignees.length > 1 ? `Tâche assignée à ${assignees.length} personnes ✓` : 'Tâche mise à jour ✓');
 }
+
 
 async function deleteCurrentTask() {
   if (!currentEditTaskId) return;
@@ -1299,34 +1309,46 @@ async function saveNewEvent() {
   } catch(e) { showToast('Erreur : ' + e.message); }
 }
 
+function toggleAllTaskAssignees(btn) {
+  const container = btn.closest('.form-group').querySelector('[id$="-task-assignees"], #new-task-assignees, #edit-task-assignees');
+  const checkboxes = container ? container.querySelectorAll('[name=assignees]') : btn.closest('.form-group').querySelectorAll('[name=assignees]');
+  const allChecked = [...checkboxes].every(c => c.checked);
+  checkboxes.forEach(c => c.checked = !allChecked);
+}
+
 async function saveNewTask() {
   const form = document.getElementById('form-newTask');
   if (!form) return;
-  const data = {
-    title: form.querySelector('[name=title]')?.value,
-    description: form.querySelector('[name=description]')?.value,
-    assignee_name: form.querySelector('[name=assignee]')?.value,
+  const title = form.querySelector('[name=title]')?.value;
+  if (!title) { showToast('Titre obligatoire'); return; }
+  const assignees = [...form.querySelectorAll('[name=assignees]:checked')].map(c => c.value);
+  if (!assignees.length) { showToast('Sélectionne au moins une personne'); return; }
+  const base = {
+    title,
+    description: form.querySelector('[name=description]')?.value || null,
     due_date: form.querySelector('[name=due_date]')?.value || null,
     priority: form.querySelector('[name=priority]')?.value || 'Normal',
     status: 'todo'
   };
-  if (!data.title) { showToast('Titre obligatoire'); return; }
+  const photoFile = form.querySelector('[name=photo]')?.files[0];
   try {
-    const { data: created, error } = await sb.from('tasks').insert(data).select().single();
-    if (error) throw error;
-    // Upload photo if selected
-    const photoFile = form.querySelector('[name=photo]')?.files[0];
-    if (photoFile && created) {
-      try {
-        const photoUrl = await uploadTaskPhoto(photoFile, created.id);
-        await sb.from('tasks').update({ photo_url: photoUrl }).eq('id', created.id);
-      } catch(e) { showToast('Tâche créée mais erreur photo : ' + e.message); }
+    for (const name of assignees) {
+      const { data: created, error } = await sb.from('tasks').insert({ ...base, assignee_name: name }).select().single();
+      if (error) throw error;
+      if (photoFile && created) {
+        try {
+          const photoUrl = await uploadTaskPhoto(photoFile, created.id);
+          await sb.from('tasks').update({ photo_url: photoUrl }).eq('id', created.id);
+        } catch(e) {}
+      }
     }
     closeModal('newTask');
-    await loadAndRenderTasks();
-    showToast('Tâche créée !');
     form.reset();
+    form.querySelectorAll('[name=assignees]').forEach(c => c.checked = false);
     clearNewTaskPhoto();
+    await loadAndRenderTasks();
+    loadTasksBadge();
+    showToast(assignees.length > 1 ? `Tâche créée pour ${assignees.length} personnes ✓` : 'Tâche créée ✓');
   } catch(e) { showToast('Erreur : ' + e.message); }
 }
 
