@@ -201,21 +201,21 @@
     </div>
 
     <div class="stats-grid" id="stats-grid">
-      <div class="stat-card gold" data-stat-id="events" onclick="showPage('events')" style="cursor:grab">
+      <div class="stat-card gold" data-stat-id="events" onclick="showPage('events')" style="cursor:pointer">
         <div class="stat-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
         <div class="stat-info">
           <span class="stat-value" id="stat-events-count">—</span>
           <span class="stat-label">Événements à venir</span>
         </div>
       </div>
-      <div class="stat-card" data-stat-id="tasks" onclick="showPage('tasks')" style="cursor:grab">
+      <div class="stat-card" data-stat-id="tasks" onclick="showPage('tasks')" style="cursor:pointer">
         <div class="stat-icon warning"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
         <div class="stat-info">
           <span class="stat-value" id="stat-tasks-count">—</span>
           <span class="stat-label">Tâches en cours</span>
         </div>
       </div>
-      <div class="stat-card" data-stat-id="ca" onclick="showPage('finances')" style="cursor:grab">
+      <div class="stat-card" data-stat-id="ca" onclick="showPage('finances')" style="cursor:pointer">
         <div class="stat-icon success"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
         <div class="stat-info">
           <span class="stat-value" id="stat-ca-count">—</span>
@@ -223,7 +223,7 @@
           <span id="stat-benef-label" style="font-size:.72rem;margin-top:2px;font-weight:600"></span>
         </div>
       </div>
-      <div class="stat-card" data-stat-id="creances" onclick="showPage('finances')" style="cursor:grab">
+      <div class="stat-card" data-stat-id="creances" onclick="showPage('finances')" style="cursor:pointer">
         <div class="stat-icon danger"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8l10 6 10-6"/></svg></div>
         <div class="stat-info">
           <span class="stat-value" id="stat-creances-count">0</span>
@@ -231,7 +231,7 @@
           <span id="stat-creances-total" style="font-size:.72rem;color:#f44336;font-weight:600;margin-top:2px"></span>
         </div>
       </div>
-      <div class="stat-card" data-stat-id="crm" onclick="showPage('crm')" style="cursor:grab">
+      <div class="stat-card" data-stat-id="crm" onclick="showPage('crm')" style="cursor:pointer">
         <div class="stat-icon" style="background:rgba(99,102,241,.15);color:#6366f1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
         <div class="stat-info">
           <span class="stat-value" id="stat-prospects-count">0</span>
@@ -239,7 +239,7 @@
           <div id="stat-prospects-names" style="font-size:.72rem;color:var(--text2);margin-top:2px;line-height:1.4"></div>
         </div>
       </div>
-      <div class="stat-card" data-stat-id="devis" onclick="showPage('devis-requests');loadDevisRequests()" style="cursor:grab">
+      <div class="stat-card" data-stat-id="devis" onclick="showPage('devis-requests');loadDevisRequests()" style="cursor:pointer">
         <div class="stat-icon" style="background:rgba(245,197,24,.15);color:var(--gold)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
         <div class="stat-info">
           <span class="stat-value" id="stat-devis-req-count">0</span>
@@ -251,7 +251,7 @@
 
     <div class="dashboard-grid" id="dashboard-grid">
       <!-- Upcoming events -->
-      <div class="card" data-dash-id="events" style="cursor:grab" onclick="showPage('events')">
+      <div class="card" data-dash-id="0" style="cursor:pointer" onclick="showPage('events')">
         <div class="card-header">
           <h3>Prochains événements</h3>
           <span style="font-size:.8rem;color:var(--text2)">Voir tout →</span>
@@ -262,7 +262,7 @@
       </div>
 
       <!-- Urgent tasks -->
-      <div class="card" data-dash-id="tasks" style="cursor:grab" onclick="showPage('tasks')">
+      <div class="card" data-dash-id="0" style="cursor:pointer" onclick="showPage('tasks')">
         <div class="card-header">
           <h3>Tâches urgentes</h3>
           <span style="font-size:.8rem;color:var(--text2)">Voir tout →</span>
@@ -273,7 +273,7 @@
       </div>
 
       <!-- Team -->
-      <div class="card" data-dash-id="team" style="cursor:grab" onclick="showPage('personnel')">
+      <div class="card" data-dash-id="0" style="cursor:pointer" onclick="showPage('personnel')">
         <div class="card-header"><h3>Équipe</h3><span style="font-size:.8rem;color:var(--text2)">Voir les membres →</span></div>
         <div class="team-grid">
           <div class="team-member">
@@ -305,13 +305,13 @@
 
 
       <!-- CA Objectifs -->
-      <div class="card span2" data-dash-id="ca-bars" style="cursor:grab">
+      <div class="card span2" data-dash-id="0" style="cursor:pointer">
         <div class="card-header"><h3>Bénéfice réalisé 2026 — seuil charges : <span data-charges-label>8 718 €/mois</span></h3></div>
         <div class="objectives-grid" id="dashboard-ca-bars"></div>
       </div>
 
       <!-- Jauges financières -->
-      <div class="card span2" data-dash-id="gauges" style="cursor:grab" onclick="showPage('finances')">
+      <div class="card span2" data-dash-id="0" style="cursor:pointer" onclick="showPage('finances')">
         <div class="card-header">
           <h3>📊 Indicateurs financiers 2026</h3>
           <span style="font-size:.8rem;color:var(--text2)">Voir les finances →</span>

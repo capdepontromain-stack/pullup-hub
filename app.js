@@ -829,8 +829,8 @@ function focusPersonCol(name) {
   }
 }
 
-// ===== DRAG & DROP TABLEAU DE BORD =====
-(function initDashboardDrag() {
+// Drag & drop tableau de bord désactivé
+/* (function initDashboardDrag() {
   const grid = document.getElementById('dashboard-grid');
   if (!grid) return;
 
@@ -914,10 +914,10 @@ function focusPersonCol(name) {
       touchEl = null;
     });
   });
-})();
+})(); */
 
-// ===== DRAG & DROP STATS GRID (cartes du haut) =====
-(function initStatsDrag() {
+// ===== DRAG & DROP STATS GRID (cartes du haut) désactivé =====
+/* (function initStatsDrag() {
   const grid = document.getElementById('stats-grid');
   if (!grid) return;
 
@@ -996,4 +996,4 @@ function focusPersonCol(name) {
       touchEl = null;
     });
   });
-})();
+})(); */
