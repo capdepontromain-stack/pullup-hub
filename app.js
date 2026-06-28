@@ -636,3 +636,47 @@ if ('serviceWorker' in navigator) {
 }
 
 // Init géré par supabase.js (boot → login ou app)
+
+// Focus plein écran d'une colonne de tâches
+let _focusedCol = null;
+function focusPersonCol(name) {
+  const board = document.getElementById('person-board');
+  const col = document.getElementById('col-' + name);
+  if (!board || !col) return;
+
+  if (_focusedCol === name) {
+    // Retour à la vue normale
+    _focusedCol = null;
+    board.querySelectorAll('.person-col').forEach(c => {
+      c.style.display = '';
+      c.style.flex = '';
+      c.style.minWidth = '';
+    });
+    const btn = document.getElementById('tasks-focus-back');
+    if (btn) btn.remove();
+    board.style.display = '';
+  } else {
+    // Mode focus
+    _focusedCol = name;
+    board.querySelectorAll('.person-col').forEach(c => {
+      if (c.id === 'col-' + name) {
+        c.style.flex = '1';
+        c.style.minWidth = '0';
+        c.style.display = '';
+      } else {
+        c.style.display = 'none';
+      }
+    });
+    board.style.display = 'flex';
+    // Bouton retour
+    if (!document.getElementById('tasks-focus-back')) {
+      const btn = document.createElement('button');
+      btn.id = 'tasks-focus-back';
+      btn.textContent = '← Voir tous';
+      btn.className = 'btn-outline';
+      btn.style.cssText = 'margin-bottom:12px;display:block';
+      btn.onclick = () => focusPersonCol(name);
+      board.parentNode.insertBefore(btn, board);
+    }
+  }
+}
