@@ -31,6 +31,113 @@ document.querySelectorAll('.nav-item').forEach(item => {
   });
 });
 
+// ===== RÉORGANISATION DES ONGLETS PAR DRAG & DROP =====
+(function initNavDrag() {
+  const nav = document.querySelector('.sidebar-nav');
+  if (!nav) return;
+
+  // Restaurer l'ordre sauvegardé
+  const saved = localStorage.getItem('pullup_nav_order');
+  if (saved) {
+    try {
+      const order = JSON.parse(saved);
+      order.forEach(page => {
+        const el = nav.querySelector(`[data-page="${page}"]`);
+        if (el) nav.appendChild(el);
+      });
+    } catch(e) {}
+  }
+
+  let dragEl = null;
+  let touchDragEl = null;
+  let touchClone = null;
+  let touchStartY = 0;
+
+  function saveNavOrder() {
+    const order = [...nav.querySelectorAll('.nav-item')].map(el => el.dataset.page);
+    localStorage.setItem('pullup_nav_order', JSON.stringify(order));
+  }
+
+  function getNavItemAt(y) {
+    return [...nav.querySelectorAll('.nav-item')].find(el => {
+      if (el === touchDragEl) return false;
+      const r = el.getBoundingClientRect();
+      return y >= r.top && y <= r.bottom;
+    });
+  }
+
+  nav.querySelectorAll('.nav-item').forEach(item => {
+    // === Desktop drag ===
+    item.setAttribute('draggable', 'true');
+
+    item.addEventListener('dragstart', e => {
+      dragEl = item;
+      item.style.opacity = '.4';
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    item.addEventListener('dragend', () => {
+      dragEl = null;
+      item.style.opacity = '';
+      nav.querySelectorAll('.nav-item').forEach(i => i.style.borderTop = '');
+      saveNavOrder();
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (!dragEl || dragEl === item) return;
+      const r = item.getBoundingClientRect();
+      const after = e.clientY > r.top + r.height / 2;
+      nav.querySelectorAll('.nav-item').forEach(i => i.style.borderTop = '');
+      if (after) {
+        item.style.borderBottom = '2px solid var(--gold)';
+        item.style.borderTop = '';
+      } else {
+        item.style.borderTop = '2px solid var(--gold)';
+        item.style.borderBottom = '';
+      }
+      if (after) item.after(dragEl); else item.before(dragEl);
+    });
+    item.addEventListener('dragleave', () => {
+      item.style.borderTop = '';
+      item.style.borderBottom = '';
+    });
+
+    // === Touch drag ===
+    item.addEventListener('touchstart', e => {
+      touchDragEl = item;
+      touchStartY = e.touches[0].clientY;
+      // Clone visuel
+      touchClone = item.cloneNode(true);
+      touchClone.style.cssText = `position:fixed;left:0;width:${item.offsetWidth}px;opacity:.85;z-index:9999;background:var(--bg3);border-radius:8px;pointer-events:none;padding:9px 16px;color:var(--gold);font-size:13px;`;
+      touchClone.style.top = item.getBoundingClientRect().top + 'px';
+      document.body.appendChild(touchClone);
+      item.style.opacity = '.3';
+    }, { passive: true });
+
+    item.addEventListener('touchmove', e => {
+      if (!touchDragEl) return;
+      e.preventDefault();
+      const y = e.touches[0].clientY;
+      if (touchClone) touchClone.style.top = (y - 20) + 'px';
+      const target = getNavItemAt(y);
+      nav.querySelectorAll('.nav-item').forEach(i => { i.style.borderTop = ''; i.style.borderBottom = ''; });
+      if (target) {
+        const r = target.getBoundingClientRect();
+        if (y > r.top + r.height / 2) { target.style.borderBottom = '2px solid var(--gold)'; target.after(touchDragEl); }
+        else { target.style.borderTop = '2px solid var(--gold)'; target.before(touchDragEl); }
+      }
+    }, { passive: false });
+
+    item.addEventListener('touchend', () => {
+      if (!touchDragEl) return;
+      touchDragEl.style.opacity = '';
+      if (touchClone) { touchClone.remove(); touchClone = null; }
+      nav.querySelectorAll('.nav-item').forEach(i => { i.style.borderTop = ''; i.style.borderBottom = ''; });
+      saveNavOrder();
+      touchDragEl = null;
+    });
+  });
+})();
+
 // Sidebar mobile
 const menuBtn = document.getElementById('menuBtn');
 const sidebar = document.getElementById('sidebar');
