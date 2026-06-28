@@ -2505,16 +2505,18 @@ const personnelData = {
 async function loadPersonnelLeaveStats() {
   const now = new Date();
   const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const prefix = `${year}-${month}`;
+  const month = now.getMonth(); // 0-indexed
+  const firstDay = `${year}-${String(month+1).padStart(2,'0')}-01`;
+  const lastDay = new Date(year, month+1, 0).toISOString().slice(0,10);
 
-  const { data } = await sb.from('leaves').select('*')
-    .gte('leave_date', `${prefix}-01`)
-    .lte('leave_date', `${prefix}-31`);
+  const { data, error } = await sb.from('leaves').select('*')
+    .gte('leave_date', firstDay)
+    .lte('leave_date', lastDay);
+  if (error) { console.error('loadPersonnelLeaveStats', error); return; }
 
   const members = ['Romain', 'Ketsia', 'Flora', 'Gloria'];
   members.forEach(name => {
-    const myLeaves = (data || []).filter(l => l.person_name === name && l.status === 'approved');
+    const myLeaves = (data || []).filter(l => l.person_name === name);
     const totalH = myLeaves.reduce((s, l) => s + (parseFloat(l.hours) || 0), 0);
     const congeJ = myLeaves.filter(l => !l.leave_type || l.leave_type === 'conge').length;
     const maladieJ = myLeaves.filter(l => l.leave_type === 'maladie').length;
