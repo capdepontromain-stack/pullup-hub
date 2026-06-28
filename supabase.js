@@ -250,16 +250,39 @@ async function upsertFinanceMonthly(year, month, field, value) {
 async function saveNewFacture(e) {
   e.preventDefault();
   const form = e.target;
+  const benefVal = parseFloat(form.querySelector('[name=benef]')?.value) || null;
+  const invoiceDate = form.querySelector('[name=invoice_date]').value || null;
   const data = {
     type: 'facture',
     client:       form.querySelector('[name=client]').value,
     amount:       parseFloat(form.querySelector('[name=amount]').value) || null,
-    invoice_date: form.querySelector('[name=invoice_date]').value || null,
+    benef:        benefVal,
+    invoice_date: invoiceDate,
     status:       form.querySelector('[name=status]').value || 'En attente',
     notes:        form.querySelector('[name=notes]')?.value || null,
   };
   try {
     await createFinance(data);
+    // Si bénéfice renseigné, mettre à jour l'analyse mensuelle
+    if (benefVal && invoiceDate) {
+      const d = new Date(invoiceDate);
+      const year = d.getFullYear();
+      const month = d.getMonth() + 1;
+      // Recalculer le bénéfice total du mois depuis toutes les factures
+      const { data: allFact } = await sb.from('finance_entries').select('invoice_date,benef').eq('type','facture').not('benef','is',null);
+      const monthBenef = (allFact || []).filter(f => {
+        if (!f.invoice_date || !f.benef) return false;
+        const fd = new Date(f.invoice_date);
+        return fd.getFullYear() === year && fd.getMonth() + 1 === month;
+      }).reduce((s, f) => s + (parseFloat(f.benef) || 0), 0);
+      // Mettre à jour ou créer la ligne dans finance_monthly
+      const { data: existing } = await sb.from('finance_monthly').select('id,ca').eq('year', year).eq('month', month).single();
+      if (existing) {
+        await sb.from('finance_monthly').update({ benef: Math.round(monthBenef) }).eq('id', existing.id);
+      } else {
+        await sb.from('finance_monthly').insert({ year, month, ca: 0, benef: Math.round(monthBenef) });
+      }
+    }
     showToast('Facture ajoutée ✓');
     closeModal('newFacture');
     form.reset();
