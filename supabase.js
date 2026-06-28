@@ -983,23 +983,40 @@ function renderFinances(entries) {
 
   const facturesTbody = document.getElementById('fin-factures-body');
   if (facturesTbody) {
-    facturesTbody.innerHTML = factures.length ? factures.map(f => {
-      const statusColors = { 'Payée':'#4CAF50','En attente':'#F5C518','En retard':'#f44336','Non payé':'#f44336' };
-      const sc = statusColors[f.status] || 'var(--text2)';
-      return `<tr style="cursor:pointer" onclick="openEditFacture('${f.id}')" title="Cliquer pour modifier">
-        <td>${f.client || '—'}</td>
-        <td style="font-weight:700">${f.amount ? parseFloat(f.amount).toLocaleString('fr-FR') + ' €' : '—'}</td>
-        <td style="color:#4CAF50;font-weight:700">${f.benef ? parseFloat(f.benef).toLocaleString('fr-FR') + ' €' : '—'}</td>
-        <td>${f.invoice_date ? new Date(f.invoice_date).toLocaleDateString('fr-FR') : '—'}</td>
-        <td>${f.notes || '—'}</td>
-        <td onclick="event.stopPropagation()">
-          <select onchange="updateFinanceStatus('${f.id}', this.value)" style="background:var(--bg3);color:${sc};border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:.8rem;font-weight:600">
-            ${['En attente','Payée','En retard','Non payé'].map(s=>`<option ${f.status===s?'selected':''}>${s}</option>`).join('')}
-          </select>
-        </td>
-        <td onclick="event.stopPropagation()"><button class="btn-icon" onclick="deleteFinanceEntry('${f.id}')" title="Supprimer">🗑</button></td>
-      </tr>`;
-    }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">Aucune facture — cliquez sur "+ Nouvelle facture"</td></tr>';
+    if (factures.length) {
+      // Grouper par mois
+      const grouped = {};
+      factures.forEach(f => {
+        const key = f.invoice_date ? f.invoice_date.slice(0,7) : '0000-00';
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(f);
+      });
+      const MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+      facturesTbody.innerHTML = Object.keys(grouped).sort().reverse().map(key => {
+        const [yr, mo] = key.split('-');
+        const label = key === '0000-00' ? 'Sans date' : `${MOIS[parseInt(mo)-1]} ${yr}`;
+        const rows = grouped[key].map(f => {
+          const statusColors = { 'Payée':'#4CAF50','En attente':'#F5C518','En retard':'#f44336','Non payé':'#f44336' };
+          const sc = statusColors[f.status] || 'var(--text2)';
+          return `<tr style="cursor:pointer" onclick="openEditFacture('${f.id}')" title="Cliquer pour modifier">
+            <td>${f.client || '—'}</td>
+            <td style="font-weight:700">${f.amount ? parseFloat(f.amount).toLocaleString('fr-FR') + ' €' : '—'}</td>
+            <td style="color:#4CAF50;font-weight:700">${f.benef ? parseFloat(f.benef).toLocaleString('fr-FR') + ' €' : '—'}</td>
+            <td>${f.invoice_date ? new Date(f.invoice_date).toLocaleDateString('fr-FR') : '—'}</td>
+            <td>${f.notes || '—'}</td>
+            <td onclick="event.stopPropagation()">
+              <select onchange="updateFinanceStatus('${f.id}', this.value)" style="background:var(--bg3);color:${sc};border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:.8rem;font-weight:600">
+                ${['En attente','Payée','En retard','Non payé'].map(s=>`<option ${f.status===s?'selected':''}>${s}</option>`).join('')}
+              </select>
+            </td>
+            <td onclick="event.stopPropagation()"><button class="btn-icon" onclick="deleteFinanceEntry('${f.id}')" title="Supprimer">🗑</button></td>
+          </tr>`;
+        }).join('');
+        return `<tr><td colspan="7" style="padding:1rem 0 .3rem;font-weight:700;font-size:.85rem;color:var(--gold);letter-spacing:.05em;border-bottom:1px solid var(--border);text-transform:uppercase">${label}</td></tr>${rows}`;
+      }).join('');
+    } else {
+      facturesTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">Aucune facture — cliquez sur "+ Nouvelle facture"</td></tr>';
+    }
   }
 
   const devisTbody = document.getElementById('fin-devis-body');
