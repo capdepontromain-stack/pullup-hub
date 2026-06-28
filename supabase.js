@@ -415,19 +415,19 @@ function renderKanban(tasks) {
       return;
     }
 
-    // Trier : actives d'abord, terminées en dernier
+    // Trier par sort_order, puis terminées en dernier
     const sorted = [...myTasks].sort((a, b) => {
       if (a.status === 'done' && b.status !== 'done') return 1;
       if (a.status !== 'done' && b.status === 'done') return -1;
-      const prioOrder = { Urgent: 0, Normal: 1, Bas: 2 };
-      return (prioOrder[a.priority] ?? 1) - (prioOrder[b.priority] ?? 1);
+      return (a.sort_order ?? 0) - (b.sort_order ?? 0);
     });
 
     sorted.forEach(t => {
       const isDone = t.status === 'done';
       const card = document.createElement('div');
       card.className = 'ptask-card' + (isDone ? ' ptask-done' : '');
-      card.style.cursor = 'pointer';
+      card.style.cursor = 'grab';
+      card.dataset.taskId = t.id;
       const prioColor = prioBadge[t.priority] || prioBadge['Normal'];
       const dateStr = t.due_date ? new Date(t.due_date.split('-')).toLocaleDateString('fr-FR', {day:'numeric',month:'short'}) : '';
       card.innerHTML = `
@@ -447,10 +447,90 @@ function renderKanban(tasks) {
         ${t.description ? `<div style="font-size:.78rem;color:var(--text2);margin-top:3px">${t.description}</div>` : ''}
         ${t.events ? `<div style="margin-top:5px;display:flex;align-items:center;gap:4px;background:var(--bg4);border-radius:6px;padding:3px 7px;font-size:.72rem;color:var(--gold)">📅 ${t.events.name}${t.events.client ? ' · ' + t.events.client : ''}${t.events.event_date ? ' · ' + new Date(t.events.event_date).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}) : ''}</div>` : ''}
         <div class="ptask-status"><span style="font-size:10px;color:var(--text3)">${statusLabel[t.status] || t.status}</span></div>`;
+
       card.addEventListener('click', () => openEditTask(t));
+      setupTaskDrag(card, col);
       col.appendChild(card);
     });
   });
+}
+
+let _dragSrc = null;
+
+function setupTaskDrag(card, col) {
+  // Desktop drag
+  card.draggable = true;
+  card.addEventListener('dragstart', e => {
+    _dragSrc = card;
+    card.style.opacity = '0.4';
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  card.addEventListener('dragend', () => {
+    card.style.opacity = '1';
+    col.querySelectorAll('.ptask-card').forEach(c => c.style.borderTop = '');
+    saveTaskOrder(col);
+  });
+  card.addEventListener('dragover', e => {
+    e.preventDefault();
+    if (_dragSrc && _dragSrc !== card) {
+      const rect = card.getBoundingClientRect();
+      const mid = rect.top + rect.height / 2;
+      if (e.clientY < mid) {
+        col.insertBefore(_dragSrc, card);
+      } else {
+        col.insertBefore(_dragSrc, card.nextSibling);
+      }
+    }
+  });
+
+  // Mobile touch
+  let touchClone = null, touchStartY = 0, touchMoved = false;
+  card.addEventListener('touchstart', e => {
+    touchStartY = e.touches[0].clientY;
+    touchMoved = false;
+    // Long press delay to distinguish tap vs drag
+    card._touchTimer = setTimeout(() => {
+      _dragSrc = card;
+      card.style.opacity = '0.5';
+      card.style.transform = 'scale(1.03)';
+      touchClone = card;
+    }, 200);
+  }, { passive: true });
+
+  card.addEventListener('touchmove', e => {
+    if (!_dragSrc || _dragSrc !== card) { clearTimeout(card._touchTimer); return; }
+    touchMoved = true;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const els = document.elementsFromPoint(touch.clientX, touch.clientY);
+    const target = els.find(el => el.classList.contains('ptask-card') && el !== card);
+    if (target) {
+      const rect = target.getBoundingClientRect();
+      if (touch.clientY < rect.top + rect.height / 2) {
+        col.insertBefore(card, target);
+      } else {
+        col.insertBefore(card, target.nextSibling);
+      }
+    }
+  }, { passive: false });
+
+  card.addEventListener('touchend', () => {
+    clearTimeout(card._touchTimer);
+    card.style.opacity = '1';
+    card.style.transform = '';
+    if (_dragSrc === card) {
+      saveTaskOrder(col);
+      _dragSrc = null;
+    }
+  });
+}
+
+async function saveTaskOrder(col) {
+  const cards = [...col.querySelectorAll('.ptask-card')];
+  const updates = cards.map((c, i) => ({ id: c.dataset.taskId, sort_order: i }));
+  for (const u of updates) {
+    await sb.from('tasks').update({ sort_order: u.sort_order }).eq('id', u.id);
+  }
 }
 
 let currentEditTaskId = null;
