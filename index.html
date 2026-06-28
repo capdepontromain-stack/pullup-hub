@@ -1273,7 +1273,10 @@ Afin d'avancer, nous pouvons :
       <div class="fkpi"><span class="fkpi-val gold">98 763 €</span><span>CA 2026 (Janv–Juin)</span></div>
       <div class="fkpi"><span class="fkpi-val success">55 199 €</span><span>Bénéfice 2026 H1</span></div>
       <div class="fkpi"><span class="fkpi-val" style="color:var(--color-flora)">287 014 €</span><span>CA total 2025</span></div>
-      <div class="fkpi"><span class="fkpi-val danger">900 €</span><span>Mission Locale — non payé ❌</span></div>
+      <div class="fkpi" id="fkpi-creances-card" onclick="document.querySelector('[data-section=creances]')?.scrollIntoView({behavior:'smooth'})" style="cursor:pointer">
+        <span class="fkpi-val danger" id="fkpi-creances-montant">—</span>
+        <span id="fkpi-creances-label" style="font-size:.8rem">Chargement...</span>
+      </div>
     </div>
 
     <!-- Jauges objectifs -->

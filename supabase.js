@@ -983,6 +983,22 @@ function renderCreances(entries) {
   const dashTotalEl = document.getElementById('stat-creances-total');
   if (dashTotalEl) dashTotalEl.textContent = total > 0 ? 'Total : ' + total.toLocaleString('fr-FR') + ' €' : '';
 
+  // Carte KPI dynamique dans Finances
+  const kpiMontant = document.getElementById('fkpi-creances-montant');
+  const kpiLabel = document.getElementById('fkpi-creances-label');
+  if (kpiMontant && kpiLabel) {
+    if (impayees.length === 0) {
+      kpiMontant.textContent = '✅ 0 €';
+      kpiMontant.className = 'fkpi-val success';
+      kpiLabel.textContent = 'Aucune créance impayée';
+    } else {
+      const clients = [...new Set(impayees.map(f => f.client).filter(Boolean))];
+      kpiMontant.textContent = total.toLocaleString('fr-FR') + ' €';
+      kpiMontant.className = 'fkpi-val danger';
+      kpiLabel.innerHTML = `❌ ${impayees.length} facture${impayees.length > 1 ? 's' : ''} impayée${impayees.length > 1 ? 's' : ''}<br><span style="font-size:.72rem;color:var(--text2)">${clients.slice(0,3).join(', ')}${clients.length > 3 ? '…' : ''}</span>`;
+    }
+  }
+
   const tbody = document.getElementById('creances-tbody');
   if (!tbody) return;
   if (!impayees.length) {
