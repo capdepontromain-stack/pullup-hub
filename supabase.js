@@ -723,7 +723,7 @@ function renderMessages(messages) {
   container.innerHTML = messages.map(m => {
     const isMine = m.author_id === currentUser?.id;
     const canDelete = true;
-    const time = new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const time = new Date(m.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit' }) + ' ' + new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     return `<div class="chat-msg ${isMine ? 'mine' : ''}" data-id="${m.id}">
       ${!isMine ? `<div class="chat-avatar">${chatAvatar(m.author_name)}</div>` : ''}
       <div class="chat-bubble">
@@ -1623,7 +1623,8 @@ async function sendChatMessage() {
 
   // Affichage optimiste immédiat
   const container = document.getElementById('chatMessages');
-  const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const _now = new Date();
+  const time = _now.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit' }) + ' ' + _now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   const tempId = 'tmp-' + Date.now();
   if (container) {
     const div = document.createElement('div');
@@ -2395,7 +2396,7 @@ async function switchChannel(channel) {
       showMessageNotification(msg);
       loadUnreadCounts();
     }
-    const time = new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const time = new Date(msg.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit' }) + ' ' + new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     const div = document.createElement('div');
     div.className = `chat-msg ${isMine ? 'mine' : ''}`;
     div.innerHTML = `${!isMine ? `<div class="chat-avatar">${chatAvatar(msg.author_name)}</div>` : ''}
