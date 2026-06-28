@@ -458,14 +458,18 @@ let currentEditTaskId = null;
 function openEditTask(t) {
   currentEditTaskId = t.id;
   const form = document.getElementById('form-editTask');
-  if (!form) return;
-  form.elements['id'].value = t.id || '';
-  form.elements['title'].value = t.title || '';
-  form.elements['assignee_name'].value = t.assignee_name || 'Romain';
-  form.elements['priority'].value = t.priority || 'Normal';
-  form.elements['status'].value = t.status || 'todo';
-  form.elements['due_date'].value = t.due_date || '';
-  form.elements['description'].value = t.description || '';
+  if (!form) { console.error('form-editTask introuvable'); return; }
+  try {
+    // Normaliser les anciens statuts
+    const statusMap = { faire: 'todo', fait: 'done', inprogress: 'inprogress', waiting: 'waiting', done: 'done', todo: 'todo' };
+    form.elements['id'].value = t.id || '';
+    form.elements['title'].value = t.title || '';
+    form.elements['assignee_name'].value = t.assignee_name || 'Romain';
+    form.elements['priority'].value = t.priority || 'Normal';
+    form.elements['status'].value = statusMap[t.status] || 'todo';
+    form.elements['due_date'].value = t.due_date || '';
+    form.elements['description'].value = t.description || '';
+  } catch(e) { console.error('openEditTask error', e); return; }
   // Reset photo input
   const photoInput = form.querySelector('[name=photo]');
   if (photoInput) photoInput.value = '';
