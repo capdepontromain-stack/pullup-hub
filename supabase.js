@@ -447,6 +447,7 @@ function renderKanban(tasks) {
       card.className = 'ptask-card' + (isDone ? ' ptask-done' : '');
       card.style.cursor = 'grab';
       card.dataset.taskId = t.id;
+      if (t.color) card.style.borderLeft = `3px solid ${t.color}`;
       const prioColor = prioBadge[t.priority] || prioBadge['Normal'];
       const dateStr = t.due_date ? new Date(t.due_date.split('-')).toLocaleDateString('fr-FR', {day:'numeric',month:'short'}) : '';
       card.innerHTML = `
@@ -465,7 +466,12 @@ function renderKanban(tasks) {
         <div class="ptask-title" style="${isDone ? 'text-decoration:line-through;color:var(--text2)' : 'font-weight:600'}">${t.title}</div>
         ${t.description ? `<div style="font-size:.78rem;color:var(--text2);margin-top:3px">${t.description}</div>` : ''}
         ${t.events ? `<div style="margin-top:5px;display:flex;align-items:center;gap:4px;background:var(--bg4);border-radius:6px;padding:3px 7px;font-size:.72rem;color:var(--gold)">📅 ${t.events.name}${t.events.client ? ' · ' + t.events.client : ''}${t.events.event_date ? ' · ' + new Date(t.events.event_date).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}) : ''}</div>` : ''}
-        <div class="ptask-status"><span style="font-size:10px;color:var(--text3)">${statusLabel[t.status] || t.status}</span></div>`;
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+          <span style="font-size:10px;color:var(--text3)">${statusLabel[t.status] || t.status}</span>
+          <button class="task-color-btn" onclick="event.stopPropagation();openTaskColorPicker(this,'${t.id}')"
+            style="width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border);background:${t.color || 'var(--bg3)'};cursor:pointer;flex-shrink:0;padding:0"
+            title="Couleur"></button>
+        </div>`;
 
       card.addEventListener('click', () => openEditTask(t));
       setupTaskDrag(card, col);
@@ -1261,6 +1267,57 @@ function renderQuickLinks(links) {
 // =============================================
 // DELETE HELPERS
 // =============================================
+const TASK_COLORS = [
+  { label: 'Aucune', value: null },
+  { label: 'Rouge',   value: '#e74c3c' },
+  { label: 'Orange',  value: '#e67e22' },
+  { label: 'Jaune',   value: '#f1c40f' },
+  { label: 'Vert',    value: '#2ecc71' },
+  { label: 'Bleu',    value: '#3498db' },
+  { label: 'Violet',  value: '#9b59b6' },
+  { label: 'Rose',    value: '#FF6B9D' },
+  { label: 'Cyan',    value: '#1abc9c' },
+];
+
+function openTaskColorPicker(btn, taskId) {
+  // Fermer tout picker existant
+  document.querySelectorAll('.task-color-picker').forEach(p => p.remove());
+
+  const picker = document.createElement('div');
+  picker.className = 'task-color-picker';
+  picker.style.cssText = 'position:absolute;z-index:999;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px;display:flex;gap:6px;flex-wrap:wrap;width:152px;box-shadow:0 4px 16px rgba(0,0,0,.4)';
+
+  TASK_COLORS.forEach(c => {
+    const swatch = document.createElement('button');
+    swatch.title = c.label;
+    swatch.style.cssText = `width:24px;height:24px;border-radius:6px;border:2px solid var(--border);cursor:pointer;background:${c.value || 'var(--bg3)'};padding:0;flex-shrink:0`;
+    if (!c.value) swatch.textContent = '✕';
+    swatch.onclick = async (e) => {
+      e.stopPropagation();
+      picker.remove();
+      // Mettre à jour visuellement
+      const card = btn.closest('.ptask-card');
+      if (card) {
+        card.style.borderLeft = c.value ? `3px solid ${c.value}` : '';
+        btn.style.background = c.value || 'var(--bg3)';
+      }
+      await sb.from('tasks').update({ color: c.value }).eq('id', taskId);
+    };
+    picker.appendChild(swatch);
+  });
+
+  // Positionner sous le bouton
+  document.body.appendChild(picker);
+  const rect = btn.getBoundingClientRect();
+  picker.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+  picker.style.left = Math.max(4, rect.right - picker.offsetWidth + window.scrollX) + 'px';
+
+  // Fermer au clic extérieur
+  setTimeout(() => document.addEventListener('click', function h() {
+    picker.remove(); document.removeEventListener('click', h);
+  }), 10);
+}
+
 async function deleteTaskById(id) {
   if (!confirm('Supprimer cette tâche ?')) return;
   await deleteTask(id);
