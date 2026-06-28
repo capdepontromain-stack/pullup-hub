@@ -20,6 +20,7 @@ function showPage(id) {
   if (id === 'flora') loadAndRenderFlora();
   if (id === 'charges' && typeof loadCharges === 'function') loadCharges();
   if (id === 'devis-requests' && typeof loadDevisRequests === 'function') loadDevisRequests();
+  if (id === 'personnel' && typeof loadPersonnelLeaveStats === 'function') loadPersonnelLeaveStats();
 }
 
 document.querySelectorAll('.nav-item').forEach(item => {

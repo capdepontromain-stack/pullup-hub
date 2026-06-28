@@ -2502,6 +2502,32 @@ const personnelData = {
   }
 };
 
+async function loadPersonnelLeaveStats() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const prefix = `${year}-${month}`;
+
+  const { data } = await sb.from('leaves').select('*')
+    .gte('leave_date', `${prefix}-01`)
+    .lte('leave_date', `${prefix}-31`);
+
+  const members = ['Romain', 'Ketsia', 'Flora', 'Gloria'];
+  members.forEach(name => {
+    const myLeaves = (data || []).filter(l => l.person_name === name && l.status === 'approved');
+    const totalH = myLeaves.reduce((s, l) => s + (parseFloat(l.hours) || 0), 0);
+    const congeJ = myLeaves.filter(l => !l.leave_type || l.leave_type === 'conge').length;
+    const maladieJ = myLeaves.filter(l => l.leave_type === 'maladie').length;
+
+    const hEl = document.getElementById(`pstat-h-${name}`);
+    const cEl = document.getElementById(`pstat-conge-${name}`);
+    const mEl = document.getElementById(`pstat-maladie-${name}`);
+    if (hEl) hEl.textContent = totalH > 0 ? `${totalH}h` : '0h';
+    if (cEl) cEl.textContent = congeJ > 0 ? `${congeJ}j` : '0j';
+    if (mEl) mEl.textContent = maladieJ > 0 ? `${maladieJ}j` : '0j';
+  });
+}
+
 function openPersonnelDetail(name) {
   const p = personnelData[name];
   if (!p) return;
