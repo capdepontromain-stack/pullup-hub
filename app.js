@@ -9,7 +9,10 @@ function showPage(id) {
   localStorage.setItem('pullup_last_page', id);
   if (id === 'events') {
     renderCalendar();
-    if (typeof loadAndRenderEvents === 'function') loadAndRenderEvents();
+    if (typeof loadAndRenderTasks === 'function') loadAndRenderTasks().then(() => {
+      if (typeof loadAndRenderEvents === 'function') loadAndRenderEvents();
+    });
+    else if (typeof loadAndRenderEvents === 'function') loadAndRenderEvents();
   }
   if (id === 'finances') renderFinanceAnalyse().catch(console.error);
   if (id === 'dashboard') renderDashboardCA().catch(console.error);

@@ -353,6 +353,25 @@ function renderEventsTable(events) {
   tbody.innerHTML = events.map(ev => {
     const date = ev.event_date ? new Date(ev.event_date).toLocaleDateString('fr-FR') : '—';
     const c = clientColor(ev.client);
+    const evTasks = (window._allTasks || []).filter(t => t.event_id === ev.id);
+    const todoTasks = evTasks.filter(t => t.status !== 'done' && t.status !== 'fait');
+    const doneTasks = evTasks.filter(t => t.status === 'done' || t.status === 'fait');
+    const tasksHtml = evTasks.length ? `
+      <tr style="background:${c.bg}">
+        <td colspan="8" style="padding:2px 12px 10px 20px;border-left:3px solid ${c.border}">
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${todoTasks.map(t => `<span style="display:inline-flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:.75rem">
+              <span style="width:7px;height:7px;border-radius:50%;background:#f44336;flex-shrink:0"></span>
+              <span>${t.title}</span>
+              <span style="color:var(--text3);font-size:.7rem">— ${t.assignee_name || ''}</span>
+            </span>`).join('')}
+            ${doneTasks.map(t => `<span style="display:inline-flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:.75rem;opacity:.5;text-decoration:line-through">
+              <span style="width:7px;height:7px;border-radius:50%;background:#4CAF50;flex-shrink:0"></span>
+              <span>${t.title}</span>
+            </span>`).join('')}
+          </div>
+        </td>
+      </tr>` : '';
     return `<tr style="border-left:3px solid ${c.border};background:${c.bg}">
       <td onclick="openEventDetailById('${ev.id}')" style="cursor:pointer"><strong>${ev.name}</strong></td>
       <td><span style="color:${c.text};font-weight:600">${ev.client || '—'}</span></td>
@@ -369,7 +388,7 @@ function renderEventsTable(events) {
           ).join('')}
         </select>
       </td>
-    </tr>`;
+    </tr>${tasksHtml}`;
   }).join('');
 }
 
@@ -1264,6 +1283,7 @@ async function loadAndRenderEvents() {
 
 async function loadAndRenderTasks() {
   const tasks = await fetchTasks();
+  window._allTasks = tasks;
   renderKanban(tasks);
   updateDashboardTasks(tasks);
 }
