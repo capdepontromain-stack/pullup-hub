@@ -52,7 +52,8 @@ document.querySelectorAll('.nav-item').forEach(item => {
   let dragEl = null;
   let touchDragEl = null;
   let touchClone = null;
-  let touchStartY = 0;
+  let holdTimer = null;
+  let dragReady = false; // vrai seulement après 2 secondes d'appui
 
   function saveNavOrder() {
     const order = [...nav.querySelectorAll('.nav-item')].map(el => el.dataset.page);
@@ -68,10 +69,26 @@ document.querySelectorAll('.nav-item').forEach(item => {
   }
 
   nav.querySelectorAll('.nav-item').forEach(item => {
-    // === Desktop drag ===
-    item.setAttribute('draggable', 'true');
+    // === Desktop : délai 2s avant d'activer le drag ===
+    item.setAttribute('draggable', 'false'); // désactivé par défaut
+
+    item.addEventListener('mousedown', () => {
+      holdTimer = setTimeout(() => {
+        item.setAttribute('draggable', 'true');
+        item.style.cursor = 'grab';
+      }, 2000);
+    });
+    item.addEventListener('mouseup', () => {
+      clearTimeout(holdTimer);
+      // Remettre non-draggable après un court délai
+      setTimeout(() => { item.setAttribute('draggable', 'false'); item.style.cursor = ''; }, 300);
+    });
+    item.addEventListener('mouseleave', () => {
+      clearTimeout(holdTimer);
+    });
 
     item.addEventListener('dragstart', e => {
+      if (item.getAttribute('draggable') !== 'true') { e.preventDefault(); return; }
       dragEl = item;
       item.style.opacity = '.4';
       e.dataTransfer.effectAllowed = 'move';
@@ -79,7 +96,9 @@ document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('dragend', () => {
       dragEl = null;
       item.style.opacity = '';
-      nav.querySelectorAll('.nav-item').forEach(i => i.style.borderTop = '');
+      item.setAttribute('draggable', 'false');
+      item.style.cursor = '';
+      nav.querySelectorAll('.nav-item').forEach(i => { i.style.borderTop = ''; i.style.borderBottom = ''; });
       saveNavOrder();
     });
     item.addEventListener('dragover', e => {
@@ -87,14 +106,9 @@ document.querySelectorAll('.nav-item').forEach(item => {
       if (!dragEl || dragEl === item) return;
       const r = item.getBoundingClientRect();
       const after = e.clientY > r.top + r.height / 2;
-      nav.querySelectorAll('.nav-item').forEach(i => i.style.borderTop = '');
-      if (after) {
-        item.style.borderBottom = '2px solid var(--gold)';
-        item.style.borderTop = '';
-      } else {
-        item.style.borderTop = '2px solid var(--gold)';
-        item.style.borderBottom = '';
-      }
+      nav.querySelectorAll('.nav-item').forEach(i => { i.style.borderTop = ''; i.style.borderBottom = ''; });
+      if (after) { item.style.borderBottom = '2px solid var(--gold)'; }
+      else { item.style.borderTop = '2px solid var(--gold)'; }
       if (after) item.after(dragEl); else item.before(dragEl);
     });
     item.addEventListener('dragleave', () => {
@@ -102,20 +116,30 @@ document.querySelectorAll('.nav-item').forEach(item => {
       item.style.borderBottom = '';
     });
 
-    // === Touch drag ===
+    // === Touch : délai 2s avant d'activer le drag ===
     item.addEventListener('touchstart', e => {
-      touchDragEl = item;
-      touchStartY = e.touches[0].clientY;
-      // Clone visuel
-      touchClone = item.cloneNode(true);
-      touchClone.style.cssText = `position:fixed;left:0;width:${item.offsetWidth}px;opacity:.85;z-index:9999;background:var(--bg3);border-radius:8px;pointer-events:none;padding:9px 16px;color:var(--gold);font-size:13px;`;
-      touchClone.style.top = item.getBoundingClientRect().top + 'px';
-      document.body.appendChild(touchClone);
-      item.style.opacity = '.3';
+      dragReady = false;
+      const touch = e.touches[0];
+      holdTimer = setTimeout(() => {
+        dragReady = true;
+        touchDragEl = item;
+        // Vibration feedback si dispo
+        if (navigator.vibrate) navigator.vibrate(80);
+        // Clone visuel
+        touchClone = item.cloneNode(true);
+        touchClone.style.cssText = `position:fixed;left:0;width:${item.offsetWidth}px;opacity:.9;z-index:9999;background:var(--bg4);border:1px solid var(--gold);border-radius:8px;pointer-events:none;padding:9px 16px;color:var(--gold);font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,.5)`;
+        touchClone.style.top = item.getBoundingClientRect().top + 'px';
+        document.body.appendChild(touchClone);
+        item.style.opacity = '.3';
+      }, 2000);
     }, { passive: true });
 
     item.addEventListener('touchmove', e => {
-      if (!touchDragEl) return;
+      if (!dragReady || !touchDragEl) {
+        // Pas encore prêt : annuler le timer si l'utilisateur bouge
+        clearTimeout(holdTimer);
+        return;
+      }
       e.preventDefault();
       const y = e.touches[0].clientY;
       if (touchClone) touchClone.style.top = (y - 20) + 'px';
@@ -129,12 +153,14 @@ document.querySelectorAll('.nav-item').forEach(item => {
     }, { passive: false });
 
     item.addEventListener('touchend', () => {
+      clearTimeout(holdTimer);
       if (!touchDragEl) return;
       touchDragEl.style.opacity = '';
       if (touchClone) { touchClone.remove(); touchClone = null; }
       nav.querySelectorAll('.nav-item').forEach(i => { i.style.borderTop = ''; i.style.borderBottom = ''; });
-      saveNavOrder();
+      if (dragReady) saveNavOrder();
       touchDragEl = null;
+      dragReady = false;
     });
   });
 })();
