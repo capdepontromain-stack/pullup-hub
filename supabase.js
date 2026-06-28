@@ -247,9 +247,27 @@ async function upsertFinanceMonthly(year, month, field, value) {
   if (error) throw error;
 }
 
+let _allFactures = [];
+
+function openEditFacture(id) {
+  const f = _allFactures.find(x => x.id == id);
+  if (!f) return;
+  const form = document.getElementById('form-newFacture');
+  form.querySelector('[name=client]').value = f.client || '';
+  form.querySelector('[name=amount]').value = f.amount || '';
+  form.querySelector('[name=benef]').value = f.benef || '';
+  form.querySelector('[name=invoice_date]').value = f.invoice_date || '';
+  form.querySelector('[name=notes]').value = f.notes || '';
+  form.querySelector('[name=status]').value = f.status || 'En attente';
+  form.dataset.editId = id;
+  document.querySelector('#modal-newFacture .modal-header h3').textContent = 'Modifier la facture';
+  openModal('newFacture');
+}
+
 async function saveNewFacture(e) {
   e.preventDefault();
   const form = e.target;
+  const editId = form.dataset?.editId;
   const benefVal = parseFloat(form.querySelector('[name=benef]')?.value) || null;
   const invoiceDate = form.querySelector('[name=invoice_date]').value || null;
   const data = {
@@ -262,29 +280,33 @@ async function saveNewFacture(e) {
     notes:        form.querySelector('[name=notes]')?.value || null,
   };
   try {
-    await createFinance(data);
-    // Si bénéfice renseigné, mettre à jour l'analyse mensuelle
-    if (benefVal && invoiceDate) {
+    if (editId) {
+      await sb.from('finances').update(data).eq('id', editId);
+      form.dataset.editId = '';
+    } else {
+      await createFinance(data);
+    }
+    // Recalculer le bénéfice mensuel depuis toutes les factures du même mois
+    if (invoiceDate) {
       const d = new Date(invoiceDate);
       const year = d.getFullYear();
       const month = d.getMonth() + 1;
-      // Recalculer le bénéfice total du mois depuis toutes les factures
       const { data: allFact } = await sb.from('finances').select('invoice_date,benef').eq('type','facture').not('benef','is',null);
       const monthBenef = (allFact || []).filter(f => {
         if (!f.invoice_date || !f.benef) return false;
         const fd = new Date(f.invoice_date);
         return fd.getFullYear() === year && fd.getMonth() + 1 === month;
       }).reduce((s, f) => s + (parseFloat(f.benef) || 0), 0);
-      // Mettre à jour ou créer la ligne dans finance_monthly
-      const { data: existing } = await sb.from('finance_monthly').select('id,ca').eq('year', year).eq('month', month).single();
+      const { data: existing } = await sb.from('finance_monthly').select('id').eq('year', year).eq('month', month).single();
       if (existing) {
         await sb.from('finance_monthly').update({ benef: Math.round(monthBenef) }).eq('id', existing.id);
-      } else {
+      } else if (monthBenef > 0) {
         await sb.from('finance_monthly').insert({ year, month, ca: 0, benef: Math.round(monthBenef) });
       }
     }
-    showToast('Facture ajoutée ✓');
+    showToast(editId ? 'Facture modifiée ✓' : 'Facture ajoutée ✓');
     closeModal('newFacture');
+    document.querySelector('#modal-newFacture .modal-header h3').textContent = 'Nouvelle facture';
     form.reset();
     const entries = await fetchFinances();
     renderFinances(entries);
@@ -956,6 +978,7 @@ function renderMileageBoard() {
 function renderFinances(entries) {
   renderCreances(entries);
   const factures = entries.filter(e => e.type === 'facture');
+  _allFactures = factures;
   const devis    = entries.filter(e => e.type === 'devis');
 
   const facturesTbody = document.getElementById('fin-factures-body');
@@ -963,17 +986,17 @@ function renderFinances(entries) {
     facturesTbody.innerHTML = factures.length ? factures.map(f => {
       const statusColors = { 'Payée':'#4CAF50','En attente':'#F5C518','En retard':'#f44336','Non payé':'#f44336' };
       const sc = statusColors[f.status] || 'var(--text2)';
-      return `<tr>
+      return `<tr style="cursor:pointer" onclick="openEditFacture('${f.id}')" title="Cliquer pour modifier">
         <td>${f.client || '—'}</td>
         <td style="font-weight:700">${f.amount ? parseFloat(f.amount).toLocaleString('fr-FR') + ' €' : '—'}</td>
         <td>${f.invoice_date ? new Date(f.invoice_date).toLocaleDateString('fr-FR') : '—'}</td>
         <td>${f.notes || '—'}</td>
-        <td>
+        <td onclick="event.stopPropagation()">
           <select onchange="updateFinanceStatus('${f.id}', this.value)" style="background:var(--bg3);color:${sc};border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:.8rem;font-weight:600">
             ${['En attente','Payée','En retard','Non payé'].map(s=>`<option ${f.status===s?'selected':''}>${s}</option>`).join('')}
           </select>
         </td>
-        <td><button class="btn-icon" onclick="deleteFinanceEntry('${f.id}')" title="Supprimer">🗑</button></td>
+        <td onclick="event.stopPropagation()"><button class="btn-icon" onclick="deleteFinanceEntry('${f.id}')" title="Supprimer">🗑</button></td>
       </tr>`;
     }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">Aucune facture — cliquez sur "+ Nouvelle facture"</td></tr>';
   }
