@@ -309,6 +309,36 @@
         <div class="card-header"><h3>Bénéfice réalisé 2026 — seuil charges : <span data-charges-label>8 718 €/mois</span></h3></div>
         <div class="objectives-grid" id="dashboard-ca-bars"></div>
       </div>
+
+      <!-- Jauges financières -->
+      <div class="card span2" style="cursor:pointer" onclick="showPage('finances')">
+        <div class="card-header">
+          <h3>📊 Indicateurs financiers 2026</h3>
+          <span style="font-size:.8rem;color:var(--text2)">Voir les finances →</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+          <!-- Jauge charges -->
+          <div>
+            <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">Couverture charges</div>
+            <div style="font-size:.78rem;color:var(--text2);margin-bottom:10px" id="dash-gauge-charges-sub">Chargement…</div>
+            <div class="fin-gauge-bar-wrap" style="margin-bottom:6px">
+              <div class="fin-gauge-bar" id="dash-gauge-charges" style="width:0%"></div>
+              <span class="fin-gauge-pct" id="dash-gauge-charges-pct">0%</span>
+            </div>
+            <div class="fin-gauge-labels"><span>0 €</span><span id="dash-gauge-charges-half">—</span><span id="dash-gauge-charges-full">—</span></div>
+          </div>
+          <!-- Jauge objectif CA -->
+          <div>
+            <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">Objectif CA — 300 000 €</div>
+            <div style="font-size:.78rem;color:var(--text2);margin-bottom:10px" id="dash-gauge-ca-sub">Chargement…</div>
+            <div class="fin-gauge-bar-wrap" style="margin-bottom:6px">
+              <div class="fin-gauge-bar fin-gauge-ca" id="dash-gauge-ca" style="width:0%"></div>
+              <span class="fin-gauge-pct" id="dash-gauge-ca-pct">0%</span>
+            </div>
+            <div class="fin-gauge-labels"><span>0 €</span><span>150 000 €</span><span>300 000 €</span></div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 

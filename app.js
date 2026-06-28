@@ -616,6 +616,33 @@ async function renderDashboardCA() {
     </div>`;
   }
   container.innerHTML = html || '<p style="color:var(--text2);padding:1rem">Aucune donnée 2026</p>';
+
+  // Jauges du dashboard (mêmes données que Finances)
+  const [rfRes, rvRes] = await Promise.all([
+    sb.from('charges_fixes').select('montant'),
+    sb.from('charges_variables_items').select('montant'),
+  ]);
+  const totalCF = (rfRes.data || []).reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
+  const totalCV = (rvRes.data  || []).reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
+  const totalChargesAnnuel = (totalCF + totalCV) * 12;
+  const chargesPct = totalChargesAnnuel > 0 ? Math.min(100, Math.round((totalBenef / totalChargesAnnuel) * 100)) : 0;
+  const caPct = Math.min(100, Math.round((totalCA / 300000) * 100));
+
+  const dSub1 = document.getElementById('dash-gauge-charges-sub');
+  if (dSub1) dSub1.innerHTML = `Bénéfice réalisé : <strong>${totalBenef.toLocaleString('fr-FR')} €</strong> / ${totalChargesAnnuel.toLocaleString('fr-FR')} € de charges annuelles`;
+  const dSub2 = document.getElementById('dash-gauge-ca-sub');
+  if (dSub2) dSub2.innerHTML = `CA réalisé : <strong>${totalCA.toLocaleString('fr-FR')} €</strong> / objectif 300 000 €`;
+  const dH = document.getElementById('dash-gauge-charges-half');
+  if (dH) dH.textContent = Math.round(totalChargesAnnuel / 2).toLocaleString('fr-FR') + ' €';
+  const dF = document.getElementById('dash-gauge-charges-full');
+  if (dF) dF.textContent = totalChargesAnnuel.toLocaleString('fr-FR') + ' €';
+
+  setTimeout(() => {
+    const dg1 = document.getElementById('dash-gauge-charges'); const dp1 = document.getElementById('dash-gauge-charges-pct');
+    const dg2 = document.getElementById('dash-gauge-ca');      const dp2 = document.getElementById('dash-gauge-ca-pct');
+    if (dg1) { dg1.style.width = chargesPct + '%'; if (dp1) dp1.textContent = chargesPct + '%'; }
+    if (dg2) { dg2.style.width = caPct + '%';      if (dp2) dp2.textContent = caPct + '%'; }
+  }, 120);
 }
 
 let _finMonthlyData = {}; // cache: { '2026-1': {ca,benef}, ... }
