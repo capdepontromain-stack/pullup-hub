@@ -249,9 +249,9 @@
       </div>
     </div>
 
-    <div class="dashboard-grid">
+    <div class="dashboard-grid" id="dashboard-grid">
       <!-- Upcoming events -->
-      <div class="card" style="cursor:pointer" onclick="showPage('events')">
+      <div class="card" data-dash-id="events" style="cursor:grab" onclick="showPage('events')">
         <div class="card-header">
           <h3>Prochains événements</h3>
           <span style="font-size:.8rem;color:var(--text2)">Voir tout →</span>
@@ -262,7 +262,7 @@
       </div>
 
       <!-- Urgent tasks -->
-      <div class="card" style="cursor:pointer" onclick="showPage('tasks')">
+      <div class="card" data-dash-id="tasks" style="cursor:grab" onclick="showPage('tasks')">
         <div class="card-header">
           <h3>Tâches urgentes</h3>
           <span style="font-size:.8rem;color:var(--text2)">Voir tout →</span>
@@ -273,7 +273,7 @@
       </div>
 
       <!-- Team -->
-      <div class="card" style="cursor:pointer" onclick="showPage('personnel')">
+      <div class="card" data-dash-id="team" style="cursor:grab" onclick="showPage('personnel')">
         <div class="card-header"><h3>Équipe</h3><span style="font-size:.8rem;color:var(--text2)">Voir les membres →</span></div>
         <div class="team-grid">
           <div class="team-member">
@@ -305,13 +305,13 @@
 
 
       <!-- CA Objectifs -->
-      <div class="card span2">
+      <div class="card span2" data-dash-id="ca-bars" style="cursor:grab">
         <div class="card-header"><h3>Bénéfice réalisé 2026 — seuil charges : <span data-charges-label>8 718 €/mois</span></h3></div>
         <div class="objectives-grid" id="dashboard-ca-bars"></div>
       </div>
 
       <!-- Jauges financières -->
-      <div class="card span2" style="cursor:pointer" onclick="showPage('finances')">
+      <div class="card span2" data-dash-id="gauges" style="cursor:grab" onclick="showPage('finances')">
         <div class="card-header">
           <h3>📊 Indicateurs financiers 2026</h3>
           <span style="font-size:.8rem;color:var(--text2)">Voir les finances →</span>
