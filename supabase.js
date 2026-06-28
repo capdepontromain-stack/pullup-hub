@@ -2659,6 +2659,8 @@ function renderLeaveCards() {
     const color = LEAVE_COLORS_HEX[name];
     const monthHours = monthLeaves.filter(l => l.person_name === name).reduce((s, l) => s + (parseFloat(l.hours) || 0), 0);
     const yearHours = yearLeaves.filter(l => l.person_name === name).reduce((s, l) => s + (parseFloat(l.hours) || 0), 0);
+    const yearMaladie = yearLeaves.filter(l => l.person_name === name && l.leave_type === 'maladie').length;
+    const monthMaladie = monthLeaves.filter(l => l.person_name === name && l.leave_type === 'maladie').length;
     return `<div class="card" style="text-align:center;padding:1.25rem">
       <img src="${LEAVE_PHOTOS[name]}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid ${color};margin:0 auto .75rem;display:block" onerror="this.style.display='none'">
       <div style="font-weight:700;font-size:1rem;margin-bottom:.25rem">${name}</div>
@@ -2666,6 +2668,7 @@ function renderLeaveCards() {
       <div style="font-size:.75rem;color:var(--text2);margin-bottom:.75rem">jours restants / ${LEAVE_TOTAL}</div>
       ${monthHours > 0 ? `<div style="font-size:.78rem;color:var(--text2);margin-bottom:4px">Ce mois : <strong style="color:${color}">${monthHours}h</strong></div>` : ''}
       ${yearHours > 0 ? `<div style="font-size:.75rem;color:var(--text3);margin-bottom:.5rem">Cette année : <strong>${yearHours}h</strong></div>` : ''}
+      ${yearMaladie > 0 ? `<div style="font-size:.75rem;background:rgba(74,158,255,.12);color:#4A9EFF;border-radius:6px;padding:3px 8px;margin-bottom:.5rem">🤒 ${yearMaladie}j maladie / an${monthMaladie > 0 ? ` · ${monthMaladie}j ce mois` : ''}</div>` : ''}
       ${pending > 0 ? `<div style="font-size:.75rem;background:rgba(245,197,24,.15);color:var(--gold);border-radius:6px;padding:2px 8px;margin-bottom:.5rem">${pending} en attente</div>` : ''}
       <div style="background:var(--bg3);border-radius:99px;height:6px;overflow:hidden">
         <div style="height:100%;width:${pct}%;background:${color};border-radius:99px;transition:.3s"></div>
