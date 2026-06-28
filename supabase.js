@@ -620,7 +620,7 @@ async function saveEditTask() {
   const form = document.getElementById('form-editTask');
   if (!form || !currentEditTaskId) return;
   const assignees = [...form.querySelectorAll('[name=assignees]:checked')].map(c => c.value);
-  if (!assignees.length) { showToast('Sélectionne au moins une personne'); return; }
+  if (!assignees.length) { showToast('⚠️ Vous n\'avez attribué cette tâche à personne. Veuillez sélectionner au moins un responsable.'); return; }
   const baseUpdates = {
     title: form.elements['title'].value.trim(),
     priority: form.elements['priority'].value,
@@ -1402,7 +1402,7 @@ async function saveNewTask() {
   const title = form.querySelector('[name=title]')?.value;
   if (!title) { showToast('Titre obligatoire'); return; }
   const assignees = [...form.querySelectorAll('[name=assignees]:checked')].map(c => c.value);
-  if (!assignees.length) { showToast('Sélectionne au moins une personne'); return; }
+  if (!assignees.length) { showToast('⚠️ Vous n\'avez attribué cette tâche à personne. Veuillez sélectionner au moins un responsable.'); return; }
   const base = {
     title,
     description: form.querySelector('[name=description]')?.value || null,
