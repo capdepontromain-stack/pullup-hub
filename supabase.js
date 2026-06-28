@@ -269,7 +269,7 @@ async function saveNewFacture(e) {
       const year = d.getFullYear();
       const month = d.getMonth() + 1;
       // Recalculer le bénéfice total du mois depuis toutes les factures
-      const { data: allFact } = await sb.from('finance_entries').select('invoice_date,benef').eq('type','facture').not('benef','is',null);
+      const { data: allFact } = await sb.from('finances').select('invoice_date,benef').eq('type','facture').not('benef','is',null);
       const monthBenef = (allFact || []).filter(f => {
         if (!f.invoice_date || !f.benef) return false;
         const fd = new Date(f.invoice_date);
