@@ -40,20 +40,24 @@ document.querySelectorAll('.nav-item').forEach(item => {
   if (!nav) return;
 
   // Restaurer l'ordre sauvegardé
+  const allPages = [...nav.querySelectorAll('.nav-item')].map(el => el.dataset.page);
   const saved = localStorage.getItem('pullup_nav_order');
   if (saved) {
     try {
       const order = JSON.parse(saved);
-      // Appliquer l'ordre sauvegardé
-      order.forEach(page => {
-        const el = nav.querySelector(`[data-page="${page}"]`);
-        if (el) nav.appendChild(el);
-      });
-      // Tout nouvel onglet absent de l'ordre sauvegardé va à la fin
-      nav.querySelectorAll('.nav-item').forEach(el => {
-        if (!order.includes(el.dataset.page)) nav.appendChild(el);
-      });
-    } catch(e) {}
+      // Si des onglets manquent dans l'ordre sauvegardé, on efface et on repart de zéro
+      const hasAll = allPages.every(p => order.includes(p));
+      if (!hasAll) {
+        localStorage.removeItem('pullup_nav_order');
+      } else {
+        order.forEach(page => {
+          const el = nav.querySelector(`[data-page="${page}"]`);
+          if (el) nav.appendChild(el);
+        });
+      }
+    } catch(e) {
+      localStorage.removeItem('pullup_nav_order');
+    }
   }
 
   let dragEl = null;
