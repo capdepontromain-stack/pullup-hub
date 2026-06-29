@@ -786,24 +786,130 @@ async function deleteMessage(id) {
   if (el) el.remove();
 }
 
+// WhatsApp channel selection
+function waSelectChannel(el, channel, name, avatar) {
+  document.querySelectorAll('.wa-conv-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  // Sur mobile : cacher sidebar, montrer chat
+  document.getElementById('waSidebar')?.classList.add('hidden');
+  document.getElementById('waBackBtn').style.display = 'flex';
+  // Mettre à jour header
+  const avatarEl = document.getElementById('waChatAvatar');
+  if (avatarEl) { avatarEl.textContent = avatar; avatarEl.style.background = el.querySelector('.wa-conv-avatar')?.style.background || '#25D366'; }
+  document.getElementById('chatHeader').textContent = name;
+  const subs = { general:'Canal principal de l\'équipe', annonces:'Informations importantes' };
+  document.getElementById('waChatSub').textContent = subs[channel] || 'En ligne';
+  document.getElementById('chatInput').placeholder = `Message dans ${name}…`;
+  // Charger les messages
+  if (typeof switchChannel === 'function') switchChannel(channel);
+}
+
+function waShowSidebar() {
+  document.getElementById('waSidebar')?.classList.remove('hidden');
+  document.getElementById('waBackBtn').style.display = 'none';
+}
+
+// Avatar couleurs par personne
+const WA_COLORS = { Romain:'var(--color-romain)', Ketsia:'var(--color-ketsia)', Flora:'var(--color-flora)', Gloria:'var(--color-gloria)' };
+
 function renderMessages(messages) {
   const container = document.getElementById('chatMessages');
   if (!container) return;
-  container.innerHTML = messages.map(m => {
+  let lastDate = '';
+  let html = '';
+  messages.forEach(m => {
     const isMine = m.author_id === currentUser?.id;
-    const canDelete = true;
-    const time = new Date(m.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit' }) + ' ' + new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    return `<div class="chat-msg ${isMine ? 'mine' : ''}" data-id="${m.id}">
-      ${!isMine ? `<div class="chat-avatar">${chatAvatar(m.author_name)}</div>` : ''}
+    const d = new Date(m.created_at);
+    const dateKey = d.toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
+    if (dateKey !== lastDate) {
+      html += `<div class="wa-date-sep"><span>${dateKey}</span></div>`;
+      lastDate = dateKey;
+    }
+    const time = d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+    const firstName = (m.author_name || '?').split(' ')[0];
+    const initials = firstName[0].toUpperCase();
+    const avatarColor = WA_COLORS[firstName] || '#555';
+    const isVoice = m.content?.startsWith('__voice__:');
+    const voiceUrl = isVoice ? m.content.replace('__voice__:', '') : null;
+    const bubbleContent = isVoice
+      ? `<div class="wa-audio"><span style="font-size:1.2rem">🎤</span><audio controls src="${voiceUrl}" style="flex:1;height:32px;max-width:200px"></audio></div>`
+      : `<div class="chat-text">${m.content}</div>`;
+    html += `<div class="chat-msg ${isMine ? 'mine' : ''}" data-id="${m.id}">
+      ${!isMine ? `<div class="chat-avatar-wa" style="background:${avatarColor};color:${firstName==='Romain'?'#000':'#fff'}">${initials}</div>` : ''}
       <div class="chat-bubble">
-        ${!isMine ? `<div class="chat-name">${m.author_name}</div>` : ''}
-        <div class="chat-text">${m.content}</div>
+        ${!isMine ? `<div class="chat-name">${firstName}</div>` : ''}
+        ${bubbleContent}
         <div class="chat-time">${time}</div>
       </div>
-      ${canDelete ? `<button class="msg-delete-btn" onclick="deleteMessage('${m.id}')" title="Supprimer">✕</button>` : ''}
+      <button class="msg-delete-btn" onclick="deleteMessage('${m.id}')" title="Supprimer">✕</button>
     </div>`;
-  }).join('');
+  });
+  container.innerHTML = html;
   container.scrollTop = container.scrollHeight;
+}
+
+// ===== MESSAGES VOCAUX =====
+let mediaRecorder = null;
+let audioChunks = [];
+let voiceTimerInterval = null;
+let voiceSeconds = 0;
+
+async function toggleVoiceRecord() {
+  const btn = document.getElementById('voiceRecordBtn');
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    sendVoiceRecord();
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.start();
+    btn.classList.add('recording');
+    document.getElementById('waVoiceBar').style.display = 'flex';
+    document.getElementById('waVoiceTimer').textContent = '0:00';
+    voiceSeconds = 0;
+    voiceTimerInterval = setInterval(() => {
+      voiceSeconds++;
+      const m = Math.floor(voiceSeconds/60);
+      const s = voiceSeconds%60;
+      document.getElementById('waVoiceTimer').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+    }, 1000);
+  } catch(e) {
+    showToast('Microphone non autorisé');
+  }
+}
+
+function cancelVoiceRecord() {
+  if (mediaRecorder) { mediaRecorder.stream.getTracks().forEach(t=>t.stop()); mediaRecorder = null; }
+  clearInterval(voiceTimerInterval);
+  document.getElementById('waVoiceBar').style.display = 'none';
+  document.getElementById('voiceRecordBtn').classList.remove('recording');
+}
+
+async function sendVoiceRecord() {
+  if (!mediaRecorder) return;
+  mediaRecorder.stop();
+  clearInterval(voiceTimerInterval);
+  document.getElementById('voiceRecordBtn').classList.remove('recording');
+  document.getElementById('waVoiceBar').style.display = 'none';
+  mediaRecorder.onstop = async () => {
+    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+    const path = `voice/${Date.now()}_${currentUserName || 'user'}.webm`;
+    const { error } = await sb.storage.from('voice-messages').upload(path, blob, { upsert: true });
+    if (error) { showToast('Erreur upload audio'); return; }
+    const { data } = sb.storage.from('voice-messages').getPublicUrl(path);
+    const url = data?.publicUrl;
+    await sb.from('messages').insert([{
+      channel: activeChannel,
+      content: `__voice__:${url}`,
+      author_name: currentProfile?.name || currentUser.email,
+      author_id: currentUser.id
+    }]);
+    mediaRecorder.stream.getTracks().forEach(t=>t.stop());
+    mediaRecorder = null;
+  };
 }
 
 // Render inventory
@@ -2556,18 +2662,23 @@ async function switchChannel(channel) {
   messageSubscription = subscribeToMessages(channel, (msg) => {
     const container = document.getElementById('chatMessages');
     if (!container) return;
-    const isMine = msg.author_name === (currentProfile?.name || currentUser?.email);
-    if (!isMine) {
-      showMessageNotification(msg);
-      loadUnreadCounts();
-    }
-    const time = new Date(msg.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit' }) + ' ' + new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const isMine = msg.author_id === currentUser?.id;
+    if (!isMine) { showMessageNotification(msg); loadUnreadCounts(); }
+    const time = new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+    const firstName = (msg.author_name || '?').split(' ')[0];
+    const initials = firstName[0].toUpperCase();
+    const avatarColor = WA_COLORS[firstName] || '#555';
+    const isVoice = msg.content?.startsWith('__voice__:');
+    const voiceUrl = isVoice ? msg.content.replace('__voice__:', '') : null;
+    const bubbleContent = isVoice
+      ? `<div class="wa-audio"><span style="font-size:1.2rem">🎤</span><audio controls src="${voiceUrl}" style="flex:1;height:32px;max-width:200px"></audio></div>`
+      : `<div class="chat-text">${msg.content}</div>`;
     const div = document.createElement('div');
     div.className = `chat-msg ${isMine ? 'mine' : ''}`;
-    div.innerHTML = `${!isMine ? `<div class="chat-avatar">${chatAvatar(msg.author_name)}</div>` : ''}
+    div.innerHTML = `${!isMine ? `<div class="chat-avatar-wa" style="background:${avatarColor};color:${firstName==='Romain'?'#000':'#fff'}">${initials}</div>` : ''}
       <div class="chat-bubble">
-        ${!isMine ? `<div class="chat-name">${msg.author_name}</div>` : ''}
-        <div class="chat-text">${msg.content}</div>
+        ${!isMine ? `<div class="chat-name">${firstName}</div>` : ''}
+        ${bubbleContent}
         <div class="chat-time">${time}</div>
       </div>`;
     container.appendChild(div);
@@ -2589,7 +2700,7 @@ function showMessageNotification(msg) {
   notif.onclick = () => {
     window.focus();
     switchChannel(msg.channel);
-    document.querySelectorAll('.channel-item').forEach(i => i.classList.toggle('active', i.dataset.channel === msg.channel));
+    document.querySelectorAll('.wa-conv-item').forEach(i => i.classList.toggle('active', i.dataset.channel === msg.channel));
     notif.close();
   };
 }
@@ -2742,16 +2853,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   document.getElementById('btn-sendMsg')?.addEventListener('click', sendChatMessage);
 
-  // Channel switching
-  document.querySelectorAll('.channel-item').forEach(item => {
+  // Channel switching (new WA UI handled by waSelectChannel, fallback)
+  document.querySelectorAll('.wa-conv-item').forEach(item => {
     item.addEventListener('click', () => {
-      document.querySelectorAll('.channel-item').forEach(i => i.classList.remove('active'));
-      item.classList.add('active');
       const ch = item.dataset.channel || 'general';
-      // Sync barre mobile
-      document.querySelectorAll('.msg-mobile-btn').forEach(b => {
-        b.classList.toggle('active', b.dataset.channel === ch);
-      });
       switchChannel(ch);
     });
   });

@@ -589,65 +589,103 @@
 
   <!-- MESSAGES -->
   <section class="page" id="page-messages">
-    <div class="page-header"><h1>Messagerie interne</h1></div>
-    <div class="messaging-layout">
-      <div class="channels-panel">
-        <div class="channels-section">
-          <div class="channel-section-title">Général</div>
-          <div class="channel-item active" data-channel="general"><span>#</span> général <span class="msg-badge" id="badge-general" style="display:none"></span></div>
-          <div class="channel-item" data-channel="annonces"><span>#</span> annonces <span class="msg-badge" id="badge-annonces" style="display:none"></span></div>
+    <div class="wa-layout">
+
+      <!-- SIDEBAR style WhatsApp -->
+      <div class="wa-sidebar" id="waSidebar">
+        <div class="wa-sidebar-header">
+          <span style="font-weight:700;font-size:1.1rem;color:var(--text)">Messages</span>
         </div>
-        <div class="channels-section">
-          <div class="channel-section-title">Événements</div>
-          <div class="channel-item"><span>#</span> galeries-lafayette</div>
-          <div class="channel-item"><span>#</span> archery-tag-renault</div>
-          <div class="channel-item"><span>#</span> marché-bron</div>
-        </div>
-        <div class="channels-section">
-          <div class="channel-section-title">Messages privés</div>
-          <div class="channel-item" data-channel="dm-romain"><div class="mini-avatar av-romain" style="width:20px;height:20px;font-size:10px">R</div> Romain <span class="msg-badge" id="badge-dm-romain" style="display:none"></span></div>
-          <div class="channel-item" data-channel="dm-ketsia"><div class="mini-avatar av-ketsia" style="width:20px;height:20px;font-size:10px">K</div> Ketsia <span class="msg-badge" id="badge-dm-ketsia" style="display:none"></span></div>
-          <div class="channel-item" data-channel="dm-flora"><div class="mini-avatar av-flora" style="width:20px;height:20px;font-size:10px">F</div> Flora <span class="msg-badge" id="badge-dm-flora" style="display:none"></span></div>
-          <div class="channel-item" data-channel="dm-gloria"><div class="mini-avatar av-gloria" style="width:20px;height:20px;font-size:10px">G</div> Gloria <span class="msg-badge" id="badge-dm-gloria" style="display:none"></span></div>
+        <div class="wa-conv-list" id="waConvList">
+
+          <!-- Groupes -->
+          <div class="wa-section-label">Groupes</div>
+          <div class="wa-conv-item active" data-channel="general" onclick="waSelectChannel(this,'general','Général','#')">
+            <div class="wa-conv-avatar" style="background:#25D366;color:#fff;font-size:1.2rem">💬</div>
+            <div class="wa-conv-info">
+              <div class="wa-conv-name">Général <span class="msg-badge" id="badge-general" style="display:none"></span></div>
+              <div class="wa-conv-preview" id="preview-general">Canal principal de l'équipe</div>
+            </div>
+          </div>
+          <div class="wa-conv-item" data-channel="annonces" onclick="waSelectChannel(this,'annonces','Annonces','📢')">
+            <div class="wa-conv-avatar" style="background:#F5C518;color:#000;font-size:1.2rem">📢</div>
+            <div class="wa-conv-info">
+              <div class="wa-conv-name">Annonces <span class="msg-badge" id="badge-annonces" style="display:none"></span></div>
+              <div class="wa-conv-preview" id="preview-annonces">Informations importantes</div>
+            </div>
+          </div>
+
+          <!-- Messages privés -->
+          <div class="wa-section-label">Messages privés</div>
+          <div class="wa-conv-item" data-channel="dm-romain" onclick="waSelectChannel(this,'dm-romain','Romain','R')">
+            <div class="wa-conv-avatar" style="background:var(--color-romain);color:#000">R</div>
+            <div class="wa-conv-info">
+              <div class="wa-conv-name">Romain <span class="msg-badge" id="badge-dm-romain" style="display:none"></span></div>
+              <div class="wa-conv-preview" id="preview-dm-romain">Message privé</div>
+            </div>
+            <div class="wa-conv-dot wa-online"></div>
+          </div>
+          <div class="wa-conv-item" data-channel="dm-ketsia" onclick="waSelectChannel(this,'dm-ketsia','Ketsia','K')">
+            <div class="wa-conv-avatar" style="background:var(--color-ketsia);color:#fff">K</div>
+            <div class="wa-conv-info">
+              <div class="wa-conv-name">Ketsia <span class="msg-badge" id="badge-dm-ketsia" style="display:none"></span></div>
+              <div class="wa-conv-preview" id="preview-dm-ketsia">Message privé</div>
+            </div>
+            <div class="wa-conv-dot wa-online"></div>
+          </div>
+          <div class="wa-conv-item" data-channel="dm-flora" onclick="waSelectChannel(this,'dm-flora','Flora','F')">
+            <div class="wa-conv-avatar" style="background:var(--color-flora);color:#fff">F</div>
+            <div class="wa-conv-info">
+              <div class="wa-conv-name">Flora <span class="msg-badge" id="badge-dm-flora" style="display:none"></span></div>
+              <div class="wa-conv-preview" id="preview-dm-flora">Message privé</div>
+            </div>
+            <div class="wa-conv-dot wa-online"></div>
+          </div>
+          <div class="wa-conv-item" data-channel="dm-gloria" onclick="waSelectChannel(this,'dm-gloria','Gloria','G')">
+            <div class="wa-conv-avatar" style="background:var(--color-gloria);color:#fff">G</div>
+            <div class="wa-conv-info">
+              <div class="wa-conv-name">Gloria <span class="msg-badge" id="badge-dm-gloria" style="display:none"></span></div>
+              <div class="wa-conv-preview" id="preview-dm-gloria">Message privé</div>
+            </div>
+            <div class="wa-conv-dot wa-online"></div>
+          </div>
         </div>
       </div>
-      <div class="chat-panel">
-        <!-- Barre de navigation mobile -->
-        <div class="msg-mobile-nav" id="msgMobileNav">
-          <button class="msg-mobile-btn active" data-channel="general" onclick="mobileSwitchChannel(this,'general','# général')">
-            <div class="msg-mobile-avatar-txt" style="background:var(--bg4);color:var(--text2)">#</div>
-            <span>Général</span>
-          </button>
-          <button class="msg-mobile-btn" data-channel="annonces" onclick="mobileSwitchChannel(this,'annonces','# annonces')">
-            <div class="msg-mobile-avatar-txt" style="background:var(--bg4);color:var(--text2)">#</div>
-            <span>Annonces</span>
-          </button>
-          <button class="msg-mobile-btn" data-channel="dm-romain" onclick="mobileSwitchChannel(this,'dm-romain','Romain')">
-            <img src="photos/romain.jpg" class="msg-mobile-avatar" style="border-color:var(--color-romain)" onerror="this.outerHTML='<div class=msg-mobile-avatar-txt style=background:var(--color-romain);color:#000;border-color:var(--color-romain)>R</div>'">
-            <span>Romain</span>
-          </button>
-          <button class="msg-mobile-btn" data-channel="dm-ketsia" onclick="mobileSwitchChannel(this,'dm-ketsia','Ketsia')">
-            <img src="photos/ketsia.jpg" class="msg-mobile-avatar" style="border-color:var(--color-ketsia)" onerror="this.outerHTML='<div class=msg-mobile-avatar-txt style=background:var(--color-ketsia);color:#fff;border-color:var(--color-ketsia)>K</div>'">
-            <span>Ketsia</span>
-          </button>
-          <button class="msg-mobile-btn" data-channel="dm-flora" onclick="mobileSwitchChannel(this,'dm-flora','Flora')">
-            <img src="photos/flora.jpg" class="msg-mobile-avatar" style="border-color:var(--color-flora)" onerror="this.outerHTML='<div class=msg-mobile-avatar-txt style=background:var(--color-flora);color:#fff;border-color:var(--color-flora)>F</div>'">
-            <span>Flora</span>
-          </button>
-          <button class="msg-mobile-btn" data-channel="dm-gloria" onclick="mobileSwitchChannel(this,'dm-gloria','Gloria')">
-            <img src="photos/gloria.jpg" class="msg-mobile-avatar" style="border-color:var(--color-gloria)" onerror="this.outerHTML='<div class=msg-mobile-avatar-txt style=background:var(--color-gloria);color:#fff;border-color:var(--color-gloria)>G</div>'">
-            <span>Gloria</span>
+
+      <!-- ZONE CHAT -->
+      <div class="wa-chat" id="waChat">
+        <!-- Header conversation -->
+        <div class="wa-chat-header">
+          <button class="wa-back-btn" id="waBackBtn" onclick="waShowSidebar()" style="display:none">←</button>
+          <div class="wa-chat-header-avatar" id="waChatAvatar">💬</div>
+          <div class="wa-chat-header-info">
+            <div class="wa-chat-header-name" id="chatHeader">Général</div>
+            <div class="wa-chat-header-sub" id="waChatSub">Canal principal</div>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="wa-messages" id="chatMessages"></div>
+
+        <!-- Zone de saisie -->
+        <div class="wa-input-bar">
+          <button class="wa-input-btn" id="voiceRecordBtn" onclick="toggleVoiceRecord()" title="Message vocal">🎤</button>
+          <input type="text" id="chatInput" class="wa-text-input" placeholder="Message…">
+          <button class="wa-send-btn" id="btn-sendMsg">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"/></svg>
           </button>
         </div>
-        <div class="chat-header" id="chatHeader"># général</div>
-        <div class="chat-messages" id="chatMessages"></div>
-        <div class="chat-input-wrap">
-          <input type="text" id="chatInput" class="chat-input" placeholder="Message dans #général... (Entrée pour envoyer)">
-          <button class="btn-send" id="btn-sendMsg">Envoyer</button>
+        <!-- Indicateur enregistrement vocal -->
+        <div class="wa-voice-bar" id="waVoiceBar" style="display:none">
+          <div class="wa-voice-wave">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <span id="waVoiceTimer">0:00</span>
+          <button class="wa-voice-cancel" onclick="cancelVoiceRecord()">✕ Annuler</button>
+          <button class="wa-voice-send" onclick="sendVoiceRecord()">Envoyer 🎤</button>
         </div>
       </div>
     </div>
-
   </section>
 
   <!-- KNOWLEDGE BASE -->
