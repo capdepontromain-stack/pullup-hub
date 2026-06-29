@@ -875,16 +875,16 @@ async function sendChatFile(file) {
 
   showToast('⏳ Envoi en cours…');
   try {
-    const { data: upData, error: upErr } = await sb.storage.from('chat-files').upload(path, file, { upsert: true, contentType: file.type || 'application/octet-stream' });
-    if (upErr) {
-      if (upErr.message?.includes('Bucket not found') || upErr.message?.includes('not found')) {
-        showToast('❌ Bucket manquant — crée le bucket "chat-files" dans Supabase Storage (Public)');
-      } else {
-        showToast('❌ Erreur upload : ' + upErr.message);
-      }
-      return;
+    // Essayer d'abord chat-files, sinon fallback sur task-photos (existant)
+    let bucket = 'chat-files';
+    let upResult = await sb.storage.from(bucket).upload(path, file, { upsert: true, contentType: file.type || 'application/octet-stream' });
+    if (upResult.error?.message?.toLowerCase().includes('not found') || upResult.error?.message?.toLowerCase().includes('bucket')) {
+      bucket = 'task-photos';
+      upResult = await sb.storage.from(bucket).upload(path, file, { upsert: true, contentType: file.type || 'application/octet-stream' });
     }
-    const { data: urlData } = sb.storage.from('chat-files').getPublicUrl(path);
+    const upErr = upResult.error;
+    if (upErr) { showToast('❌ Erreur upload : ' + upErr.message); return; }
+    const { data: urlData } = sb.storage.from(bucket).getPublicUrl(path);
     const url = urlData?.publicUrl;
     if (!url) { showToast('❌ Impossible d\'obtenir l\'URL du fichier'); return; }
 
