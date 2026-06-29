@@ -2,6 +2,16 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<script>
+// Anti-cache SW : si l'URL n'a pas le bon token, on redirige immédiatement.
+// Le SW n'a pas en cache l'URL avec ce token → le navigateur va chercher sur le réseau.
+(function(){
+  var TOKEN = 'v20260630';
+  if (location.search.indexOf(TOKEN) === -1) {
+    location.replace(location.pathname + '?' + TOKEN);
+  }
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
