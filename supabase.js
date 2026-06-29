@@ -908,31 +908,59 @@ async function sendChatFile(file) {
 
 // Drag & drop sur la zone de messages — initialisé à la demande
 function initChatDrop() {
-  const chat = document.getElementById('waChat');
-  if (!chat || chat._dropInit) return;
-  chat._dropInit = true;
+  if (window._globalDropInit) return;
+  window._globalDropInit = true;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'global-drop-overlay';
+  overlay.innerHTML = '<div>📎 Dépose ton fichier ici</div>';
+  overlay.style.cssText = 'display:none;position:fixed;inset:0;background:#25D36680;z-index:9999;align-items:center;justify-content:center;font-size:1.8rem;font-weight:700;color:#fff;text-align:center;backdrop-filter:blur(4px)';
+  document.body.appendChild(overlay);
 
   let dragCounter = 0;
 
-  chat.addEventListener('dragenter', e => {
-    e.preventDefault();
+  document.addEventListener('dragenter', e => {
+    if (!e.dataTransfer?.types?.includes('Files')) return;
     dragCounter++;
-    chat.classList.add('wa-drag-over');
+    overlay.style.display = 'flex';
   });
-  chat.addEventListener('dragover', e => {
-    e.preventDefault();
-  });
-  chat.addEventListener('dragleave', e => {
+
+  document.addEventListener('dragleave', e => {
     dragCounter--;
-    if (dragCounter <= 0) { dragCounter = 0; chat.classList.remove('wa-drag-over'); }
+    if (dragCounter <= 0) { dragCounter = 0; overlay.style.display = 'none'; }
   });
-  chat.addEventListener('drop', e => {
+
+  document.addEventListener('dragover', e => {
+    if (e.dataTransfer?.types?.includes('Files')) e.preventDefault();
+  });
+
+  document.addEventListener('drop', e => {
     e.preventDefault();
     dragCounter = 0;
-    chat.classList.remove('wa-drag-over');
+    overlay.style.display = 'none';
     const file = e.dataTransfer?.files?.[0];
-    if (file) sendChatFile(file);
-    else showToast('Aucun fichier détecté');
+    if (!file) return;
+    // Uniquement si on est sur la page messages
+    const msgPage = document.getElementById('page-messages');
+    if (msgPage?.classList.contains('active')) {
+      sendChatFile(file);
+    } else {
+      showToast('Ouvre d\'abord une conversation pour envoyer un fichier');
+    }
+  });
+
+  // Coller une image depuis le presse-papier (Ctrl+V)
+  document.addEventListener('paste', e => {
+    const msgPage = document.getElementById('page-messages');
+    if (!msgPage?.classList.contains('active')) return;
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.kind === 'file') {
+        const file = item.getAsFile();
+        if (file) { sendChatFile(file); break; }
+      }
+    }
   });
 }
 

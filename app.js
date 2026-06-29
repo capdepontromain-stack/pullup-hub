@@ -24,7 +24,7 @@ function showPage(id) {
   if (id === 'personnel' && typeof loadPersonnelLeaveStats === 'function') loadPersonnelLeaveStats();
   if (id === 'editorial' && typeof loadAndRenderEditorial === 'function') loadAndRenderEditorial();
   if (id === 'improvements' && typeof loadImprovements === 'function') loadImprovements();
-  if (id === 'messages' && typeof initChatDrop === 'function') setTimeout(initChatDrop, 100);
+  if (typeof initChatDrop === 'function') initChatDrop();
 }
 
 document.querySelectorAll('.nav-item').forEach(item => {
