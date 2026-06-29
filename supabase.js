@@ -3783,23 +3783,34 @@ function renderImprovements() {
 }
 
 async function saveImprovement() {
-  const id = document.getElementById('improv-edit-id')?.value?.trim();
-  const title = document.getElementById('improv-title')?.value?.trim();
-  const description = document.getElementById('improv-desc')?.value?.trim() || null;
-  const priority = document.getElementById('improv-priority')?.value || 'normal';
-  if (!title) { showToast('Le titre est requis'); return; }
-  try {
-    if (id) {
-      const { error } = await sb.from('improvements').update({ title, description, priority }).eq('id', id);
-      if (error) throw error;
-    } else {
-      const { error } = await sb.from('improvements').insert([{ title, description, priority, status: 'idea' }]);
-      if (error) throw error;
-    }
-    closeModal('newImprovement');
-    await loadImprovements();
-    showToast(id ? 'Amélioration mise à jour ✓' : 'Suggestion enregistrée ! ✓');
-  } catch(e) { console.error('saveImprovement error:', e); showToast('Erreur : ' + (e.message || JSON.stringify(e))); }
+  const idEl = document.getElementById('improv-edit-id');
+  const titleEl = document.getElementById('improv-title');
+  const descEl = document.getElementById('improv-desc');
+  const prioEl = document.getElementById('improv-priority');
+
+  if (!titleEl || !titleEl.value.trim()) { showToast('Le titre est requis'); return; }
+
+  const id = idEl ? idEl.value.trim() : '';
+  const title = titleEl.value.trim();
+  const description = descEl ? (descEl.value.trim() || null) : null;
+  const priority = prioEl ? prioEl.value : 'normal';
+
+  let result;
+  if (id) {
+    result = await sb.from('improvements').update({ title, description, priority }).eq('id', id);
+  } else {
+    result = await sb.from('improvements').insert({ title, description, priority, status: 'idea' });
+  }
+
+  if (result.error) {
+    console.error('Improvements error:', result.error);
+    showToast('Erreur : ' + result.error.message);
+    return;
+  }
+
+  closeModal('newImprovement');
+  await loadImprovements();
+  showToast(id ? 'Mise à jour ✓' : 'Suggestion ajoutée ✓');
 }
 
 function openNewImprovement() {
