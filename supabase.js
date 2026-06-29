@@ -3753,22 +3753,23 @@ function renderImprovements() {
 }
 
 async function saveImprovement() {
-  const id = document.getElementById('improv-edit-id').value;
-  const title = document.getElementById('improv-title').value.trim();
-  const description = document.getElementById('improv-desc').value.trim();
-  const priority = document.getElementById('improv-priority').value;
+  const id = document.getElementById('improv-edit-id')?.value?.trim();
+  const title = document.getElementById('improv-title')?.value?.trim();
+  const description = document.getElementById('improv-desc')?.value?.trim() || null;
+  const priority = document.getElementById('improv-priority')?.value || 'normal';
   if (!title) { showToast('Le titre est requis'); return; }
-  const payload = { title, description, priority, status: id ? undefined : 'idea', author: currentUserName || 'Équipe' };
-  if (!id) payload.status = 'idea';
-  if (id) {
-    delete payload.status;
-    await sb.from('improvements').update({ title, description, priority }).eq('id', id);
-  } else {
-    await sb.from('improvements').insert(payload);
-  }
-  closeModal('newImprovement');
-  await loadImprovements();
-  showToast(id ? 'Amélioration mise à jour' : 'Suggestion enregistrée !');
+  try {
+    if (id) {
+      const { error } = await sb.from('improvements').update({ title, description, priority }).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await sb.from('improvements').insert([{ title, description, priority, status: 'idea' }]);
+      if (error) throw error;
+    }
+    closeModal('newImprovement');
+    await loadImprovements();
+    showToast(id ? 'Amélioration mise à jour ✓' : 'Suggestion enregistrée ! ✓');
+  } catch(e) { showToast('Erreur : ' + e.message); }
 }
 
 function openNewImprovement() {
