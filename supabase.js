@@ -1097,11 +1097,11 @@ function renderCreances(entries) {
     return;
   }
   tbody.innerHTML = impayees.map(f => `
-    <tr data-id="${f.id}">
+    <tr data-id="${f.id}" style="cursor:pointer" onclick="openEditFacture('${f.id}')" title="Cliquer pour modifier">
       <td>${f.client || '—'}</td>
       <td style="font-weight:700;color:var(--gold)">${f.amount ? parseFloat(f.amount).toLocaleString('fr-FR') + ' €' : '—'}</td>
       <td>${f.invoice_date ? new Date(f.invoice_date).toLocaleDateString('fr-FR') : '—'}</td>
-      <td>
+      <td onclick="event.stopPropagation()">
         <select onchange="markInvoicePaid('${f.id}', this)" data-prev="Impayé"
           style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:.8rem;cursor:pointer">
           <option selected>Impayé</option>
