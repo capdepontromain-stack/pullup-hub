@@ -44,9 +44,14 @@ document.querySelectorAll('.nav-item').forEach(item => {
   if (saved) {
     try {
       const order = JSON.parse(saved);
+      // Appliquer l'ordre sauvegardé
       order.forEach(page => {
         const el = nav.querySelector(`[data-page="${page}"]`);
         if (el) nav.appendChild(el);
+      });
+      // Tout nouvel onglet absent de l'ordre sauvegardé va à la fin
+      nav.querySelectorAll('.nav-item').forEach(el => {
+        if (!order.includes(el.dataset.page)) nav.appendChild(el);
       });
     } catch(e) {}
   }

@@ -6,7 +6,7 @@
 // Anti-cache SW : si l'URL n'a pas le bon token, on redirige immédiatement.
 // Le SW n'a pas en cache l'URL avec ce token → le navigateur va chercher sur le réseau.
 (function(){
-  var TOKEN = 'v20260630';
+  var TOKEN = 'v20260630b';
   if (location.search.indexOf(TOKEN) === -1) {
     location.replace(location.pathname + '?' + TOKEN);
   }
