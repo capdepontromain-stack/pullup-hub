@@ -2039,8 +2039,8 @@ Afin d'avancer, nous pouvons :
       <form id="form-newMileage" class="form-grid">
         <div class="form-group"><label>Date *</label><input name="trip_date" type="date" required></div>
         <div class="form-group"><label>Collaborateur</label><select name="user_name"><option>Romain Capdepont</option><option>Ketsia</option><option>Flora Boyer</option><option>Gloria</option></select></div>
-        <div class="form-group"><label>Départ *</label><input name="departure" type="text" placeholder="Ex: Le Tampon" required></div>
-        <div class="form-group"><label>Destination *</label><input name="destination" type="text" placeholder="Ex: Cap Homard" required></div>
+        <div class="form-group"><label>Départ *</label><input name="departure" type="text" placeholder="Ex: Le Tampon" required onblur="autoCalcDistance()"></div>
+        <div class="form-group"><label>Destination *</label><input name="destination" type="text" placeholder="Ex: Cap Homard" required onblur="autoCalcDistance()"></div>
         <div class="form-group span2"><label>Client</label><input name="client" type="text" placeholder="Ex: Mercialys, Mission Locale…"></div>
         <div class="form-group"><label>Km *</label><input name="km" type="number" step="0.1" placeholder="0" required oninput="calcMileageAmount()"></div>
         <div class="form-group"><label>Barème (€/km)</label><input name="rate" type="number" step="0.001" value="0.374" oninput="calcMileageAmount()"></div>
@@ -2428,7 +2428,7 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260630e"></script>
+<script src="supabase.js?v=20260630f"></script>
 <script src="app.js?v=20260630c"></script>
 <script>
   if ('serviceWorker' in navigator) {

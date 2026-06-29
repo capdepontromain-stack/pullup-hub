@@ -1979,6 +1979,42 @@ async function saveNewClient() {
   } catch(e) { showToast('Erreur : ' + e.message); }
 }
 
+async function autoCalcDistance() {
+  const form = document.getElementById('form-newMileage');
+  if (!form) return;
+  const departure = form.querySelector('[name=departure]')?.value?.trim();
+  const destination = form.querySelector('[name=destination]')?.value?.trim();
+  if (!departure || !destination) return;
+
+  const totalEl = document.getElementById('mileage-calc-total');
+  if (totalEl) totalEl.textContent = '⏳ Calcul…';
+
+  try {
+    const geocode = async (place) => {
+      const q = encodeURIComponent(place + ', Réunion');
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`, {
+        headers: { 'Accept-Language': 'fr' }
+      });
+      const data = await res.json();
+      if (!data.length) throw new Error(`Lieu introuvable : ${place}`);
+      return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+    };
+
+    const [dep, dest] = await Promise.all([geocode(departure), geocode(destination)]);
+    const osrmRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${dep.lon},${dep.lat};${dest.lon},${dest.lat}?overview=false`);
+    const osrmData = await osrmRes.json();
+    if (osrmData.code !== 'Ok') throw new Error('Itinéraire introuvable');
+
+    const km = Math.round(osrmData.routes[0].distance / 100) / 10;
+    const kmInput = form.querySelector('[name=km]');
+    if (kmInput) { kmInput.value = km; }
+    calcMileageAmount();
+  } catch(e) {
+    if (totalEl) totalEl.textContent = '— €';
+    showToast('📍 Distance non trouvée, saisis les km manuellement.');
+  }
+}
+
 function calcMileageAmount() {
   const form = document.getElementById('form-newMileage');
   if (!form) return;
