@@ -3296,11 +3296,12 @@ function renderLeaveCalendar() {
     html += `<div style="${cellStyle}" ${clickAttr}>
       <div style="font-size:.8rem;font-weight:${isToday?'700':'400'};color:${isToday?'var(--gold)':'var(--text2)'};margin-bottom:3px">${d}</div>
       ${leavesOnDay.map(l => {
-        const typeColors = { maladie:'#4A9EFF', formation:'#9B59B6', bureau:'#4CAF50', evenement:'#FF6B9D', conge: LEAVE_COLORS_HEX[l.person_name] };
-        const typeIcons = { maladie:'🤒', formation:'📚', bureau:'🏢', evenement:'🎉', conge:'🏖' };
-        const bg = typeColors[l.leave_type] || LEAVE_COLORS_HEX[l.person_name];
+        const typeIcons = { maladie:'🤒', formation:'📚', bureau:'🏢', ferie:'🎌', evenement:'🎉', conge:'🏖' };
+        const personHex = LEAVE_COLORS_HEX[l.person_name] || '#888';
+        const typeOverride = { maladie:'#4A9EFF', formation:'#9B59B6' };
+        const bg = typeOverride[l.leave_type] || personHex;
         const icon = typeIcons[l.leave_type] || '🏖';
-        const textColor = (l.leave_type === 'conge' && l.person_name === 'Romain') ? '#000' : '#fff';
+        const textColor = (l.person_name === 'Romain') ? '#000' : '#fff';
         return `<div style="background:${bg};border-radius:4px;padding:1px 5px;font-size:.68rem;font-weight:600;color:${textColor};margin-bottom:2px;opacity:${l.status==='pending'?'0.6':'1'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.person_name} ${icon}${l.hours?` · ${l.hours}h`:''}${l.status==='pending'?' (attente)':''}">
           ${icon} ${l.person_name}${l.hours ? ` <span style="opacity:.8">${l.hours}h</span>` : ''}${l.status==='pending'?' ⏳':''}
         </div>`;
