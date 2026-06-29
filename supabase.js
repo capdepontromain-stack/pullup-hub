@@ -844,9 +844,7 @@ function renderMessages(messages) {
       const url = m.content.replace('__img__:','');
       bubbleContent = `<img src="${url}" style="max-width:220px;max-height:200px;border-radius:8px;display:block;cursor:pointer" onclick="window.open('${url}','_blank')">`;
     } else if (isFile) {
-      const parts = m.content.replace('__file__:','').split(':');
-      const url = parts[0]; const name = parts[1] || 'Fichier';
-      bubbleContent = `<a href="${url}" target="_blank" style="display:flex;align-items:center;gap:8px;color:var(--gold);text-decoration:none;font-size:.85rem"><span style="font-size:1.4rem">📄</span>${name}</a>`;
+      try { const {url,name} = JSON.parse(m.content.replace('__file__:','')); bubbleContent = `<a href="${url}" download="${name}" target="_blank" style="display:flex;align-items:center;gap:8px;color:var(--gold);text-decoration:none;font-size:.85rem;background:var(--bg4);padding:8px 12px;border-radius:8px"><span style="font-size:1.6rem">📄</span><div><div style="font-weight:600">${name}</div><div style="font-size:.7rem;color:var(--text3)">Appuyer pour télécharger</div></div></a>`; } catch { bubbleContent = `<div class="chat-text">${m.content}</div>`; }
     } else {
       bubbleContent = `<div class="chat-text">${m.content}</div>`;
     }
@@ -875,7 +873,7 @@ async function sendChatFile(file) {
   const { data } = sb.storage.from('chat-files').getPublicUrl(path);
   const url = data?.publicUrl;
   const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(file.name);
-  const content = isImage ? `__img__:${url}` : `__file__:${url}:${file.name}`;
+  const content = isImage ? `__img__:${url}` : `__file__:${JSON.stringify({url, name: file.name})}`;
   await sb.from('messages').insert([{
     channel: activeChannel,
     content,
@@ -886,21 +884,33 @@ async function sendChatFile(file) {
   showToast('Fichier envoyé ✓');
 }
 
-// Drag & drop sur la zone de messages
-(function initChatDrop() {
-  document.addEventListener('DOMContentLoaded', () => {
-    const zone = document.getElementById('chatMessages');
-    if (!zone) return;
-    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('wa-drag-over'); });
-    zone.addEventListener('dragleave', () => zone.classList.remove('wa-drag-over'));
-    zone.addEventListener('drop', e => {
+// Drag & drop sur la zone de messages — initialisé à la demande
+function initChatDrop() {
+  const zone = document.getElementById('chatMessages');
+  if (!zone || zone._dropInit) return;
+  zone._dropInit = true;
+  zone.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); zone.classList.add('wa-drag-over'); });
+  zone.addEventListener('dragleave', e => { if (!zone.contains(e.relatedTarget)) zone.classList.remove('wa-drag-over'); });
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); e.stopPropagation();
+    zone.classList.remove('wa-drag-over');
+    const file = e.dataTransfer?.files?.[0];
+    if (file) sendChatFile(file);
+  });
+  // Aussi sur toute la zone wa-chat
+  const chat = document.getElementById('waChat');
+  if (chat && !chat._dropInit) {
+    chat._dropInit = true;
+    chat.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('wa-drag-over'); });
+    chat.addEventListener('dragleave', e => { if (!chat.contains(e.relatedTarget)) zone.classList.remove('wa-drag-over'); });
+    chat.addEventListener('drop', e => {
       e.preventDefault();
       zone.classList.remove('wa-drag-over');
-      const file = e.dataTransfer.files[0];
+      const file = e.dataTransfer?.files?.[0];
       if (file) sendChatFile(file);
     });
-  });
-})();
+  }
+}
 
 // ===== MESSAGES VOCAUX =====
 let mediaRecorder = null;
@@ -2756,9 +2766,7 @@ async function switchChannel(channel) {
       const url = msg.content.replace('__img__:','');
       bubbleContent = `<img src="${url}" style="max-width:220px;max-height:200px;border-radius:8px;display:block;cursor:pointer" onclick="window.open('${url}','_blank')">`;
     } else if (isFile) {
-      const parts = msg.content.replace('__file__:','').split(':');
-      const url = parts[0]; const name = parts[1] || 'Fichier';
-      bubbleContent = `<a href="${url}" target="_blank" style="display:flex;align-items:center;gap:8px;color:var(--gold);text-decoration:none;font-size:.85rem"><span style="font-size:1.4rem">📄</span>${name}</a>`;
+      try { const {url,name} = JSON.parse(msg.content.replace('__file__:','')); bubbleContent = `<a href="${url}" download="${name}" target="_blank" style="display:flex;align-items:center;gap:8px;color:var(--gold);text-decoration:none;font-size:.85rem;background:var(--bg4);padding:8px 12px;border-radius:8px"><span style="font-size:1.6rem">📄</span><div><div style="font-weight:600">${name}</div><div style="font-size:.7rem;color:var(--text3)">Appuyer pour télécharger</div></div></a>`; } catch { bubbleContent = `<div class="chat-text">${msg.content}</div>`; }
     } else {
       bubbleContent = `<div class="chat-text">${msg.content}</div>`;
     }
