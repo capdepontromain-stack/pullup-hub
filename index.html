@@ -370,9 +370,11 @@ try {
 
   <!-- EVENTS -->
   <section class="page" id="page-events">
-    <div class="page-header">
-      <h1>Gestion des événements</h1>
-      <button class="btn-primary" onclick="openModal('newEvent')">+ Nouvel événement</button>
+    <div class="page-header" style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <h1 style="margin:0">Gestion des événements</h1>
+        <button class="btn-primary" onclick="openModal('newEvent')" style="font-size:.85rem;padding:.45rem 1rem">+ Nouvel événement</button>
+      </div>
     </div>
     <div class="tabs">
       <button class="tab active" onclick="switchTab(this,'cal-list')">Liste</button>
