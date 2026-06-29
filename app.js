@@ -773,7 +773,7 @@ async function renderFinanceAnalyse() {
     const barPct = Math.min(100, Math.round((ca26 / (window.CHARGES_FIXES_MOIS || 8717.96)) * 100));
 
     html26 += `<tr class="${rowClass}">
-      <td><strong>${MNAMES_FR[m]}</strong></td>
+      <td onclick="showMonthDetail(2026,${m})" style="cursor:pointer" title="Voir le détail des factures"><strong>${MNAMES_FR[m]}</strong> <span style="font-size:.7rem;color:var(--gold);opacity:.7">▶</span></td>
       <td class="fin-editable" onclick="editFinanceCell(2026,${m},'ca',${ca26})" style="position:relative;cursor:pointer" title="Cliquer pour modifier">
         <div style="position:absolute;left:0;top:0;bottom:0;width:${barPct}%;background:var(--gold);opacity:.12;border-radius:3px"></div>
         <span style="position:relative">${ca26 > 0 ? fmt(ca26) : '<span style="color:var(--text2)">—</span>'}</span>

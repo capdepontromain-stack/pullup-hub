@@ -2434,7 +2434,7 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260630g"></script>
+<script src="supabase.js?v=20260630h"></script>
 <script src="app.js?v=20260630c"></script>
 <script>
   if ('serviceWorker' in navigator) {
@@ -2518,5 +2518,27 @@ async function loadAuditLog() {
   </tbody></table>`;
 }
 </script>
+
+<!-- Modal détail mois finances -->
+<div class="modal-overlay" id="modal-monthDetail">
+  <div class="modal" style="max-width:720px;width:95%">
+    <div class="modal-header">
+      <h2 id="monthDetail-title">Détail du mois</h2>
+      <button class="modal-close" onclick="closeModal('monthDetail')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <div class="events-table-wrap" style="max-height:420px;overflow-y:auto">
+        <table class="data-table">
+          <thead><tr><th>Date</th><th>Projet</th><th>Client</th><th>CA (€)</th><th>Statut</th></tr></thead>
+          <tbody id="monthDetail-tbody"><tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text2)">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+      <div id="monthDetail-total" style="padding:14px 20px;text-align:right;border-top:1px solid var(--border);font-size:1.05rem"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" onclick="closeModal('monthDetail')">Fermer</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

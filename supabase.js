@@ -1979,6 +1979,47 @@ async function saveNewClient() {
   } catch(e) { showToast('Erreur : ' + e.message); }
 }
 
+async function showMonthDetail(year, month) {
+  const MNAMES = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const titleEl = document.getElementById('monthDetail-title');
+  const tbody = document.getElementById('monthDetail-tbody');
+  const totalEl = document.getElementById('monthDetail-total');
+  if (titleEl) titleEl.textContent = `${MNAMES[month]} ${year} — Détail des factures`;
+  if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text2)">Chargement…</td></tr>';
+  openModal('monthDetail');
+
+  const start = `${year}-${String(month).padStart(2,'0')}-01`;
+  const end = new Date(year, month, 0).toISOString().split('T')[0];
+  const { data, error } = await sb.from('finances').select('*').gte('invoice_date', start).lte('invoice_date', end).order('invoice_date');
+
+  if (error || !data?.length) {
+    if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text2);padding:2.5rem">
+      Aucune facture enregistrée pour ce mois.<br>
+      <span style="font-size:.82rem;margin-top:6px;display:block">Ajoutez des factures via l'onglet <strong>Factures</strong>.</span>
+    </td></tr>`;
+    if (totalEl) totalEl.innerHTML = '';
+    return;
+  }
+
+  const statusColors = { 'Payée':'#4CAF50','Payé':'#4CAF50','Non payé':'#f44336','En attente':'#F5C518','En retard':'#f44336' };
+  let total = 0;
+  tbody.innerHTML = data.map(f => {
+    const amt = parseFloat(f.amount) || 0;
+    total += amt;
+    const date = f.invoice_date ? new Date(f.invoice_date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}) : '—';
+    const color = statusColors[f.status] || 'var(--text2)';
+    return `<tr>
+      <td style="color:var(--text2);font-size:.85rem">${date}</td>
+      <td>${f.description || '—'}</td>
+      <td><strong>${f.client || '—'}</strong></td>
+      <td style="font-weight:700;color:var(--gold)">${amt > 0 ? amt.toLocaleString('fr-FR',{minimumFractionDigits:2}) + ' €' : '—'}</td>
+      <td><span style="color:${color};font-size:.82rem">${f.status || '—'}</span></td>
+    </tr>`;
+  }).join('');
+
+  if (totalEl) totalEl.innerHTML = `Total : <strong style="color:var(--gold)">${total.toLocaleString('fr-FR',{minimumFractionDigits:2})} €</strong> <span style="color:var(--text2);font-size:.85rem">(${data.length} facture${data.length>1?'s':''})</span>`;
+}
+
 async function autoCalcDistance() {
   const form = document.getElementById('form-newMileage');
   if (!form) return;
