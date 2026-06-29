@@ -863,53 +863,77 @@ function renderMessages(messages) {
 }
 
 // ===== FICHIERS EN CHAT =====
+const CHAT_ALLOWED_TYPES = /\.(png|jpg|jpeg|gif|webp|pdf|pages|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|mp4|mov|heic|svg)$/i;
+
 async function sendChatFile(file) {
   if (!file) return;
-  const ext = file.name.split('.').pop();
-  const path = `chat-files/${Date.now()}_${file.name.replace(/\s+/g,'_')}`;
-  showToast('Envoi en cours…');
-  const { error } = await sb.storage.from('chat-files').upload(path, file, { upsert: true });
-  if (error) { showToast('Erreur upload : ' + error.message); return; }
-  const { data } = sb.storage.from('chat-files').getPublicUrl(path);
-  const url = data?.publicUrl;
-  const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(file.name);
-  const content = isImage ? `__img__:${url}` : `__file__:${JSON.stringify({url, name: file.name})}`;
-  await sb.from('messages').insert([{
-    channel: activeChannel,
-    content,
-    author_name: currentProfile?.name || currentUser.email,
-    author_id: currentUser.id
-  }]);
-  document.getElementById('chatFileInput').value = '';
-  showToast('Fichier envoyé ✓');
+  if (!currentUser) { showToast('Connecte-toi pour envoyer un fichier'); return; }
+
+  // Accepter tous les types mais avertir si format inhabituel
+  const safeName = file.name.replace(/[^a-zA-Z0-9._\-]/g, '_');
+  const path = `chat-files/${Date.now()}_${safeName}`;
+
+  showToast('⏳ Envoi en cours…');
+  try {
+    const { data: upData, error: upErr } = await sb.storage.from('chat-files').upload(path, file, { upsert: true, contentType: file.type || 'application/octet-stream' });
+    if (upErr) {
+      if (upErr.message?.includes('Bucket not found') || upErr.message?.includes('not found')) {
+        showToast('❌ Bucket manquant — crée le bucket "chat-files" dans Supabase Storage (Public)');
+      } else {
+        showToast('❌ Erreur upload : ' + upErr.message);
+      }
+      return;
+    }
+    const { data: urlData } = sb.storage.from('chat-files').getPublicUrl(path);
+    const url = urlData?.publicUrl;
+    if (!url) { showToast('❌ Impossible d\'obtenir l\'URL du fichier'); return; }
+
+    const isImage = /\.(png|jpg|jpeg|gif|webp|heic|svg)$/i.test(file.name);
+    const content = isImage
+      ? `__img__:${url}`
+      : `__file__:${JSON.stringify({ url, name: file.name, size: file.size, type: file.type })}`;
+
+    const { error: msgErr } = await sb.from('messages').insert([{
+      channel: activeChannel,
+      content,
+      author_name: currentProfile?.name || currentUser.email,
+      author_id: currentUser.id
+    }]);
+    if (msgErr) { showToast('❌ Erreur message : ' + msgErr.message); return; }
+    showToast('✅ Fichier envoyé !');
+  } catch(e) {
+    showToast('❌ Erreur : ' + (e.message || 'inconnue'));
+  }
 }
 
 // Drag & drop sur la zone de messages — initialisé à la demande
 function initChatDrop() {
-  const zone = document.getElementById('chatMessages');
-  if (!zone || zone._dropInit) return;
-  zone._dropInit = true;
-  zone.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); zone.classList.add('wa-drag-over'); });
-  zone.addEventListener('dragleave', e => { if (!zone.contains(e.relatedTarget)) zone.classList.remove('wa-drag-over'); });
-  zone.addEventListener('drop', e => {
-    e.preventDefault(); e.stopPropagation();
-    zone.classList.remove('wa-drag-over');
+  const chat = document.getElementById('waChat');
+  if (!chat || chat._dropInit) return;
+  chat._dropInit = true;
+
+  let dragCounter = 0;
+
+  chat.addEventListener('dragenter', e => {
+    e.preventDefault();
+    dragCounter++;
+    chat.classList.add('wa-drag-over');
+  });
+  chat.addEventListener('dragover', e => {
+    e.preventDefault();
+  });
+  chat.addEventListener('dragleave', e => {
+    dragCounter--;
+    if (dragCounter <= 0) { dragCounter = 0; chat.classList.remove('wa-drag-over'); }
+  });
+  chat.addEventListener('drop', e => {
+    e.preventDefault();
+    dragCounter = 0;
+    chat.classList.remove('wa-drag-over');
     const file = e.dataTransfer?.files?.[0];
     if (file) sendChatFile(file);
+    else showToast('Aucun fichier détecté');
   });
-  // Aussi sur toute la zone wa-chat
-  const chat = document.getElementById('waChat');
-  if (chat && !chat._dropInit) {
-    chat._dropInit = true;
-    chat.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('wa-drag-over'); });
-    chat.addEventListener('dragleave', e => { if (!chat.contains(e.relatedTarget)) zone.classList.remove('wa-drag-over'); });
-    chat.addEventListener('drop', e => {
-      e.preventDefault();
-      zone.classList.remove('wa-drag-over');
-      const file = e.dataTransfer?.files?.[0];
-      if (file) sendChatFile(file);
-    });
-  }
 }
 
 // ===== MESSAGES VOCAUX =====
