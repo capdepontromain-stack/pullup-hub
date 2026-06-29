@@ -1985,9 +1985,7 @@ function calcMileageAmount() {
   const km = parseFloat(form.querySelector('[name=km]')?.value) || 0;
   const rate = parseFloat(form.querySelector('[name=rate]')?.value) || 0.374;
   const total = km * rate;
-  const detail = document.getElementById('mileage-calc-detail');
   const totalEl = document.getElementById('mileage-calc-total');
-  if (detail) detail.textContent = `${km} km × ${rate.toFixed(3)} €/km`;
   if (totalEl) totalEl.textContent = km > 0 ? `${total.toFixed(2)} €` : '— €';
 }
 
