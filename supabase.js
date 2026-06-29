@@ -2002,10 +2002,13 @@ async function showMonthDetail(year, month) {
   }
 
   const statusColors = { 'Payée':'#4CAF50','Payé':'#4CAF50','Non payé':'#f44336','En attente':'#F5C518','En retard':'#f44336' };
-  let total = 0;
+  let totalCA = 0, totalBenef = 0;
   tbody.innerHTML = data.map(f => {
     const amt = parseFloat(f.amount) || 0;
-    total += amt;
+    const ben = parseFloat(f.benef) || 0;
+    totalCA += amt; totalBenef += ben;
+    const marge = amt > 0 && ben > 0 ? Math.round((ben / amt) * 100) : null;
+    const margeClass = marge >= 50 ? '#4CAF50' : marge >= 30 ? '#F5C518' : '#f44336';
     const date = f.invoice_date ? new Date(f.invoice_date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}) : '—';
     const color = statusColors[f.status] || 'var(--text2)';
     return `<tr>
@@ -2013,11 +2016,18 @@ async function showMonthDetail(year, month) {
       <td>${f.notes || '—'}</td>
       <td><strong>${f.client || '—'}</strong></td>
       <td style="font-weight:700;color:var(--gold)">${amt > 0 ? amt.toLocaleString('fr-FR',{minimumFractionDigits:2}) + ' €' : '—'}</td>
+      <td style="font-weight:700;color:#4CAF50">${ben > 0 ? ben.toLocaleString('fr-FR',{minimumFractionDigits:2}) + ' €' : '—'}</td>
+      <td style="color:${marge !== null ? margeClass : 'var(--text2)'};font-weight:600">${marge !== null ? marge + '%' : '—'}</td>
       <td><span style="color:${color};font-size:.82rem">${f.status || '—'}</span></td>
     </tr>`;
   }).join('');
 
-  if (totalEl) totalEl.innerHTML = `Total : <strong style="color:var(--gold)">${total.toLocaleString('fr-FR',{minimumFractionDigits:2})} €</strong> <span style="color:var(--text2);font-size:.85rem">(${data.length} facture${data.length>1?'s':''})</span>`;
+  const totalMarge = totalCA > 0 && totalBenef > 0 ? Math.round((totalBenef/totalCA)*100) : null;
+  if (totalEl) totalEl.innerHTML = `
+    <span style="margin-right:24px">CA : <strong style="color:var(--gold)">${totalCA.toLocaleString('fr-FR',{minimumFractionDigits:2})} €</strong></span>
+    <span style="margin-right:24px">Bénéfice : <strong style="color:#4CAF50">${totalBenef > 0 ? totalBenef.toLocaleString('fr-FR',{minimumFractionDigits:2}) + ' €' : '—'}</strong></span>
+    ${totalMarge !== null ? `<span>Marge : <strong style="color:#4CAF50">${totalMarge}%</strong></span>` : ''}
+    <span style="color:var(--text2);font-size:.82rem;margin-left:16px">(${data.length} facture${data.length>1?'s':''})</span>`;
 }
 
 async function autoCalcDistance() {
