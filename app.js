@@ -15,7 +15,7 @@ function showPage(id) {
     else if (typeof loadAndRenderEvents === 'function') loadAndRenderEvents();
   }
   if (id === 'finances') renderFinanceAnalyse().catch(console.error);
-  if (id === 'dashboard') renderDashboardCA().catch(console.error);
+  if (id === 'dashboard') { renderDashboardCA().catch(console.error); renderMiniCalendar(); }
   if (id === 'leaves') loadAndRenderLeaves();
   if (id === 'flora') loadAndRenderFlora();
   if (id === 'charges' && typeof loadCharges === 'function') loadCharges();
@@ -305,6 +305,52 @@ function calNav(dir) {
   if (calState.month > 11) { calState.month = 0; calState.year++; }
   if (calState.month < 0) { calState.month = 11; calState.year--; }
   renderCalendar();
+}
+
+function renderMiniCalendar() {
+  const wrap = document.getElementById('dash-mini-cal');
+  if (!wrap) return;
+  const now = new Date();
+  const year = now.getFullYear(), month = now.getMonth();
+  const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDay = new Date(year, month, 1).getDay();
+  const offset = firstDay === 0 ? 6 : firstDay - 1;
+  const prevDays = new Date(year, month, 0).getDate();
+
+  let html = `<div style="text-align:center;font-weight:700;color:var(--gold);margin-bottom:10px;font-size:.9rem">${monthNames[month]} ${year}</div>`;
+  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:.72rem">';
+  ['L','M','M','J','V','S','D'].forEach(d => html += `<div style="text-align:center;color:var(--text2);padding:3px 0;font-weight:600">${d}</div>`);
+
+  for (let i = offset - 1; i >= 0; i--) {
+    html += `<div style="text-align:center;color:var(--text2);opacity:.3;padding:4px 2px">${prevDays - i}</div>`;
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = d === now.getDate();
+    const cellDate = new Date(year, month, d);
+    const evts = (window.calendarEvents || []).filter(e => {
+      if (!e.event_date) return false;
+      const [sy, sm, sd] = e.event_date.split('-').map(Number);
+      const start = new Date(sy, sm - 1, sd);
+      const end = e.end_date ? (() => { const [ey,em,ed]=e.end_date.split('-').map(Number); return new Date(ey,em-1,ed); })() : start;
+      return cellDate >= start && cellDate <= end;
+    });
+    const dots = evts.slice(0,3).map(e => {
+      const c = typeof eventColor === 'function' ? eventColor(e) : { border: 'var(--gold)' };
+      return `<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:${c.border};margin:0 1px"></span>`;
+    }).join('');
+    const todayStyle = isToday ? 'background:var(--gold);color:#000;border-radius:50%;font-weight:700;' : '';
+    const hasEvt = evts.length > 0 ? 'color:var(--text);' : 'color:var(--text2);';
+    html += `<div style="text-align:center;padding:3px 2px;${todayStyle}${!isToday ? hasEvt : ''}">
+      <div>${d}</div>${dots ? `<div style="margin-top:1px">${dots}</div>` : ''}
+    </div>`;
+  }
+  const remaining = 42 - offset - daysInMonth;
+  for (let d = 1; d <= remaining; d++) {
+    html += `<div style="text-align:center;color:var(--text2);opacity:.3;padding:4px 2px">${d}</div>`;
+  }
+  html += '</div>';
+  wrap.innerHTML = html;
 }
 
 // AI Assistant

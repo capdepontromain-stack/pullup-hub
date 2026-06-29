@@ -1659,6 +1659,7 @@ async function loadAndRenderEvents() {
   updateDashboardEvents(events);
   window.calendarEvents = events;
   if (document.getElementById('page-events')?.classList.contains('active')) renderCalendar();
+  if (typeof renderMiniCalendar === 'function') renderMiniCalendar();
 }
 
 async function loadAndRenderTasks() {

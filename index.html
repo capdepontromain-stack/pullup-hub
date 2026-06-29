@@ -316,6 +316,15 @@ try {
       </div>
 
 
+      <!-- Mini calendrier -->
+      <div class="card span2" data-dash-id="0" style="cursor:pointer" onclick="showPage('events');setTimeout(()=>{document.querySelectorAll('.tab')[1].click()},100)" title="Voir le calendrier complet">
+        <div class="card-header">
+          <h3>📅 Calendrier</h3>
+          <span style="font-size:.8rem;color:var(--text2)">Voir le calendrier →</span>
+        </div>
+        <div id="dash-mini-cal"></div>
+      </div>
+
       <!-- CA Objectifs -->
       <div class="card span2" data-dash-id="0" style="cursor:pointer">
         <div class="card-header"><h3>Bénéfice réalisé 2026 — seuil charges : <span data-charges-label>8 718 €/mois</span></h3></div>
