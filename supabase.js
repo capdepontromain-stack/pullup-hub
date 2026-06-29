@@ -1979,16 +1979,32 @@ async function saveNewClient() {
   } catch(e) { showToast('Erreur : ' + e.message); }
 }
 
+function calcMileageAmount() {
+  const form = document.getElementById('form-newMileage');
+  if (!form) return;
+  const km = parseFloat(form.querySelector('[name=km]')?.value) || 0;
+  const rate = parseFloat(form.querySelector('[name=rate]')?.value) || 0.374;
+  const total = km * rate;
+  const detail = document.getElementById('mileage-calc-detail');
+  const totalEl = document.getElementById('mileage-calc-total');
+  if (detail) detail.textContent = `${km} km × ${rate.toFixed(3)} €/km`;
+  if (totalEl) totalEl.textContent = km > 0 ? `${total.toFixed(2)} €` : '— €';
+}
+
 async function saveNewMileage() {
   const form = document.getElementById('form-newMileage');
   if (!form) return;
+  const km = parseFloat(form.querySelector('[name=km]')?.value) || 0;
+  const rate = parseFloat(form.querySelector('[name=rate]')?.value) || 0.374;
   const data = {
     trip_date: form.querySelector('[name=trip_date]')?.value,
     user_name: form.querySelector('[name=user_name]')?.value,
     departure: form.querySelector('[name=departure]')?.value,
     destination: form.querySelector('[name=destination]')?.value,
-    km: parseFloat(form.querySelector('[name=km]')?.value) || 0,
-    rate: parseFloat(form.querySelector('[name=rate]')?.value) || 0.374,
+    client: form.querySelector('[name=client]')?.value || null,
+    km,
+    rate,
+    amount: Math.round(km * rate * 100) / 100,
     motif: form.querySelector('[name=motif]')?.value
   };
   if (!data.trip_date || !data.km) { showToast('Date et km obligatoires'); return; }
