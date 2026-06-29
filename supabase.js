@@ -1968,6 +1968,26 @@ async function handleLogin(e) {
 // =============================================
 // INIT APP (chargement de toutes les données)
 // =============================================
+async function updatePresence() {
+  if (!currentUser) return;
+  await sb.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', currentUser.id);
+}
+
+async function refreshPresenceDots() {
+  const { data: profiles } = await sb.from('profiles').select('name, last_seen');
+  if (!profiles) return;
+  const now = Date.now();
+  const DM_NAMES = ['romain','ketsia','flora','gloria'];
+  DM_NAMES.forEach(n => {
+    const dot = document.querySelector(`.wa-conv-item[data-channel="dm-${n}"] .wa-conv-dot`);
+    if (!dot) return;
+    const p = profiles.find(p => p.name?.toLowerCase() === n);
+    if (!p?.last_seen) { dot.className = 'wa-conv-dot wa-offline'; return; }
+    const diff = now - new Date(p.last_seen).getTime();
+    dot.className = diff < 5 * 60 * 1000 ? 'wa-conv-dot wa-online' : 'wa-conv-dot wa-offline';
+  });
+}
+
 async function initApp() {
   // Update user info in sidebar
   if (currentProfile) {
@@ -1980,6 +2000,12 @@ async function initApp() {
     if (sideAvatar) sideAvatar.textContent = initial;
     document.querySelectorAll('.topbar-avatar').forEach(el => el.textContent = initial);
   }
+
+  // Présence : mettre à jour last_seen toutes les 60s
+  updatePresence();
+  setInterval(updatePresence, 60000);
+  refreshPresenceDots();
+  setInterval(refreshPresenceDots, 60000);
 
   // Charger toutes les données en parallèle
   await Promise.all([
