@@ -2249,6 +2249,16 @@ async function initApp() {
   setInterval(loadTasksBadge, 60000);
   loadDevisBadge();
   setInterval(loadDevisBadge, 60000);
+  loadImprovementsBadge();
+  // Écoute temps réel — nouvelle amélioration
+  sb.channel('improvements-realtime')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'improvements' }, (payload) => {
+      // Ne pas notifier si c'est moi qui ai posté
+      if (payload.new?.author_id === currentUser?.id) return;
+      loadImprovementsBadge();
+      showToast('💡 Nouvelle suggestion d\'amélioration !');
+    })
+    .subscribe();
   // Afficher les éléments réservés admin
   if (isAdmin()) {
     document.querySelectorAll('.nav-admin-only').forEach(el => el.style.display = '');
@@ -2268,6 +2278,23 @@ async function loadDevisBadge() {
   const n = count || 0;
   if (n > 0) { badge.textContent = n > 99 ? '99+' : n; badge.style.display = 'inline-flex'; }
   else badge.style.display = 'none';
+}
+
+async function loadImprovementsBadge() {
+  if (!currentUser) return;
+  const lastSeen = localStorage.getItem('improvements_last_seen') || '2000-01-01';
+  const { count } = await sb.from('improvements')
+    .select('id', { count: 'exact', head: true })
+    .gt('created_at', lastSeen);
+  const badge = document.getElementById('nav-badge-improvements');
+  if (!badge) return;
+  const n = count || 0;
+  if (n > 0) {
+    badge.textContent = n > 99 ? '99+' : n;
+    badge.style.display = 'inline-flex';
+  } else {
+    badge.style.display = 'none';
+  }
 }
 
 async function loadTasksBadge() {
@@ -3972,6 +3999,10 @@ const IMPROV_STATUS = { idea:'💡 Idée', todo:'🔧 À faire', done:'✅ Fait'
 const IMPROV_STATUS_COLORS = { idea:'#F5C518', todo:'#4A9EFF', done:'#4CAF50' };
 
 async function loadImprovements() {
+  // Marquer comme vu — efface la pastille
+  localStorage.setItem('improvements_last_seen', new Date().toISOString());
+  const badge = document.getElementById('nav-badge-improvements');
+  if (badge) badge.style.display = 'none';
   const { data } = await sb.from('improvements').select('*').order('created_at', { ascending: false });
   allImprovements = data || [];
   renderImprovements();
