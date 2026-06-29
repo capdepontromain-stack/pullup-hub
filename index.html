@@ -2,6 +2,18 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<script>
+// Correctif nav : si l'ordre sauvegardé est incomplet, on l'efface avant que app.js le lise
+try {
+  var _saved = localStorage.getItem('pullup_nav_order');
+  if (_saved) {
+    var _order = JSON.parse(_saved);
+    var _required = ['improvements','leaves','editorial','charges','devis-requests'];
+    var _missing = _required.some(function(p){ return _order.indexOf(p) === -1; });
+    if (_missing) localStorage.removeItem('pullup_nav_order');
+  }
+} catch(e) { localStorage.removeItem('pullup_nav_order'); }
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pull Up Hub</title>
 <link rel="manifest" href="/manifest.json">
@@ -2412,8 +2424,8 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260629b"></script>
-<script src="app.js?v=20260629b"></script>
+<script src="supabase.js?v=20260630c"></script>
+<script src="app.js?v=20260630c"></script>
 <script>
   if ('serviceWorker' in navigator) {
     // Écouter le signal de rechargement forcé envoyé par le nouveau SW
