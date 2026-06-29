@@ -2010,7 +2010,7 @@ async function showMonthDetail(year, month) {
     const color = statusColors[f.status] || 'var(--text2)';
     return `<tr>
       <td style="color:var(--text2);font-size:.85rem">${date}</td>
-      <td>${f.description || '—'}</td>
+      <td>${f.notes || '—'}</td>
       <td><strong>${f.client || '—'}</strong></td>
       <td style="font-weight:700;color:var(--gold)">${amt > 0 ? amt.toLocaleString('fr-FR',{minimumFractionDigits:2}) + ' €' : '—'}</td>
       <td><span style="color:${color};font-size:.82rem">${f.status || '—'}</span></td>
