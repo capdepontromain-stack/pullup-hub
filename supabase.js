@@ -2020,7 +2020,8 @@ function calcMileageAmount() {
   if (!form) return;
   const km = parseFloat(form.querySelector('[name=km]')?.value) || 0;
   const rate = parseFloat(form.querySelector('[name=rate]')?.value) || 0.374;
-  const total = km * rate;
+  const roundtrip = form.querySelector('[name=roundtrip]')?.checked ? 2 : 1;
+  const total = km * roundtrip * rate;
   const totalEl = document.getElementById('mileage-calc-total');
   if (totalEl) totalEl.textContent = km > 0 ? `${total.toFixed(2)} €` : '— €';
 }
@@ -2028,7 +2029,9 @@ function calcMileageAmount() {
 async function saveNewMileage() {
   const form = document.getElementById('form-newMileage');
   if (!form) return;
-  const km = parseFloat(form.querySelector('[name=km]')?.value) || 0;
+  const kmOne = parseFloat(form.querySelector('[name=km]')?.value) || 0;
+  const roundtrip = form.querySelector('[name=roundtrip]')?.checked ? 2 : 1;
+  const km = kmOne * roundtrip;
   const rate = parseFloat(form.querySelector('[name=rate]')?.value) || 0.374;
   const data = {
     trip_date: form.querySelector('[name=trip_date]')?.value,

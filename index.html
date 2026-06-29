@@ -2045,6 +2045,12 @@ Afin d'avancer, nous pouvons :
         <div class="form-group"><label>Km *</label><input name="km" type="number" step="0.1" placeholder="0" required oninput="calcMileageAmount()"></div>
         <div class="form-group"><label>Barème (€/km)</label><input name="rate" type="number" step="0.001" value="0.374" oninput="calcMileageAmount()"></div>
         <div class="form-group span2">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
+            <input type="checkbox" name="roundtrip" onchange="calcMileageAmount()" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer">
+            <span>Aller-retour <span style="color:var(--text2);font-size:.85rem">(× 2)</span></span>
+          </label>
+        </div>
+        <div class="form-group span2">
           <label>Frais kilométriques</label>
           <div style="background:var(--bg3);border:1px solid var(--gold);border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:center">
             <span style="font-size:1.3rem;font-weight:700;color:var(--gold)" id="mileage-calc-total">— €</span>
@@ -2428,7 +2434,7 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260630f"></script>
+<script src="supabase.js?v=20260630g"></script>
 <script src="app.js?v=20260630c"></script>
 <script>
   if ('serviceWorker' in navigator) {
