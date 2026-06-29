@@ -2011,7 +2011,7 @@ async function showMonthDetail(year, month) {
     const margeClass = marge >= 50 ? '#4CAF50' : marge >= 30 ? '#F5C518' : '#f44336';
     const date = f.invoice_date ? new Date(f.invoice_date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}) : '—';
     const color = statusColors[f.status] || 'var(--text2)';
-    return `<tr>
+    return `<tr style="cursor:pointer" onclick="openEditFinanceRow(${JSON.stringify(f).replace(/'/g,'&#39;')})" title="Cliquer pour modifier">
       <td style="color:var(--text2);font-size:.85rem">${date}</td>
       <td>${f.notes || '—'}</td>
       <td><strong>${f.client || '—'}</strong></td>
@@ -2028,6 +2028,76 @@ async function showMonthDetail(year, month) {
     <span style="margin-right:24px">Bénéfice : <strong style="color:#4CAF50">${totalBenef > 0 ? totalBenef.toLocaleString('fr-FR',{minimumFractionDigits:2}) + ' €' : '—'}</strong></span>
     ${totalMarge !== null ? `<span>Marge : <strong style="color:#4CAF50">${totalMarge}%</strong></span>` : ''}
     <span style="color:var(--text2);font-size:.82rem;margin-left:16px">(${data.length} facture${data.length>1?'s':''})</span>`;
+}
+
+let _editFinanceRowMonth = null;
+
+function openEditFinanceRow(f) {
+  const form = document.getElementById('form-editFinanceRow');
+  if (!form) return;
+  form.querySelector('[name=id]').value = f.id;
+  form.querySelector('[name=notes]').value = f.notes || '';
+  form.querySelector('[name=client]').value = f.client || '';
+  form.querySelector('[name=amount]').value = f.amount || '';
+  form.querySelector('[name=benef]').value = f.benef || '';
+  form.querySelector('[name=invoice_date]').value = f.invoice_date || '';
+  form.querySelector('[name=status]').value = f.status || 'En attente';
+  // Store month context to refresh after save
+  if (f.invoice_date) {
+    const d = new Date(f.invoice_date);
+    _editFinanceRowMonth = { year: d.getFullYear(), month: d.getMonth() + 1 };
+  }
+  calcEditMarge();
+  openModal('editFinanceRow');
+}
+
+function calcEditMarge() {
+  const form = document.getElementById('form-editFinanceRow');
+  if (!form) return;
+  const amt = parseFloat(form.querySelector('[name=amount]')?.value) || 0;
+  const ben = parseFloat(form.querySelector('[name=benef]')?.value) || 0;
+  const el = document.getElementById('editFinanceRow-marge');
+  if (!el) return;
+  if (amt > 0 && ben > 0) {
+    const pct = Math.round((ben / amt) * 100);
+    const color = pct >= 50 ? '#4CAF50' : pct >= 30 ? '#F5C518' : '#f44336';
+    el.style.color = color;
+    el.textContent = pct + '%';
+  } else {
+    el.style.color = 'var(--text2)';
+    el.textContent = '—';
+  }
+}
+
+async function saveFinanceRow() {
+  const form = document.getElementById('form-editFinanceRow');
+  if (!form) return;
+  const id = form.querySelector('[name=id]').value;
+  const data = {
+    notes: form.querySelector('[name=notes]').value || null,
+    client: form.querySelector('[name=client]').value,
+    amount: parseFloat(form.querySelector('[name=amount]').value) || null,
+    benef: parseFloat(form.querySelector('[name=benef]').value) || null,
+    invoice_date: form.querySelector('[name=invoice_date]').value || null,
+    status: form.querySelector('[name=status]').value,
+  };
+  const { error } = await sb.from('finances').update(data).eq('id', id);
+  if (error) { showToast('Erreur : ' + error.message); return; }
+  showToast('Facture mise à jour ✓');
+  closeModal('editFinanceRow');
+  if (_editFinanceRowMonth) showMonthDetail(_editFinanceRowMonth.year, _editFinanceRowMonth.month);
+}
+
+async function deleteFinanceRow() {
+  const form = document.getElementById('form-editFinanceRow');
+  if (!form) return;
+  const id = form.querySelector('[name=id]').value;
+  if (!confirm('Supprimer cette facture ?')) return;
+  const { error } = await sb.from('finances').delete().eq('id', id);
+  if (error) { showToast('Erreur : ' + error.message); return; }
+  showToast('Facture supprimée');
+  closeModal('editFinanceRow');
+  if (_editFinanceRowMonth) showMonthDetail(_editFinanceRowMonth.year, _editFinanceRowMonth.month);
 }
 
 async function autoCalcDistance() {
