@@ -2416,7 +2416,12 @@ Afin d'avancer, nous pouvons :
 <script src="app.js"></script>
 <script>
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js');
+    // Purger tous les anciens caches et SW bloqués
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      regs.forEach(r => r.unregister());
+    });
+    caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+    setTimeout(() => navigator.serviceWorker.register('/sw.js'), 500);
   }
 </script>
 </body>
