@@ -2620,7 +2620,7 @@ async function markChannelRead(channel) {
   await sb.from('message_reads').upsert({ user_id: currentUser.id, channel, last_read_at: new Date().toISOString() }, { onConflict: 'user_id,channel' });
   // Efface le badge du channel
   const badge = document.getElementById('badge-' + channel);
-  if (badge) { badge.textContent = ''; badge.style.background = '#4CAF50'; badge.style.minWidth = '10px'; badge.style.width = '10px'; badge.style.height = '10px'; badge.style.padding = '0'; badge.style.display = 'inline-flex'; }
+  if (badge) { badge.textContent = ''; badge.style.display = 'none'; }
   refreshNavMessageBadge();
 }
 
@@ -2642,18 +2642,13 @@ async function loadUnreadCounts() {
     const n = count || 0;
     const badge = document.getElementById('badge-' + ch);
     if (badge) {
-      badge.style.display = 'inline-flex';
       if (n > 0) {
-        badge.textContent = n > 99 ? '99+' : n;
-        badge.style.background = '#f44336';
-        badge.style.minWidth = '18px';
+        badge.textContent = n > 99 ? '99+' : String(n);
+        badge.style.display = 'inline-flex';
+        badge.style.background = '#25D366';
       } else {
         badge.textContent = '';
-        badge.style.background = '#4CAF50';
-        badge.style.minWidth = '10px';
-        badge.style.width = '10px';
-        badge.style.height = '10px';
-        badge.style.padding = '0';
+        badge.style.display = 'none';
       }
     }
     totalUnread += n;
