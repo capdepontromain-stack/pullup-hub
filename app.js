@@ -25,6 +25,7 @@ function showPage(id) {
   if (id === 'editorial' && typeof loadAndRenderEditorial === 'function') loadAndRenderEditorial();
   if (id === 'improvements' && typeof loadImprovements === 'function') loadImprovements();
   if (id === 'links' && typeof loadAndRenderLinks === 'function') loadAndRenderLinks();
+  if (id === 'audit' && typeof loadAuditLog === 'function') loadAuditLog();
   if (typeof initChatDrop === 'function') initChatDrop();
 }
 

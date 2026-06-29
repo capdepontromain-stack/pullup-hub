@@ -21,6 +21,20 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 let currentUser = null;
 let currentProfile = null;
 
+function isAdmin() {
+  return currentProfile?.role === 'admin';
+}
+
+async function logAudit(action, details) {
+  try {
+    await sb.from('audit_logs').insert([{
+      user_name: currentProfile?.name || currentUser?.email || 'Inconnu',
+      action,
+      details,
+    }]);
+  } catch(e) { console.warn('Audit log failed', e); }
+}
+
 async function signIn(email, password) {
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
   if (error) throw error;
@@ -61,8 +75,10 @@ async function updateEvent(id, updates) {
 }
 
 async function deleteEvent(id) {
+  if (!isAdmin()) { showToast('Seul l\'administrateur peut supprimer un événement.'); return; }
   const { error } = await sb.from('events').delete().eq('id', id);
   if (error) throw error;
+  logAudit('Suppression événement', `id: ${id}`);
 }
 
 // =============================================
@@ -87,8 +103,10 @@ async function updateTaskStatus(id, status) {
 }
 
 async function deleteTask(id) {
+  if (!isAdmin()) { showToast('Seul l\'administrateur peut supprimer une tâche.'); return; }
   const { error } = await sb.from('tasks').delete().eq('id', id);
   if (error) throw error;
+  logAudit('Suppression tâche', `id: ${id}`);
 }
 
 // =============================================
@@ -690,14 +708,18 @@ function openEditTask(t) {
   const form = document.getElementById('form-editTask');
   if (!form) { console.error('form-editTask introuvable'); return; }
   try {
-    // Normaliser les anciens statuts
     const statusMap = { faire: 'todo', fait: 'done', inprogress: 'inprogress', waiting: 'waiting', done: 'done', todo: 'todo' };
     form.elements['id'].value = t.id || '';
     form.elements['title'].value = t.title || '';
-    // Cocher la bonne personne dans les checkboxes
     form.querySelectorAll('[name=assignees]').forEach(c => {
       c.checked = c.value === (t.assignee_name || 'Romain');
     });
+    // Masquer la section assignation pour les non-admins
+    const assigneeSection = form.querySelector('.assignee-section');
+    if (assigneeSection) assigneeSection.style.display = isAdmin() ? '' : 'none';
+    // Masquer le bouton supprimer pour les non-admins
+    const delBtn = document.getElementById('btn-delete-task');
+    if (delBtn) delBtn.style.display = isAdmin() ? '' : 'none';
     form.elements['priority'].value = t.priority || 'Normal';
     form.elements['status'].value = statusMap[t.status] || 'todo';
     form.elements['due_date'].value = t.due_date || '';
@@ -771,6 +793,14 @@ async function saveEditTask() {
   if (!form || !currentEditTaskId) return;
   const assignees = [...form.querySelectorAll('[name=assignees]:checked')].map(c => c.value);
   if (!assignees.length) { showToast('⚠️ Vous n\'avez attribué cette tâche à personne. Veuillez sélectionner au moins un responsable.'); return; }
+  // Vérifier si l'assignation change — seul l'admin peut changer le responsable
+  const prevTask = (window._allTasks || []).find(t => t.id === currentEditTaskId);
+  const prevAssignee = prevTask?.assignee_name || '';
+  const newAssignee = assignees[0];
+  if (!isAdmin() && newAssignee !== prevAssignee) {
+    showToast('Seul l\'administrateur peut changer le responsable d\'une tâche.');
+    return;
+  }
   const baseUpdates = {
     title: form.elements['title'].value.trim(),
     priority: form.elements['priority'].value,
@@ -778,7 +808,6 @@ async function saveEditTask() {
     due_date: form.elements['due_date'].value || null,
     description: form.elements['description'].value.trim() || null,
   };
-  // Handle photo
   const photoInput = form.querySelector('[name=photo]');
   const photoFile = photoInput?.files[0];
   if (photoFile) {
@@ -788,12 +817,14 @@ async function saveEditTask() {
   } else if (window._editTaskPhotoRemoved) {
     baseUpdates.photo_url = null;
   }
-  // Update current task with first assignee, create new tasks for others
   const { error } = await sb.from('tasks').update({ ...baseUpdates, assignee_name: assignees[0] }).eq('id', currentEditTaskId);
   if (error) { showToast('Erreur : ' + error.message); return; }
-  for (let i = 1; i < assignees.length; i++) {
-    await sb.from('tasks').insert({ ...baseUpdates, assignee_name: assignees[i], status: 'todo' });
+  if (isAdmin() && assignees.length > 1) {
+    for (let i = 1; i < assignees.length; i++) {
+      await sb.from('tasks').insert({ ...baseUpdates, assignee_name: assignees[i], status: 'todo' });
+    }
   }
+  if (isAdmin() && newAssignee !== prevAssignee) logAudit('Réassignation tâche', `"${baseUpdates.title}" → ${newAssignee}`);
   closeModal('editTask');
   await loadAndRenderTasks();
   loadTasksBadge();
@@ -803,8 +834,11 @@ async function saveEditTask() {
 
 async function deleteCurrentTask() {
   if (!currentEditTaskId) return;
+  if (!isAdmin()) { showToast('Seul l\'administrateur peut supprimer une tâche.'); return; }
   if (!confirm('Supprimer cette tâche ?')) return;
+  const t = (window._allTasks || []).find(t => t.id === currentEditTaskId);
   await sb.from('tasks').delete().eq('id', currentEditTaskId);
+  logAudit('Suppression tâche', `"${t?.title || currentEditTaskId}"`);
   closeModal('editTask');
   await loadAndRenderTasks();
   showToast('Tâche supprimée');
@@ -2202,6 +2236,7 @@ async function initApp() {
   allSuppliers = await fetchSuppliers();
 
   showPage('dashboard');
+  if (typeof checkCharter === 'function') checkCharter();
   await loadChargesGlobales();
   if (typeof renderDashboardCA === 'function') renderDashboardCA();
   renderDashboardProspectsRelance();
@@ -2214,6 +2249,10 @@ async function initApp() {
   setInterval(loadTasksBadge, 60000);
   loadDevisBadge();
   setInterval(loadDevisBadge, 60000);
+  // Afficher les éléments réservés admin
+  if (isAdmin()) {
+    document.querySelectorAll('.nav-admin-only').forEach(el => el.style.display = '');
+  }
 }
 
 async function loadDevisBadge() {

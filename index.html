@@ -127,6 +127,10 @@ try {
       <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
       <span>Liens Rapides</span>
     </a>
+    <a class="nav-item nav-admin-only" data-page="audit" style="display:none">
+      <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
+      <span>Journal d'audit</span>
+    </a>
     <a class="nav-item" data-page="mileage">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
       <span>Frais kilométriques</span>
@@ -1856,7 +1860,7 @@ Afin d'avancer, nous pouvons :
       <form id="form-editTask" class="form-grid">
         <input type="hidden" name="id">
         <div class="form-group span2"><label>Titre de la tâche</label><input name="title" type="text" required></div>
-        <div class="form-group span2"><label>Responsable(s)</label>
+        <div class="form-group span2 assignee-section"><label>Responsable(s)</label>
           <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px">
             <button type="button" onclick="toggleAllTaskAssignees(this)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:.8rem;cursor:pointer;color:var(--text2)">👥 Toute l'équipe</button>
           </div>
@@ -1898,7 +1902,7 @@ Afin d'avancer, nous pouvons :
       </form>
     </div>
     <div class="modal-footer">
-      <button class="btn-outline btn-danger-outline" onclick="deleteCurrentTask()" style="margin-right:auto">🗑 Supprimer</button>
+      <button id="btn-delete-task" class="btn-outline btn-danger-outline" onclick="deleteCurrentTask()" style="margin-right:auto">🗑 Supprimer</button>
       <button class="btn-outline" onclick="closeModal('editTask')">Annuler</button>
       <button class="btn-primary" onclick="saveEditTask()">Enregistrer</button>
     </div>
@@ -2438,6 +2442,65 @@ Afin d'avancer, nous pouvons :
       });
     });
   }
+</script>
+
+<!-- MODALE CHARTE D'UTILISATION -->
+<div class="modal-overlay" id="modal-charter" style="z-index:9999;background:rgba(0,0,0,.7)">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header"><h3>📋 Charte d'utilisation</h3></div>
+    <div class="modal-body" style="font-size:.9rem;line-height:1.7;color:var(--text1)">
+      <p>Bienvenue sur <strong>Pull Up Hub</strong>, l'outil interne de gestion de <strong>Pull Up Événements</strong>.</p>
+      <p>En accédant à cette application, vous reconnaissez et acceptez les points suivants :</p>
+      <ul style="padding-left:1.2rem;margin:.8rem 0;display:flex;flex-direction:column;gap:.5rem">
+        <li>Vos données personnelles (nom, congés, frais, présence) sont collectées et traitées dans le cadre de la gestion interne de l'entreprise, conformément au <strong>RGPD</strong>.</li>
+        <li>Ces données sont accessibles uniquement aux membres de l'équipe Pull Up Événements et à l'administrateur.</li>
+        <li>Vous pouvez à tout moment demander à consulter ou corriger vos données en contactant Romain Capdepont.</li>
+        <li>Toute modification ou suppression de données est enregistrée dans un journal d'audit.</li>
+        <li>Cette application est à usage professionnel exclusivement. Toute utilisation inappropriée peut engager votre responsabilité.</li>
+      </ul>
+      <p style="font-size:.8rem;color:var(--text2)">Responsable du traitement : Pull Up Événements — Romain Capdepont — 6 Impasse des Sœurs Brontë, Le Tampon</p>
+    </div>
+    <div class="modal-footer" style="justify-content:center">
+      <button class="btn-primary" style="padding:.7rem 2.5rem;font-size:1rem" onclick="acceptCharter()">✅ J'ai lu et j'accepte</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE JOURNAL D'AUDIT (admin) -->
+<section class="page" id="page-audit" style="display:none">
+  <div class="page-header"><h1>🔍 Journal d'audit</h1></div>
+  <div id="audit-log-container">
+    <p style="color:var(--text2);padding:2rem;text-align:center">Chargement…</p>
+  </div>
+</section>
+
+<script>
+function acceptCharter() {
+  localStorage.setItem('pullup_charter_accepted', '1');
+  document.getElementById('modal-charter').classList.remove('open');
+}
+
+function checkCharter() {
+  if (!localStorage.getItem('pullup_charter_accepted')) {
+    document.getElementById('modal-charter').classList.add('open');
+  }
+}
+
+async function loadAuditLog() {
+  const container = document.getElementById('audit-log-container');
+  if (!container) return;
+  const { data, error } = await sb.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(200);
+  if (error) { container.innerHTML = '<p style="color:var(--danger)">Erreur de chargement</p>'; return; }
+  if (!data.length) { container.innerHTML = '<p style="color:var(--text2);padding:2rem;text-align:center">Aucune action enregistrée</p>'; return; }
+  container.innerHTML = `<table class="data-table" style="width:100%"><thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Détail</th></tr></thead><tbody>
+    ${data.map(r => `<tr>
+      <td style="font-size:.8rem;color:var(--text2);white-space:nowrap">${new Date(r.created_at).toLocaleString('fr-FR')}</td>
+      <td><strong>${r.user_name}</strong></td>
+      <td><span style="background:var(--bg3);border-radius:6px;padding:2px 8px;font-size:.8rem">${r.action}</span></td>
+      <td style="color:var(--text2);font-size:.85rem">${r.details || '—'}</td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
 </script>
 </body>
 </html>
