@@ -3387,7 +3387,7 @@ async function requestLeaveDay(dateStr) {
     leave_date: dateStr,
     leave_type: leaveType,
     hours: hours,
-    status: currentUserName === 'Romain' ? 'approved' : 'pending'
+    status: (currentUserName === 'Romain' || leaveType === 'bureau') ? 'approved' : 'pending'
   });
   if (error) { showToast('Erreur : ' + error.message); return; }
 
