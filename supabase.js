@@ -3773,7 +3773,7 @@ async function saveImprovement() {
     closeModal('newImprovement');
     await loadImprovements();
     showToast(id ? 'Amélioration mise à jour ✓' : 'Suggestion enregistrée ! ✓');
-  } catch(e) { showToast('Erreur : ' + e.message); }
+  } catch(e) { console.error('saveImprovement error:', e); showToast('Erreur : ' + (e.message || JSON.stringify(e))); }
 }
 
 function openNewImprovement() {
