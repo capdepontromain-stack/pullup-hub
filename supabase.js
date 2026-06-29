@@ -440,7 +440,7 @@ async function saveLinkForm(e) {
 
 async function deleteLink(id) {
   if (!confirm('Supprimer ce lien ?')) return;
-  const { error } = await sb.from('quick_links').delete().eq('id', id);
+  const { error } = await sb.from('quick_links').delete().eq('id', String(id));
   if (error) { showToast('Erreur : ' + error.message); return; }
   showToast('Lien supprimé');
   loadAndRenderLinks();
