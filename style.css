@@ -357,6 +357,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 #waVoiceTimer { font-size:.9rem; font-weight:700; color:#f44336; min-width:36px; }
 .wa-voice-cancel { background:none; border:1px solid var(--border); color:var(--text2); border-radius:20px; padding:5px 12px; font-size:.8rem; cursor:pointer; }
 .wa-voice-send { background:#25D366; border:none; color:#fff; border-radius:20px; padding:5px 14px; font-size:.8rem; cursor:pointer; font-weight:600; }
+.wa-drag-over { outline: 3px dashed #25D366; outline-offset: -8px; background: #25D36610 !important; }
 /* Audio player dans bulle */
 .wa-audio { display:flex; align-items:center; gap:8px; min-width:180px; }
 .wa-audio audio { flex:1; height:32px; }

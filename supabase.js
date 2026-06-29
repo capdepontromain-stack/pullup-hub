@@ -834,10 +834,22 @@ function renderMessages(messages) {
     const initials = firstName[0].toUpperCase();
     const avatarColor = WA_COLORS[firstName] || '#555';
     const isVoice = m.content?.startsWith('__voice__:');
-    const voiceUrl = isVoice ? m.content.replace('__voice__:', '') : null;
-    const bubbleContent = isVoice
-      ? `<div class="wa-audio"><span style="font-size:1.2rem">🎤</span><audio controls src="${voiceUrl}" style="flex:1;height:32px;max-width:200px"></audio></div>`
-      : `<div class="chat-text">${m.content}</div>`;
+    const isImg   = m.content?.startsWith('__img__:');
+    const isFile  = m.content?.startsWith('__file__:');
+    let bubbleContent;
+    if (isVoice) {
+      const url = m.content.replace('__voice__:','');
+      bubbleContent = `<div class="wa-audio"><span style="font-size:1.2rem">🎤</span><audio controls src="${url}" style="flex:1;height:32px;max-width:200px"></audio></div>`;
+    } else if (isImg) {
+      const url = m.content.replace('__img__:','');
+      bubbleContent = `<img src="${url}" style="max-width:220px;max-height:200px;border-radius:8px;display:block;cursor:pointer" onclick="window.open('${url}','_blank')">`;
+    } else if (isFile) {
+      const parts = m.content.replace('__file__:','').split(':');
+      const url = parts[0]; const name = parts[1] || 'Fichier';
+      bubbleContent = `<a href="${url}" target="_blank" style="display:flex;align-items:center;gap:8px;color:var(--gold);text-decoration:none;font-size:.85rem"><span style="font-size:1.4rem">📄</span>${name}</a>`;
+    } else {
+      bubbleContent = `<div class="chat-text">${m.content}</div>`;
+    }
     html += `<div class="chat-msg ${isMine ? 'mine' : ''}" data-id="${m.id}">
       ${!isMine ? `<div class="chat-avatar-wa" style="background:${avatarColor};color:${firstName==='Romain'?'#000':'#fff'}">${initials}</div>` : ''}
       <div class="chat-bubble">
@@ -851,6 +863,44 @@ function renderMessages(messages) {
   container.innerHTML = html;
   container.scrollTop = container.scrollHeight;
 }
+
+// ===== FICHIERS EN CHAT =====
+async function sendChatFile(file) {
+  if (!file) return;
+  const ext = file.name.split('.').pop();
+  const path = `chat-files/${Date.now()}_${file.name.replace(/\s+/g,'_')}`;
+  showToast('Envoi en cours…');
+  const { error } = await sb.storage.from('chat-files').upload(path, file, { upsert: true });
+  if (error) { showToast('Erreur upload : ' + error.message); return; }
+  const { data } = sb.storage.from('chat-files').getPublicUrl(path);
+  const url = data?.publicUrl;
+  const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(file.name);
+  const content = isImage ? `__img__:${url}` : `__file__:${url}:${file.name}`;
+  await sb.from('messages').insert([{
+    channel: activeChannel,
+    content,
+    author_name: currentProfile?.name || currentUser.email,
+    author_id: currentUser.id
+  }]);
+  document.getElementById('chatFileInput').value = '';
+  showToast('Fichier envoyé ✓');
+}
+
+// Drag & drop sur la zone de messages
+(function initChatDrop() {
+  document.addEventListener('DOMContentLoaded', () => {
+    const zone = document.getElementById('chatMessages');
+    if (!zone) return;
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('wa-drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('wa-drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('wa-drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) sendChatFile(file);
+    });
+  });
+})();
 
 // ===== MESSAGES VOCAUX =====
 let mediaRecorder = null;
@@ -2696,10 +2746,22 @@ async function switchChannel(channel) {
     const initials = firstName[0].toUpperCase();
     const avatarColor = WA_COLORS[firstName] || '#555';
     const isVoice = msg.content?.startsWith('__voice__:');
-    const voiceUrl = isVoice ? msg.content.replace('__voice__:', '') : null;
-    const bubbleContent = isVoice
-      ? `<div class="wa-audio"><span style="font-size:1.2rem">🎤</span><audio controls src="${voiceUrl}" style="flex:1;height:32px;max-width:200px"></audio></div>`
-      : `<div class="chat-text">${msg.content}</div>`;
+    const isImg   = msg.content?.startsWith('__img__:');
+    const isFile  = msg.content?.startsWith('__file__:');
+    let bubbleContent;
+    if (isVoice) {
+      const url = msg.content.replace('__voice__:','');
+      bubbleContent = `<div class="wa-audio"><span>🎤</span><audio controls src="${url}" style="height:32px;max-width:200px"></audio></div>`;
+    } else if (isImg) {
+      const url = msg.content.replace('__img__:','');
+      bubbleContent = `<img src="${url}" style="max-width:220px;max-height:200px;border-radius:8px;display:block;cursor:pointer" onclick="window.open('${url}','_blank')">`;
+    } else if (isFile) {
+      const parts = msg.content.replace('__file__:','').split(':');
+      const url = parts[0]; const name = parts[1] || 'Fichier';
+      bubbleContent = `<a href="${url}" target="_blank" style="display:flex;align-items:center;gap:8px;color:var(--gold);text-decoration:none;font-size:.85rem"><span style="font-size:1.4rem">📄</span>${name}</a>`;
+    } else {
+      bubbleContent = `<div class="chat-text">${msg.content}</div>`;
+    }
     const div = document.createElement('div');
     div.className = `chat-msg ${isMine ? 'mine' : ''}`;
     div.innerHTML = `${!isMine ? `<div class="chat-avatar-wa" style="background:${avatarColor};color:${firstName==='Romain'?'#000':'#fff'}">${initials}</div>` : ''}
