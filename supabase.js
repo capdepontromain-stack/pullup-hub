@@ -395,15 +395,19 @@ async function fetchQuickLinks() {
 // Render events table
 // Génère une couleur pastel unique et reproductible à partir d'une chaîne
 function clientColor(str) {
-  if (!str) return { bg: 'transparent', border: 'transparent', text: 'inherit' };
+  if (!str) str = '?';
   let hash = 0;
   for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
   const hue = Math.abs(hash) % 360;
   return {
-    bg: `hsla(${hue},60%,55%,0.12)`,
-    border: `hsla(${hue},60%,55%,0.5)`,
+    bg: `hsla(${hue},65%,55%,0.13)`,
+    border: `hsla(${hue},65%,55%,0.6)`,
     text: `hsl(${hue},55%,70%)`
   };
+}
+
+function eventColor(ev) {
+  return clientColor(ev.client || ev.name);
 }
 
 function renderEventsTable(events) {
@@ -415,7 +419,7 @@ function renderEventsTable(events) {
   }
   tbody.innerHTML = events.map(ev => {
     const date = ev.event_date ? new Date(ev.event_date).toLocaleDateString('fr-FR') : '—';
-    const c = clientColor(ev.client);
+    const c = eventColor(ev);
     const evTasks = (window._allTasks || []).filter(t => t.event_id === ev.id);
     const todoTasks = evTasks.filter(t => t.status !== 'done' && t.status !== 'fait');
     const doneTasks = evTasks.filter(t => t.status === 'done' || t.status === 'fait');
