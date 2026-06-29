@@ -3664,6 +3664,15 @@ async function saveImprovement() {
   showToast(id ? 'Amélioration mise à jour' : 'Suggestion enregistrée !');
 }
 
+function openNewImprovement() {
+  document.getElementById('improv-edit-id').value = '';
+  document.getElementById('improv-modal-title').textContent = 'Nouvelle suggestion';
+  document.getElementById('improv-title').value = '';
+  document.getElementById('improv-desc').value = '';
+  document.getElementById('improv-priority').value = 'normal';
+  openModal('newImprovement');
+}
+
 function openEditImprovement(id) {
   const item = allImprovements.find(i => i.id == id);
   if (!item) return;
