@@ -1645,25 +1645,27 @@ async function changeTaskStatus(id, newStatus) {
 // =============================================
 // MODAL FORMS — SAVE TO SUPABASE
 // =============================================
+function fv(form, name) { const v = form.querySelector(`[name=${name}]`)?.value?.trim(); return v || null; }
+
 async function saveNewEvent() {
   const form = document.getElementById('form-newEvent');
   if (!form) return;
   const data = {
-    name: form.querySelector('[name=name]')?.value,
-    client: form.querySelector('[name=client]')?.value,
-    event_date: form.querySelector('[name=event_date]')?.value,
-    end_date: form.querySelector('[name=end_date]')?.value || null,
-    start_time: form.querySelector('[name=start_time]')?.value,
-    end_time: form.querySelector('[name=end_time]')?.value,
-    location: form.querySelector('[name=location]')?.value,
-    contact_name: form.querySelector('[name=contact_name]')?.value,
-    contact_phone: form.querySelector('[name=contact_phone]')?.value,
-    participants: parseInt(form.querySelector('[name=participants]')?.value) || null,
-    budget: parseFloat(form.querySelector('[name=budget]')?.value) || null,
-    status: form.querySelector('[name=status]')?.value || 'En préparation',
-    notes: form.querySelector('[name=notes]')?.value
+    name:          fv(form,'name'),
+    client:        fv(form,'client'),
+    event_date:    fv(form,'event_date'),
+    end_date:      fv(form,'end_date'),
+    start_time:    fv(form,'start_time'),
+    end_time:      fv(form,'end_time'),
+    location:      fv(form,'location'),
+    contact_name:  fv(form,'contact_name'),
+    contact_phone: fv(form,'contact_phone'),
+    participants:  parseInt(form.querySelector('[name=participants]')?.value) || null,
+    budget:        parseFloat(form.querySelector('[name=budget]')?.value) || null,
+    status:        fv(form,'status') || 'En préparation',
+    notes:         fv(form,'notes'),
   };
-  if (!data.name) { showToast('Nom obligatoire'); return; }
+  if (!data.name) { showToast('Le nom de l\'événement est obligatoire'); return; }
   try {
     await createEvent(data);
     closeModal('newEvent');
