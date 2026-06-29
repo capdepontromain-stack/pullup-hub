@@ -883,21 +883,28 @@ async function deleteMessage(id) {
 }
 
 // WhatsApp channel selection
-function waSelectChannel(el, channel, name, avatar) {
+// Génère un canal DM unique par paire (ex: dm-flora-romain)
+function dmChannelName(otherName) {
+  const me = (currentProfile?.name || '').split(' ')[0].toLowerCase();
+  const them = otherName.toLowerCase();
+  return 'dm-' + [me, them].sort().join('-');
+}
+
+function waSelectChannel(el, channelKey, name, avatar) {
   document.querySelectorAll('.wa-conv-item').forEach(i => i.classList.remove('active'));
   el.classList.add('active');
-  // Sur mobile : cacher sidebar, montrer chat
   document.getElementById('waSidebar')?.classList.add('hidden');
   document.getElementById('waBackBtn').style.display = 'flex';
-  // Mettre à jour header
   const avatarEl = document.getElementById('waChatAvatar');
   if (avatarEl) { avatarEl.textContent = avatar; avatarEl.style.background = el.querySelector('.wa-conv-avatar')?.style.background || '#25D366'; }
   document.getElementById('chatHeader').textContent = name;
   const subs = { general:'Canal principal de l\'équipe', annonces:'Informations importantes' };
-  document.getElementById('waChatSub').textContent = subs[channel] || 'En ligne';
+  document.getElementById('waChatSub').textContent = subs[channelKey] || 'En ligne';
   document.getElementById('chatInput').placeholder = `Message dans ${name}…`;
-  // Charger les messages
-  if (typeof switchChannel === 'function') switchChannel(channel);
+  // Calculer le vrai canal : DM = paire unique, groupe = tel quel
+  const isDM = channelKey.startsWith('dm-');
+  const realChannel = isDM ? dmChannelName(channelKey.replace('dm-', '')) : channelKey;
+  if (typeof switchChannel === 'function') switchChannel(realChannel);
 }
 
 function waShowSidebar() {
@@ -2689,14 +2696,15 @@ let allNotifications = [];
 async function loadNotifications() {
   const myName = currentProfile?.name || '';
   const isRomain = myName === 'Romain';
-  // Canal DM de l'utilisateur (messages privés reçus)
-  const dmChannel = 'dm-' + myName.toLowerCase();
+  // Canaux DM de l'utilisateur (conversations privées avec chaque membre)
+  const otherMembers = ['Romain','Ketsia','Flora','Gloria'].filter(n => n !== myName.split(' ')[0]);
+  const myDmChannels = otherMembers.map(n => dmChannelName(n));
 
   const promises = [
     // Tâches assignées à moi, non terminées
     sb.from('tasks').select('*').neq('status','done').ilike('assignee', `%${myName}%`),
-    // Messages privés reçus dans mon canal DM (dernières 24h)
-    sb.from('messages').select('*').eq('channel', dmChannel).order('created_at', { ascending: false }).limit(10),
+    // Messages privés reçus dans mes canaux DM
+    sb.from('messages').select('*').in('channel', myDmChannels).neq('author_id', currentUser.id).order('created_at', { ascending: false }).limit(10),
   ];
   if (isRomain) {
     // Congés en attente à valider
@@ -2862,22 +2870,31 @@ async function markChannelRead(channel) {
 }
 
 async function loadUnreadCounts() {
-  if (!currentUser) return;
-  const channels = ['general', 'annonces', 'dm-romain', 'dm-ketsia', 'dm-flora', 'dm-gloria'];
+  if (!currentUser || !currentProfile) return;
+  const me = (currentProfile.name || '').split(' ')[0];
+  // Canaux groupes fixes + DM par paire pour chaque membre
+  const dmPairs = ['Romain','Ketsia','Flora','Gloria']
+    .filter(n => n !== me)
+    .map(n => ({ key: 'dm-' + n.toLowerCase(), real: dmChannelName(n) }));
+  const groupChannels = [
+    { key: 'general', real: 'general' },
+    { key: 'annonces', real: 'annonces' }
+  ];
+  const allChannels = [...groupChannels, ...dmPairs];
+
   const { data: reads } = await sb.from('message_reads').select('channel,last_read_at').eq('user_id', currentUser.id);
   const readMap = {};
   (reads || []).forEach(r => { readMap[r.channel] = r.last_read_at; });
 
   let totalUnread = 0;
-  for (const ch of channels) {
-    const lastRead = readMap[ch] || '1970-01-01T00:00:00Z';
-    let q = sb.from('messages').select('id', { count: 'exact', head: true })
-      .eq('channel', ch)
+  for (const { key, real } of allChannels) {
+    const lastRead = readMap[real] || '1970-01-01T00:00:00Z';
+    const { count } = await sb.from('messages').select('id', { count: 'exact', head: true })
+      .eq('channel', real)
       .neq('author_id', currentUser.id)
       .gt('created_at', lastRead);
-    const { count } = await q;
     const n = count || 0;
-    const badge = document.getElementById('badge-' + ch);
+    const badge = document.getElementById('badge-' + key);
     if (badge) {
       if (n > 0) {
         badge.textContent = n > 99 ? '99+' : String(n);
@@ -2899,8 +2916,8 @@ function refreshNavMessageBadge(total) {
   if (total === undefined) {
     // Recalcule depuis les badges existants
     let t = 0;
-    ['general','annonces','dm-romain','dm-ketsia','dm-flora','dm-gloria'].forEach(ch => {
-      const b = document.getElementById('badge-' + ch);
+    ['general','annonces','dm-romain','dm-ketsia','dm-flora','dm-gloria'].forEach(key => {
+      const b = document.getElementById('badge-' + key);
       if (b && b.style.display !== 'none') t += parseInt(b.textContent) || 0;
     });
     total = t;
