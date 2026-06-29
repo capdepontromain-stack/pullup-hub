@@ -232,6 +232,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .pstat-val { display: block; font-size: 15px; font-weight: 700; }
 .pstat-val.gold { color: var(--gold); }
 .pstat-lbl { display: block; font-size: 10px; color: var(--text2); }
+.pstat-lastseen { margin-top: 10px; font-size: 11px; color: var(--text2); display: flex; align-items: center; gap: 5px; }
+.pstat-lastseen .dot-online { width:7px;height:7px;border-radius:50%;background:#25D366;display:inline-block;flex-shrink:0; }
+.pstat-lastseen .dot-offline { width:7px;height:7px;border-radius:50%;background:#888;display:inline-block;flex-shrink:0; }
 
 /* KANBAN */
 .kanban-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; overflow-x: auto; }

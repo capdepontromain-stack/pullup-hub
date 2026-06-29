@@ -2930,14 +2930,14 @@ const personnelData = {
 async function loadPersonnelLeaveStats() {
   const now = new Date();
   const year = now.getFullYear();
-  const month = now.getMonth(); // 0-indexed
+  const month = now.getMonth();
   const firstDay = `${year}-${String(month+1).padStart(2,'0')}-01`;
   const lastDay = new Date(year, month+1, 0).toISOString().slice(0,10);
 
-  const { data, error } = await sb.from('leaves').select('*')
-    .gte('leave_date', firstDay)
-    .lte('leave_date', lastDay);
-  if (error) { console.error('loadPersonnelLeaveStats', error); return; }
+  const [{ data }, { data: profiles }] = await Promise.all([
+    sb.from('leaves').select('*').gte('leave_date', firstDay).lte('leave_date', lastDay),
+    sb.from('profiles').select('name, last_seen')
+  ]);
 
   const members = ['Romain', 'Ketsia', 'Flora', 'Gloria'];
   members.forEach(name => {
@@ -2952,6 +2952,28 @@ async function loadPersonnelLeaveStats() {
     if (hEl) hEl.textContent = totalH > 0 ? `${totalH}h` : '0h';
     if (cEl) cEl.textContent = congeJ > 0 ? `${congeJ}j` : '0j';
     if (mEl) mEl.textContent = maladieJ > 0 ? `${maladieJ}j` : '0j';
+
+    // Dernière connexion
+    const lsEl = document.getElementById(`lastseen-${name}`);
+    if (lsEl) {
+      const profile = (profiles || []).find(p => p.name && p.name.startsWith(name));
+      if (profile?.last_seen) {
+        const d = new Date(profile.last_seen);
+        const diffMin = Math.floor((now - d) / 60000);
+        const isOnline = diffMin < 5;
+        let label;
+        if (diffMin < 1) label = 'En ligne maintenant';
+        else if (diffMin < 60) label = `Il y a ${diffMin} min`;
+        else if (diffMin < 1440) label = `Il y a ${Math.floor(diffMin/60)}h`;
+        else {
+          const opts = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+          label = `Le ${d.toLocaleDateString('fr-FR', opts)}`;
+        }
+        lsEl.innerHTML = `<span class="${isOnline ? 'dot-online' : 'dot-offline'}"></span> Dernière connexion : ${label}`;
+      } else {
+        lsEl.innerHTML = `<span class="dot-offline"></span> Jamais connecté`;
+      }
+    }
   });
 }
 
