@@ -2419,12 +2419,25 @@ Afin d'avancer, nous pouvons :
 <script src="app.js?v=20260629b"></script>
 <script>
   if ('serviceWorker' in navigator) {
-    // Purger tous les anciens caches et SW bloqués
-    navigator.serviceWorker.getRegistrations().then(regs => {
-      regs.forEach(r => r.unregister());
+    // Écouter le signal de rechargement forcé envoyé par le nouveau SW
+    navigator.serviceWorker.addEventListener('message', e => {
+      if (e.data && e.data.type === 'FORCE_RELOAD') {
+        window.location.reload(true);
+      }
     });
-    caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
-    setTimeout(() => navigator.serviceWorker.register('/sw.js'), 500);
+    // Enregistrer le SW de nettoyage
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      // Si un SW est en attente, l'activer immédiatement
+      if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      reg.addEventListener('updatefound', () => {
+        const newSW = reg.installing;
+        newSW.addEventListener('statechange', () => {
+          if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+            newSW.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
+      });
+    });
   }
 </script>
 </body>
