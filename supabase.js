@@ -388,6 +388,64 @@ async function fetchQuickLinks() {
   return data;
 }
 
+async function loadAndRenderLinks() {
+  const links = await fetchQuickLinks();
+  const container = document.getElementById('links-container');
+  if (!container) return;
+  if (!links.length) {
+    container.innerHTML = '<p style="color:var(--text2);padding:2rem;text-align:center">Aucun lien — cliquez sur "+ Ajouter lien"</p>';
+    return;
+  }
+  // Grouper par catégorie
+  const groups = {};
+  links.forEach(l => {
+    const cat = l.category || 'Général';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(l);
+  });
+  container.innerHTML = Object.entries(groups).map(([cat, items]) => `
+    <div style="margin-bottom:28px">
+      <h3 style="font-size:.8rem;font-weight:700;letter-spacing:.08em;color:var(--text2);text-transform:uppercase;margin-bottom:12px">${cat}</h3>
+      <div class="links-grid">
+        ${items.map(l => `
+          <div class="link-card" style="position:relative">
+            <div class="link-icon" style="background:var(--bg3);font-size:1.4rem">${l.icon || l.emoji || '🔗'}</div>
+            <div class="link-info" style="flex:1;cursor:pointer" onclick="window.open('${l.url}','_blank')">
+              <strong>${l.name}</strong>
+              <span>${l.description || l.url}</span>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <button class="btn-copy-link" onclick="copyLink('${l.url}')">🔗 Copier</button>
+              <button onclick="deleteLink(${l.id})" title="Supprimer" style="background:none;border:none;color:#f44336;cursor:pointer;font-size:1.1rem;padding:4px">🗑</button>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+async function saveLinkForm(e) {
+  e.preventDefault();
+  const name = document.getElementById('link-name').value.trim();
+  const url = document.getElementById('link-url').value.trim();
+  const desc = document.getElementById('link-desc').value.trim();
+  const cat = document.getElementById('link-cat').value.trim() || 'Général';
+  const icon = document.getElementById('link-icon').value.trim() || '🔗';
+  const { error } = await sb.from('quick_links').insert([{ name, url, description: desc, category: cat, icon, emoji: icon }]);
+  if (error) { showToast('Erreur : ' + error.message); return; }
+  closeModal('newLink');
+  document.getElementById('form-newLink').reset();
+  showToast('Lien ajouté ✓');
+  loadAndRenderLinks();
+}
+
+async function deleteLink(id) {
+  if (!confirm('Supprimer ce lien ?')) return;
+  const { error } = await sb.from('quick_links').delete().eq('id', id);
+  if (error) { showToast('Erreur : ' + error.message); return; }
+  showToast('Lien supprimé');
+  loadAndRenderLinks();
+}
+
 // =============================================
 // UI — RENDU DYNAMIQUE
 // =============================================

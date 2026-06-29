@@ -1150,50 +1150,27 @@ Afin d'avancer, nous pouvons :
 
   <!-- QUICK LINKS -->
   <section class="page" id="page-links">
-    <div class="page-header"><h1>Liens rapides</h1><button class="btn-primary">+ Ajouter lien</button></div>
-    <div class="links-grid">
-      <div class="link-card">
-        <div class="link-icon" style="background:#1877F222">📘</div>
-        <div class="link-info"><strong>Facebook Pull Up</strong><span>Page officielle</span></div>
-        <button class="btn-copy-link" onclick="copyLink('https://facebook.com/pullup')">🔗 COPIER LE LIEN</button>
-      </div>
-      <div class="link-card">
-        <div class="link-icon" style="background:#E91E6322">📸</div>
-        <div class="link-info"><strong>Instagram Pull Up</strong><span>@pullup_evenements</span></div>
-        <button class="btn-copy-link" onclick="copyLink('https://instagram.com/pullup_evenements')">🔗 COPIER LE LIEN</button>
-      </div>
-      <div class="link-card">
-        <div class="link-icon" style="background:#00000022">🎵</div>
-        <div class="link-info"><strong>TikTok Pull Up</strong><span>@pullup_events</span></div>
-        <button class="btn-copy-link">🔗 COPIER LE LIEN</button>
-      </div>
-      <div class="link-card">
-        <div class="link-icon" style="background:#FF000022">▶️</div>
-        <div class="link-info"><strong>YouTube Pull Up</strong><span>Chaîne officielle</span></div>
-        <button class="btn-copy-link">🔗 COPIER LE LIEN</button>
-      </div>
-      <div class="link-card">
-        <div class="link-icon" style="background:#4285F422">📁</div>
-        <div class="link-info"><strong>Google Drive</strong><span>Documents partagés</span></div>
-        <button class="btn-copy-link">🔗 COPIER LE LIEN</button>
-      </div>
-      <div class="link-card">
-        <div class="link-icon" style="background:#00C4CC22">🎨</div>
-        <div class="link-info"><strong>Canva Pull Up</strong><span>Espace de création</span></div>
-        <button class="btn-copy-link">🔗 COPIER LE LIEN</button>
-      </div>
-      <div class="link-card">
-        <div class="link-icon" style="background:#F5C51822">🌐</div>
-        <div class="link-info"><strong>Site internet</strong><span>pullup-evenements.fr</span></div>
-        <button class="btn-copy-link">🔗 COPIER LE LIEN</button>
-      </div>
-      <div class="link-card">
-        <div class="link-icon" style="background:#4CAF5022">⭐</div>
-        <div class="link-info"><strong>Avis Google</strong><span>Laisser un avis</span></div>
-        <button class="btn-copy-link">🔗 COPIER LE LIEN</button>
-      </div>
-    </div>
+    <div class="page-header"><h1>Liens rapides</h1><button class="btn-primary" onclick="openModal('newLink')">+ Ajouter lien</button></div>
+    <div id="links-container"></div>
   </section>
+
+  <!-- Modal nouveau lien -->
+  <div class="modal-overlay" id="modal-newLink">
+    <div class="modal" style="max-width:420px">
+      <div class="modal-header"><h3>Ajouter un lien</h3><button class="modal-close" onclick="closeModal('newLink')">✕</button></div>
+      <form id="form-newLink" onsubmit="saveLinkForm(event)">
+        <div class="form-group"><label>Nom *</label><input id="link-name" class="form-control" required placeholder="Ex: Google Drive"></div>
+        <div class="form-group"><label>URL *</label><input id="link-url" class="form-control" required placeholder="https://..."></div>
+        <div class="form-group"><label>Description</label><input id="link-desc" class="form-control" placeholder="Ex: Documents partagés"></div>
+        <div class="form-group"><label>Catégorie</label><input id="link-cat" class="form-control" placeholder="Ex: Outils, Réseaux sociaux…"></div>
+        <div class="form-group"><label>Icône (emoji)</label><input id="link-icon" class="form-control" placeholder="📁" maxlength="4"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="closeModal('newLink')">Annuler</button>
+          <button type="submit" class="btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- MILEAGE -->
   <section class="page" id="page-mileage">

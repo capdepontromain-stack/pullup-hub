@@ -24,6 +24,7 @@ function showPage(id) {
   if (id === 'personnel' && typeof loadPersonnelLeaveStats === 'function') loadPersonnelLeaveStats();
   if (id === 'editorial' && typeof loadAndRenderEditorial === 'function') loadAndRenderEditorial();
   if (id === 'improvements' && typeof loadImprovements === 'function') loadImprovements();
+  if (id === 'links' && typeof loadAndRenderLinks === 'function') loadAndRenderLinks();
   if (typeof initChatDrop === 'function') initChatDrop();
 }
 
