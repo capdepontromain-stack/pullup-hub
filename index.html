@@ -667,10 +667,28 @@
         <!-- Messages -->
         <div class="wa-messages" id="chatMessages"></div>
 
+        <!-- Zone de drop fichiers -->
+        <div id="chatDropZone"
+          ondragenter="event.preventDefault();this.style.display='flex'"
+          ondragover="event.preventDefault()"
+          ondragleave="if(!this.contains(event.relatedTarget))this.style.display='none'"
+          ondrop="event.preventDefault();this.style.display='none';sendChatFile(event.dataTransfer.files[0])"
+          style="display:none;position:absolute;inset:0;background:#25D36690;z-index:100;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff;border:4px dashed #25D366;border-radius:12px;pointer-events:none">
+          📎 Lâche le fichier ici
+        </div>
+
+        <!-- Invisible drop catcher sur toute la zone chat -->
+        <div style="position:absolute;inset:0;z-index:50;pointer-events:none" id="chatDropCatcher"
+          ondragenter="event.preventDefault();document.getElementById('chatDropZone').style.cssText='display:flex;position:absolute;inset:0;background:#25D36690;z-index:100;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff;border:4px dashed #25D366;border-radius:12px';this.style.pointerEvents='all'"
+          ondragover="event.preventDefault()"
+          ondragleave="document.getElementById('chatDropZone').style.display='none';this.style.pointerEvents='none'"
+          ondrop="event.preventDefault();document.getElementById('chatDropZone').style.display='none';this.style.pointerEvents='none';sendChatFile(event.dataTransfer.files[0])">
+        </div>
+
         <!-- Zone de saisie -->
         <div class="wa-input-bar">
           <button class="wa-input-btn" id="voiceRecordBtn" onclick="toggleVoiceRecord()" title="Message vocal">🎤</button>
-          <label class="wa-input-btn" title="Joindre un fichier" style="cursor:pointer">📎<input type="file" id="chatFileInput" accept="*/*" style="display:none" onchange="sendChatFile(this.files[0]);this.value=''"></label>
+          <label class="wa-input-btn" title="Joindre un fichier" style="cursor:pointer;font-size:1.3rem">📎<input type="file" id="chatFileInput" accept="*/*" style="display:none" onchange="sendChatFile(this.files[0]);this.value=''"></label>
           <input type="text" id="chatInput" class="wa-text-input" placeholder="Message… ou glisse un fichier ici">
           <button class="wa-send-btn" id="btn-sendMsg">
             <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"/></svg>
