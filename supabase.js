@@ -1924,13 +1924,28 @@ async function saveNewTask() {
         } catch(e) {}
       }
     }
+    // Si case "Devis à établir" cochée → créer une demande de devis pour chaque responsable
+    const isDevis = form.querySelector('[name=is_devis]')?.checked;
+    if (isDevis) {
+      for (const name of assignees) {
+        await sb.from('devis_requests').insert([{
+          client: title,
+          notes: form.querySelector('[name=description]')?.value || null,
+          priority: form.querySelector('[name=priority]')?.value || 'Normal',
+          status: 'À traiter',
+          assigned_to: name,
+          event_date: form.querySelector('[name=due_date]')?.value || null,
+        }]);
+      }
+    }
     closeModal('newTask');
     form.reset();
     form.querySelectorAll('[name=assignees]').forEach(c => c.checked = false);
     clearNewTaskPhoto();
     await loadAndRenderTasks();
     loadTasksBadge();
-    showToast(assignees.length > 1 ? `Tâche créée pour ${assignees.length} personnes ✓` : 'Tâche créée ✓');
+    const suffix = isDevis ? ' + devis ajouté ✓' : ' ✓';
+    showToast(assignees.length > 1 ? `Tâche créée pour ${assignees.length} personnes${suffix}` : `Tâche créée${suffix}`);
   } catch(e) { showToast('Erreur : ' + e.message); }
 }
 
