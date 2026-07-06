@@ -3390,7 +3390,8 @@ async function loadAndRenderLeaves() {
   }
 
   const year = leaveViewDate.getFullYear();
-  const { data, error } = await sb.from('leaves').select('*').gte('leave_date', year + '-01-01').lte('leave_date', year + '-12-31').order('leave_date');
+  // Charger déc N-1 → déc N pour inclure Flora (contrat 1er déc)
+  const { data, error } = await sb.from('leaves').select('*').gte('leave_date', (year-1) + '-12-01').lte('leave_date', year + '-12-31').order('leave_date');
   if (error) { showToast('Erreur congés : ' + error.message); return; }
   allLeaves = data || [];
 
@@ -3426,7 +3427,12 @@ function renderLeaveCards() {
   const monthLeaves = allLeaves.filter(l => l.leave_date.startsWith(`${leaveViewDate.getFullYear()}-${String(leaveViewDate.getMonth()+1).padStart(2,'0')}`));
 
   container.innerHTML = LEAVE_MEMBERS.map(name => {
-    const approved = yearLeaves.filter(l => l.person_name === name && l.status === 'approved' && (!l.leave_type || l.leave_type === 'conge')).length;
+    // Flora : année de contrat du 1er déc N-1 au 30 nov N
+    const floraStart = `${year-1}-12-01`;
+    const floraEnd   = `${year}-11-30`;
+    const approved = name === 'Flora'
+      ? allLeaves.filter(l => l.person_name === 'Flora' && l.status === 'approved' && (!l.leave_type || l.leave_type === 'conge') && l.leave_date >= floraStart && l.leave_date <= floraEnd).length
+      : yearLeaves.filter(l => l.person_name === name && l.status === 'approved' && (!l.leave_type || l.leave_type === 'conge')).length;
     const pending = yearLeaves.filter(l => l.person_name === name && l.status === 'pending').length;
     const remaining = LEAVE_TOTAL - approved;
     const pct = Math.round((approved / LEAVE_TOTAL) * 100);
