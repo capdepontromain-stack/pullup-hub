@@ -299,6 +299,8 @@ async function saveNewFacture(e) {
     amount:       parseFloat(form.querySelector('[name=amount]').value) || null,
     benef:        benefVal,
     invoice_date: invoiceDate,
+    event_date:   form.querySelector('[name=event_date]')?.value || null,
+    paid_date:    form.querySelector('[name=paid_date]')?.value || null,
     status:       form.querySelector('[name=status]').value || 'En attente',
     notes:        form.querySelector('[name=notes]')?.value || null,
   };
