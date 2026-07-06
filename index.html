@@ -1903,7 +1903,7 @@ Afin d'avancer, nous pouvons :
         <div class="form-group span2">
           <label>Photo / pièce jointe</label>
           <div id="edit-task-photo-preview" style="margin-bottom:.5rem">
-            <img id="edit-task-photo-img" src="" style="display:none;max-width:100%;max-height:180px;border-radius:8px;object-fit:cover">
+            <img id="edit-task-photo-img" src="" onclick="openFilePreview(this.src)" style="display:none;max-width:100%;max-height:180px;border-radius:8px;object-fit:cover;cursor:zoom-in" title="Cliquer pour agrandir">
             <button type="button" id="edit-task-photo-remove" onclick="clearEditTaskPhoto()" style="display:none;margin-top:.4rem;background:none;border:none;color:var(--danger);cursor:pointer;font-size:.8rem">✕ Supprimer la photo</button>
           </div>
           <label style="display:flex;align-items:center;gap:.6rem;background:var(--bg3);border:1px dashed var(--border);border-radius:8px;padding:.75rem 1rem;cursor:pointer;color:var(--text2);font-size:.85rem">
@@ -2443,7 +2443,7 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260706b"></script>
+<script src="supabase.js?v=20260706c"></script>
 <script src="app.js?v=20260630c"></script>
 <script>
   if ('serviceWorker' in navigator) {
