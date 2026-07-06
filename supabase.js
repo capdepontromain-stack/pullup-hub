@@ -1155,7 +1155,7 @@ function renderSuppliers(suppliers) {
   if (!grid || !suppliers.length) return;
   grid.innerHTML = suppliers.map(s => {
     const stars = '★'.repeat(s.rating || 4) + '☆'.repeat(5 - (s.rating || 4));
-    const emoji = {'Traiteur':'🍽','DJ':'🎧','Animateur':'🎤','Hôtesse':'👩','Sonorisation':'🔊','Artiste':'🎨'}[s.category] || '🤝';
+    const emoji = {'Traiteur':'🍽','DJ':'🎧','Animateur':'🎤','Hôtesse':'👩','Sonorisation':'🔊','Artiste':'🎨','Domaine':'🏡'}[s.category] || '🤝';
     return `<div class="supplier-card">
       <div class="supplier-header">
         <div class="supplier-avatar">${emoji}</div>
