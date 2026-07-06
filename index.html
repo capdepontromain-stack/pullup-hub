@@ -2443,7 +2443,7 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260706a"></script>
+<script src="supabase.js?v=20260706b"></script>
 <script src="app.js?v=20260630c"></script>
 <script>
   if ('serviceWorker' in navigator) {
@@ -2588,6 +2588,17 @@ async function loadAuditLog() {
     </div>
   </div>
 </div>
+<!-- Lightbox aperçu fichier/photo -->
+<div id="modal-filePreview" onclick="closeFilePreview()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:16px;cursor:zoom-out">
+  <button onclick="closeFilePreview()" style="position:absolute;top:18px;right:22px;background:none;border:none;color:#fff;font-size:1.8rem;cursor:pointer;line-height:1">✕</button>
+  <img id="filePreview-img" src="" alt="" onclick="event.stopPropagation()" style="max-width:92vw;max-height:85vh;border-radius:10px;object-fit:contain;box-shadow:0 8px 40px rgba(0,0,0,.6)">
+  <a id="filePreview-link" href="#" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--gold);font-size:1.1rem;padding:12px 28px;border:1px solid var(--gold);border-radius:8px;text-decoration:none">Ouvrir le fichier</a>
+</div>
+<style>
+  #modal-filePreview { display:none }
+  #modal-filePreview.active { display:flex }
+</style>
+
 <!-- Modal édition fournisseur -->
 <div class="modal-overlay" id="modal-editSupplier">
   <div class="modal" style="max-width:520px;width:95%">

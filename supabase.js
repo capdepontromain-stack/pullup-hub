@@ -596,7 +596,7 @@ function renderKanban(tasks) {
       const prioColor = prioBadge[t.priority] || prioBadge['Normal'];
       const dateStr = t.due_date ? new Date(t.due_date.split('-')).toLocaleDateString('fr-FR', {day:'numeric',month:'short'}) : '';
       card.innerHTML = `
-        ${t.photo_url ? `<img src="${t.photo_url}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:.5rem;display:block">` : ''}
+        ${t.photo_url ? `<img src="${t.photo_url}" onclick="event.stopPropagation();openFilePreview('${t.photo_url}')" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:.5rem;display:block;cursor:zoom-in" title="Cliquer pour agrandir">` : ''}
         <div class="ptask-top">
           <span style="font-size:10px;font-weight:700;color:${prioColor}">${t.priority || 'Normal'}</span>
           <div style="display:flex;gap:4px;align-items:center">
@@ -4440,6 +4440,30 @@ function openEditMileage(id) {
   f.dataset.editId = id;
   document.querySelector('#modal-newMileage .modal-header h3').textContent = 'Modifier le trajet';
   openModal('newMileage');
+}
+
+function openFilePreview(url) {
+  const modal = document.getElementById('modal-filePreview');
+  const img   = document.getElementById('filePreview-img');
+  const link  = document.getElementById('filePreview-link');
+  const isImage = /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(url);
+  if (isImage) {
+    img.src = url;
+    img.style.display = 'block';
+    link.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    link.href = url;
+    link.textContent = url.split('/').pop().split('?')[0] || 'Ouvrir le fichier';
+    link.style.display = 'inline-block';
+  }
+  modal.classList.add('active');
+}
+
+function closeFilePreview() {
+  const modal = document.getElementById('modal-filePreview');
+  modal.classList.remove('active');
+  document.getElementById('filePreview-img').src = '';
 }
 
 function openEditSupplier(s) {
