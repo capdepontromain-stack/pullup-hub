@@ -1,0 +1,29 @@
+# Système / OS
+.DS_Store
+Thumbs.db
+
+# Éditeurs
+.vscode/
+.idea/
+
+# Dépendances / build (au cas où)
+node_modules/
+dist/
+
+# Secrets / environnement — ne JAMAIS committer
+.env
+.env.*
+*.local
+secrets.json
+service-role*.txt
+
+# Netlify
+.netlify/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sauvegardes locales
+sauvegarde-*/
+*.bak

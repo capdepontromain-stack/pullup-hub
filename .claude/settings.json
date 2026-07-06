@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // .tool_response.filePath // empty' | { read -r f; [ -n \"$f\" ] && echo \"$f\" | grep -qiE '\\.(js|css|html|json)$' && /opt/homebrew/bin/npx --yes prettier --write \"$f\" >/dev/null 2>&1; } || true",
+            "statusMessage": "Formatage Prettier…"
+          }
+        ]
+      }
+    ]
+  }
+}
