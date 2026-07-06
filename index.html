@@ -2443,7 +2443,7 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260630o"></script>
+<script src="supabase.js?v=20260706a"></script>
 <script src="app.js?v=20260630c"></script>
 <script>
   if ('serviceWorker' in navigator) {
@@ -2584,6 +2584,65 @@ async function loadAuditLog() {
       <div style="display:flex;gap:8px">
         <button class="btn-outline" onclick="closeModal('editFinanceRow')">Annuler</button>
         <button class="btn-primary" onclick="saveFinanceRow()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal édition fournisseur -->
+<div class="modal-overlay" id="modal-editSupplier">
+  <div class="modal" style="max-width:520px;width:95%">
+    <div class="modal-header">
+      <h3>Modifier le fournisseur</h3>
+      <button class="modal-close" onclick="closeModal('editSupplier')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editSupplier-id">
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:14px">
+        <div class="form-group span2">
+          <label>Nom</label>
+          <input type="text" id="editSupplier-name" class="form-control" placeholder="Nom du fournisseur">
+        </div>
+        <div class="form-group">
+          <label>Catégorie</label>
+          <select id="editSupplier-category" class="form-control">
+            <option>Traiteur</option>
+            <option>DJ</option>
+            <option>Animateur</option>
+            <option>Hôtesse</option>
+            <option>Sonorisation</option>
+            <option>Artiste</option>
+            <option>Domaine</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Note (étoiles)</label>
+          <select id="editSupplier-rating" class="form-control">
+            <option value="1">★☆☆☆☆</option>
+            <option value="2">★★☆☆☆</option>
+            <option value="3">★★★☆☆</option>
+            <option value="4">★★★★☆</option>
+            <option value="5">★★★★★</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Téléphone</label>
+          <input type="text" id="editSupplier-phone" class="form-control" placeholder="0692...">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="editSupplier-email" class="form-control" placeholder="contact@...">
+        </div>
+        <div class="form-group span2">
+          <label>Notes / Commentaires</label>
+          <textarea id="editSupplier-notes" class="form-control" rows="3" placeholder="Informations complémentaires..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between">
+      <button class="btn-outline" style="color:#e53935;border-color:#e53935" onclick="deleteSupplier()">🗑 Supprimer</button>
+      <div style="display:flex;gap:10px">
+        <button class="btn-outline" onclick="closeModal('editSupplier')">Annuler</button>
+        <button class="btn-primary" onclick="saveEditSupplier()">Enregistrer</button>
       </div>
     </div>
   </div>

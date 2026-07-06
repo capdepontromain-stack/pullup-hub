@@ -1156,7 +1156,7 @@ function renderSuppliers(suppliers) {
   grid.innerHTML = suppliers.map(s => {
     const stars = '★'.repeat(s.rating || 4) + '☆'.repeat(5 - (s.rating || 4));
     const emoji = {'Traiteur':'🍽','DJ':'🎧','Animateur':'🎤','Hôtesse':'👩','Sonorisation':'🔊','Artiste':'🎨','Domaine':'🏡'}[s.category] || '🤝';
-    return `<div class="supplier-card">
+    return `<div class="supplier-card" onclick="openEditSupplier(${JSON.stringify(s).replace(/'/g,'&#39;')})" style="cursor:pointer" title="Cliquer pour modifier">
       <div class="supplier-header">
         <div class="supplier-avatar">${emoji}</div>
         <div><strong>${s.name}</strong><span class="supplier-cat">${s.category || ''}</span></div>
@@ -4440,4 +4440,46 @@ function openEditMileage(id) {
   f.dataset.editId = id;
   document.querySelector('#modal-newMileage .modal-header h3').textContent = 'Modifier le trajet';
   openModal('newMileage');
+}
+
+function openEditSupplier(s) {
+  document.getElementById('editSupplier-id').value = s.id || '';
+  document.getElementById('editSupplier-name').value = s.name || '';
+  document.getElementById('editSupplier-category').value = s.category || 'Traiteur';
+  document.getElementById('editSupplier-rating').value = s.rating || 4;
+  document.getElementById('editSupplier-phone').value = s.phone || '';
+  document.getElementById('editSupplier-email').value = s.email || '';
+  document.getElementById('editSupplier-notes').value = s.notes || '';
+  openModal('editSupplier');
+}
+
+async function saveEditSupplier() {
+  const id = document.getElementById('editSupplier-id').value;
+  if (!id) return;
+  const updates = {
+    name:     document.getElementById('editSupplier-name').value.trim(),
+    category: document.getElementById('editSupplier-category').value,
+    rating:   parseInt(document.getElementById('editSupplier-rating').value),
+    phone:    document.getElementById('editSupplier-phone').value.trim() || null,
+    email:    document.getElementById('editSupplier-email').value.trim() || null,
+    notes:    document.getElementById('editSupplier-notes').value.trim() || null,
+  };
+  const { error } = await sb.from('suppliers').update(updates).eq('id', id);
+  if (error) { alert('Erreur : ' + error.message); return; }
+  closeModal('editSupplier');
+  const fresh = await fetchSuppliers();
+  renderSuppliers(fresh);
+  allSuppliers = fresh;
+}
+
+async function deleteSupplier() {
+  const id = document.getElementById('editSupplier-id').value;
+  if (!id) return;
+  if (!confirm('Supprimer ce fournisseur définitivement ?')) return;
+  const { error } = await sb.from('suppliers').delete().eq('id', id);
+  if (error) { alert('Erreur : ' + error.message); return; }
+  closeModal('editSupplier');
+  const fresh = await fetchSuppliers();
+  renderSuppliers(fresh);
+  allSuppliers = fresh;
 }
