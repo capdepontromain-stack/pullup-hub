@@ -58,7 +58,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .topbar-avatar { width: 32px; height: 32px; background: var(--gold); color: #000; border-radius: 50%; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
 /* MAIN */
-.main-content { margin-left: var(--sidebar-w); margin-top: var(--topbar-h); padding: 24px; min-height: calc(100vh - var(--topbar-h)); }
+.main-content { margin-left: var(--sidebar-w); margin-top: var(--topbar-h); padding: 24px; min-height: calc(100vh - var(--topbar-h)); overflow-x: hidden; box-sizing: border-box; }
 .page { display: none; }
 .page.active { display: block; }
 .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
