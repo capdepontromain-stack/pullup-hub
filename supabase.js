@@ -4354,7 +4354,8 @@ async function loadMileageCalendar() {
   const year = mileageCalDate.getFullYear();
   const month = mileageCalDate.getMonth();
   const firstDay = `${year}-${String(month+1).padStart(2,'0')}-01`;
-  const lastDay = new Date(year, month+1, 0).toISOString().slice(0,10);
+  const lastDayDate = new Date(year, month+1, 0);
+  const lastDay = `${lastDayDate.getFullYear()}-${String(lastDayDate.getMonth()+1).padStart(2,'0')}-${String(lastDayDate.getDate()).padStart(2,'0')}`;
   const { data } = await sb.from('mileage').select('*').gte('trip_date', firstDay).lte('trip_date', lastDay).order('trip_date');
   _allMileageTrips = data || [];
   renderMileageCalendar();
