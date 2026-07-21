@@ -1220,10 +1220,10 @@ function renderMileageBoard() {
       ? myEntries.filter(e => e.trip_date?.startsWith(mileageFocusMonth))
       : myEntries;
 
-    const totalKm  = myEntries.reduce((s,e)=>s+(parseFloat(e.km)||0),0);
-    const totalAmt = myEntries.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
-    const mKm  = monthEntries.reduce((s,e)=>s+(parseFloat(e.km)||0),0);
-    const mAmt = monthEntries.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+    const totalKm  = myEntries.filter(e=>!e.is_utility).reduce((s,e)=>s+(parseFloat(e.km)||0),0);
+    const totalAmt = myEntries.filter(e=>!e.is_utility).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+    const mKm  = monthEntries.filter(e=>!e.is_utility).reduce((s,e)=>s+(parseFloat(e.km)||0),0);
+    const mAmt = monthEntries.filter(e=>!e.is_utility).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
 
     const monthOpts = months.map(k => {
       const [y,m] = k.split('-');
@@ -1279,8 +1279,8 @@ function renderMileageBoard() {
 
     board.innerHTML = MILEAGE_MEMBERS.map(member => {
       const myEntries = entries.filter(e => member.aliases.some(a => (e.user_name||'').includes(a)));
-      const totalKm  = myEntries.reduce((s,e)=>s+(parseFloat(e.km)||0),0);
-      const totalAmt = myEntries.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+      const totalKm  = myEntries.filter(e=>!e.is_utility).reduce((s,e)=>s+(parseFloat(e.km)||0),0);
+      const totalAmt = myEntries.filter(e=>!e.is_utility).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
 
       // Résumé par mois (dans vue grille, max 3 mois visibles)
       const byMonth = {};
