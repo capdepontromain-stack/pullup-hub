@@ -4721,27 +4721,52 @@ async function generateMileagePDF() {
 <title>Frais kilométriques — ${userName}</title>
 <style>
   body { font-family: Arial, sans-serif; font-size: 13px; color: #1a1a1a; margin: 30px; }
-  h1 { font-size: 20px; margin-bottom: 4px; }
-  h2 { font-size: 14px; font-weight: normal; color: #555; margin-top: 0; }
+  .toolbar { display:flex; gap:10px; margin-bottom:24px; }
+  .toolbar button { padding:8px 18px; border:none; border-radius:6px; cursor:pointer; font-size:13px; font-weight:bold; }
+  .btn-print { background:#1a1a1a; color:#c8a84b; }
+  .btn-download { background:#c8a84b; color:#1a1a1a; }
+  .header-card { background:#f8f4e8; border-left:4px solid #c8a84b; padding:12px 16px; margin-bottom:24px; border-radius:4px; }
+  .header-card h1 { font-size:18px; margin:0 0 4px; }
+  .header-card .meta { display:flex; flex-wrap:wrap; gap:16px; margin-top:8px; font-size:12px; color:#555; }
+  .header-card .meta span { display:flex; align-items:center; gap:4px; }
   h3 { font-size: 14px; }
   table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
   th { background: #1a1a1a; color: #fff; padding: 6px 10px; text-align: left; font-size: 12px; }
   td { padding: 5px 10px; border-bottom: 1px solid #e0e0e0; }
   tfoot td { border-bottom: none; }
   .total-global { margin-top: 24px; background: #1a1a1a; color: #c8a84b; padding: 12px 16px; border-radius: 6px; font-size: 15px; font-weight: bold; }
-  @media print { body { margin: 15mm; } }
+  @media print { .toolbar { display:none; } body { margin: 15mm; } }
 </style>
 </head><body>
-  <h1>🚗 Indemnités kilométriques</h1>
-  <h2>${userName} — ${periodLabel}</h2>
+  <div class="toolbar">
+    <button class="btn-print" onclick="window.print()">🖨 Imprimer</button>
+    <button class="btn-download" onclick="downloadPDF()">⬇️ Télécharger PDF</button>
+  </div>
+  <div class="header-card">
+    <h1>🚗 Indemnités kilométriques — ${periodLabel}</h1>
+    <div class="meta">
+      <span>👤 <strong>Romain Capdepont</strong></span>
+      <span>🏢 Président SASU · Contrat gérant</span>
+      <span>🚘 Mercedes Classe A · <strong>DS 591 QS</strong></span>
+      <span>📏 Barème : <strong>0,374 €/km</strong></span>
+    </div>
+  </div>
   ${tablesSections}
   <div class="total-global">Total général : ${totalKmAll.toFixed(1)} km — ${totalAmtAll.toFixed(2)} €</div>
+<script>
+function downloadPDF() {
+  const blob = new Blob([document.documentElement.outerHTML], {type: 'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'frais-kilometriques-${periodLabel.replace(/\\s/g,'-').replace(/[^a-zA-Z0-9-]/g,'')}.html';
+  a.click();
+}
+</script>
 </body></html>`;
 
   const win = window.open('', '_blank');
   win.document.write(html);
   win.document.close();
   win.focus();
-  setTimeout(() => win.print(), 600);
   closeModal('exportPDF');
 }
