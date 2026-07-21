@@ -4647,8 +4647,7 @@ async function generateMileagePDF() {
   if (!checked.length) { showToast('Sélectionne au moins un mois.'); return; }
 
   const MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-  const user = (await sb.auth.getUser()).data.user;
-  const userName = user?.user_metadata?.full_name || user?.email || 'Utilisateur';
+  const MOIS_LONG = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 
   const sorted = [...checked].sort();
   const firstDay = sorted[0] + '-01';
@@ -4668,6 +4667,7 @@ async function generateMileagePDF() {
   const trips = (data || []).filter(t => checked.includes(t.trip_date.slice(0, 7)));
   if (!trips.length) { showToast('Aucun trajet trouvé pour les mois sélectionnés.'); return; }
 
+  // Groupement par mois
   const byMonth = {};
   trips.forEach(t => {
     const key = t.trip_date.slice(0, 7);
@@ -4675,12 +4675,31 @@ async function generateMileagePDF() {
     byMonth[key].push(t);
   });
 
+  // Période affichée
+  const [fy, fm0] = sorted[0].split('-');
+  const [lly, llm0] = sorted[sorted.length-1].split('-');
+  const lastDayNum = lastDayDate.getDate();
+  const periodLabel = sorted.length === 1
+    ? `${MOIS[parseInt(fm0,10)-1]} ${fy}`
+    : `du 1er ${MOIS_LONG[parseInt(fm0,10)-1]} ${fy} au ${lastDayNum} ${MOIS_LONG[parseInt(llm0,10)-1]} ${lly}`;
+  const periodHeader = sorted.length === 1
+    ? `Du 1er ${MOIS[parseInt(fm0,10)-1]} ${fy} au ${lastDayNum} ${MOIS[parseInt(fm0,10)-1]} ${fy}`
+    : `Du 1er ${MOIS[parseInt(fm0,10)-1]} ${fy} au ${lastDayNum} ${MOIS[parseInt(llm0,10)-1]} ${lly}`;
+
+  // Date du jour (génération)
+  const now = new Date();
+  const dateJour = `${String(now.getDate()).padStart(2,'0')} ${MOIS_LONG[now.getMonth()]} ${now.getFullYear()}`;
+
+  // Tableau détaillé par mois
   let tablesSections = '';
+  let bulletsMois = '';
+  const RATE = 0.47;
+
   for (const [monthKey, mTrips] of Object.entries(byMonth).sort()) {
     const [y, mo] = monthKey.split('-');
     const monthLabel = `${MOIS[parseInt(mo,10)-1]} ${y}`;
     const totalKm = mTrips.reduce((s, t) => s + (parseFloat(t.km) || 0), 0);
-    const totalAmt = mTrips.reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+    const totalAmt = Math.round(totalKm * RATE * 100) / 100;
 
     const rows = mTrips.map(t => {
       const [yy, mm, dd] = t.trip_date.split('-');
@@ -4688,77 +4707,116 @@ async function generateMileagePDF() {
       return `<tr>
         <td>${dd}/${mm}/${yy}</td>
         <td>${trajet}</td>
+        <td>${t.motif || '—'}</td>
         <td>${t.client || '—'}</td>
         <td style="text-align:right">${parseFloat(t.km)||0} km</td>
-        <td style="text-align:right">${parseFloat(t.amount||0).toFixed(2)} €</td>
+        <td style="text-align:right">${(parseFloat(t.km)||0) * RATE > 0 ? ((parseFloat(t.km)||0) * RATE).toFixed(2) : '0.00'} €</td>
       </tr>`;
     }).join('');
 
     tablesSections += `
-      <h3 style="margin:28px 0 8px;color:#c8a84b;border-bottom:1px solid #c8a84b;padding-bottom:4px">${monthLabel}</h3>
+      <h3>${monthLabel}</h3>
       <table>
-        <thead><tr><th>Date</th><th>Trajet</th><th>Client</th><th style="text-align:right">Km</th><th style="text-align:right">Indemnité</th></tr></thead>
+        <thead><tr><th>Date</th><th>Trajet</th><th>Motif</th><th>Client</th><th style="text-align:right">Km</th><th style="text-align:right">Indemnité</th></tr></thead>
         <tbody>${rows}</tbody>
-        <tfoot><tr style="font-weight:bold;background:#f8f4e8">
-          <td colspan="3">Total ${monthLabel}</td>
-          <td style="text-align:right">${totalKm.toFixed(1)} km</td>
-          <td style="text-align:right">${totalAmt.toFixed(2)} €</td>
+        <tfoot><tr>
+          <td colspan="4"><strong>Total ${monthLabel}</strong></td>
+          <td style="text-align:right"><strong>${totalKm.toFixed(0)} km</strong></td>
+          <td style="text-align:right"><strong>${totalAmt.toFixed(2)} €</strong></td>
         </tr></tfoot>
       </table>`;
+
+    bulletsMois += `<li>En ${monthLabel} : <strong>${totalKm.toFixed(0)} km</strong></li>`;
   }
 
   const totalKmAll = trips.reduce((s, t) => s + (parseFloat(t.km)||0), 0);
-  const totalAmtAll = trips.reduce((s, t) => s + (parseFloat(t.amount)||0), 0);
-  const checkedSorted = [...checked].sort();
-  const [fm, fy] = [parseInt(checkedSorted[0].split('-')[1],10)-1, checkedSorted[0].split('-')[0]];
-  const [lmIdx, lyStr] = [parseInt(checkedSorted[checkedSorted.length-1].split('-')[1],10)-1, checkedSorted[checkedSorted.length-1].split('-')[0]];
-  const periodLabel = checked.length === 1
-    ? `${MOIS[fm]} ${fy}`
-    : `${MOIS[fm]} ${fy} – ${MOIS[lmIdx]} ${lyStr}`;
+  const totalAmtAll = Math.round(totalKmAll * RATE * 100) / 100;
+
+  const fileSlug = `attestation-km-${sorted[0]}-${sorted[sorted.length-1]}`;
 
   const html = `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="UTF-8">
-<title>Frais kilométriques — ${userName}</title>
+<title>Note de frais kilométriques — Romain Capdepont</title>
 <style>
-  body { font-family: Arial, sans-serif; font-size: 13px; color: #1a1a1a; margin: 30px; }
-  .toolbar { display:flex; gap:10px; margin-bottom:24px; }
+  * { box-sizing: border-box; }
+  body { font-family: "Times New Roman", serif; font-size: 13pt; color: #1a1a1a; margin: 30mm 25mm; line-height: 1.6; }
+  .toolbar { display:flex; gap:10px; margin-bottom:28px; font-family:Arial,sans-serif; }
   .toolbar button { padding:8px 18px; border:none; border-radius:6px; cursor:pointer; font-size:13px; font-weight:bold; }
   .btn-print { background:#1a1a1a; color:#c8a84b; }
-  .btn-download { background:#c8a84b; color:#1a1a1a; }
-  .header-card { background:#f8f4e8; border-left:4px solid #c8a84b; padding:12px 16px; margin-bottom:24px; border-radius:4px; }
-  .header-card h1 { font-size:18px; margin:0 0 4px; }
-  .header-card .meta { display:flex; flex-wrap:wrap; gap:16px; margin-top:8px; font-size:12px; color:#555; }
-  .header-card .meta span { display:flex; align-items:center; gap:4px; }
-  h3 { font-size: 14px; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
-  th { background: #1a1a1a; color: #fff; padding: 6px 10px; text-align: left; font-size: 12px; }
-  td { padding: 5px 10px; border-bottom: 1px solid #e0e0e0; }
-  tfoot td { border-bottom: none; }
-  .total-global { margin-top: 24px; background: #1a1a1a; color: #c8a84b; padding: 12px 16px; border-radius: 6px; font-size: 15px; font-weight: bold; }
-  @media print { .toolbar { display:none; } body { margin: 15mm; } }
+  .btn-dl { background:#c8a84b; color:#1a1a1a; }
+  .doc-title { text-align:center; font-size:18pt; font-weight:bold; text-decoration:underline; margin-bottom:28px; letter-spacing:1px; }
+  .infos-bloc { margin-bottom:24px; }
+  .infos-bloc table { border:none; }
+  .infos-bloc td { padding:2px 12px 2px 0; font-size:12pt; border:none; }
+  .infos-bloc td:first-child { font-weight:bold; width:120px; }
+  .attestation-text { margin: 24px 0 16px; font-size:12pt; }
+  h3 { font-size:13pt; margin:28px 0 6px; border-bottom:1px solid #999; padding-bottom:3px; }
+  table { width:100%; border-collapse:collapse; margin-bottom:8px; font-size:11pt; }
+  thead th { background:#1a1a1a; color:#fff; padding:5px 8px; text-align:left; font-size:10pt; }
+  tbody td { padding:4px 8px; border-bottom:1px solid #ddd; }
+  tfoot td { padding:5px 8px; background:#f5f5f5; border-top:2px solid #999; }
+  .resume-mois { margin:24px 0 8px; font-size:12pt; }
+  .resume-mois ul { margin:8px 0; padding-left:24px; }
+  .total-box { margin:20px 0; padding:14px 18px; border:2px solid #1a1a1a; border-radius:4px; font-size:13pt; }
+  .legal-text { margin-top:20px; font-size:11pt; color:#333; }
+  .signature-bloc { margin-top:48px; font-size:12pt; }
+  .signature-line { margin-top:40px; border-top:1px solid #333; width:220px; }
+  @media print { .toolbar { display:none; } body { margin:15mm 20mm; } }
 </style>
 </head><body>
+
   <div class="toolbar">
     <button class="btn-print" onclick="window.print()">🖨 Imprimer</button>
-    <button class="btn-download" onclick="downloadPDF()">⬇️ Télécharger PDF</button>
+    <button class="btn-dl" onclick="dlDoc()">⬇️ Télécharger</button>
   </div>
-  <div class="header-card">
-    <h1>🚗 Indemnités kilométriques — ${periodLabel}</h1>
-    <div class="meta">
-      <span>👤 <strong>Romain Capdepont</strong></span>
-      <span>🏢 Président SASU · Contrat gérant</span>
-      <span>🚘 Mercedes Classe A · <strong>DS 591 QS</strong></span>
-      <span>📏 Barème : <strong>0,374 €/km</strong></span>
-    </div>
+
+  <div class="doc-title">NOTE DE FRAIS KILOMÉTRIQUES</div>
+
+  <div class="infos-bloc">
+    <table>
+      <tr><td>Société :</td><td>Pull Up Événements</td></tr>
+      <tr><td>Gérant :</td><td>Romain Capdepont</td></tr>
+      <tr><td>Qualité :</td><td>Président SASU — Contrat gérant</td></tr>
+      <tr><td>Véhicule :</td><td>Mercedes Classe A — Immatriculation DS 591 QS</td></tr>
+      <tr><td>Période :</td><td>${periodHeader}</td></tr>
+    </table>
   </div>
+
+  <p class="attestation-text">
+    Je soussigné, <strong>Romain Capdepont</strong>, gérant de la société <strong>Pull Up Événements</strong>,
+    atteste sur l'honneur avoir effectué les déplacements suivants dans le cadre de l'activité de l'entreprise :
+  </p>
+
   ${tablesSections}
-  <div class="total-global">Total général : ${totalKmAll.toFixed(1)} km — ${totalAmtAll.toFixed(2)} €</div>
+
+  <div class="resume-mois">
+    <strong>Récapitulatif :</strong>
+    <ul>${bulletsMois}</ul>
+  </div>
+
+  <div class="total-box">
+    Ce qui représente un <strong>total remboursable de ${totalAmtAll.toFixed(2).replace('.',',')} €</strong>
+    en appliquant le barème kilométrique 2026 correspondant
+    (tranche de + de 20 000 km, avec un coefficient de <strong>0,47 € par km</strong>).
+  </div>
+
+  <p class="legal-text">
+    Ce document accompagne le virement de cette somme depuis le compte de la société en guise de justification comptable.<br>
+    <strong>Fait pour servir et valoir ce que de droit.</strong>
+  </p>
+
+  <div class="signature-bloc">
+    Au Tampon, le ${dateJour}<br><br>
+    Signature : <strong>Romain Capdepont</strong>
+    <div class="signature-line"></div>
+  </div>
+
 <script>
-function downloadPDF() {
-  const blob = new Blob([document.documentElement.outerHTML], {type: 'text/html'});
+function dlDoc() {
+  const blob = new Blob([document.documentElement.outerHTML], {type:'text/html;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'frais-kilometriques-${periodLabel.replace(/\\s/g,'-').replace(/[^a-zA-Z0-9-]/g,'')}.html';
+  a.download = '${fileSlug}.html';
   a.click();
 }
 </script>
