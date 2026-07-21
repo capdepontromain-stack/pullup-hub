@@ -4452,10 +4452,11 @@ async function kmPasteTrip(dateStr) {
   if (!_kmCopiedTrip) return;
   const newTrip = { ..._kmCopiedTrip, trip_date: dateStr };
   delete newTrip.id; delete newTrip.created_at; delete newTrip.updated_at;
-  const { error } = await sb.from('mileage').insert([newTrip]);
+  const { data, error } = await sb.from('mileage').insert([newTrip]).select();
   if (error) { showToast('Erreur : ' + error.message); return; }
+  if (data && data[0]) _allMileageTrips.push(data[0]);
   const d = dateStr.split('-'); showToast(`✅ Collé le ${d[2]}/${d[1]}/${d[0]}`);
-  await loadMileageCalendar();
+  renderMileageCalendar();
 }
 
 window.addEventListener('keydown', async function(e) {
