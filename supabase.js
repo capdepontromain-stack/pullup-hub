@@ -4399,7 +4399,7 @@ function renderMileageCalendar() {
     }).join('');
     const more = trips.length > 3 ? `<div style="font-size:.62rem;color:var(--text3)">+${trips.length-3} autres</div>` : '';
 
-    html += `<div class="km-day${isToday?' today':''}" onclick="openNewMileageOnDate('${dateStr}')">
+    html += `<div class="km-day${isToday?' today':''}" onclick="openNewMileageOnDate('${dateStr}')" onmouseenter="_kmHoverDate='${dateStr}'" onmouseleave="">
       <div class="km-day-num">${d}${trips.length ? `<span style="font-size:.6rem;color:var(--gold);margin-left:4px">${trips.reduce((s,t)=>s+(parseFloat(t.km)||0),0)}km</span>` : ''}</div>
       ${pillsHtml}${more}
     </div>`;
@@ -4443,6 +4443,43 @@ function openEditMileage(id) {
   document.querySelector('#modal-newMileage .modal-header h3').textContent = 'Modifier le trajet';
   openModal('newMileage');
 }
+
+// ——— Copier-coller de trajets kilométriques (Cmd+C / Cmd+V) ———
+let _kmHoverDate = null;
+let _kmCopiedTrip = null;
+
+document.addEventListener('keydown', async function(e) {
+  // Ignorer si on est dans un champ de saisie
+  if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+  // Vérifier qu'on est sur la page frais kilométriques
+  if (!document.getElementById('mileage-calendar')) return;
+
+  const isCopy  = (e.metaKey || e.ctrlKey) && e.key === 'c';
+  const isPaste = (e.metaKey || e.ctrlKey) && e.key === 'v';
+
+  if (isCopy && _kmHoverDate) {
+    // Trouver le(s) trajet(s) sur la case survolée
+    const trips = _allMileageTrips.filter(t => t.trip_date === _kmHoverDate);
+    if (!trips.length) { showToast('Aucun trajet sur cette case'); return; }
+    // Si plusieurs trajets, copier le dernier ajouté
+    _kmCopiedTrip = { ...trips[trips.length - 1] };
+    delete _kmCopiedTrip.id;
+    delete _kmCopiedTrip.created_at;
+    delete _kmCopiedTrip.updated_at;
+    showToast(`📋 Trajet copié : ${_kmCopiedTrip.departure || ''}→${_kmCopiedTrip.destination || ''} (${_kmCopiedTrip.km} km)`);
+    e.preventDefault();
+  }
+
+  if (isPaste && _kmCopiedTrip && _kmHoverDate) {
+    const newTrip = { ..._kmCopiedTrip, trip_date: _kmHoverDate };
+    const { error } = await sb.from('mileage').insert([newTrip]);
+    if (error) { showToast('Erreur : ' + error.message); return; }
+    showToast(`✅ Trajet collé le ${_kmHoverDate}`);
+    _allMileageTrips = (await fetchMileage()) || _allMileageTrips;
+    renderMileageCalendar();
+    e.preventDefault();
+  }
+});
 
 function openFilePreview(url) {
   const modal = document.getElementById('modal-filePreview');
