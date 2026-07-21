@@ -4643,6 +4643,7 @@ async function openExportPDFModal() {
 }
 
 async function generateMileagePDF() {
+  try {
   const checked = [...document.querySelectorAll('#exportPDF-months input[type=checkbox]:checked')].map(i => i.value);
   if (!checked.length) { showToast('Sélectionne au moins un mois.'); return; }
 
@@ -4822,8 +4823,10 @@ function dlDoc() {
 </body></html>`;
 
   const win = window.open('', '_blank');
+  if (!win) { showToast('⚠️ Pop-up bloquée — autorise les pop-ups pour ce site dans ton navigateur.'); return; }
   win.document.write(html);
   win.document.close();
   win.focus();
   closeModal('exportPDF');
+  } catch(err) { showToast('Erreur PDF : ' + err.message); console.error(err); }
 }
