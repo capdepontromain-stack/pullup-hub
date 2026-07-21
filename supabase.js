@@ -2978,7 +2978,7 @@ async function filterSuppliers(category, btn) {
   document.querySelectorAll('#page-suppliers .filter-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   if (!allSuppliers.length) allSuppliers = await fetchSuppliers();
-  const filtered = category ? allSuppliers.filter(s => s.category === category) : allSuppliers;
+  const filtered = category ? allSuppliers.filter(s => s.category === category || (Array.isArray(s.tags) && s.tags.includes(category))) : allSuppliers;
   if (!filtered.length) {
     const grid = document.querySelector('#page-suppliers .supplier-grid');
     if (grid) grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--text2);padding:2rem">
@@ -4479,12 +4479,17 @@ function openEditSupplier(s) {
   document.getElementById('editSupplier-phone').value = s.phone || '';
   document.getElementById('editSupplier-email').value = s.email || '';
   document.getElementById('editSupplier-notes').value = s.notes || '';
+  const tags = Array.isArray(s.tags) ? s.tags : (s.tags ? JSON.parse(s.tags) : []);
+  document.querySelectorAll('#editSupplier-tags input[type=checkbox]').forEach(cb => {
+    cb.checked = tags.includes(cb.value);
+  });
   openModal('editSupplier');
 }
 
 async function saveEditSupplier() {
   const id = document.getElementById('editSupplier-id').value;
   if (!id) return;
+  const selectedTags = [...document.querySelectorAll('#editSupplier-tags input[type=checkbox]:checked')].map(cb => cb.value);
   const updates = {
     name:     document.getElementById('editSupplier-name').value.trim(),
     category: document.getElementById('editSupplier-category').value,
@@ -4492,6 +4497,7 @@ async function saveEditSupplier() {
     phone:    document.getElementById('editSupplier-phone').value.trim() || null,
     email:    document.getElementById('editSupplier-email').value.trim() || null,
     notes:    document.getElementById('editSupplier-notes').value.trim() || null,
+    tags:     selectedTags,
   };
   const { error } = await sb.from('suppliers').update(updates).eq('id', id);
   if (error) { alert('Erreur : ' + error.message); return; }

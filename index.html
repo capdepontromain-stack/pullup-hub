@@ -802,6 +802,11 @@ try {
       <button class="filter-btn" onclick="filterSuppliers('Traiteur',this)">Traiteurs</button>
       <button class="filter-btn" onclick="filterSuppliers('DJ',this)">DJ</button>
       <button class="filter-btn" onclick="filterSuppliers('Animateur',this)">Animateurs</button>
+      <button class="filter-btn" onclick="filterSuppliers('Animateur enfant',this)">Animateur enfant</button>
+      <button class="filter-btn" onclick="filterSuppliers('Noël',this)">Noël 🎄</button>
+      <button class="filter-btn" onclick="filterSuppliers('Vidéo',this)">Vidéo 🎥</button>
+      <button class="filter-btn" onclick="filterSuppliers('Photo cabine',this)">Photo cabine 📸</button>
+      <button class="filter-btn" onclick="filterSuppliers('Autre animation',this)">Autre animation</button>
       <button class="filter-btn" onclick="filterSuppliers('Hôtesse',this)">Hôtesses</button>
       <button class="filter-btn" onclick="filterSuppliers('Artiste',this)">Artistes</button>
       <button class="filter-btn" onclick="filterSuppliers('Sonorisation',this)">Sonorisation</button>
@@ -2443,7 +2448,7 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260706e"></script>
+<script src="supabase.js?v=20260706f"></script>
 <script src="app.js?v=20260630c"></script>
 <script>
   if ('serviceWorker' in navigator) {
@@ -2646,6 +2651,20 @@ async function loadAuditLog() {
         <div class="form-group span2">
           <label>Notes / Commentaires</label>
           <textarea id="editSupplier-notes" class="form-control" rows="3" placeholder="Informations complémentaires..."></textarea>
+        </div>
+        <div class="form-group span2">
+          <label>Apparaît aussi dans… <span style="color:var(--text2);font-size:.8rem">(plusieurs onglets possibles)</span></label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px" id="editSupplier-tags">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.85rem"><input type="checkbox" value="Animateur enfant" style="accent-color:var(--gold)"> Animateur enfant</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.85rem"><input type="checkbox" value="Noël" style="accent-color:var(--gold)"> Noël 🎄</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.85rem"><input type="checkbox" value="Vidéo" style="accent-color:var(--gold)"> Vidéo 🎥</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.85rem"><input type="checkbox" value="Photo cabine" style="accent-color:var(--gold)"> Photo cabine 📸</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.85rem"><input type="checkbox" value="Autre animation" style="accent-color:var(--gold)"> Autre animation</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.85rem"><input type="checkbox" value="DJ" style="accent-color:var(--gold)"> DJ</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.85rem"><input type="checkbox" value="Animateur" style="accent-color:var(--gold)"> Animateur</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.85rem"><input type="checkbox" value="Sonorisation" style="accent-color:var(--gold)"> Sonorisation</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.85rem"><input type="checkbox" value="Traiteur" style="accent-color:var(--gold)"> Traiteur</label>
+          </div>
         </div>
       </div>
     </div>
