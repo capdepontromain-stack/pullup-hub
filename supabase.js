@@ -4699,7 +4699,7 @@ async function generateMileagePDF() {
     const [y, mo] = monthKey.split('-');
     const monthLabel = `${MOIS[parseInt(mo,10)-1]} ${y}`;
     const totalKm = mTrips.reduce((s, t) => s + (parseFloat(t.km) || 0), 0);
-    const totalAmt = Math.round(totalKm * RATE * 100) / 100;
+    const totalAmt = mTrips.reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
 
     const rows = mTrips.map(t => {
       const [yy, mm, dd] = t.trip_date.split('-');
@@ -4710,7 +4710,7 @@ async function generateMileagePDF() {
         <td>${t.motif || '—'}</td>
         <td>${t.client || '—'}</td>
         <td style="text-align:right">${parseFloat(t.km)||0} km</td>
-        <td style="text-align:right">${(parseFloat(t.km)||0) * RATE > 0 ? ((parseFloat(t.km)||0) * RATE).toFixed(2) : '0.00'} €</td>
+        <td style="text-align:right">${parseFloat(t.amount||0).toFixed(2)} €</td>
       </tr>`;
     }).join('');
 
@@ -4730,7 +4730,7 @@ async function generateMileagePDF() {
   }
 
   const totalKmAll = trips.reduce((s, t) => s + (parseFloat(t.km)||0), 0);
-  const totalAmtAll = Math.round(totalKmAll * RATE * 100) / 100;
+  const totalAmtAll = trips.reduce((s, t) => s + (parseFloat(t.amount)||0), 0);
 
   const fileSlug = `attestation-km-${sorted[0]}-${sorted[sorted.length-1]}`;
 
