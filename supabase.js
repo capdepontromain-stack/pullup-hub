@@ -4478,6 +4478,7 @@ async function kmPasteTrip(dateStr) {
   _kmCopiedTrip = null;
   const d = dateStr.split('-'); showToast(`✅ Collé le ${d[2]}/${d[1]}/${d[0]}`);
   renderMileageCalendar();
+  loadAndRenderMileage();
 }
 
 window.addEventListener('keydown', async function(e) {
