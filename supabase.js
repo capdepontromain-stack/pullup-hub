@@ -4413,6 +4413,7 @@ function renderMileageCalendar() {
 }
 
 function openNewMileageOnDate(dateStr) {
+  if (_kmCopiedTrip) { kmPasteTrip(dateStr); return; }
   const f = document.getElementById('form-newMileage');
   if (!f) return;
   f.reset();
