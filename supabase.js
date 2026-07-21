@@ -208,7 +208,7 @@ async function fetchMileage() {
 
 async function createMileage(entry) {
   const km = parseFloat(entry.km) || 0;
-  const rate = parseFloat(entry.rate) || 0.374;
+  const rate = parseFloat(entry.rate) || 0.47;
   const amount = Math.round(km * rate * 100) / 100;
   const { data, error } = await sb.from('mileage').insert([{
     ...entry, km, rate, amount,
@@ -2160,7 +2160,7 @@ function calcMileageAmount() {
   if (!form) return;
   const isUtility = form.querySelector('[name=is_utility]')?.checked;
   const km = parseFloat(form.querySelector('[name=km]')?.value) || 0;
-  const rate = parseFloat(form.querySelector('[name=rate]')?.value) || 0.374;
+  const rate = parseFloat(form.querySelector('[name=rate]')?.value) || 0.47;
   const roundtrip = form.querySelector('[name=roundtrip]')?.checked ? 2 : 1;
   const total = isUtility ? 0 : km * roundtrip * rate;
   const totalEl = document.getElementById('mileage-calc-total');
@@ -2176,7 +2176,7 @@ async function saveNewMileage() {
   const kmOne = parseFloat(form.querySelector('[name=km]')?.value) || 0;
   const roundtrip = form.querySelector('[name=roundtrip]')?.checked ? 2 : 1;
   const km = kmOne * roundtrip;
-  const rate = parseFloat(form.querySelector('[name=rate]')?.value) || 0.374;
+  const rate = parseFloat(form.querySelector('[name=rate]')?.value) || 0.47;
   const isUtility = form.querySelector('[name=is_utility]')?.checked || false;
   const data = {
     trip_date: form.querySelector('[name=trip_date]')?.value,
@@ -3253,7 +3253,7 @@ const personnelData = {
     nom: 'Romain Capdepont', role: 'Président SASU', contrat: 'Gérant',
     email: 'romain@pullup.re', photo: 'photos/romain.jpg',
     salaire: '1 950 €/mois', vehicule: 'Mercedes Classe A — DS591QS',
-    bareme_km: '0,374 €/km', heures: '~180h/mois',
+    bareme_km: '0,47 €/km', heures: '~180h/mois',
     domicile: 'La Réunion', notes: 'Président et fondateur de Pull Up Événements'
   },
   'Ketsia': {
@@ -3265,7 +3265,7 @@ const personnelData = {
   'Flora': {
     nom: 'Flora Boyer', role: 'Alternante', contrat: 'Alternance',
     email: 'flora@pullup.re', photo: 'photos/flora.jpg',
-    salaire: '1 112 €/mois', vehicule: 'Peugeot 207 (4CV)', bareme_km: '0,374 €/km',
+    salaire: '1 112 €/mois', vehicule: 'Peugeot 207 (4CV)', bareme_km: '0,47 €/km',
     heures: '124h (Juin)', domicile: 'Le Tampon', notes: 'Congés pris : 4 jours'
   },
   'Gloria': {
@@ -4471,7 +4471,7 @@ function openEditMileage(id) {
   const clientField = f.querySelector('[name=client]');
   if (clientField) clientField.value = trip.client || '';
   f.querySelector('[name=km]').value = trip.km || '';
-  f.querySelector('[name=rate]').value = trip.rate || 0.374;
+  f.querySelector('[name=rate]').value = trip.rate || 0.47;
   f.querySelector('[name=motif]').value = trip.motif || '';
   const utilField = f.querySelector('[name=is_utility]');
   if (utilField) utilField.checked = !!trip.is_utility;
@@ -4506,7 +4506,7 @@ async function kmPasteTrip(dateStr) {
   const newTrip = { ..._kmCopiedTrip, trip_date: dateStr };
   delete newTrip.id; delete newTrip.created_at; delete newTrip.updated_at;
   const km = parseFloat(newTrip.km) || 0;
-  const rate = parseFloat(newTrip.rate) || 0.374;
+  const rate = parseFloat(newTrip.rate) || 0.47;
   newTrip.amount = newTrip.is_utility ? 0 : Math.round(km * rate * 100) / 100;
   const { data, error } = await sb.from('mileage').insert([newTrip]).select();
   if (error) { showToast('Erreur : ' + error.message); return; }
