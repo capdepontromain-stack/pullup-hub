@@ -4613,3 +4613,135 @@ async function deleteSupplier() {
   renderSuppliers(fresh);
   allSuppliers = fresh;
 }
+
+// ── Export PDF frais kilométriques ──────────────────────────────────────────
+
+async function openExportPDFModal() {
+  const user = (await sb.auth.getUser()).data.user;
+  const { data, error } = await sb.from('mileage')
+    .select('trip_date')
+    .eq('is_utility', false)
+    .order('trip_date', { ascending: false });
+  if (error) { showToast('Erreur : ' + error.message); return; }
+
+  const months = [...new Set((data || []).map(t => t.trip_date.slice(0, 7)))].sort().reverse();
+  const container = document.getElementById('exportPDF-months');
+  if (!container) return;
+
+  const MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  container.innerHTML = months.length === 0
+    ? '<p style="color:var(--text2)">Aucun trajet à exporter.</p>'
+    : months.map(m => {
+        const [y, mo] = m.split('-');
+        const label = `${MOIS[parseInt(mo,10)-1]} ${y}`;
+        return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 10px;background:var(--bg3);border-radius:6px">
+          <input type="checkbox" value="${m}" style="accent-color:var(--gold);width:16px;height:16px"> ${label}
+        </label>`;
+      }).join('');
+
+  openModal('exportPDF');
+}
+
+async function generateMileagePDF() {
+  const checked = [...document.querySelectorAll('#exportPDF-months input[type=checkbox]:checked')].map(i => i.value);
+  if (!checked.length) { showToast('Sélectionne au moins un mois.'); return; }
+
+  const MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const user = (await sb.auth.getUser()).data.user;
+  const userName = user?.user_metadata?.full_name || user?.email || 'Utilisateur';
+
+  const sorted = [...checked].sort();
+  const firstDay = sorted[0] + '-01';
+  const [ly, lm] = sorted[sorted.length - 1].split('-');
+  const lastDayDate = new Date(parseInt(ly), parseInt(lm), 0);
+  const lastDay = `${lastDayDate.getFullYear()}-${String(lastDayDate.getMonth()+1).padStart(2,'0')}-${String(lastDayDate.getDate()).padStart(2,'0')}`;
+
+  const { data, error } = await sb.from('mileage')
+    .select('*')
+    .eq('is_utility', false)
+    .gte('trip_date', firstDay)
+    .lte('trip_date', lastDay)
+    .order('trip_date', { ascending: true });
+
+  if (error) { showToast('Erreur : ' + error.message); return; }
+
+  const trips = (data || []).filter(t => checked.includes(t.trip_date.slice(0, 7)));
+  if (!trips.length) { showToast('Aucun trajet trouvé pour les mois sélectionnés.'); return; }
+
+  const byMonth = {};
+  trips.forEach(t => {
+    const key = t.trip_date.slice(0, 7);
+    if (!byMonth[key]) byMonth[key] = [];
+    byMonth[key].push(t);
+  });
+
+  let tablesSections = '';
+  for (const [monthKey, mTrips] of Object.entries(byMonth).sort()) {
+    const [y, mo] = monthKey.split('-');
+    const monthLabel = `${MOIS[parseInt(mo,10)-1]} ${y}`;
+    const totalKm = mTrips.reduce((s, t) => s + (parseFloat(t.km) || 0), 0);
+    const totalAmt = mTrips.reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+
+    const rows = mTrips.map(t => {
+      const [yy, mm, dd] = t.trip_date.split('-');
+      const trajet = t.departure ? `${t.departure} → ${t.destination || '—'}` : '—';
+      return `<tr>
+        <td>${dd}/${mm}/${yy}</td>
+        <td>${trajet}</td>
+        <td>${t.client || '—'}</td>
+        <td style="text-align:right">${parseFloat(t.km)||0} km</td>
+        <td style="text-align:right">${parseFloat(t.amount||0).toFixed(2)} €</td>
+      </tr>`;
+    }).join('');
+
+    tablesSections += `
+      <h3 style="margin:28px 0 8px;color:#c8a84b;border-bottom:1px solid #c8a84b;padding-bottom:4px">${monthLabel}</h3>
+      <table>
+        <thead><tr><th>Date</th><th>Trajet</th><th>Client</th><th style="text-align:right">Km</th><th style="text-align:right">Indemnité</th></tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr style="font-weight:bold;background:#f8f4e8">
+          <td colspan="3">Total ${monthLabel}</td>
+          <td style="text-align:right">${totalKm.toFixed(1)} km</td>
+          <td style="text-align:right">${totalAmt.toFixed(2)} €</td>
+        </tr></tfoot>
+      </table>`;
+  }
+
+  const totalKmAll = trips.reduce((s, t) => s + (parseFloat(t.km)||0), 0);
+  const totalAmtAll = trips.reduce((s, t) => s + (parseFloat(t.amount)||0), 0);
+  const checkedSorted = [...checked].sort();
+  const [fm, fy] = [parseInt(checkedSorted[0].split('-')[1],10)-1, checkedSorted[0].split('-')[0]];
+  const [lmIdx, lyStr] = [parseInt(checkedSorted[checkedSorted.length-1].split('-')[1],10)-1, checkedSorted[checkedSorted.length-1].split('-')[0]];
+  const periodLabel = checked.length === 1
+    ? `${MOIS[fm]} ${fy}`
+    : `${MOIS[fm]} ${fy} – ${MOIS[lmIdx]} ${lyStr}`;
+
+  const html = `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8">
+<title>Frais kilométriques — ${userName}</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 13px; color: #1a1a1a; margin: 30px; }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  h2 { font-size: 14px; font-weight: normal; color: #555; margin-top: 0; }
+  h3 { font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  th { background: #1a1a1a; color: #fff; padding: 6px 10px; text-align: left; font-size: 12px; }
+  td { padding: 5px 10px; border-bottom: 1px solid #e0e0e0; }
+  tfoot td { border-bottom: none; }
+  .total-global { margin-top: 24px; background: #1a1a1a; color: #c8a84b; padding: 12px 16px; border-radius: 6px; font-size: 15px; font-weight: bold; }
+  @media print { body { margin: 15mm; } }
+</style>
+</head><body>
+  <h1>🚗 Indemnités kilométriques</h1>
+  <h2>${userName} — ${periodLabel}</h2>
+  ${tablesSections}
+  <div class="total-global">Total général : ${totalKmAll.toFixed(1)} km — ${totalAmtAll.toFixed(2)} €</div>
+</body></html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 600);
+  closeModal('exportPDF');
+}
