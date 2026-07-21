@@ -4395,7 +4395,7 @@ function renderMileageCalendar() {
     const pillsHtml = trips.slice(0,3).map(t => {
       const col = PERSON_COLORS[t.user_name] || 'var(--gold)';
       const label = `${t.km}km${t.departure ? ' · ' + t.departure + '→' + (t.destination||'') : ''}${t.motif ? ' · ' + t.motif : ''}`;
-      return `<div class="km-trip-pill" style="border-color:${col}" title="${label}"><span onclick="event.stopPropagation();openEditMileage('${t.id}')" style="flex:1;overflow:hidden;text-overflow:ellipsis">${label}</span><span onclick="event.stopPropagation();kmDeleteTrip('${t.id}')" title="Supprimer" style="margin-left:4px;opacity:.5;cursor:pointer;flex-shrink:0">🗑</span></div>`;
+      return `<div class="km-trip-pill" style="border-color:${col}" title="${label}"><span onclick="event.stopPropagation();openEditMileage('${t.id}')" style="flex:1;overflow:hidden;text-overflow:ellipsis">${label}</span><span onclick="event.stopPropagation();kmCopyTrip('${t.id}')" title="Copier ce trajet" style="margin-left:4px;opacity:.5;cursor:pointer;flex-shrink:0">📋</span><span onclick="event.stopPropagation();kmDeleteTrip('${t.id}')" title="Supprimer" style="margin-left:2px;opacity:.5;cursor:pointer;flex-shrink:0">🗑</span></div>`;
     }).join('');
     const more = trips.length > 3 ? `<div style="font-size:.62rem;color:var(--text3)">+${trips.length-3} autres</div>` : '';
 
@@ -4449,6 +4449,14 @@ function openEditMileage(id) {
 let _kmHoverDate = null;
 let _kmCopiedTrip = null;
 
+function kmCopyTrip(id) {
+  const trip = _allMileageTrips.find(t => String(t.id) === String(id));
+  if (!trip) return;
+  _kmCopiedTrip = { ...trip };
+  showToast(`📋 Trajet copié — clique sur une date pour le coller`);
+  document.querySelectorAll('.km-day').forEach(el => el.classList.add('km-paste-mode'));
+}
+
 async function kmDeleteTrip(id) {
   if (!confirm('Supprimer ce trajet ?')) return;
   const { error } = await sb.from('mileage').delete().eq('id', id);
@@ -4464,6 +4472,7 @@ async function kmPasteTrip(dateStr) {
   const { data, error } = await sb.from('mileage').insert([newTrip]).select();
   if (error) { showToast('Erreur : ' + error.message); return; }
   if (data && data[0]) _allMileageTrips.push(data[0]);
+  _kmCopiedTrip = null;
   const d = dateStr.split('-'); showToast(`✅ Collé le ${d[2]}/${d[1]}/${d[0]}`);
   renderMileageCalendar();
 }
