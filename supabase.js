@@ -4439,10 +4439,13 @@ function openEditMileage(id) {
   f.querySelector('[name=user_name]').value = trip.user_name || '';
   f.querySelector('[name=departure]').value = trip.departure || '';
   f.querySelector('[name=destination]').value = trip.destination || '';
+  const clientField = f.querySelector('[name=client]');
+  if (clientField) clientField.value = trip.client || '';
   f.querySelector('[name=km]').value = trip.km || '';
   f.querySelector('[name=rate]').value = trip.rate || 0.374;
   f.querySelector('[name=motif]').value = trip.motif || '';
   f.dataset.editId = id;
+  calcMileageAmount();
   document.querySelector('#modal-newMileage .modal-header h3').textContent = 'Modifier le trajet';
   openModal('newMileage');
 }
