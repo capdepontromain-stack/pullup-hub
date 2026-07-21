@@ -5,6 +5,9 @@ on:
     - cron: '0 * * * *'   # toutes les heures
   workflow_dispatch:        # déclenchement manuel possible
 
+permissions:
+  contents: write           # autorise le bot à pousser calendar.ics
+
 jobs:
   generate-ics:
     runs-on: ubuntu-latest
