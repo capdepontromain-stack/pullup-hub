@@ -1166,6 +1166,7 @@ function renderSuppliers(suppliers) {
         <p>📞 ${s.phone || '—'}</p>
         <p>✉ ${s.email || '—'}</p>
       </div>
+      ${s.price ? `<div style="font-size:.8rem;color:var(--gold);font-weight:600;margin-bottom:3px">💰 ${s.price}</div>` : ''}
       <div class="supplier-collab">${s.notes || (s.collaborations ? s.collaborations + ' collab(s)' : 'Partenaire')}</div>
     </div>`;
   }).join('');
@@ -1960,7 +1961,8 @@ async function saveNewSupplier() {
     phone: form.querySelector('[name=phone]')?.value,
     email: form.querySelector('[name=email]')?.value,
     rating: parseInt(form.querySelector('[name=rating]')?.value) || 4,
-    notes: form.querySelector('[name=notes]')?.value
+    notes: form.querySelector('[name=notes]')?.value,
+    price: form.querySelector('[name=price]')?.value || null,
   };
   if (!data.name) { showToast('Nom obligatoire'); return; }
   try {
@@ -4478,6 +4480,7 @@ function openEditSupplier(s) {
   document.getElementById('editSupplier-rating').value = s.rating || 4;
   document.getElementById('editSupplier-phone').value = s.phone || '';
   document.getElementById('editSupplier-email').value = s.email || '';
+  document.getElementById('editSupplier-price').value = s.price || '';
   document.getElementById('editSupplier-notes').value = s.notes || '';
   const tags = Array.isArray(s.tags) ? s.tags : (s.tags ? JSON.parse(s.tags) : []);
   document.querySelectorAll('#editSupplier-tags input[type=checkbox]').forEach(cb => {
@@ -4497,6 +4500,7 @@ async function saveEditSupplier() {
     phone:    document.getElementById('editSupplier-phone').value.trim() || null,
     email:    document.getElementById('editSupplier-email').value.trim() || null,
     notes:    document.getElementById('editSupplier-notes').value.trim() || null,
+    price:    document.getElementById('editSupplier-price').value.trim() || null,
     tags:     selectedTags,
   };
   const { error } = await sb.from('suppliers').update(updates).eq('id', id);

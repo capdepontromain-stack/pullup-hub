@@ -2012,7 +2012,8 @@ Afin d'avancer, nous pouvons :
         <div class="form-group"><label>Téléphone</label><input name="phone" type="tel" placeholder="06 xx xx xx xx"></div>
         <div class="form-group"><label>Email</label><input name="email" type="email" placeholder="email@example.com"></div>
         <div class="form-group"><label>Note (1-5)</label><select name="rating"><option>5</option><option selected>4</option><option>3</option><option>2</option><option>1</option></select></div>
-        <div class="form-group span2"><label>Notes</label><textarea name="notes" rows="2" placeholder="Remarques, tarifs..."></textarea></div>
+        <div class="form-group span2"><label>💰 Prix / Tarif</label><input name="price" type="text" placeholder="Ex : 800€ la prestation, 50€/h, sur devis..."></div>
+        <div class="form-group span2"><label>Notes</label><textarea name="notes" rows="2" placeholder="Remarques..."></textarea></div>
       </form>
     </div>
     <div class="modal-footer">
@@ -2448,7 +2449,7 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260706f"></script>
+<script src="supabase.js?v=20260706g"></script>
 <script src="app.js?v=20260630c"></script>
 <script>
   if ('serviceWorker' in navigator) {
@@ -2647,6 +2648,10 @@ async function loadAuditLog() {
         <div class="form-group">
           <label>Email</label>
           <input type="email" id="editSupplier-email" class="form-control" placeholder="contact@...">
+        </div>
+        <div class="form-group span2">
+          <label>💰 Prix / Tarif</label>
+          <input type="text" id="editSupplier-price" class="form-control" placeholder="Ex : 800€ la prestation, 50€/h, sur devis...">
         </div>
         <div class="form-group span2">
           <label>Notes / Commentaires</label>
