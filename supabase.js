@@ -1284,7 +1284,7 @@ function renderMileageBoard() {
 
       // Résumé par mois (dans vue grille, max 3 mois visibles)
       const byMonth = {};
-      myEntries.forEach(e => {
+      myEntries.filter(e=>!e.is_utility).forEach(e => {
         const k = e.trip_date?.slice(0,7) || '—';
         if (!byMonth[k]) byMonth[k] = { km:0, amt:0 };
         byMonth[k].km  += parseFloat(e.km)||0;
