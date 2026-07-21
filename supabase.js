@@ -4461,14 +4461,13 @@ async function kmPasteTrip(dateStr) {
 
 window.addEventListener('keydown', async function(e) {
   if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)) return;
-  const onMileagePage = !!document.querySelector('#page-mileage.active, #page-mileage[style*="block"], #page-mileage:not([style*="none"])');
-  if (!onMileagePage || !_kmHoverDate) return;
+  if (!_kmHoverDate) return;
 
   if ((e.metaKey || e.ctrlKey) && e.key === 'c') {
-    const trips = _allMileageTrips.filter(t => t.trip_date === _kmHoverDate);
+    const trips = (_allMileageTrips || []).filter(t => t.trip_date === _kmHoverDate);
     if (!trips.length) return;
     _kmCopiedTrip = { ...trips[trips.length - 1] };
-    showToast(`📋 Copié : ${_kmCopiedTrip.departure || ''}→${_kmCopiedTrip.destination || ''} ${_kmCopiedTrip.km} km — survole une date et fais Cmd+V`);
+    showToast(`📋 Copié — survole une date et fais Cmd+V`);
     e.preventDefault();
   }
 
