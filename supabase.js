@@ -2200,8 +2200,8 @@ async function saveNewMileage() {
       await createMileage(data);
     }
     closeModal('newMileage');
+    await loadMileageCalendar();
     await loadAndRenderMileage();
-    if (typeof loadMileageCalendar === 'function') loadMileageCalendar();
     showToast(editId ? 'Trajet modifié !' : 'Frais enregistrés !');
     form.reset();
   } catch(e) { showToast('Erreur : ' + e.message); }
