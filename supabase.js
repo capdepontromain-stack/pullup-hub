@@ -4414,6 +4414,8 @@ function renderMileageCalendar() {
 
 function openNewMileageOnDate(dateStr) {
   if (_kmCopiedTrip) { kmPasteTrip(dateStr); return; }
+  const existing = _allMileageTrips.filter(t => t.trip_date === dateStr);
+  if (existing.length === 1) { openEditMileage(existing[0].id); return; }
   const f = document.getElementById('form-newMileage');
   if (!f) return;
   f.reset();
