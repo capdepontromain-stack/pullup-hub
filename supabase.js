@@ -4650,12 +4650,20 @@ async function generateMileagePDF() {
   const MOIS_LONG = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 
   const sorted = [...checked].sort();
+  const firstDay = sorted[0] + '-01';
+  const [ly, lm] = sorted[sorted.length - 1].split('-');
+  const lastDayDate = new Date(parseInt(ly), parseInt(lm), 0);
+  const lastDay = `${lastDayDate.getFullYear()}-${String(lastDayDate.getMonth()+1).padStart(2,'0')}-${String(lastDayDate.getDate()).padStart(2,'0')}`;
 
-  // Utilise les données déjà en mémoire (mêmes que la carte) pour garantir la cohérence
-  const trips = (allMileageEntries || [])
-    .filter(t => !t.is_utility && checked.includes((t.trip_date || '').slice(0, 7)))
-    .sort((a, b) => a.trip_date < b.trip_date ? -1 : 1);
+  const { data: rawData, error } = await sb.from('mileage')
+    .select('*')
+    .gte('trip_date', firstDay)
+    .lte('trip_date', lastDay)
+    .order('trip_date', { ascending: true });
 
+  if (error) { showToast('Erreur : ' + error.message); return; }
+
+  const trips = (rawData || []).filter(t => !t.is_utility && checked.includes((t.trip_date || '').slice(0, 7)));
   if (!trips.length) { showToast('Aucun trajet trouvé pour les mois sélectionnés.'); return; }
 
   // Groupement par mois
