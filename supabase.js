@@ -2196,14 +2196,21 @@ async function saveNewMileage() {
     if (editId) {
       const { error } = await sb.from('mileage').update(data).eq('id', editId);
       if (error) throw error;
+      const idx = _allMileageTrips.findIndex(t => String(t.id) === String(editId));
+      if (idx !== -1) _allMileageTrips[idx] = { ..._allMileageTrips[idx], ...data };
       form.dataset.editId = '';
+      closeModal('newMileage');
+      renderMileageCalendar();
+      loadAndRenderMileage();
+      showToast('Trajet modifié !');
     } else {
-      await createMileage(data);
+      const created = await createMileage(data);
+      if (created) _allMileageTrips.push(created);
+      closeModal('newMileage');
+      renderMileageCalendar();
+      loadAndRenderMileage();
+      showToast('Frais enregistrés !');
     }
-    closeModal('newMileage');
-    await loadMileageCalendar();
-    await loadAndRenderMileage();
-    showToast(editId ? 'Trajet modifié !' : 'Frais enregistrés !');
     form.reset();
   } catch(e) { showToast('Erreur : ' + e.message); }
 }
