@@ -4416,8 +4416,9 @@ function renderMileageCalendar() {
     }).join('');
     const more = trips.length > 3 ? `<div style="font-size:.62rem;color:var(--text3)">+${trips.length-3} autres</div>` : '';
 
+    const addBtn = `<span onclick="event.stopPropagation();kmForceNewOnDate('${dateStr}')" title="Ajouter un trajet" style="margin-left:auto;opacity:.4;cursor:pointer;font-size:.9rem;line-height:1;padding:0 2px;flex-shrink:0">＋</span>`;
     html += `<div class="km-day${isToday?' today':''}" onclick="_kmCopiedTrip ? kmPasteTrip('${dateStr}') : openNewMileageOnDate('${dateStr}')" onmouseenter="_kmHoverDate='${dateStr}'">
-      <div class="km-day-num">${d}${trips.length ? `<span style="font-size:.6rem;color:var(--gold);margin-left:4px">${trips.reduce((s,t)=>s+(parseFloat(t.km)||0),0)}km</span>` : ''}</div>
+      <div class="km-day-num" style="display:flex;align-items:center">${d}${trips.length ? `<span style="font-size:.6rem;color:var(--gold);margin-left:4px">${trips.reduce((s,t)=>s+(parseFloat(t.km)||0),0)}km</span>` : ''}${trips.length ? addBtn : ''}</div>
       ${pillsHtml}${more}
     </div>`;
   }
@@ -4427,6 +4428,17 @@ function renderMileageCalendar() {
   if (rem) for (let i = 0; i < 7 - rem; i++) html += `<div class="km-day other-month"></div>`;
   html += '</div>';
   cal.innerHTML = html;
+}
+
+function kmForceNewOnDate(dateStr) {
+  const f = document.getElementById('form-newMileage');
+  if (!f) return;
+  f.reset();
+  f.querySelector('[name=trip_date]').value = dateStr;
+  if (mileageCalPerson !== 'Tous') { const s = f.querySelector('[name=user_name]'); if (s) s.value = mileageCalPerson; }
+  if (f.dataset) f.dataset.editId = '';
+  document.querySelector('#modal-newMileage .modal-header h3').textContent = 'Nouvelle saisie kilométrique';
+  openModal('newMileage');
 }
 
 function openNewMileageOnDate(dateStr) {
