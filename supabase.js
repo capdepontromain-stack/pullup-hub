@@ -4395,10 +4395,7 @@ function renderMileageCalendar() {
     const pillsHtml = trips.slice(0,3).map(t => {
       const col = PERSON_COLORS[t.user_name] || 'var(--gold)';
       const label = `${t.km}km${t.departure ? ' · ' + t.departure + '→' + (t.destination||'') : ''}${t.motif ? ' · ' + t.motif : ''}`;
-      return `<div class="km-trip-pill" style="border-color:${col};display:flex;align-items:center;gap:3px" title="${label}">
-        <span onclick="event.stopPropagation();openEditMileage('${t.id}')" style="flex:1;overflow:hidden;text-overflow:ellipsis">${label}</span>
-        <span onclick="event.stopPropagation();kmCopyTrip('${t.id}')" title="Copier ce trajet" style="cursor:pointer;opacity:.6;font-size:.75rem;flex-shrink:0;padding:0 2px">📋</span>
-      </div>`;
+      return `<div class="km-trip-pill" style="border-color:${col}" title="${label}" onclick="event.stopPropagation();openEditMileage('${t.id}')">${label}</div>`;
     }).join('');
     const more = trips.length > 3 ? `<div style="font-size:.62rem;color:var(--text3)">+${trips.length-3} autres</div>` : '';
 
@@ -4447,40 +4444,35 @@ function openEditMileage(id) {
   openModal('newMileage');
 }
 
-// ——— Copier-coller de trajets kilométriques ———
+// ——— Copier-coller de trajets kilométriques (Cmd+C / Cmd+V) ———
 let _kmHoverDate = null;
 let _kmCopiedTrip = null;
 
-function kmCopyTrip(id) {
-  const trip = _allMileageTrips.find(t => t.id == id);
-  if (!trip) return;
-  _kmCopiedTrip = { ...trip };
-  delete _kmCopiedTrip.id;
-  delete _kmCopiedTrip.created_at;
-  delete _kmCopiedTrip.updated_at;
-  showToast(`📋 Copié : ${_kmCopiedTrip.departure || ''}→${_kmCopiedTrip.destination || ''} (${_kmCopiedTrip.km} km) — Clique sur une date pour coller`);
-  // Mettre en évidence les cases vides pour indiquer où coller
-  document.querySelectorAll('.km-day').forEach(el => {
-    el.style.outline = _kmCopiedTrip ? '1.5px dashed var(--gold)' : '';
-    el.style.outlineOffset = '-2px';
-  });
-}
-
 async function kmPasteTrip(dateStr) {
-  if (!_kmCopiedTrip) return false;
+  if (!_kmCopiedTrip) return;
   const newTrip = { ..._kmCopiedTrip, trip_date: dateStr };
+  delete newTrip.id; delete newTrip.created_at; delete newTrip.updated_at;
   const { error } = await sb.from('mileage').insert([newTrip]);
   if (error) { showToast('Erreur : ' + error.message); return; }
-  showToast(`✅ Trajet collé le ${dateStr.split('-').reverse().join('/')}`);
-  const data = await fetchMileage();
-  if (data) _allMileageTrips = data;
+  const d = dateStr.split('-'); showToast(`✅ Collé le ${d[2]}/${d[1]}/${d[0]}`);
+  await fetchMileage();
   renderMileageCalendar();
 }
 
-document.addEventListener('keydown', async function(e) {
-  if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
-  const isPaste = (e.metaKey || e.ctrlKey) && e.key === 'v';
-  if (isPaste && _kmCopiedTrip && _kmHoverDate) {
+window.addEventListener('keydown', async function(e) {
+  if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)) return;
+  const onMileagePage = !!document.querySelector('#page-mileage.active, #page-mileage[style*="block"], #page-mileage:not([style*="none"])');
+  if (!onMileagePage || !_kmHoverDate) return;
+
+  if ((e.metaKey || e.ctrlKey) && e.key === 'c') {
+    const trips = _allMileageTrips.filter(t => t.trip_date === _kmHoverDate);
+    if (!trips.length) return;
+    _kmCopiedTrip = { ...trips[trips.length - 1] };
+    showToast(`📋 Copié : ${_kmCopiedTrip.departure || ''}→${_kmCopiedTrip.destination || ''} ${_kmCopiedTrip.km} km — survole une date et fais Cmd+V`);
+    e.preventDefault();
+  }
+
+  if ((e.metaKey || e.ctrlKey) && e.key === 'v' && _kmCopiedTrip) {
     await kmPasteTrip(_kmHoverDate);
     e.preventDefault();
   }
