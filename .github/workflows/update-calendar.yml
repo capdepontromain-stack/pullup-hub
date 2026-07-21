@@ -1,0 +1,46 @@
+name: Mettre à jour le calendrier ICS
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # toutes les heures
+  workflow_dispatch:        # déclenchement manuel possible
+
+jobs:
+  generate-ics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Générer calendar.ics depuis Supabase
+        env:
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          curl -s "https://vincxrmtfjbenlzhjwby.supabase.co/rest/v1/events?select=*&order=event_date.asc" \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_KEY" \
+          | node -e "
+          const data = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
+          const escape = s => (s||'').replace(/[\\\;,]/g, m=>'\\\\'+m).replace(/\n/g,'\\\\n');
+          let ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Pull Up Evenements//HUB//FR','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:Pull Up Hub','X-WR-TIMEZONE:Indian/Reunion','REFRESH-INTERVAL;VALUE=DURATION:PT1H'].join('\r\n') + '\r\n';
+          for (const ev of data) {
+            if (!ev.event_date) continue;
+            const dtStart = ev.event_date.replace(/-/g,'');
+            const endRaw = ev.end_date || ev.event_date;
+            const [ey,em,ed] = endRaw.split('-').map(Number);
+            const endDate = new Date(ey,em-1,ed+1);
+            const dtEnd = [endDate.getFullYear(),String(endDate.getMonth()+1).padStart(2,'0'),String(endDate.getDate()).padStart(2,'0')].join('');
+            const lines = ['BEGIN:VEVENT','UID:'+ev.id+'@pullup-hub','DTSTART;VALUE=DATE:'+dtStart,'DTEND;VALUE=DATE:'+dtEnd,'SUMMARY:'+escape(ev.name),ev.client?'DESCRIPTION:Client: '+escape(ev.client):'',ev.location?'LOCATION:'+escape(ev.location):'','STATUS:'+(ev.status==='Annule'?'CANCELLED':'CONFIRMED'),'END:VEVENT'].filter(Boolean);
+            ics += lines.join('\r\n') + '\r\n';
+          }
+          ics += 'END:VCALENDAR';
+          require('fs').writeFileSync('calendar.ics', ics);
+          console.log('Evenements:', data.length);
+          "
+
+      - name: Commit et push si modifié
+        run: |
+          git config user.name "Pull Up Bot"
+          git config user.email "bot@pullup.re"
+          git add calendar.ics
+          git diff --staged --quiet || git commit -m "Auto: mise à jour calendrier ICS"
+          git push
