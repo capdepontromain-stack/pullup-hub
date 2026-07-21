@@ -4395,7 +4395,7 @@ function renderMileageCalendar() {
     const pillsHtml = trips.slice(0,3).map(t => {
       const col = PERSON_COLORS[t.user_name] || 'var(--gold)';
       const label = `${t.km}km${t.departure ? ' · ' + t.departure + '→' + (t.destination||'') : ''}${t.motif ? ' · ' + t.motif : ''}`;
-      return `<div class="km-trip-pill" style="border-color:${col}" title="${label}" onclick="event.stopPropagation();openEditMileage('${t.id}')">${label}</div>`;
+      return `<div class="km-trip-pill" style="border-color:${col}" title="${label}"><span onclick="event.stopPropagation();openEditMileage('${t.id}')" style="flex:1;overflow:hidden;text-overflow:ellipsis">${label}</span><span onclick="event.stopPropagation();kmDeleteTrip('${t.id}')" title="Supprimer" style="margin-left:4px;opacity:.5;cursor:pointer;flex-shrink:0">🗑</span></div>`;
     }).join('');
     const more = trips.length > 3 ? `<div style="font-size:.62rem;color:var(--text3)">+${trips.length-3} autres</div>` : '';
 
@@ -4447,6 +4447,14 @@ function openEditMileage(id) {
 // ——— Copier-coller de trajets kilométriques (Cmd+C / Cmd+V) ———
 let _kmHoverDate = null;
 let _kmCopiedTrip = null;
+
+async function kmDeleteTrip(id) {
+  if (!confirm('Supprimer ce trajet ?')) return;
+  const { error } = await sb.from('mileage').delete().eq('id', id);
+  if (error) { showToast('Erreur : ' + error.message); return; }
+  _allMileageTrips = _allMileageTrips.filter(t => t.id != id);
+  renderMileageCalendar();
+}
 
 async function kmPasteTrip(dateStr) {
   if (!_kmCopiedTrip) return;

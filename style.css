@@ -657,4 +657,34 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .km-day.other-month { opacity:.25;pointer-events:none; }
 .km-day-num { font-size:.75rem;font-weight:700;color:var(--text2);margin-bottom:3px; }
 .km-day.today .km-day-num { color:var(--gold); }
-.km-trip-pill { font-size:.68rem;font-weight:600;background:var(--bg4);border-left:2px solid var(--gold);border-radius:4px;padding:2px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.km-trip-pill { display:flex;align-items:center;font-size:.68rem;font-weight:600;background:var(--bg4);border-left:2px solid var(--gold);border-radius:4px;padding:2px 5px;margin-bottom:2px;overflow:hidden; }
+.km-trip-pill span:first-child { white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer; }
+
+/* ===== FINITIONS DESIGN ===== */
+/* Sélection de texte aux couleurs de la marque */
+::selection { background: rgba(245, 197, 24, .28); color: #fff; }
+
+/* Barres de défilement au thème sombre */
+* { scrollbar-width: thin; scrollbar-color: var(--bg4) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 8px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+
+/* Anneau doré au focus des champs (cohérent partout) */
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus,
+#login-email:focus, #login-password:focus, .ai-input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(245, 197, 24, .15);
+}
+#login-email, #login-password { transition: border-color .15s, box-shadow .15s; }
+
+/* Boutons : retour tactile au clic + halo discret sur le bouton principal */
+.btn-primary { box-shadow: 0 2px 8px rgba(245, 197, 24, .12); transition: background .15s, box-shadow .15s, transform .1s; }
+.btn-primary:hover { box-shadow: 0 4px 16px rgba(245, 197, 24, .22); }
+.btn-primary:active, #login-btn:active { transform: translateY(1px); }
+
+/* Écran de connexion : bouton et carte plus soignés */
+#login-btn { transition: background .15s, box-shadow .15s, transform .1s; box-shadow: 0 2px 10px rgba(245, 197, 24, .15); }
+#login-btn:hover { background: var(--gold-dim); box-shadow: 0 6px 20px rgba(245, 197, 24, .28); }
+#login-form { box-shadow: 0 24px 70px rgba(0, 0, 0, .55); }
