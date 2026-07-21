@@ -2158,12 +2158,16 @@ async function autoCalcDistance() {
 function calcMileageAmount() {
   const form = document.getElementById('form-newMileage');
   if (!form) return;
+  const isUtility = form.querySelector('[name=is_utility]')?.checked;
   const km = parseFloat(form.querySelector('[name=km]')?.value) || 0;
   const rate = parseFloat(form.querySelector('[name=rate]')?.value) || 0.374;
   const roundtrip = form.querySelector('[name=roundtrip]')?.checked ? 2 : 1;
-  const total = km * roundtrip * rate;
+  const total = isUtility ? 0 : km * roundtrip * rate;
   const totalEl = document.getElementById('mileage-calc-total');
-  if (totalEl) totalEl.textContent = km > 0 ? `${total.toFixed(2)} €` : '— €';
+  if (totalEl) {
+    totalEl.textContent = isUtility ? '0.00 € (utilitaire)' : km > 0 ? `${total.toFixed(2)} €` : '— €';
+    totalEl.style.color = isUtility ? '#27ae60' : 'var(--gold)';
+  }
 }
 
 async function saveNewMileage() {
@@ -2173,15 +2177,17 @@ async function saveNewMileage() {
   const roundtrip = form.querySelector('[name=roundtrip]')?.checked ? 2 : 1;
   const km = kmOne * roundtrip;
   const rate = parseFloat(form.querySelector('[name=rate]')?.value) || 0.374;
+  const isUtility = form.querySelector('[name=is_utility]')?.checked || false;
   const data = {
     trip_date: form.querySelector('[name=trip_date]')?.value,
     user_name: form.querySelector('[name=user_name]')?.value,
     departure: form.querySelector('[name=departure]')?.value,
     destination: form.querySelector('[name=destination]')?.value,
     client: form.querySelector('[name=client]')?.value || null,
+    is_utility: isUtility,
     km,
     rate,
-    amount: Math.round(km * rate * 100) / 100,
+    amount: isUtility ? 0 : Math.round(km * rate * 100) / 100,
     motif: form.querySelector('[name=motif]')?.value
   };
   if (!data.trip_date || !data.km) { showToast('Date et km obligatoires'); return; }
@@ -4393,9 +4399,11 @@ function renderMileageCalendar() {
     const isToday = dateStr === todayStr;
     const trips = filtered.filter(t => t.trip_date === dateStr);
     const pillsHtml = trips.slice(0,3).map(t => {
-      const col = PERSON_COLORS[t.user_name] || 'var(--gold)';
-      const label = `${t.km}km${t.departure ? ' · ' + t.departure + '→' + (t.destination||'') : ''}${t.motif ? ' · ' + t.motif : ''}`;
-      return `<div class="km-trip-pill" style="border-color:${col}" title="${label}"><span onclick="event.stopPropagation();openEditMileage('${t.id}')" style="flex:1;overflow:hidden;text-overflow:ellipsis">${label}</span><span onclick="event.stopPropagation();kmDeleteTrip('${t.id}')" title="Supprimer" style="margin-left:4px;opacity:.5;cursor:pointer;flex-shrink:0">🗑</span></div>`;
+      const col = t.is_utility ? '#27ae60' : (PERSON_COLORS[t.user_name] || 'var(--gold)');
+      const label = t.is_utility
+        ? `🚐 ${t.km}km${t.departure ? ' · ' + t.departure + '→' + (t.destination||'') : ''}`
+        : `${t.km}km${t.departure ? ' · ' + t.departure + '→' + (t.destination||'') : ''}${t.motif ? ' · ' + t.motif : ''}`;
+      return `<div class="km-trip-pill" style="border-color:${col}${t.is_utility ? ';color:#27ae60' : ''}" title="${label}"><span onclick="event.stopPropagation();openEditMileage('${t.id}')" style="flex:1;overflow:hidden;text-overflow:ellipsis">${label}</span><span onclick="event.stopPropagation();kmDeleteTrip('${t.id}')" title="Supprimer" style="margin-left:4px;opacity:.5;cursor:pointer;flex-shrink:0">🗑</span></div>`;
     }).join('');
     const more = trips.length > 3 ? `<div style="font-size:.62rem;color:var(--text3)">+${trips.length-3} autres</div>` : '';
 
@@ -4444,6 +4452,8 @@ function openEditMileage(id) {
   f.querySelector('[name=km]').value = trip.km || '';
   f.querySelector('[name=rate]').value = trip.rate || 0.374;
   f.querySelector('[name=motif]').value = trip.motif || '';
+  const utilField = f.querySelector('[name=is_utility]');
+  if (utilField) utilField.checked = !!trip.is_utility;
   f.dataset.editId = id;
   calcMileageAmount();
   document.querySelector('#modal-newMileage .modal-header h3').textContent = 'Modifier le trajet';
@@ -4476,7 +4486,7 @@ async function kmPasteTrip(dateStr) {
   delete newTrip.id; delete newTrip.created_at; delete newTrip.updated_at;
   const km = parseFloat(newTrip.km) || 0;
   const rate = parseFloat(newTrip.rate) || 0.374;
-  newTrip.amount = Math.round(km * rate * 100) / 100;
+  newTrip.amount = newTrip.is_utility ? 0 : Math.round(km * rate * 100) / 100;
   const { data, error } = await sb.from('mileage').insert([newTrip]).select();
   if (error) { showToast('Erreur : ' + error.message); return; }
   if (data && data[0]) _allMileageTrips.push(data[0]);
