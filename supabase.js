@@ -4399,7 +4399,7 @@ function renderMileageCalendar() {
     }).join('');
     const more = trips.length > 3 ? `<div style="font-size:.62rem;color:var(--text3)">+${trips.length-3} autres</div>` : '';
 
-    html += `<div class="km-day${isToday?' today':''}" onclick="_kmCopiedTrip ? kmPasteTrip('${dateStr}') : openNewMileageOnDate('${dateStr}')" onmouseenter="_kmHoverDate='${dateStr}'"
+    html += `<div class="km-day${isToday?' today':''}" onclick="openNewMileageOnDate('${dateStr}')" onmouseenter="_kmHoverDate='${dateStr}'">
       <div class="km-day-num">${d}${trips.length ? `<span style="font-size:.6rem;color:var(--gold);margin-left:4px">${trips.reduce((s,t)=>s+(parseFloat(t.km)||0),0)}km</span>` : ''}</div>
       ${pillsHtml}${more}
     </div>`;
