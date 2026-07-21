@@ -4395,11 +4395,14 @@ function renderMileageCalendar() {
     const pillsHtml = trips.slice(0,3).map(t => {
       const col = PERSON_COLORS[t.user_name] || 'var(--gold)';
       const label = `${t.km}km${t.departure ? ' · ' + t.departure + '→' + (t.destination||'') : ''}${t.motif ? ' · ' + t.motif : ''}`;
-      return `<div class="km-trip-pill" style="border-color:${col}" title="${label}" onclick="event.stopPropagation();openEditMileage('${t.id}')">${label}</div>`;
+      return `<div class="km-trip-pill" style="border-color:${col};display:flex;align-items:center;gap:3px" title="${label}">
+        <span onclick="event.stopPropagation();openEditMileage('${t.id}')" style="flex:1;overflow:hidden;text-overflow:ellipsis">${label}</span>
+        <span onclick="event.stopPropagation();kmCopyTrip('${t.id}')" title="Copier ce trajet" style="cursor:pointer;opacity:.6;font-size:.75rem;flex-shrink:0;padding:0 2px">📋</span>
+      </div>`;
     }).join('');
     const more = trips.length > 3 ? `<div style="font-size:.62rem;color:var(--text3)">+${trips.length-3} autres</div>` : '';
 
-    html += `<div class="km-day${isToday?' today':''}" onclick="openNewMileageOnDate('${dateStr}')" onmouseenter="_kmHoverDate='${dateStr}'" onmouseleave="">
+    html += `<div class="km-day${isToday?' today':''}" onclick="_kmCopiedTrip ? kmPasteTrip('${dateStr}') : openNewMileageOnDate('${dateStr}')" onmouseenter="_kmHoverDate='${dateStr}'"
       <div class="km-day-num">${d}${trips.length ? `<span style="font-size:.6rem;color:var(--gold);margin-left:4px">${trips.reduce((s,t)=>s+(parseFloat(t.km)||0),0)}km</span>` : ''}</div>
       ${pillsHtml}${more}
     </div>`;
@@ -4444,39 +4447,41 @@ function openEditMileage(id) {
   openModal('newMileage');
 }
 
-// ——— Copier-coller de trajets kilométriques (Cmd+C / Cmd+V) ———
+// ——— Copier-coller de trajets kilométriques ———
 let _kmHoverDate = null;
 let _kmCopiedTrip = null;
 
+function kmCopyTrip(id) {
+  const trip = _allMileageTrips.find(t => t.id == id);
+  if (!trip) return;
+  _kmCopiedTrip = { ...trip };
+  delete _kmCopiedTrip.id;
+  delete _kmCopiedTrip.created_at;
+  delete _kmCopiedTrip.updated_at;
+  showToast(`📋 Copié : ${_kmCopiedTrip.departure || ''}→${_kmCopiedTrip.destination || ''} (${_kmCopiedTrip.km} km) — Clique sur une date pour coller`);
+  // Mettre en évidence les cases vides pour indiquer où coller
+  document.querySelectorAll('.km-day').forEach(el => {
+    el.style.outline = _kmCopiedTrip ? '1.5px dashed var(--gold)' : '';
+    el.style.outlineOffset = '-2px';
+  });
+}
+
+async function kmPasteTrip(dateStr) {
+  if (!_kmCopiedTrip) return false;
+  const newTrip = { ..._kmCopiedTrip, trip_date: dateStr };
+  const { error } = await sb.from('mileage').insert([newTrip]);
+  if (error) { showToast('Erreur : ' + error.message); return; }
+  showToast(`✅ Trajet collé le ${dateStr.split('-').reverse().join('/')}`);
+  const data = await fetchMileage();
+  if (data) _allMileageTrips = data;
+  renderMileageCalendar();
+}
+
 document.addEventListener('keydown', async function(e) {
-  // Ignorer si on est dans un champ de saisie
   if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
-  // Vérifier qu'on est sur la page frais kilométriques
-  if (!document.getElementById('mileage-calendar')) return;
-
-  const isCopy  = (e.metaKey || e.ctrlKey) && e.key === 'c';
   const isPaste = (e.metaKey || e.ctrlKey) && e.key === 'v';
-
-  if (isCopy && _kmHoverDate) {
-    // Trouver le(s) trajet(s) sur la case survolée
-    const trips = _allMileageTrips.filter(t => t.trip_date === _kmHoverDate);
-    if (!trips.length) { showToast('Aucun trajet sur cette case'); return; }
-    // Si plusieurs trajets, copier le dernier ajouté
-    _kmCopiedTrip = { ...trips[trips.length - 1] };
-    delete _kmCopiedTrip.id;
-    delete _kmCopiedTrip.created_at;
-    delete _kmCopiedTrip.updated_at;
-    showToast(`📋 Trajet copié : ${_kmCopiedTrip.departure || ''}→${_kmCopiedTrip.destination || ''} (${_kmCopiedTrip.km} km)`);
-    e.preventDefault();
-  }
-
   if (isPaste && _kmCopiedTrip && _kmHoverDate) {
-    const newTrip = { ..._kmCopiedTrip, trip_date: _kmHoverDate };
-    const { error } = await sb.from('mileage').insert([newTrip]);
-    if (error) { showToast('Erreur : ' + error.message); return; }
-    showToast(`✅ Trajet collé le ${_kmHoverDate}`);
-    _allMileageTrips = (await fetchMileage()) || _allMileageTrips;
-    renderMileageCalendar();
+    await kmPasteTrip(_kmHoverDate);
     e.preventDefault();
   }
 });
