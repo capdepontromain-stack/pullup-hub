@@ -4657,7 +4657,7 @@ async function generateMileagePDF() {
 
   const { data, error } = await sb.from('mileage')
     .select('*')
-    .eq('is_utility', false)
+    .or('is_utility.eq.false,is_utility.is.null')
     .gte('trip_date', firstDay)
     .lte('trip_date', lastDay)
     .order('trip_date', { ascending: true });
