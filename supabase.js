@@ -1156,7 +1156,7 @@ function renderSuppliers(suppliers) {
   grid.innerHTML = suppliers.map(s => {
     const stars = '★'.repeat(s.rating || 4) + '☆'.repeat(5 - (s.rating || 4));
     const emoji = {'Traiteur':'🍽','DJ':'🎧','Animateur':'🎤','Hôtesse':'👩','Sonorisation':'🔊','Artiste':'🎨','Domaine':'🏡'}[s.category] || '🤝';
-    return `<div class="supplier-card" onclick="openEditSupplierById(${s.id})" style="cursor:pointer" title="Cliquer pour modifier">
+    return `<div class="supplier-card" onclick="openEditSupplierById('${s.id}')" style="cursor:pointer" title="Cliquer pour modifier">
       <div class="supplier-header">
         <div class="supplier-avatar">${emoji}</div>
         <div><strong>${s.name}</strong><span class="supplier-cat">${s.category || ''}</span></div>
