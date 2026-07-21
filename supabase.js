@@ -2194,7 +2194,8 @@ async function saveNewMileage() {
   try {
     const editId = form.dataset?.editId;
     if (editId) {
-      await sb.from('mileage').update(data).eq('id', editId);
+      const { error } = await sb.from('mileage').update(data).eq('id', editId);
+      if (error) throw error;
       form.dataset.editId = '';
     } else {
       await createMileage(data);
