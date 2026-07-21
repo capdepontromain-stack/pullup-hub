@@ -2059,16 +2059,14 @@ Afin d'avancer, nous pouvons :
         <div class="form-group span2"><label>Client</label><input name="client" type="text" placeholder="Ex: Mercialys, Mission Locale…"></div>
         <div class="form-group"><label>Km *</label><input name="km" type="number" step="0.1" placeholder="0" required oninput="calcMileageAmount()"></div>
         <div class="form-group"><label>Barème (€/km)</label><input name="rate" type="number" step="0.001" value="0.374" oninput="calcMileageAmount()"></div>
-        <div class="form-group span2">
+        <div class="form-group span2" style="display:flex;gap:24px">
           <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
             <input type="checkbox" name="roundtrip" onchange="calcMileageAmount()" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer">
             <span>Aller-retour <span style="color:var(--text2);font-size:.85rem">(× 2)</span></span>
           </label>
-        </div>
-        <div class="form-group span2">
           <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
             <input type="checkbox" name="is_utility" onchange="calcMileageAmount()" style="width:18px;height:18px;accent-color:#27ae60;cursor:pointer">
-            <span>🚐 Véhicule utilitaire <span style="color:var(--text2);font-size:.85rem">(frais = 0 €)</span></span>
+            <span style="color:#27ae60">🚐 Utilitaire <span style="color:var(--text2);font-size:.85rem">(0 €)</span></span>
           </label>
         </div>
         <div class="form-group span2">
@@ -2455,7 +2453,7 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260721d"></script>
+<script src="supabase.js?v=20260721e"></script>
 <script src="app.js?v=20260630c"></script>
 <script>
   if ('serviceWorker' in navigator) {
