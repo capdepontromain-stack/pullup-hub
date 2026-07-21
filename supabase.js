@@ -4455,8 +4455,7 @@ async function kmPasteTrip(dateStr) {
   const { error } = await sb.from('mileage').insert([newTrip]);
   if (error) { showToast('Erreur : ' + error.message); return; }
   const d = dateStr.split('-'); showToast(`✅ Collé le ${d[2]}/${d[1]}/${d[0]}`);
-  await fetchMileage();
-  renderMileageCalendar();
+  await loadMileageCalendar();
 }
 
 window.addEventListener('keydown', async function(e) {
