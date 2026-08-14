@@ -1,0 +1,2884 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<script>
+// Correctif nav : si l'ordre sauvegardé est incomplet, on l'efface avant que app.js le lise
+try {
+  var _saved = localStorage.getItem('pullup_nav_order');
+  if (_saved) {
+    var _order = JSON.parse(_saved);
+    var _required = ['improvements','leaves','editorial','charges','devis-requests'];
+    var _missing = _required.some(function(p){ return _order.indexOf(p) === -1; });
+    if (_missing) localStorage.removeItem('pullup_nav_order');
+  }
+} catch(e) { localStorage.removeItem('pullup_nav_order'); }
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pull Up Hub</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0D0D0D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Pull Up">
+<link rel="apple-touch-icon" href="logo-512.png">
+<link rel="stylesheet" href="style.css?v=20260731">
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" style="display:none;position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 28%, #1a1a1a 0%, var(--bg) 62%);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:2rem;">
+  <div style="text-align:center;">
+    <svg width="110" height="120" viewBox="0 0 110 120" xmlns="http://www.w3.org/2000/svg" style="margin:0 auto 0.5rem;display:block">
+      <!-- Anneau blanc -->
+      <circle cx="55" cy="52" r="34" fill="white"/>
+      <circle cx="55" cy="52" r="21" fill="#0D0D0D"/>
+      <!-- Chapeau doré -->
+      <polygon points="72,4 88,50 56,40" fill="#F5A623"/>
+    </svg>
+    <div style="font-family:Georgia,serif;font-size:1.6rem;font-weight:700;color:#F5A623;letter-spacing:.12em;line-height:1.1;text-align:center">PULL UP</div>
+    <div style="font-family:Georgia,serif;font-size:.75rem;color:#F5A623;letter-spacing:.25em;text-align:center;margin-bottom:.5rem">ÉVÉNEMENTS</div>
+    <p style="color:var(--text2);margin-top:.25rem">Connectez-vous pour accéder à votre espace</p>
+  </div>
+  <form id="login-form" style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:2rem;width:100%;max-width:380px;display:flex;flex-direction:column;gap:1rem;">
+    <div>
+      <label style="font-size:.85rem;color:var(--text2);margin-bottom:.4rem;display:block">Email</label>
+      <input id="login-email" type="email" placeholder="votre@email.com" required
+        style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:1rem;box-sizing:border-box;">
+    </div>
+    <div>
+      <label style="font-size:.85rem;color:var(--text2);margin-bottom:.4rem;display:block">Mot de passe</label>
+      <input id="login-password" type="password" placeholder="••••••••" required
+        style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:1rem;box-sizing:border-box;">
+    </div>
+    <p id="login-error" style="color:var(--danger);font-size:.85rem;min-height:1.2rem;margin:0;"></p>
+    <button id="login-btn" type="submit"
+      style="background:var(--gold);color:#000;font-weight:700;border:none;border-radius:8px;padding:.875rem;font-size:1rem;cursor:pointer;">
+      Se connecter
+    </button>
+  </form>
+  <p style="color:var(--text3);font-size:.8rem">Pull Up Événements · La Réunion</p>
+</div>
+
+<!-- APP CONTAINER -->
+<div id="app-container" style="display:none;width:100%;height:100vh;">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <svg width="38" height="38" viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+      <!-- Anneau blanc -->
+      <circle cx="55" cy="58" r="38" fill="white"/>
+      <circle cx="55" cy="58" r="24" fill="#0D0D0D"/>
+      <!-- Chapeau doré -->
+      <polygon points="72,6 92,56 52,46" fill="#F5A623"/>
+    </svg>
+    <div class="logo-text">
+      <span class="logo-title" style="font-family:Georgia,serif;letter-spacing:.06em;color:#F5A623">PULL UP</span>
+      <span class="logo-sub" style="font-family:Georgia,serif;letter-spacing:.15em;color:#F5A623;font-size:.55rem">ÉVÉNEMENTS</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="nav-item active" data-page="dashboard">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Tableau de bord</span>
+    </a>
+    <a class="nav-item" data-page="events">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Événements</span>
+    </a>
+    <a class="nav-item" data-page="personnel">
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>
+      <span>Personnel</span>
+    </a>
+    <a class="nav-item" data-page="tasks" style="position:relative">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
+      <span>Tâches</span>
+      <span id="nav-badge-tasks" style="display:none;position:absolute;top:6px;right:6px;background:#f44336;color:#fff;font-size:.6rem;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;line-height:1"></span>
+    </a>
+    <a class="nav-item" data-page="devis-requests" onclick="loadDevisRequests()" style="position:relative">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      <span>Devis à établir</span>
+      <span id="nav-badge-devis" style="display:none;position:absolute;top:6px;right:6px;background:#f44336;color:#fff;font-size:.6rem;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;line-height:1"></span>
+    </a>
+    <a class="nav-item" data-page="messages" style="position:relative">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <span>Messages</span>
+      <span id="nav-badge-messages" style="display:none;position:absolute;top:6px;right:6px;background:#f44336;color:#fff;font-size:.6rem;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;line-height:1"></span>
+    </a>
+    <a class="nav-item" data-page="knowledge">
+      <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+      <span>Base de connaissances</span>
+    </a>
+    <a class="nav-item" data-page="suppliers">
+      <svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+      <span>Fournisseurs</span>
+    </a>
+    <a class="nav-item" data-page="crm">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      <span>Clients CRM</span>
+    </a>
+    <a class="nav-item" data-page="mails">
+      <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8l10 6 10-6"/></svg>
+      <span>Modèles Mails</span>
+    </a>
+    <a class="nav-item" data-page="links">
+      <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+      <span>Liens Rapides</span>
+    </a>
+    <a class="nav-item nav-admin-only" data-page="audit" style="display:none">
+      <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
+      <span>Journal d'audit</span>
+    </a>
+    <a class="nav-item" data-page="mileage">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      <span>Frais kilométriques</span>
+    </a>
+    <a class="nav-item" data-page="inventory">
+      <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+      <span>Inventaire</span>
+    </a>
+    <a class="nav-item" data-page="finances">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      <span>Finances</span>
+    </a>
+    <a class="nav-item" data-page="charges" onclick="loadCharges()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      <span>Charges</span>
+    </a>
+    <a class="nav-item" data-page="ai">
+      <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/><path d="M12 8v4l3 3"/></svg>
+      <span>IA Assistante</span>
+    </a>
+    <a class="nav-item" data-page="reports">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Rapports</span>
+    </a>
+    <a class="nav-item" data-page="leaves">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>
+      <span>Congés</span>
+    </a>
+    <a class="nav-item" data-page="editorial">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/><circle cx="15" cy="15" r="2.5" fill="currentColor" stroke="none" opacity=".7"/><line x1="15" y1="6" x2="15" y2="6.01" stroke-width="3" stroke-linecap="round"/></svg>
+      <span>Éditorial</span>
+    </a>
+    <a class="nav-item" data-page="improvements" style="position:relative">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
+      <span>Améliorations</span>
+      <span id="nav-badge-improvements" style="display:none;position:absolute;top:6px;right:6px;background:#f44336;color:#fff;font-size:.6rem;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;line-height:1"></span>
+    </a>
+  </nav>
+
+  <!-- BASCULE VERS PULL UP ASSISTANT -->
+  <div class="app-switch">
+    <a href="https://pullup-assistant-equipe.netlify.app" target="_blank" rel="noopener" class="app-switch-btn" title="Ouvrir Pull Up Assistant — l'outil des devis et des mails">
+      <span class="app-switch-ico">✨</span>
+      <span class="app-switch-txt"><strong>Pull Up Assistant</strong><small>devis · mails · analyses</small></span>
+      <span class="app-switch-fleche">→</span>
+    </a>
+  </div>
+
+  <div class="sidebar-user">
+    <div class="user-avatar" id="sidebar-user-avatar">?</div>
+    <div class="user-info">
+      <span class="user-name" id="user-name">Romain</span>
+      <span class="user-role" id="user-role">Administrateur</span>
+    </div>
+    <button id="btn-logout" title="Déconnexion" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:1.1rem;padding:4px;margin-left:auto;" onclick="signOut()">⏻</button>
+  </div>
+</aside>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn">
+    <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="topbar-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" placeholder="Recherche globale...">
+  </div>
+  <div class="topbar-right">
+    <div style="position:relative">
+      <button class="notif-btn" id="notifBtn" onclick="toggleNotifPanel()">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="notif-badge" id="notifBadge">0</span>
+      </button>
+      <div id="notifPanel" style="display:none;position:absolute;right:0;top:110%;background:var(--bg2);border:1px solid var(--border);border-radius:12px;width:320px;padding:1rem;z-index:500;box-shadow:0 8px 32px rgba(0,0,0,.4)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+          <strong>Notifications</strong>
+          <button onclick="toggleNotifPanel()" style="background:none;border:none;color:var(--text2);cursor:pointer">✕</button>
+        </div>
+        <div id="notifList"><p style="color:var(--text2);font-size:.85rem">Chargement...</p></div>
+      </div>
+    </div>
+    <div class="topbar-avatar" id="topbar-user-avatar">?</div>
+  </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="main-content" id="mainContent">
+
+  <!-- DASHBOARD -->
+  <section class="page active" id="page-dashboard">
+    <div class="page-header">
+      <h1>Tableau de bord</h1>
+      <span class="page-date" id="currentDate"></span>
+    </div>
+
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card gold" data-stat-id="events" onclick="showPage('events')" style="cursor:pointer">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-events-count">—</span>
+          <span class="stat-label">Événements à venir</span>
+        </div>
+      </div>
+      <div class="stat-card" data-stat-id="tasks" onclick="showPage('tasks')" style="cursor:pointer">
+        <div class="stat-icon warning"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-tasks-count">—</span>
+          <span class="stat-label">Tâches en cours</span>
+        </div>
+      </div>
+      <div class="stat-card" data-stat-id="ca" onclick="showPage('finances')" style="cursor:pointer">
+        <div class="stat-icon success"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-ca-count">—</span>
+          <span class="stat-label">CA réalisé (€)</span>
+          <span id="stat-benef-label" style="font-size:.72rem;margin-top:2px;font-weight:600"></span>
+        </div>
+      </div>
+      <div class="stat-card" data-stat-id="creances" onclick="showPage('finances')" style="cursor:pointer">
+        <div class="stat-icon danger"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8l10 6 10-6"/></svg></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-creances-count">0</span>
+          <span class="stat-label">Factures impayées</span>
+          <span id="stat-creances-total" style="font-size:.72rem;color:#f44336;font-weight:600;margin-top:2px"></span>
+        </div>
+      </div>
+      <div class="stat-card" data-stat-id="crm" onclick="showPage('crm')" style="cursor:pointer">
+        <div class="stat-icon" style="background:rgba(99,102,241,.15);color:#6366f1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-prospects-count">0</span>
+          <span class="stat-label">Prospects à relancer</span>
+          <div id="stat-prospects-names" style="font-size:.72rem;color:var(--text2);margin-top:2px;line-height:1.4"></div>
+        </div>
+      </div>
+      <div class="stat-card" data-stat-id="devis" onclick="showPage('devis-requests');loadDevisRequests()" style="cursor:pointer">
+        <div class="stat-icon" style="background:rgba(245,197,24,.15);color:var(--gold)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-devis-req-count">0</span>
+          <span class="stat-label">Devis à établir</span>
+          <div id="stat-devis-req-names" style="font-size:.72rem;color:var(--text2);margin-top:2px;line-height:1.4"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-grid" id="dashboard-grid">
+      <!-- Upcoming events -->
+      <div class="card" data-dash-id="0" style="cursor:pointer" onclick="showPage('events')">
+        <div class="card-header">
+          <h3>Prochains événements</h3>
+          <span style="font-size:.8rem;color:var(--text2)">Voir tout →</span>
+        </div>
+        <div class="event-list" id="dash-events-list">
+          <p style="color:var(--text2);text-align:center;padding:1rem">Chargement...</p>
+        </div>
+      </div>
+
+      <!-- Urgent tasks -->
+      <div class="card" data-dash-id="0" style="cursor:pointer" onclick="showPage('tasks')">
+        <div class="card-header">
+          <h3>Tâches urgentes</h3>
+          <span style="font-size:.8rem;color:var(--text2)">Voir tout →</span>
+        </div>
+        <div class="task-list" id="dash-tasks-list">
+          <p style="color:var(--text2);text-align:center;padding:1rem">Chargement...</p>
+        </div>
+      </div>
+
+      <!-- Team -->
+      <div class="card" data-dash-id="0" style="cursor:pointer" onclick="showPage('personnel')">
+        <div class="card-header"><h3>Équipe</h3><span style="font-size:.8rem;color:var(--text2)">Voir les membres →</span></div>
+        <div class="team-grid">
+          <div class="team-member">
+            <img src="photos/romain.jpg" class="member-avatar-photo" alt="Romain">
+            <span class="member-name">Romain</span>
+            <span class="member-role">Président</span>
+            <span class="status-dot online"></span>
+          </div>
+          <div class="team-member">
+            <img src="photos/ketsia.jpg" class="member-avatar-photo" alt="Ketsia">
+            <span class="member-name">Ketsia</span>
+            <span class="member-role">Resp. Projet</span>
+            <span class="status-dot online"></span>
+          </div>
+          <div class="team-member">
+            <img src="photos/flora.jpg" class="member-avatar-photo" alt="Flora">
+            <span class="member-name">Flora</span>
+            <span class="member-role">Alternante</span>
+            <span class="status-dot away"></span>
+          </div>
+          <div class="team-member">
+            <img src="photos/gloria.jpg" class="member-avatar-photo" alt="Gloria" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--color-gloria)">
+            <span class="member-name">Gloria</span>
+            <span class="member-role">Commerciale</span>
+            <span class="status-dot online"></span>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Mini calendrier -->
+      <div class="card span2" data-dash-id="0" style="cursor:pointer" onclick="showPage('events');setTimeout(()=>{document.querySelectorAll('.tab')[1].click()},100)" title="Voir le calendrier complet">
+        <div class="card-header">
+          <h3>📅 Calendrier</h3>
+          <span style="font-size:.8rem;color:var(--text2)">Voir le calendrier →</span>
+        </div>
+        <div id="dash-mini-cal"></div>
+      </div>
+
+      <!-- CA Objectifs -->
+      <div class="card span2" data-dash-id="0" style="cursor:pointer">
+        <div class="card-header"><h3>Bénéfice réalisé 2026 — seuil charges : <span data-charges-label>8 718 €/mois</span></h3></div>
+        <div class="objectives-grid" id="dashboard-ca-bars"></div>
+      </div>
+
+      <!-- Jauges financières -->
+      <div class="card span2" data-dash-id="0" style="cursor:pointer" onclick="showPage('finances')">
+        <div class="card-header">
+          <h3>📊 Indicateurs financiers 2026</h3>
+          <span style="font-size:.8rem;color:var(--text2)">Voir les finances →</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+          <!-- Jauge charges -->
+          <div>
+            <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">Couverture charges</div>
+            <div style="font-size:.78rem;color:var(--text2);margin-bottom:10px" id="dash-gauge-charges-sub">Chargement…</div>
+            <div class="fin-gauge-bar-wrap" style="margin-bottom:6px">
+              <div class="fin-gauge-bar" id="dash-gauge-charges" style="width:0%"></div>
+              <span class="fin-gauge-pct" id="dash-gauge-charges-pct">0%</span>
+            </div>
+            <div class="fin-gauge-labels"><span>0 €</span><span id="dash-gauge-charges-half">—</span><span id="dash-gauge-charges-full">—</span></div>
+          </div>
+          <!-- Jauge objectif CA -->
+          <div>
+            <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">Objectif CA — 300 000 €</div>
+            <div style="font-size:.78rem;color:var(--text2);margin-bottom:10px" id="dash-gauge-ca-sub">Chargement…</div>
+            <div class="fin-gauge-bar-wrap" style="margin-bottom:6px">
+              <div class="fin-gauge-bar fin-gauge-ca" id="dash-gauge-ca" style="width:0%"></div>
+              <span class="fin-gauge-pct" id="dash-gauge-ca-pct">0%</span>
+            </div>
+            <div class="fin-gauge-labels"><span>0 €</span><span>150 000 €</span><span>300 000 €</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EVENTS -->
+  <section class="page" id="page-events">
+    <div class="page-header" style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <h1 style="margin:0">Gestion des événements</h1>
+        <button class="btn-primary" onclick="openModal('newEvent')" style="font-size:.85rem;padding:.45rem 1rem">+ Nouvel événement</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab(this,'cal-list')">Liste</button>
+      <button class="tab" onclick="switchTab(this,'cal-month')">Calendrier</button>
+    </div>
+    <div class="tab-content active" id="cal-list">
+      <div class="events-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Événement</th><th>Client</th><th>Date</th><th>Heure</th><th>Lieu</th><th>Participants</th><th>Montant HT</th><th>Statut</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Scène ouverte</strong></td>
+              <td>Mercialys</td>
+              <td>4 juil. 2026</td>
+              <td>CSC Saint-Denis</td>
+              <td>1 985,55 €</td>
+              <td><span class="badge badge-warning">À venir</span></td>
+              <td><button class="btn-icon" onclick="openEventDetail()">→</button></td>
+            </tr>
+            <tr>
+              <td><strong>Lotoquine CSC</strong></td>
+              <td>Mercialys</td>
+              <td>7 juil. 2026</td>
+              <td>CSC Saint-Denis</td>
+              <td>2 170,00 €</td>
+              <td><span class="badge badge-info">Devis envoyé</span></td>
+              <td><button class="btn-icon">→</button></td>
+            </tr>
+            <tr>
+              <td><strong>TB Lolipop</strong></td>
+              <td>Lolipop</td>
+              <td>2 juin 2026</td>
+              <td>Cap Homard</td>
+              <td>2 283,38 €</td>
+              <td><span class="badge badge-success">Payé ✅</span></td>
+              <td><button class="btn-icon">→</button></td>
+            </tr>
+            <tr>
+              <td><strong>Team Building Fondation P. Favron</strong></td>
+              <td>Fondation Père Favron</td>
+              <td>25 avr. 2026</td>
+              <td>Cap Homard • 100 pax</td>
+              <td>4 600,40 €</td>
+              <td><span class="badge badge-success">Payé ✅</span></td>
+              <td><button class="btn-icon">→</button></td>
+            </tr>
+            <tr>
+              <td><strong>Team Building Croix Rouge</strong></td>
+              <td>Croix Rouge</td>
+              <td>17 avr. 2026</td>
+              <td>Cap Homard • 40 pax</td>
+              <td>4 006,36 €</td>
+              <td><span class="badge badge-success">Payé ✅</span></td>
+              <td><button class="btn-icon">→</button></td>
+            </tr>
+            <tr>
+              <td><strong>Arbre de Noël AFPAR</strong></td>
+              <td>AFPAR (n.burel@afpar.com)</td>
+              <td>12 déc. 2026</td>
+              <td>À définir • 140 pax</td>
+              <td>En cours</td>
+              <td><span class="badge badge-info">Prospect</span></td>
+              <td><button class="btn-icon">→</button></td>
+            </tr>
+            <tr>
+              <td><strong>TB + Soirée entreprise</strong></td>
+              <td>CSE CYCLEA (a.pader@cyclea.fr)</td>
+              <td>Déc. 2026</td>
+              <td>À définir • 240 pax</td>
+              <td>Fait ☑️</td>
+              <td><span class="badge badge-info">Devis fait</span></td>
+              <td><button class="btn-icon">→</button></td>
+            </tr>
+            <tr>
+              <td><strong>Arbre de Noël INSEE</strong></td>
+              <td>INSEE (dr974-comunication-interne@insee.fr)</td>
+              <td>Déc. 2026</td>
+              <td>À définir • 700 pax</td>
+              <td>Envoyé ✅</td>
+              <td><span class="badge badge-gold">Devis envoyé ✅</span></td>
+              <td><button class="btn-icon">→</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tab-content" id="cal-month">
+      <div class="calendar-wrap" id="calendarWrap"></div>
+    </div>
+
+    <!-- Event Detail Panel -->
+    <div class="detail-panel" id="eventDetailPanel">
+      <div class="detail-header">
+        <h2>Scène ouverte — Mercialys</h2>
+        <button class="btn-icon" onclick="closeEventDetail()">✕</button>
+      </div>
+      <div class="detail-body">
+        <div class="detail-grid">
+          <div class="detail-field"><label>Client</label><span>Mercialys</span></div>
+          <div class="detail-field"><label>Date</label><span>4 juillet 2026</span></div>
+          <div class="detail-field"><label>Lieu</label><span>CSC Saint-Denis</span></div>
+          <div class="detail-field"><label>Participants</label><span>150 personnes</span></div>
+          <div class="detail-field"><label>Budget</label><span>8 500 €</span></div>
+          <div class="detail-field"><label>Contact</label><span>Marie Dupont — 06 12 34 56 78</span></div>
+        </div>
+        <div class="checklist-section">
+          <h4>Checklist Préparation</h4>
+          <label class="check-item"><input type="checkbox" checked> Confirmation client reçue</label>
+          <label class="check-item"><input type="checkbox" checked> Traiteur réservé</label>
+          <label class="check-item"><input type="checkbox"> DJ confirmé</label>
+          <label class="check-item"><input type="checkbox"> Matériel inventorié</label>
+          <label class="check-item"><input type="checkbox"> Ordre de mission envoyé</label>
+        </div>
+        <div class="checklist-section">
+          <h4>Checklist Jour J</h4>
+          <label class="check-item"><input type="checkbox"> Arrivée équipe 14h00</label>
+          <label class="check-item"><input type="checkbox"> Montage sonorisation</label>
+          <label class="check-item"><input type="checkbox"> Test micro et éclairages</label>
+          <label class="check-item"><input type="checkbox"> Accueil clients 18h00</label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PERSONNEL -->
+  <section class="page" id="page-personnel">
+    <div class="page-header">
+      <h1>Gestion du personnel</h1>
+      <button class="btn-primary">+ Ajouter collaborateur</button>
+    </div>
+    <div class="personnel-grid">
+      <div class="personnel-card" onclick="openPersonnelDetail('Romain')">
+        <img src="photos/romain.jpg" class="personnel-avatar-photo" alt="Romain">
+        <div class="personnel-info">
+          <strong>Romain Capdepont</strong>
+          <span>Président SASU — Mercedes Classe A (DS591QS)</span>
+          <div class="personnel-stats">
+            <div class="pstat"><span class="pstat-val gold" id="pstat-h-Romain">—</span><span class="pstat-lbl">Heures ce mois</span></div>
+            <div class="pstat"><span class="pstat-val" id="pstat-conge-Romain" style="color:#F5C518">—</span><span class="pstat-lbl">Congés pris</span></div>
+            <div class="pstat"><span class="pstat-val" id="pstat-maladie-Romain" style="color:#4A9EFF">—</span><span class="pstat-lbl">Maladie</span></div>
+          </div>
+          <div class="pstat-lastseen" id="lastseen-Romain"></div>
+        </div>
+      </div>
+      <div class="personnel-card" onclick="openPersonnelDetail('Ketsia')">
+        <img src="photos/ketsia.jpg" class="personnel-avatar-photo" alt="Ketsia">
+        <div class="personnel-info">
+          <strong>Ketsia</strong>
+          <span>Responsable Projet — CDI</span>
+          <div class="personnel-stats">
+            <div class="pstat"><span class="pstat-val gold" id="pstat-h-Ketsia">—</span><span class="pstat-lbl">Heures ce mois</span></div>
+            <div class="pstat"><span class="pstat-val" id="pstat-conge-Ketsia" style="color:#F5C518">—</span><span class="pstat-lbl">Congés pris</span></div>
+            <div class="pstat"><span class="pstat-val" id="pstat-maladie-Ketsia" style="color:#4A9EFF">—</span><span class="pstat-lbl">Maladie</span></div>
+          </div>
+          <div class="pstat-lastseen" id="lastseen-Ketsia"></div>
+        </div>
+      </div>
+      <div class="personnel-card" onclick="openPersonnelDetail('Flora')">
+        <img src="photos/flora.jpg" class="personnel-avatar-photo" alt="Flora">
+        <div class="personnel-info">
+          <strong>Flora Boyer</strong>
+          <span>Alternante — Peugeot 207 (4CV) — Le Tampon</span>
+          <div class="personnel-stats">
+            <div class="pstat"><span class="pstat-val gold" id="pstat-h-Flora">—</span><span class="pstat-lbl">Heures ce mois</span></div>
+            <div class="pstat"><span class="pstat-val" id="pstat-conge-Flora" style="color:#F5C518">—</span><span class="pstat-lbl">Congés pris</span></div>
+            <div class="pstat"><span class="pstat-val" id="pstat-maladie-Flora" style="color:#4A9EFF">—</span><span class="pstat-lbl">Maladie</span></div>
+          </div>
+          <div class="pstat-lastseen" id="lastseen-Flora"></div>
+        </div>
+      </div>
+      <div class="personnel-card" onclick="openPersonnelDetail('Gloria')">
+        <img src="photos/gloria.jpg" class="personnel-avatar-photo" alt="Gloria">
+        <div class="personnel-info">
+          <strong>Gloria</strong>
+          <span>Commerciale — CDI</span>
+          <div class="personnel-stats">
+            <div class="pstat"><span class="pstat-val gold" id="pstat-h-Gloria">—</span><span class="pstat-lbl">Heures ce mois</span></div>
+            <div class="pstat"><span class="pstat-val" id="pstat-conge-Gloria" style="color:#F5C518">—</span><span class="pstat-lbl">Congés pris</span></div>
+            <div class="pstat"><span class="pstat-val" id="pstat-maladie-Gloria" style="color:#4A9EFF">—</span><span class="pstat-lbl">Maladie</span></div>
+          </div>
+          <div class="pstat-lastseen" id="lastseen-Gloria"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TASKS KANBAN -->
+  <section class="page" id="page-tasks">
+    <div class="page-header" style="justify-content:flex-start;gap:20px">
+      <h1>Gestion des tâches</h1>
+      <button class="btn-primary" onclick="openModal('newTask')">+ Nouvelle tâche</button>
+    </div>
+    <div class="person-board" id="person-board">
+      <!-- Romain -->
+      <div class="person-col" id="col-Romain" style="--person-color:#F5C518">
+        <div class="person-col-header" onclick="focusPersonCol('Romain')" style="cursor:pointer" title="Cliquer pour voir en plein écran">
+          <img src="photos/romain.jpg" class="person-col-photo" alt="Romain">
+          <div>
+            <div class="person-col-name">Romain</div>
+            <div class="person-col-role">Président</div>
+          </div>
+          <span class="person-task-count" id="count-Romain">0</span>
+        </div>
+        <div class="person-tasks" id="tasks-Romain"></div>
+      </div>
+      <!-- Ketsia -->
+      <div class="person-col" id="col-Ketsia" style="--person-color:#4A9EFF">
+        <div class="person-col-header" onclick="focusPersonCol('Ketsia')" style="cursor:pointer" title="Cliquer pour voir en plein écran">
+          <img src="photos/ketsia.jpg" class="person-col-photo" alt="Ketsia">
+          <div>
+            <div class="person-col-name">Ketsia</div>
+            <div class="person-col-role">Resp. Projet</div>
+          </div>
+          <span class="person-task-count" id="count-Ketsia">0</span>
+        </div>
+        <div class="person-tasks" id="tasks-Ketsia"></div>
+      </div>
+      <!-- Flora -->
+      <div class="person-col" id="col-Flora" style="--person-color:#FF6B9D">
+        <div class="person-col-header" onclick="focusPersonCol('Flora')" style="cursor:pointer" title="Cliquer pour voir en plein écran">
+          <img src="photos/flora.jpg" class="person-col-photo" alt="Flora">
+          <div>
+            <div class="person-col-name">Flora</div>
+            <div class="person-col-role">Alternante</div>
+          </div>
+          <span class="person-task-count" id="count-Flora">0</span>
+        </div>
+        <div class="person-tasks" id="tasks-Flora"></div>
+      </div>
+      <!-- Gloria -->
+      <div class="person-col" id="col-Gloria" style="--person-color:#9B59B6">
+        <div class="person-col-header" onclick="focusPersonCol('Gloria')" style="cursor:pointer" title="Cliquer pour voir en plein écran">
+          <img src="photos/gloria.jpg" class="person-col-photo" alt="Gloria">
+          <div>
+            <div class="person-col-name">Gloria</div>
+            <div class="person-col-role">Commerciale</div>
+          </div>
+          <span class="person-task-count" id="count-Gloria">0</span>
+        </div>
+        <div class="person-tasks" id="tasks-Gloria"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MESSAGES -->
+  <section class="page" id="page-messages">
+    <div class="wa-layout">
+
+      <!-- SIDEBAR style WhatsApp -->
+      <div class="wa-sidebar" id="waSidebar">
+        <div class="wa-sidebar-header">
+          <span style="font-weight:700;font-size:1.1rem;color:var(--text)">Messages</span>
+        </div>
+        <div class="wa-conv-list" id="waConvList">
+
+          <!-- Groupes -->
+          <div class="wa-section-label">Groupes</div>
+          <div class="wa-conv-item active" data-channel="general" onclick="waSelectChannel(this,'general','Général','#')">
+            <div class="wa-conv-avatar" style="background:#25D366;color:#fff;font-size:1.2rem">💬</div>
+            <div class="wa-conv-info">
+              <div class="wa-conv-name">Général <span class="msg-badge" id="badge-general" style="display:none"></span></div>
+              <div class="wa-conv-preview" id="preview-general">Canal principal de l'équipe</div>
+            </div>
+          </div>
+          <div class="wa-conv-item" data-channel="annonces" onclick="waSelectChannel(this,'annonces','Annonces','📢')">
+            <div class="wa-conv-avatar" style="background:#F5C518;color:#000;font-size:1.2rem">📢</div>
+            <div class="wa-conv-info">
+              <div class="wa-conv-name">Annonces <span class="msg-badge" id="badge-annonces" style="display:none"></span></div>
+              <div class="wa-conv-preview" id="preview-annonces">Informations importantes</div>
+            </div>
+          </div>
+
+          <!-- Messages privés -->
+          <div class="wa-section-label">Messages privés</div>
+          <div class="wa-conv-item" data-channel="dm-romain" onclick="waSelectChannel(this,'dm-romain','Romain','R')">
+            <div class="wa-conv-avatar" style="background:var(--color-romain);color:#000">R</div>
+            <div class="wa-conv-info">
+              <div class="wa-conv-name">Romain <span class="msg-badge" id="badge-dm-romain" style="display:none"></span></div>
+              <div class="wa-conv-preview" id="preview-dm-romain">Message privé</div>
+            </div>
+            <div class="wa-conv-dot wa-online"></div>
+          </div>
+          <div class="wa-conv-item" data-channel="dm-ketsia" onclick="waSelectChannel(this,'dm-ketsia','Ketsia','K')">
+            <div class="wa-conv-avatar" style="background:var(--color-ketsia);color:#fff">K</div>
+            <div class="wa-conv-info">
+              <div class="wa-conv-name">Ketsia <span class="msg-badge" id="badge-dm-ketsia" style="display:none"></span></div>
+              <div class="wa-conv-preview" id="preview-dm-ketsia">Message privé</div>
+            </div>
+            <div class="wa-conv-dot wa-online"></div>
+          </div>
+          <div class="wa-conv-item" data-channel="dm-flora" onclick="waSelectChannel(this,'dm-flora','Flora','F')">
+            <div class="wa-conv-avatar" style="background:var(--color-flora);color:#fff">F</div>
+            <div class="wa-conv-info">
+              <div class="wa-conv-name">Flora <span class="msg-badge" id="badge-dm-flora" style="display:none"></span></div>
+              <div class="wa-conv-preview" id="preview-dm-flora">Message privé</div>
+            </div>
+            <div class="wa-conv-dot wa-online"></div>
+          </div>
+          <div class="wa-conv-item" data-channel="dm-gloria" onclick="waSelectChannel(this,'dm-gloria','Gloria','G')">
+            <div class="wa-conv-avatar" style="background:var(--color-gloria);color:#fff">G</div>
+            <div class="wa-conv-info">
+              <div class="wa-conv-name">Gloria <span class="msg-badge" id="badge-dm-gloria" style="display:none"></span></div>
+              <div class="wa-conv-preview" id="preview-dm-gloria">Message privé</div>
+            </div>
+            <div class="wa-conv-dot wa-online"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ZONE CHAT -->
+      <div class="wa-chat" id="waChat">
+        <!-- Header conversation -->
+        <div class="wa-chat-header">
+          <button class="wa-back-btn" id="waBackBtn" onclick="waShowSidebar()" style="display:none">←</button>
+          <div class="wa-chat-header-avatar" id="waChatAvatar">💬</div>
+          <div class="wa-chat-header-info">
+            <div class="wa-chat-header-name" id="chatHeader">Général</div>
+            <div class="wa-chat-header-sub" id="waChatSub">Canal principal</div>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="wa-messages" id="chatMessages"></div>
+
+        <!-- Zone de drop fichiers -->
+        <div id="chatDropZone"
+          ondragenter="event.preventDefault();this.style.display='flex'"
+          ondragover="event.preventDefault()"
+          ondragleave="if(!this.contains(event.relatedTarget))this.style.display='none'"
+          ondrop="event.preventDefault();this.style.display='none';sendChatFile(event.dataTransfer.files[0])"
+          style="display:none;position:absolute;inset:0;background:#25D36690;z-index:100;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff;border:4px dashed #25D366;border-radius:12px;pointer-events:none">
+          📎 Lâche le fichier ici
+        </div>
+
+        <!-- Invisible drop catcher sur toute la zone chat -->
+        <div style="position:absolute;inset:0;z-index:50;pointer-events:none" id="chatDropCatcher"
+          ondragenter="event.preventDefault();document.getElementById('chatDropZone').style.cssText='display:flex;position:absolute;inset:0;background:#25D36690;z-index:100;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff;border:4px dashed #25D366;border-radius:12px';this.style.pointerEvents='all'"
+          ondragover="event.preventDefault()"
+          ondragleave="document.getElementById('chatDropZone').style.display='none';this.style.pointerEvents='none'"
+          ondrop="event.preventDefault();document.getElementById('chatDropZone').style.display='none';this.style.pointerEvents='none';sendChatFile(event.dataTransfer.files[0])">
+        </div>
+
+        <!-- Zone de saisie -->
+        <div class="wa-input-bar">
+          <button class="wa-input-btn" id="voiceRecordBtn" onclick="toggleVoiceRecord()" title="Message vocal">🎤</button>
+          <label class="wa-input-btn" title="Joindre un fichier" style="cursor:pointer;font-size:1.3rem">📎<input type="file" id="chatFileInput" accept="*/*" style="display:none" onchange="sendChatFile(this.files[0]);this.value=''"></label>
+          <input type="text" id="chatInput" class="wa-text-input" placeholder="Message… ou glisse un fichier ici">
+          <button class="wa-send-btn" id="btn-sendMsg">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"/></svg>
+          </button>
+        </div>
+        <!-- Indicateur enregistrement vocal -->
+        <div class="wa-voice-bar" id="waVoiceBar" style="display:none">
+          <div class="wa-voice-wave">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <span id="waVoiceTimer">0:00</span>
+          <button class="wa-voice-cancel" onclick="cancelVoiceRecord()">✕ Annuler</button>
+          <button class="wa-voice-send" onclick="sendVoiceRecord()">Envoyer 🎤</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KNOWLEDGE BASE -->
+  <section class="page" id="page-knowledge">
+    <div class="page-header"><h1>Base de connaissances</h1><button class="btn-primary" onclick="openModal('newKnowledge')">+ Nouveau document</button></div>
+    <div class="knowledge-grid">
+      <div class="knowledge-cat" onclick="filterKnowledge('Animation micro')">
+        <div class="kcat-icon" style="background:#F5C51822">🎤</div>
+        <h4>Animation micro</h4>
+        <span class="kcat-count" data-cat="Animation micro">0 doc</span>
+      </div>
+      <div class="knowledge-cat" onclick="filterKnowledge('Team Building')">
+        <div class="kcat-icon" style="background:#4CAF5022">🏹</div>
+        <h4>Team Building</h4>
+        <span class="kcat-count" data-cat="Team Building">0 doc</span>
+      </div>
+      <div class="knowledge-cat" onclick="filterKnowledge('Gonflables')">
+        <div class="kcat-icon" style="background:#2196F322">🎪</div>
+        <h4>Gonflables</h4>
+        <span class="kcat-count" data-cat="Gonflables">0 doc</span>
+      </div>
+      <div class="knowledge-cat" onclick="filterKnowledge('Logistique')">
+        <div class="kcat-icon" style="background:#9C27B022">📦</div>
+        <h4>Logistique</h4>
+        <span class="kcat-count" data-cat="Logistique">0 doc</span>
+      </div>
+      <div class="knowledge-cat" onclick="filterKnowledge('Commercial')">
+        <div class="kcat-icon" style="background:#FF980022">💼</div>
+        <h4>Commercial</h4>
+        <span class="kcat-count" data-cat="Commercial">0 doc</span>
+      </div>
+      <div class="knowledge-cat" onclick="filterKnowledge('RH')">
+        <div class="kcat-icon" style="background:#F4433622">👥</div>
+        <h4>RH</h4>
+        <span class="kcat-count" data-cat="RH">0 doc</span>
+      </div>
+      <div class="knowledge-cat" onclick="filterKnowledge('Autre')">
+        <div class="kcat-icon" style="background:#00BCD422">📁</div>
+        <h4>Autre</h4>
+        <span class="kcat-count" data-cat="Autre">0 doc</span>
+      </div>
+      <div class="knowledge-cat" onclick="filterKnowledge(null)">
+        <div class="kcat-icon" style="background:#ffffff11">📚</div>
+        <h4>Tous</h4>
+        <span id="kcat-total">0 doc</span>
+      </div>
+    </div>
+    <div class="knowledge-recent" id="knowledge-docs-section" style="margin-top:1.5rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <h3 id="knowledge-section-title">Tous les documents</h3>
+      </div>
+      <div class="doc-list" id="knowledge-doc-list">
+        <p style="color:var(--text2);text-align:center;padding:2rem">Aucun document — cliquez sur "+ Nouveau document" pour commencer</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUPPLIERS -->
+  <section class="page" id="page-suppliers">
+    <div class="page-header"><h1>Fournisseurs</h1><button class="btn-primary" onclick="openModal('newSupplier')">+ Ajouter fournisseur</button></div>
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterSuppliers(null,this)">Tous</button>
+      <button class="filter-btn" onclick="filterSuppliers('Traiteur',this)">Traiteurs</button>
+      <button class="filter-btn" onclick="filterSuppliers('DJ',this)">DJ</button>
+      <button class="filter-btn" onclick="filterSuppliers('Animateur',this)">Animateurs</button>
+      <button class="filter-btn" onclick="filterSuppliers('Animateur enfant',this)">Animateur enfant</button>
+      <button class="filter-btn" onclick="filterSuppliers('Noël',this)">Noël 🎄</button>
+      <button class="filter-btn" onclick="filterSuppliers('Vidéo',this)">Vidéo 🎥</button>
+      <button class="filter-btn" onclick="filterSuppliers('Photo cabine',this)">Photo cabine 📸</button>
+      <button class="filter-btn" onclick="filterSuppliers('Autre animation',this)">Autre animation</button>
+      <button class="filter-btn" onclick="filterSuppliers('Hôtesse',this)">Hôtesses</button>
+      <button class="filter-btn" onclick="filterSuppliers('Artiste',this)">Artistes</button>
+      <button class="filter-btn" onclick="filterSuppliers('Sonorisation',this)">Sonorisation</button>
+      <button class="filter-btn" onclick="filterSuppliers('Domaine',this)">Domaines</button>
+    </div>
+    <div class="supplier-grid">
+      <div class="supplier-card">
+        <div class="supplier-header">
+          <div class="supplier-avatar">🍽</div>
+          <div><strong>Dany Royal Traiteur</strong><span class="supplier-cat">Traiteur</span></div>
+          <div class="supplier-rating">★★★★★</div>
+        </div>
+        <div class="supplier-details">
+          <p>📞 06 92 39 83 60</p>
+          <p>✉ —</p>
+        </div>
+        <div class="supplier-collab">Traiteur partenaire</div>
+      </div>
+      <div class="supplier-card">
+        <div class="supplier-header">
+          <div class="supplier-avatar">🍽</div>
+          <div><strong>David KLB Traiteur</strong><span class="supplier-cat">Traiteur</span></div>
+          <div class="supplier-rating">★★★★☆</div>
+        </div>
+        <div class="supplier-details">
+          <p>📞 06 93 32 75 85</p>
+          <p>✉ —</p>
+        </div>
+        <div class="supplier-collab">Traiteur partenaire</div>
+      </div>
+      <div class="supplier-card">
+        <div class="supplier-header">
+          <div class="supplier-avatar">🍽</div>
+          <div><strong>Alexandre Traiteur</strong><span class="supplier-cat">Traiteur</span></div>
+          <div class="supplier-rating">★★★★☆</div>
+        </div>
+        <div class="supplier-details">
+          <p>📞 06 92 39 83 60</p>
+          <p>✉ —</p>
+        </div>
+        <div class="supplier-collab">Traiteur partenaire</div>
+      </div>
+      <div class="supplier-card">
+        <div class="supplier-header">
+          <div class="supplier-avatar">🍽</div>
+          <div><strong>Eric Traiteur de l'Ouest</strong><span class="supplier-cat">Traiteur</span></div>
+          <div class="supplier-rating">★★★★☆</div>
+        </div>
+        <div class="supplier-details">
+          <p>📞 06 92 29 03 54</p>
+          <p>✉ —</p>
+        </div>
+        <div class="supplier-collab">Traiteur partenaire</div>
+      </div>
+      <div class="supplier-card">
+        <div class="supplier-header">
+          <div class="supplier-avatar">🍽</div>
+          <div><strong>Julien Traiteur (Ti Julien)</strong><span class="supplier-cat">Traiteur</span></div>
+          <div class="supplier-rating">★★★★★</div>
+        </div>
+        <div class="supplier-details">
+          <p>📞 06 92 79 71 05</p>
+          <p>✉ —</p>
+        </div>
+        <div class="supplier-collab">Traiteur partenaire</div>
+      </div>
+      <div class="supplier-card">
+        <div class="supplier-header">
+          <div class="supplier-avatar">🍽</div>
+          <div><strong>Les Frères Dijoux</strong><span class="supplier-cat">Traiteur</span></div>
+          <div class="supplier-rating">★★★★☆</div>
+        </div>
+        <div class="supplier-details">
+          <p>📞 06 92 77 53 94</p>
+          <p>✉ —</p>
+        </div>
+        <div class="supplier-collab">Traiteur partenaire</div>
+      </div>
+      <div class="supplier-card">
+        <div class="supplier-header">
+          <div class="supplier-avatar">🍽</div>
+          <div><strong>My Traiteur</strong><span class="supplier-cat">Traiteur</span></div>
+          <div class="supplier-rating">★★★★☆</div>
+        </div>
+        <div class="supplier-details">
+          <p>📞 06 93 50 08 93</p>
+          <p>✉ —</p>
+        </div>
+        <div class="supplier-collab">Traiteur partenaire</div>
+      </div>
+      <div class="supplier-card">
+        <div class="supplier-header">
+          <div class="supplier-avatar">🍽</div>
+          <div><strong>Jeremy L'Encrin</strong><span class="supplier-cat">Traiteur</span></div>
+          <div class="supplier-rating">★★★★★</div>
+        </div>
+        <div class="supplier-details">
+          <p>📞 06 92 90 09 00</p>
+          <p>✉ —</p>
+        </div>
+        <div class="supplier-collab">Traiteur partenaire</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CRM -->
+  <section class="page" id="page-crm">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      <h1 style="margin:0;font-size:1.4rem">Clients CRM</h1>
+      <button class="btn-primary" id="crm-btn-new-client" onclick="openModal('newClient')">+ Nouveau client</button>
+      <button class="btn-primary" id="crm-btn-new-prospect" style="display:none;background:var(--color-ketsia)" onclick="openModal('newProspect')">+ Nouveau prospect</button>
+    </div>
+
+    <!-- Tabs CRM -->
+    <div class="tabs" style="margin-bottom:16px">
+      <button class="tab active" onclick="switchCrmTab(this,'crm-clients')">Clients actifs</button>
+      <button class="tab" onclick="switchCrmTab(this,'crm-prospects')">Prospects</button>
+    </div>
+
+    <!-- KPIs Clients -->
+    <div id="crm-clients">
+    <div class="crm-stats">
+      <div class="crm-stat"><span class="crm-stat-val">18</span><span>Clients actifs</span></div>
+      <div class="crm-stat"><span class="crm-stat-val gold">~68 500 €</span><span>CA 2026 (janv–juin)</span></div>
+      <div class="crm-stat"><span class="crm-stat-val">+30</span><span>Prospects CSE 2026</span></div>
+    </div>
+    <div class="events-table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Société</th><th>Contact</th><th>Mail</th><th>CA généré</th><th>Potentiel</th><th>Statut</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Mercialys</strong></td>
+            <td>Emilie (eboyer@mercialys.com)</td>
+            <td>eboyer@mercialys.com</td>
+            <td>~28 000 €</td>
+            <td><span class="potential high">Élevé</span></td>
+            <td><span class="badge badge-success">Actif</span></td>
+          </tr>
+          <tr>
+            <td><strong>CILAM</strong></td>
+            <td>—</td>
+            <td>—</td>
+            <td>~8 700 €</td>
+            <td><span class="potential high">Élevé</span></td>
+            <td><span class="badge badge-success">Actif</span></td>
+          </tr>
+          <tr>
+            <td><strong>Casabona</strong></td>
+            <td>—</td>
+            <td>—</td>
+            <td>~13 000 €</td>
+            <td><span class="potential high">Élevé</span></td>
+            <td><span class="badge badge-success">Actif</span></td>
+          </tr>
+          <tr>
+            <td><strong>Lolipop</strong></td>
+            <td>Océane / Maria</td>
+            <td>—</td>
+            <td>~7 000 €</td>
+            <td><span class="potential high">Élevé</span></td>
+            <td><span class="badge badge-success">Actif</span></td>
+          </tr>
+          <tr>
+            <td><strong>MIO (Rivière des Galets)</strong></td>
+            <td>—</td>
+            <td>—</td>
+            <td>~7 900 €</td>
+            <td><span class="potential medium">Moyen</span></td>
+            <td><span class="badge badge-success">Actif</span></td>
+          </tr>
+          <tr>
+            <td><strong>Sudeco</strong></td>
+            <td>—</td>
+            <td>—</td>
+            <td>4 032 €</td>
+            <td><span class="potential medium">Moyen</span></td>
+            <td><span class="badge badge-success">Actif</span></td>
+          </tr>
+          <tr>
+            <td><strong>Adapéi</strong></td>
+            <td>—</td>
+            <td>—</td>
+            <td>~4 200 €</td>
+            <td><span class="potential medium">Moyen</span></td>
+            <td><span class="badge badge-success">Actif</span></td>
+          </tr>
+          <tr>
+            <td><strong>Croix Rouge</strong></td>
+            <td>—</td>
+            <td>—</td>
+            <td>4 006 €</td>
+            <td><span class="potential medium">Moyen</span></td>
+            <td><span class="badge badge-success">Actif</span></td>
+          </tr>
+          <tr>
+            <td><strong>Mission Locale Nord</strong></td>
+            <td>—</td>
+            <td>—</td>
+            <td>900 €</td>
+            <td><span class="potential medium">Moyen</span></td>
+            <td><span class="badge badge-danger">Non payé ❌</span></td>
+          </tr>
+          <tr>
+            <td><strong>CSE IRT (Ile Réunion Tourisme)</strong></td>
+            <td>Mardaye Muriel</td>
+            <td>cse@reunion.fr</td>
+            <td>En cours</td>
+            <td><span class="potential high">Élevé</span></td>
+            <td><span class="badge badge-gold">Devis envoyé ✅</span></td>
+          </tr>
+          <tr>
+            <td><strong>INSEE Réunion</strong></td>
+            <td>Jocelyne Damour</td>
+            <td>dr974-comunication-interne@insee.fr</td>
+            <td>En cours (700 pax)</td>
+            <td><span class="potential high">Élevé</span></td>
+            <td><span class="badge badge-gold">Devis envoyé ✅</span></td>
+          </tr>
+          <tr>
+            <td><strong>AFPAR</strong></td>
+            <td>Mme Riviere / n.burel</td>
+            <td>n.burel@afpar.com</td>
+            <td>Prospect</td>
+            <td><span class="potential high">Élevé</span></td>
+            <td><span class="badge badge-info">À relancer</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div><!-- fin #crm-clients -->
+
+    <!-- TAB PROSPECTS -->
+    <div id="crm-prospects" style="display:none">
+      <div class="crm-stats" id="prospect-stats">
+        <div class="crm-stat"><span class="crm-stat-val" id="prospect-count">0</span><span>Prospects total</span></div>
+        <div class="crm-stat"><span class="crm-stat-val gold" id="prospect-chaud">0</span><span>🔥 Chauds</span></div>
+        <div class="crm-stat"><span class="crm-stat-val" style="color:var(--color-flora)" id="prospect-relance">0</span><span>📅 Relances à faire</span></div>
+        <div class="crm-stat"><span class="crm-stat-val" style="color:#4A9EFF" id="prospect-ca-estime">0 €</span><span>CA potentiel</span></div>
+      </div>
+      <div class="events-table-wrap" style="margin-top:16px;overflow-x:auto">
+        <table class="data-table" style="min-width:900px">
+          <thead>
+            <tr>
+              <th>Prospect</th>
+              <th>Contact</th>
+              <th>Devis</th>
+              <th>Email</th>
+              <th>Date relance</th>
+              <th>CA estimé</th>
+              <th>Température</th>
+              <th>Statut</th>
+              <th>Observations</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="prospects-tbody">
+            <tr><td colspan="10" style="text-align:center;color:var(--text2);padding:2rem">Chargement…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modal nouveau prospect -->
+  <div class="modal-overlay" id="modal-newProspect">
+    <div class="modal" style="max-width:540px">
+      <div class="modal-header"><h3>Nouveau prospect</h3><button class="modal-close" onclick="closeModal('newProspect')">✕</button></div>
+      <form id="form-newProspect" onsubmit="saveNewProspect(event)">
+        <div class="form-grid">
+          <div class="form-group"><label>Nom / Société *</label><input name="name" required placeholder="ex: CSE Mairie de St-Denis"></div>
+          <div class="form-group"><label>Contact</label><input name="contact_name" placeholder="Prénom Nom"></div>
+          <div class="form-group"><label>Email</label><input name="email" type="email" placeholder="contact@entreprise.fr"></div>
+          <div class="form-group"><label>Téléphone</label><input name="phone" placeholder="0692 XX XX XX"></div>
+          <div class="form-group"><label>Devis envoyé ?</label>
+            <select name="devis_sent"><option value="non">Non</option><option value="oui">Oui</option></select></div>
+          <div class="form-group"><label>Email envoyé ?</label>
+            <select name="email_sent"><option value="non">Non</option><option value="oui">Oui</option></select></div>
+          <div class="form-group"><label>Date de relance</label><input name="followup_date" type="date"></div>
+          <div class="form-group"><label>CA estimé (€)</label><input name="estimated_amount" type="number" placeholder="5000"></div>
+          <div class="form-group"><label>Température</label>
+            <select name="temperature"><option value="froid">❄️ Froid</option><option value="tiede">🌤 Tiède</option><option value="chaud">🔥 Chaud</option></select></div>
+          <div class="form-group"><label>Statut</label>
+            <select name="status"><option value="À contacter">À contacter</option><option value="Contacté">Contacté</option><option value="Devis envoyé">Devis envoyé</option><option value="En attente retour">En attente retour</option><option value="Négociation">Négociation</option><option value="Gagné">Gagné ✅</option><option value="Perdu">Perdu ❌</option></select></div>
+          <div class="form-group" style="grid-column:1/-1"><label>Observations</label><textarea name="notes" rows="3" placeholder="Notes, contexte, suite à donner…" style="width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);resize:vertical"></textarea></div>
+        </div>
+        <div class="form-actions"><button type="button" onclick="closeModal('newProspect')" class="btn-secondary">Annuler</button><button type="submit" class="btn-primary">Enregistrer</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAILS TEMPLATES -->
+  <section class="page" id="page-mails">
+    <div class="page-header"><h1>Modèles de mails</h1><button class="btn-primary">+ Nouveau modèle</button></div>
+    <div class="mail-templates">
+      <div class="mail-card">
+        <div class="mail-card-header">
+          <h4>Mail Salon CSE (officiel)</h4>
+          <span class="badge badge-gold">Template Pull Up</span>
+        </div>
+        <div class="mail-preview">Bonjour,
+Nous avons eu le plaisir d'échanger avec vous lors du Salon du CSE à la Nordev et nous vous remercions pour ce moment.
+Nous revenons vers vous concernant votre projet de [ex : Arbre de Noël / Team building / Soirée d'entreprise].
+
+Nous serions ravis de vous accompagner sur cette prestation et de vous proposer une formule adaptée à vos attentes, à votre budget ainsi qu'à vos contraintes logistiques.
+
+Afin d'avancer, nous pouvons :
+– organiser un échange rapide par téléphone
+– fixer un rendez-vous
+– ou vous transmettre directement une proposition détaillée</div>
+        <button class="btn-copy" onclick="copyMail(this)">📋 COPIER LE TEXTE</button>
+      </div>
+      <div class="mail-card">
+        <div class="mail-card-header">
+          <h4>Relance facture</h4>
+          <span class="badge badge-danger">Facturation</span>
+        </div>
+        <div class="mail-preview">Bonjour [Prénom],\n\nSauf erreur de notre part, la facture n°[NUMERO] d'un montant de [MONTANT] € datant du [DATE] est toujours en attente de règlement...</div>
+        <button class="btn-copy" onclick="copyMail(this)">📋 COPIER LE TEXTE</button>
+      </div>
+      <div class="mail-card">
+        <div class="mail-card-header">
+          <h4>Remerciement client</h4>
+          <span class="badge badge-success">Relation client</span>
+        </div>
+        <div class="mail-preview">Bonjour [Prénom],\n\nNous tenons à vous remercier chaleureusement pour la confiance que vous nous avez accordée lors de [EVENEMENT]...</div>
+        <button class="btn-copy" onclick="copyMail(this)">📋 COPIER LE TEXTE</button>
+      </div>
+      <div class="mail-card">
+        <div class="mail-card-header">
+          <h4>Compte rendu événement</h4>
+          <span class="badge badge-info">Post-event</span>
+        </div>
+        <div class="mail-preview">Bonjour [Prénom],\n\nVeuillez trouver ci-joint le compte rendu de [EVENEMENT] qui s'est déroulé le [DATE]...</div>
+        <button class="btn-copy" onclick="copyMail(this)">📋 COPIER LE TEXTE</button>
+      </div>
+      <div class="mail-card">
+        <div class="mail-card-header">
+          <h4>Demande de partenariat</h4>
+          <span class="badge badge-gold">Partenariat</span>
+        </div>
+        <div class="mail-preview">Bonjour [Prénom],\n\nJe suis [VOTRE_NOM], dirigeant de Pull Up Événements, agence spécialisée dans l'animation et l'organisation d'événements...</div>
+        <button class="btn-copy" onclick="copyMail(this)">📋 COPIER LE TEXTE</button>
+      </div>
+      <div class="mail-card">
+        <div class="mail-card-header">
+          <h4>Réponse commerciale</h4>
+          <span class="badge badge-info">Commercial</span>
+        </div>
+        <div class="mail-preview">Bonjour [Prénom],\n\nMerci pour votre demande. Nous avons bien pris note de votre projet et sommes ravis de pouvoir vous accompagner...</div>
+        <button class="btn-copy" onclick="copyMail(this)">📋 COPIER LE TEXTE</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUICK LINKS -->
+  <section class="page" id="page-links">
+    <div class="page-header"><h1>Liens rapides</h1><button class="btn-primary" onclick="openModal('newLink')">+ Ajouter lien</button></div>
+    <div id="links-container"></div>
+  </section>
+
+  <!-- Modal nouveau lien -->
+  <div class="modal-overlay" id="modal-newLink">
+    <div class="modal" style="max-width:420px">
+      <div class="modal-header"><h3>Ajouter un lien</h3><button class="modal-close" onclick="closeModal('newLink')">✕</button></div>
+      <form id="form-newLink" onsubmit="saveLinkForm(event)">
+        <div class="form-group"><label>Nom *</label><input id="link-name" class="form-control" required placeholder="Ex: Google Drive"></div>
+        <div class="form-group"><label>URL *</label><input id="link-url" class="form-control" required placeholder="https://..."></div>
+        <div class="form-group"><label>Description</label><input id="link-desc" class="form-control" placeholder="Ex: Documents partagés"></div>
+        <div class="form-group"><label>Catégorie</label><input id="link-cat" class="form-control" placeholder="Ex: Outils, Réseaux sociaux…"></div>
+        <div class="form-group"><label>Icône (emoji)</label><input id="link-icon" class="form-control" placeholder="📁" maxlength="4"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="closeModal('newLink')">Annuler</button>
+          <button type="submit" class="btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MILEAGE -->
+  <section class="page" id="page-mileage">
+    <div class="page-header">
+      <h1>Frais kilométriques</h1>
+      <div style="display:flex;gap:10px;align-items:center">
+        <select id="mileage-month-filter" onchange="filterMileageMonth()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;font-size:.875rem">
+          <option value="">Tous les mois</option>
+          <option value="2026-01">Janvier 2026</option>
+          <option value="2026-02">Février 2026</option>
+          <option value="2026-03">Mars 2026</option>
+          <option value="2026-04">Avril 2026</option>
+          <option value="2026-05">Mai 2026</option>
+          <option value="2026-06">Juin 2026</option>
+          <option value="2026-07">Juillet 2026</option>
+          <option value="2026-08">Août 2026</option>
+          <option value="2026-09">Septembre 2026</option>
+          <option value="2026-10">Octobre 2026</option>
+          <option value="2026-11">Novembre 2026</option>
+          <option value="2026-12">Décembre 2026</option>
+        </select>
+        <button class="btn-primary" onclick="openModal('newMileage')">+ Nouvelle saisie</button>
+      </div>
+    </div>
+
+    <!-- Colonnes par personne -->
+    <div class="person-board" id="mileage-board">
+      <!-- Romain -->
+      <div class="person-col" style="--person-color:var(--color-romain)">
+        <div class="person-col-header">
+          <img src="photos/romain.jpg" class="person-col-photo" alt="Romain">
+          <div>
+            <div class="person-col-name">Romain</div>
+            <div class="person-col-role" style="font-size:.75rem;color:var(--text2)">Barème +5 000km</div>
+          </div>
+          <div style="margin-left:auto;text-align:right">
+            <div class="person-task-count" id="km-count-Romain">0 km</div>
+            <div style="font-size:.7rem;color:var(--text2)" id="km-amount-Romain">0,00 €</div>
+          </div>
+        </div>
+        <div class="person-tasks" id="mileage-Romain"></div>
+      </div>
+      <!-- Ketsia -->
+      <div class="person-col" style="--person-color:var(--color-ketsia)">
+        <div class="person-col-header">
+          <img src="photos/ketsia.jpg" class="person-col-photo" alt="Ketsia">
+          <div>
+            <div class="person-col-name">Ketsia</div>
+            <div class="person-col-role" style="font-size:.75rem;color:var(--text2)">Frais KM</div>
+          </div>
+          <div style="margin-left:auto;text-align:right">
+            <div class="person-task-count" id="km-count-Ketsia">0 km</div>
+            <div style="font-size:.7rem;color:var(--text2)" id="km-amount-Ketsia">0,00 €</div>
+          </div>
+        </div>
+        <div class="person-tasks" id="mileage-Ketsia"></div>
+      </div>
+      <!-- Flora -->
+      <div class="person-col" style="--person-color:var(--color-flora)">
+        <div class="person-col-header">
+          <img src="photos/flora.jpg" class="person-col-photo" alt="Flora">
+          <div>
+            <div class="person-col-name">Flora</div>
+            <div class="person-col-role" style="font-size:.75rem;color:var(--text2)">Frais KM</div>
+          </div>
+          <div style="margin-left:auto;text-align:right">
+            <div class="person-task-count" id="km-count-Flora">0 km</div>
+            <div style="font-size:.7rem;color:var(--text2)" id="km-amount-Flora">0,00 €</div>
+          </div>
+        </div>
+        <div class="person-tasks" id="mileage-Flora"></div>
+      </div>
+      <!-- Gloria -->
+      <div class="person-col" style="--person-color:var(--color-gloria)">
+        <div class="person-col-header">
+          <img src="photos/gloria.jpg" class="person-col-photo" alt="Gloria">
+          <div>
+            <div class="person-col-name">Gloria</div>
+            <div class="person-col-role" style="font-size:.75rem;color:var(--text2)">Frais KM</div>
+          </div>
+          <div style="margin-left:auto;text-align:right">
+            <div class="person-task-count" id="km-count-Gloria">0 km</div>
+            <div style="font-size:.7rem;color:var(--text2)" id="km-amount-Gloria">0,00 €</div>
+          </div>
+        </div>
+        <div class="person-tasks" id="mileage-Gloria"></div>
+      </div>
+    </div>
+
+    <!-- Calendrier kilométrique -->
+    <div style="margin-top:24px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn-icon" onclick="mileageCalNav(-1)">‹</button>
+        <span id="mileage-cal-label" style="font-weight:700;font-size:1rem;min-width:150px;text-align:center"></span>
+        <button class="btn-icon" onclick="mileageCalNav(1)">›</button>
+        <div style="display:flex;gap:6px;margin-left:8px">
+          <button class="mileage-person-btn active" data-person="Tous" onclick="setMileagePerson(this,'Tous')">Tous</button>
+          <button class="mileage-person-btn" data-person="Romain Capdepont" onclick="setMileagePerson(this,'Romain Capdepont')">Romain</button>
+          <button class="mileage-person-btn" data-person="Ketsia" onclick="setMileagePerson(this,'Ketsia')">Ketsia</button>
+          <button class="mileage-person-btn" data-person="Flora Boyer" onclick="setMileagePerson(this,'Flora Boyer')">Flora</button>
+          <button class="mileage-person-btn" data-person="Gloria" onclick="setMileagePerson(this,'Gloria')">Gloria</button>
+        </div>
+      </div>
+      <div id="mileage-calendar"></div>
+    </div>
+
+    <div class="export-btns" style="margin-top:16px">
+      <button class="btn-outline" onclick="openExportPDFModal()">📄 Export PDF</button>
+      <button class="btn-outline">📊 Export Excel</button>
+    </div>
+  </section>
+
+  <!-- INVENTORY -->
+  <section class="page" id="page-inventory">
+    <div class="page-header"><h1>Inventaire matériel</h1><button class="btn-primary" onclick="openModal('newInventory')">+ Ajouter matériel</button></div>
+    <div class="inventory-alerts">
+      <div class="alert-item warning">⚠ 2 articles nécessitent une vérification</div>
+      <div class="alert-item danger">🔴 1 article à réparer : Gonflable château</div>
+    </div>
+    <div class="inventory-grid">
+      <div class="inv-card">
+        <div class="inv-img">📷</div>
+        <div class="inv-info">
+          <strong>Photo Box (Kap Numérique)</strong>
+          <div class="inv-meta"><span class="inv-qty">Qté : 1</span><span class="inv-status good">Bon état</span></div>
+          <span class="inv-location">📍 Bureau • Invest. 3 000 € + 1 700 €</span>
+        </div>
+      </div>
+      <div class="inv-card">
+        <div class="inv-img">🎪</div>
+        <div class="inv-info">
+          <strong>Ventrigliss DK (Grand 💧)</strong>
+          <div class="inv-meta"><span class="inv-qty">450 € / J</span><span class="inv-status good">Disponible</span></div>
+          <span class="inv-location">📍 Dépôt Réunion</span>
+        </div>
+      </div>
+      <div class="inv-card">
+        <div class="inv-img">🐭</div>
+        <div class="inv-info">
+          <strong>Mickey et Minnie DK (Grand)</strong>
+          <div class="inv-meta"><span class="inv-qty">450 € / J</span><span class="inv-status good">Disponible</span></div>
+          <span class="inv-location">📍 Dépôt Réunion</span>
+        </div>
+      </div>
+      <div class="inv-card">
+        <div class="inv-img">🌊</div>
+        <div class="inv-info">
+          <strong>Aire de jeux Aquatique DK (Moyen 💧)</strong>
+          <div class="inv-meta"><span class="inv-qty">450 € / J</span><span class="inv-status good">Disponible</span></div>
+          <span class="inv-location">📍 Dépôt Réunion</span>
+        </div>
+      </div>
+      <div class="inv-card">
+        <div class="inv-img">🦁</div>
+        <div class="inv-info">
+          <strong>Z'Animaux Safari RF</strong>
+          <div class="inv-meta"><span class="inv-qty">200 € / J</span><span class="inv-status good">Disponible</span></div>
+          <span class="inv-location">📍 Dépôt Réunion</span>
+        </div>
+      </div>
+      <div class="inv-card">
+        <div class="inv-img">🏴‍☠️</div>
+        <div class="inv-info">
+          <strong>Bateau Pirate RF</strong>
+          <div class="inv-meta"><span class="inv-qty">200 € / J</span><span class="inv-status good">Disponible</span></div>
+          <span class="inv-location">📍 Dépôt Réunion</span>
+        </div>
+      </div>
+      <div class="inv-card">
+        <div class="inv-img">🌊</div>
+        <div class="inv-info">
+          <strong>Toboggan "Piton Grand'Anse" RF (Grand 💧)</strong>
+          <div class="inv-meta"><span class="inv-qty">200 € / J</span><span class="inv-status good">Disponible</span></div>
+          <span class="inv-location">📍 Dépôt Réunion</span>
+        </div>
+      </div>
+      <div class="inv-card">
+        <div class="inv-img">🧇</div>
+        <div class="inv-info">
+          <strong>Machine Gaufre DK (x3)</strong>
+          <div class="inv-meta"><span class="inv-qty">1,50 € / gaufre</span><span class="inv-status good">Disponible</span></div>
+          <span class="inv-location">📍 Bureau</span>
+        </div>
+      </div>
+      <div class="inv-card">
+        <div class="inv-img">🎤</div>
+        <div class="inv-info">
+          <strong>Animateur Commercial</strong>
+          <div class="inv-meta"><span class="inv-qty">40€/h achat — 55€/h vente</span><span class="inv-status good">Grille tarifaire</span></div>
+          <span class="inv-location">📍 Prestation</span>
+        </div>
+      </div>
+      <div class="inv-card">
+        <div class="inv-img">👁️</div>
+        <div class="inv-info">
+          <strong>Surveillant RF</strong>
+          <div class="inv-meta"><span class="inv-qty">80 € / J</span><span class="inv-status good">Disponible</span></div>
+          <span class="inv-location">📍 Prestation</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINANCES -->
+  <section class="page" id="page-finances">
+    <div class="page-header"><h1>Finances</h1><button class="btn-primary" onclick="openModal('newFinance')">+ Nouvelle entrée</button></div>
+
+    <!-- KPIs -->
+    <div class="finance-kpis">
+      <div class="fkpi"><span class="fkpi-val gold">98 763 €</span><span>CA 2026 (Janv–Juin)</span></div>
+      <div class="fkpi"><span class="fkpi-val success">55 199 €</span><span>Bénéfice 2026 H1</span></div>
+      <div class="fkpi"><span class="fkpi-val" style="color:var(--color-flora)">287 014 €</span><span>CA total 2025</span></div>
+      <div class="fkpi" id="fkpi-creances-card" onclick="document.querySelector('[data-section=creances]')?.scrollIntoView({behavior:'smooth'})" style="cursor:pointer">
+        <span class="fkpi-val danger" id="fkpi-creances-montant">—</span>
+        <span id="fkpi-creances-label" style="font-size:.8rem">Chargement...</span>
+      </div>
+    </div>
+
+    <!-- Jauges objectifs -->
+    <div class="fin-gauges-row">
+      <!-- Jauge couverture charges (bénéfice vs charges) -->
+      <div class="fin-gauge-card">
+        <div class="fin-gauge-title">Couverture charges 2026</div>
+        <div class="fin-gauge-subtitle" id="gauge-charges-subtitle">Chargement…</div>
+        <div class="fin-gauge-bar-wrap">
+          <div class="fin-gauge-bar" id="gauge-charges" style="width:0%"></div>
+          <span class="fin-gauge-pct" id="gauge-charges-pct">0%</span>
+        </div>
+        <div class="fin-gauge-labels"><span>0 €</span><span class="gauge-label-half-charges">—</span><span class="gauge-label-full-charges">—</span></div>
+      </div>
+      <!-- Jauge CA vs objectif 300 000 € -->
+      <div class="fin-gauge-card">
+        <div class="fin-gauge-title">Objectif CA 2026 — 300 000 €</div>
+        <div class="fin-gauge-subtitle" id="gauge-ca-subtitle">Chargement…</div>
+        <div class="fin-gauge-bar-wrap">
+          <div class="fin-gauge-bar fin-gauge-ca" id="gauge-ca" style="width:0%"></div>
+          <span class="fin-gauge-pct" id="gauge-ca-pct">0%</span>
+        </div>
+        <div class="fin-gauge-labels"><span>0 €</span><span class="gauge-label-half-ca">150 000 €</span><span class="gauge-label-full-ca">300 000 €</span></div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab(this,'fin-analyse')">Analyse mensuelle</button>
+      <button class="tab" onclick="switchTab(this,'fin-factures')">Factures</button>
+      <button class="tab" onclick="switchTab(this,'fin-devis')">Devis</button>
+      <button class="tab" onclick="switchTab(this,'fin-creances')">Créances clients</button>
+      <button class="tab" onclick="switchTab(this,'fin-devis-requests');loadDevisRequests()">Demandes de devis</button>
+    </div>
+
+    <!-- TAB: Analyse mensuelle -->
+    <div class="tab-content active" id="fin-analyse">
+      <div class="fin-monthly-grid">
+        <!-- 2026 -->
+        <div class="card" style="flex:2;min-width:340px">
+          <div class="card-header"><h3>2026 — Mois par mois</h3><span style="font-size:.75rem;color:var(--text2)">Charges fixes : <span data-charges-label>8 718 €/mois</span></span></div>
+          <table class="data-table fin-monthly-table">
+            <thead><tr><th>Mois</th><th>CA (€)</th><th>Bénéfice (€)</th><th>% marge</th><th>vs charges</th></tr></thead>
+            <tbody id="fin-monthly-2026-body"></tbody>
+            <tfoot><tr id="fin-monthly-2026-total" style="font-weight:700;border-top:2px solid var(--border)"></tr></tfoot>
+          </table>
+        </div>
+        <!-- 2025 -->
+        <div class="card" style="flex:1;min-width:280px">
+          <div class="card-header"><h3>2025 — Référence</h3><span style="font-size:.75rem;color:var(--text2)">CA total : 287 014 €</span></div>
+          <table class="data-table fin-monthly-table">
+            <thead><tr><th>Mois</th><th>CA (€)</th><th>Évol. 2026</th></tr></thead>
+            <tbody id="fin-monthly-2025-body"></tbody>
+            <tfoot><tr id="fin-monthly-2025-total" style="font-weight:700;border-top:2px solid var(--border)"></tr></tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Factures -->
+    <div class="tab-content" id="fin-factures">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+        <button class="btn-primary" onclick="openModal('newFacture')">+ Nouvelle facture</button>
+      </div>
+      <div class="events-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Client</th><th>Montant</th><th style="color:#4CAF50">Bénéfice</th><th>Date</th><th>Description</th><th>Statut</th><th></th></tr></thead>
+          <tbody id="fin-factures-body"><tr><td colspan="7" style="text-align:center;color:var(--text2)">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: Devis -->
+    <div class="tab-content" id="fin-devis">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+        <button class="btn-primary" onclick="openModal('newDevis')">+ Nouveau devis</button>
+      </div>
+      <div class="events-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Client</th><th>Montant</th><th>Date envoi</th><th>Description</th><th>Statut</th><th></th></tr></thead>
+          <tbody id="fin-devis-body"><tr><td colspan="6" style="text-align:center;color:var(--text2)">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: Créances clients -->
+    <div class="tab-content" id="fin-creances">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+        <div class="creances-encours-card" style="flex:1;min-width:220px">
+          <div class="creances-encours-label">Encours clients</div>
+          <div class="creances-encours-val" id="creances-total">0 €</div>
+          <div class="creances-encours-sub">Total des factures impayées à ce jour</div>
+        </div>
+        <button class="btn-primary" onclick="openModal('newCreance')" style="white-space:nowrap">+ Ajouter une créance</button>
+      </div>
+      <div class="events-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Client</th><th>Montant</th><th>Date facture</th><th>Statut</th></tr></thead>
+          <tbody id="creances-tbody"><tr><td colspan="4" style="text-align:center;color:var(--text2);padding:2rem">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Demandes de devis -->
+    <div class="tab-content" id="fin-devis-requests" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+        <div>
+          <h3 style="margin:0">Demandes de devis à établir</h3>
+          <p style="margin:4px 0 0;font-size:.85rem;color:var(--text2)">Toutes les demandes reçues de clients ou prospects</p>
+        </div>
+        <button class="btn-primary" onclick="resetDevisModal();openModal('newDevisRequest')">+ Nouvelle demande</button>
+      </div>
+      <div class="events-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Client</th><th>Contact</th><th>Type d'événement</th><th>Date</th><th>Lieu</th><th>Invités</th><th>Budget estimé</th><th>Priorité</th><th>Statut</th><th>Actions</th></tr></thead>
+          <tbody id="devis-requests-tbody"><tr><td colspan="10" style="text-align:center;color:var(--text2);padding:2rem">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+  <!-- Modal nouvelle créance -->
+  <div class="modal-overlay" id="modal-newCreance">
+    <div class="modal" style="max-width:420px">
+      <div class="modal-header"><h3>Nouvelle créance</h3><button class="modal-close" onclick="closeModal('newCreance')">✕</button></div>
+      <form id="form-newCreance" onsubmit="saveNewCreance(event)">
+        <div class="form-group"><label>Client *</label><input name="client" required placeholder="Nom du client ou de la société"></div>
+        <div class="form-group"><label>Montant HT (€) *</label><input name="amount" type="number" step="0.01" required placeholder="ex: 1500"></div>
+        <div class="form-group"><label>Date de la facture *</label><input name="invoice_date" type="date" required></div>
+        <div class="form-group"><label>Statut</label><input value="Impayé" disabled style="background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:#FF6B9D;font-weight:600"></div>
+        <div class="form-actions">
+          <button type="button" onclick="closeModal('newCreance')" class="btn-secondary">Annuler</button>
+          <button type="submit" class="btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  </section>
+
+  <!-- MODAL NOUVELLE FACTURE -->
+  <div class="modal-overlay" id="modal-newFacture">
+    <div class="modal" style="max-width:460px">
+      <div class="modal-header"><h3>Nouvelle facture</h3><button class="modal-close" onclick="closeModal('newFacture')">✕</button></div>
+      <form id="form-newFacture" onsubmit="saveNewFacture(event)">
+        <div class="form-group"><label>Client *</label><input name="client" required placeholder="Nom du client"></div>
+        <div class="form-group"><label>Montant facturé HT (€)</label><input name="amount" type="number" step="0.01" placeholder="ex: 2500"></div>
+        <div class="form-group"><label>Bénéfice réalisé (€) <span style="color:var(--text3);font-size:.75rem">→ compte dans l'analyse mensuelle</span></label><input name="benef" type="number" step="0.01" placeholder="ex: 800"></div>
+        <div class="form-group"><label>Date de l'événement</label><input name="event_date" type="date"></div>
+        <div class="form-group"><label>Date de facturation</label><input name="invoice_date" type="date"></div>
+        <div class="form-group"><label>Date de paiement</label><input name="paid_date" type="date"></div>
+        <div class="form-group"><label>Description</label><input name="notes" placeholder="ex: Prestation team building mai 2026"></div>
+        <div class="form-group"><label>Statut</label>
+          <select name="status" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;width:100%">
+            <option>En attente</option><option>Payée</option><option>En retard</option><option>Non payé</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Fichier facture <span style="color:var(--text3);font-size:.75rem">(PDF ou image)</span></label>
+          <input name="facture_file" type="file" accept=".pdf,.png,.jpg,.jpeg" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;width:100%;cursor:pointer">
+          <div id="facture-file-current" style="margin-top:6px;font-size:.78rem;color:var(--text2)"></div>
+        </div>
+        <div class="form-actions">
+          <button type="button" onclick="closeModal('newFacture')" class="btn-secondary">Annuler</button>
+          <button type="submit" class="btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL NOUVEAU DEVIS -->
+  <div class="modal-overlay" id="modal-newDevis">
+    <div class="modal" style="max-width:460px">
+      <div class="modal-header"><h3>Nouveau devis</h3><button class="modal-close" onclick="closeModal('newDevis')">✕</button></div>
+      <form id="form-newDevis" onsubmit="saveNewDevis(event)">
+        <div class="form-group"><label>Client *</label><input name="client" required placeholder="Nom du client"></div>
+        <div class="form-group"><label>Montant estimé (€)</label><input name="amount" type="number" step="0.01" placeholder="ex: 3500"></div>
+        <div class="form-group"><label>Date d'envoi</label><input name="invoice_date" type="date"></div>
+        <div class="form-group"><label>Description</label><input name="notes" placeholder="ex: TB 80 pax + soirée"></div>
+        <div class="form-group"><label>Statut</label>
+          <select name="status" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;width:100%">
+            <option>Envoyé</option><option>Fait</option><option>En attente</option><option>⚠ Urgent</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="button" onclick="closeModal('newDevis')" class="btn-secondary">Annuler</button>
+          <button type="submit" class="btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- AI ASSISTANT -->
+  <section class="page" id="page-ai">
+    <div class="page-header"><h1>IA Assistante Pull Up</h1></div>
+    <div class="ai-layout">
+      <div class="ai-shortcuts">
+        <h3>Actions rapides</h3>
+        <div class="ai-actions-grid">
+          <button class="ai-action-btn" onclick="sendAIPrompt('Rédige un mail professionnel de relance devis pour un client événementiel')">✉ Rédiger un mail</button>
+          <button class="ai-action-btn" onclick="sendAIPrompt('Génère un devis type pour une animation en galerie commerciale de 4h pour 200 personnes')">📄 Générer un devis</button>
+          <button class="ai-action-btn" onclick="sendAIPrompt('Prépare un compte rendu d\'événement type pour une soirée d\'entreprise')">📋 Compte rendu</button>
+          <button class="ai-action-btn" onclick="sendAIPrompt('Crée une checklist complète pour un événement Archery Tag en extérieur')">✅ Créer checklist</button>
+          <button class="ai-action-btn" onclick="sendAIPrompt('Génère une publication Facebook engageante pour annoncer une animation événementielle Pull Up')">📘 Post Facebook</button>
+          <button class="ai-action-btn" onclick="sendAIPrompt('Génère une légende Instagram percutante avec hashtags pour Pull Up Événements')">📸 Post Instagram</button>
+          <button class="ai-action-btn" onclick="sendAIPrompt('Prépare un conducteur événementiel détaillé pour une soirée d\'entreprise de 150 personnes')">🎬 Conducteur événement</button>
+          <button class="ai-action-btn" onclick="sendAIPrompt('Crée un ordre du jour pour une réunion d\'équipe hebdomadaire Pull Up Événements')">📅 Préparer réunion</button>
+        </div>
+      </div>
+      <div class="ai-chat">
+        <div class="ai-messages" id="aiMessages">
+          <div class="ai-msg assistant">
+            <div class="ai-avatar">🤖</div>
+            <div class="ai-bubble">Bonjour ! Je suis l'IA Pull Up. Comment puis-je vous aider aujourd'hui ? Utilisez les boutons rapides ou posez-moi directement votre question.</div>
+          </div>
+        </div>
+        <div class="ai-input-wrap">
+          <input type="text" id="aiInput" class="ai-input" placeholder="Posez votre question à l'IA Pull Up...">
+          <button class="btn-send-ai" onclick="sendAIMessage()">Envoyer</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REPORTS -->
+  <section class="page" id="page-reports">
+    <div class="page-header"><h1>Rapports & Statistiques</h1><button class="btn-outline">📄 Exporter</button></div>
+    <div class="report-period">
+      <label>Période :</label>
+      <select><option>Juin 2026</option><option>Mai 2026</option><option>Avril 2026</option><option>T2 2026</option><option>2026 (YTD)</option></select>
+    </div>
+    <div class="report-kpis">
+      <div class="rkpi gold"><span class="rkpi-val">~40</span><span>Événements 2026 (janv–juin)</span></div>
+      <div class="rkpi"><span class="rkpi-val">~68 500 €</span><span>CA 2026 (janv–juin)</span></div>
+      <div class="rkpi"><span class="rkpi-val" id="rkpi-charges">8 718 €</span><span>Charges fixes/mois</span></div>
+      <div class="rkpi"><span class="rkpi-val">18</span><span>Clients actifs 2026</span></div>
+    </div>
+    <div class="reports-grid">
+      <div class="card">
+        <h3>CA réel par mois 2026</h3>
+        <div class="bar-chart">
+          <div class="bar-group"><div class="bar" style="height:51px"></div><span>Janv</span></div>
+          <div class="bar-group"><div class="bar" style="height:24px"></div><span>Févr</span></div>
+          <div class="bar-group"><div class="bar" style="height:37px"></div><span>Mars</span></div>
+          <div class="bar-group"><div class="bar" style="height:34px"></div><span>Avr</span></div>
+          <div class="bar-group"><div class="bar gold" style="height:75px"></div><span>Mai</span></div>
+          <div class="bar-group"><div class="bar" style="height:41px"></div><span>Juin</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Top clients 2026 (CA)</h3>
+        <div class="top-clients">
+          <div class="tc-row"><span>Mercialys</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:100%"></div></div><span>~28 000 €</span></div>
+          <div class="tc-row"><span>Casabona</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:46%"></div></div><span>~13 000 €</span></div>
+          <div class="tc-row"><span>CILAM</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:31%"></div></div><span>~8 700 €</span></div>
+          <div class="tc-row"><span>MIO</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:28%"></div></div><span>~7 900 €</span></div>
+          <div class="tc-row"><span>Lolipop</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:25%"></div></div><span>~7 000 €</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Temps par collaborateur (Juin)</h3>
+        <div class="time-chart">
+          <div class="time-row"><span>Romain</span><div class="time-bar-wrap"><div class="time-bar gold" style="width:82%"></div></div><span>164h</span></div>
+          <div class="time-row"><span>Gloria</span><div class="time-bar-wrap"><div class="time-bar" style="width:74%"></div></div><span>148h</span></div>
+          <div class="time-row"><span>Ketsia</span><div class="time-bar-wrap"><div class="time-bar" style="width:68%"></div></div><span>136h</span></div>
+          <div class="time-row"><span>Flora</span><div class="time-bar-wrap"><div class="time-bar" style="width:55%"></div></div><span>110h</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Prestataires les plus utilisés</h3>
+        <div class="top-clients">
+          <div class="tc-row"><span>Traiteur Lyon Prestige</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:100%"></div></div><span>12x</span></div>
+          <div class="tc-row"><span>DJ Mike Events</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:42%"></div></div><span>5x</span></div>
+          <div class="tc-row"><span>Photobooth Studio</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:67%"></div></div><span>8x</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+  <!-- CONGÉS -->
+  <section class="page" id="page-leaves">
+    <div class="page-header">
+      <h1>Congés</h1>
+      <div style="display:flex;gap:.5rem;align-items:center">
+        <button class="btn-outline" onclick="leavePrevMonth()">‹</button>
+        <span id="leaves-month-label" style="font-weight:600;min-width:130px;text-align:center"></span>
+        <button class="btn-outline" onclick="leaveNextMonth()">›</button>
+      </div>
+    </div>
+
+    <!-- Cartes récap -->
+    <div id="leaves-cards" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem"></div>
+
+    <!-- Demandes en attente (visible à tous, action pour Romain) -->
+    <div id="leaves-pending-section" style="margin-bottom:1.5rem;display:none">
+      <h3 style="margin-bottom:.75rem;color:var(--gold)">⏳ Demandes à valider</h3>
+      <div id="leaves-pending-list" style="display:flex;flex-direction:column;gap:.5rem"></div>
+    </div>
+
+    <!-- Calendrier -->
+    <div class="card" style="padding:1.25rem">
+      <div id="leaves-calendar"></div>
+    </div>
+  </section>
+
+  <!-- SUIVI FLORA -->
+  <section class="page" id="page-flora" style="display:none!important">
+    <div class="page-header" style="flex-wrap:wrap;gap:12px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <img src="photos/flora.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--color-flora)">
+        <div>
+          <h1 style="margin:0">Suivi Flora Boyer</h1>
+          <span style="font-size:.8rem;color:var(--text2)">Alternante — heures, congés, trajets</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn-icon" onclick="floraNav(-1)">‹</button>
+        <span id="flora-month-label" style="font-weight:700;font-size:1rem;min-width:140px;text-align:center"></span>
+        <button class="btn-icon" onclick="floraNav(1)">›</button>
+      </div>
+    </div>
+
+    <!-- KPIs du mois -->
+    <div class="crm-stats" id="flora-kpis" style="margin-bottom:16px">
+      <div class="crm-stat"><span class="crm-stat-val" id="fkpi-hours" style="color:var(--color-flora)">0h</span><span>Heures travaillées</span></div>
+      <div class="crm-stat"><span class="crm-stat-val gold" id="fkpi-extra">0h</span><span>Heures supp.</span></div>
+      <div class="crm-stat"><span class="crm-stat-val" style="color:#4A9EFF" id="fkpi-conge">0j</span><span>Congés pris</span></div>
+      <div class="crm-stat"><span class="crm-stat-val" style="color:#9B59B6" id="fkpi-km">0 €</span><span>Indemnités km</span></div>
+    </div>
+
+    <!-- Récap mensuel -->
+    <details style="margin-bottom:16px">
+      <summary style="cursor:pointer;font-weight:700;font-size:.95rem;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;list-style:none">
+        📊 Récapitulatif annuel mois par mois ▾
+      </summary>
+      <div class="events-table-wrap" style="margin-top:8px" id="flora-summary">
+        <p style="color:var(--text2);padding:1rem">Chargement…</p>
+      </div>
+    </details>
+
+    <!-- Tableau jours -->
+    <div class="events-table-wrap">
+      <table class="data-table" id="flora-table">
+        <thead>
+          <tr>
+            <th style="width:80px">Jour</th>
+            <th>Type de journée</th>
+            <th>Heures</th>
+            <th>H. supp</th>
+            <th>Congé</th>
+            <th>Ferm. agence</th>
+            <th>Trajets</th>
+            <th>Ind. km (€)</th>
+            <th>Prestation ext.</th>
+            <th>Commentaires</th>
+          </tr>
+        </thead>
+        <tbody id="flora-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Modal édition jour Flora -->
+  <div class="modal-overlay" id="modal-floraDay">
+    <div class="modal" style="max-width:480px">
+      <div class="modal-header"><h3 id="flora-modal-title">Modifier le jour</h3><button class="modal-close" onclick="closeModal('floraDay')">✕</button></div>
+      <form id="form-floraDay" onsubmit="saveFloraDay(event)">
+        <input type="hidden" name="date">
+        <div class="form-grid">
+          <div class="form-group"><label>Type de journée</label>
+            <select name="day_type">
+              <option value="bureau">🏢 Bureau</option>
+              <option value="terrain">🏕 Terrain</option>
+              <option value="formation">📚 Formation</option>
+              <option value="conge">🏖 Congé</option>
+              <option value="fermeture">🔒 Fermeture agence</option>
+              <option value="repos">😴 Repos / Week-end</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Heures effectuées</label><input name="hours" type="number" step="0.25" placeholder="ex: 7.5"></div>
+          <div class="form-group"><label>Heures supplémentaires</label><input name="extra_hours" type="number" step="0.25" placeholder="ex: 1"></div>
+          <div class="form-group"><label>Jours de congé</label><input name="leave_days" type="number" step="0.5" placeholder="ex: 1"></div>
+          <div class="form-group"><label>Trajets</label><input name="trips" placeholder="ex: Aller-retour St-Denis"></div>
+          <div class="form-group"><label>Indemnité km (€)</label><input name="km_indemnity" type="number" step="0.01" placeholder="ex: 12.50"></div>
+          <div class="form-group" style="grid-column:1/-1"><label>Prestation externe</label><input name="external_service" placeholder="ex: Casabona"></div>
+          <div class="form-group" style="grid-column:1/-1"><label>Commentaires</label><textarea name="notes" rows="2" style="width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);resize:vertical"></textarea></div>
+        </div>
+        <div class="form-actions">
+          <button type="button" onclick="closeModal('floraDay')" class="btn-secondary">Annuler</button>
+          <button type="submit" class="btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-newEvent">
+  <div class="modal">
+    <div class="modal-header"><h3>Nouvel événement</h3><button class="btn-icon" onclick="closeModal('newEvent')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-newEvent" class="form-grid">
+        <div class="form-group span2"><label>Nom de l'événement</label><input name="name" type="text" placeholder="Ex: Soirée d'entreprise ABC" required></div>
+        <div class="form-group"><label>Client</label><input name="client" type="text" placeholder="Nom de la société"></div>
+        <div class="form-group"><label>Date début</label><input name="event_date" type="date"></div>
+        <div class="form-group"><label>Date fin</label><input name="end_date" type="date"></div>
+        <div class="form-group"><label>Heure début</label><input name="start_time" type="time"></div>
+        <div class="form-group"><label>Heure fin</label><input name="end_time" type="time"></div>
+        <div class="form-group span2"><label>Adresse</label><input name="location" type="text" placeholder="Adresse complète"></div>
+        <div class="form-group"><label>Contact</label><input name="contact_name" type="text" placeholder="Nom du contact"></div>
+        <div class="form-group"><label>Téléphone</label><input name="contact_phone" type="tel" placeholder="06 xx xx xx xx"></div>
+        <div class="form-group"><label>Nombre participants</label><input name="participants" type="number" placeholder="0"></div>
+        <div class="form-group"><label>Budget (€ HT)</label><input name="budget" type="number" placeholder="0"></div>
+        <div class="form-group span2"><label>Notes</label><textarea name="notes" rows="3" placeholder="Notes préliminaires..."></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('newEvent')">Annuler</button>
+      <button class="btn-primary" onclick="saveNewEvent()">Créer l'événement</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-newTask">
+  <div class="modal">
+    <div class="modal-header"><h3>Nouvelle tâche</h3><button class="btn-icon" onclick="closeModal('newTask')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-newTask" class="form-grid">
+        <div class="form-group span2"><label>Titre de la tâche</label><input name="title" type="text" placeholder="Description de la tâche" required></div>
+        <div class="form-group span2"><label>Responsable(s)</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px">
+            <button type="button" onclick="toggleAllTaskAssignees(this)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:.8rem;cursor:pointer;color:var(--text2)">👥 Toute l'équipe</button>
+          </div>
+          <div id="new-task-assignees" style="display:flex;flex-wrap:wrap;gap:8px">
+            <label style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem"><input type="checkbox" name="assignees" value="Romain" style="accent-color:var(--gold)"> Romain</label>
+            <label style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem"><input type="checkbox" name="assignees" value="Ketsia" style="accent-color:#4A9EFF"> Ketsia</label>
+            <label style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem"><input type="checkbox" name="assignees" value="Flora" style="accent-color:#FF6B9D"> Flora</label>
+            <label style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem"><input type="checkbox" name="assignees" value="Gloria" style="accent-color:#9B59B6"> Gloria</label>
+          </div>
+        </div>
+        <div class="form-group"><label>Date limite</label><input name="due_date" type="date"></div>
+        <div class="form-group"><label>Priorité</label><select name="priority"><option>Urgent</option><option selected>Normal</option><option>Bas</option></select></div>
+        <div class="form-group span2"><label>Description</label><textarea name="description" rows="3" placeholder="Détails supplémentaires..."></textarea></div>
+        <div class="form-group span2">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px">
+            <input type="checkbox" name="is_devis" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer">
+            <span>📋 Devis à établir <span style="color:var(--text2);font-size:.82rem">— ajoute automatiquement dans "Demandes de devis"</span></span>
+          </label>
+        </div>
+        <div class="form-group span2">
+          <label>Photo / pièce jointe</label>
+          <div id="new-task-photo-preview" style="display:none;margin-bottom:.5rem">
+            <img id="new-task-photo-img" src="" style="max-width:100%;max-height:180px;border-radius:8px;object-fit:cover">
+            <button type="button" onclick="clearNewTaskPhoto()" style="display:block;margin-top:.4rem;background:none;border:none;color:var(--danger);cursor:pointer;font-size:.8rem">✕ Supprimer la photo</button>
+          </div>
+          <label style="display:flex;align-items:center;gap:.6rem;background:var(--bg3);border:1px dashed var(--border);border-radius:8px;padding:.75rem 1rem;cursor:pointer;color:var(--text2);font-size:.85rem">
+            <span style="font-size:1.2rem">📎</span> Choisir une photo
+            <input type="file" name="photo" accept="image/*" style="display:none" onchange="previewNewTaskPhoto(this)">
+          </label>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('newTask')">Annuler</button>
+      <button class="btn-primary" onclick="saveNewTask()">Créer la tâche</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MODIFIER TÂCHE -->
+<div class="modal-overlay" id="modal-editTask">
+  <div class="modal">
+    <div class="modal-header"><h3>Modifier la tâche</h3><button class="btn-icon" onclick="closeModal('editTask')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-editTask" class="form-grid">
+        <input type="hidden" name="id">
+        <div class="form-group span2"><label>Titre de la tâche</label><input name="title" type="text" required></div>
+        <div class="form-group span2 assignee-section"><label>Responsable(s)</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px">
+            <button type="button" onclick="toggleAllTaskAssignees(this)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:.8rem;cursor:pointer;color:var(--text2)">👥 Toute l'équipe</button>
+          </div>
+          <div id="edit-task-assignees" style="display:flex;flex-wrap:wrap;gap:8px">
+            <label style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem"><input type="checkbox" name="assignees" value="Romain" style="accent-color:var(--gold)"> Romain</label>
+            <label style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem"><input type="checkbox" name="assignees" value="Ketsia" style="accent-color:#4A9EFF"> Ketsia</label>
+            <label style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem"><input type="checkbox" name="assignees" value="Flora" style="accent-color:#FF6B9D"> Flora</label>
+            <label style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem"><input type="checkbox" name="assignees" value="Gloria" style="accent-color:#9B59B6"> Gloria</label>
+          </div>
+        </div>
+        <div class="form-group"><label>Priorité</label>
+          <select name="priority">
+            <option>Urgent</option>
+            <option>Normal</option>
+            <option>Bas</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Statut</label>
+          <select name="status">
+            <option value="todo">À faire</option>
+            <option value="inprogress">En cours</option>
+            <option value="waiting">En attente</option>
+            <option value="done">Terminé</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Date limite</label><input name="due_date" type="date"></div>
+        <div class="form-group span2"><label>Description</label><textarea name="description" rows="3"></textarea></div>
+        <div class="form-group span2">
+          <label>Photo / pièce jointe</label>
+          <div id="edit-task-photo-preview" style="margin-bottom:.5rem">
+            <img id="edit-task-photo-img" src="" onclick="openFilePreview(this.src)" style="display:none;max-width:100%;max-height:180px;border-radius:8px;object-fit:cover;cursor:zoom-in" title="Cliquer pour agrandir">
+            <button type="button" id="edit-task-photo-remove" onclick="clearEditTaskPhoto()" style="display:none;margin-top:.4rem;background:none;border:none;color:var(--danger);cursor:pointer;font-size:.8rem">✕ Supprimer la photo</button>
+          </div>
+          <label style="display:flex;align-items:center;gap:.6rem;background:var(--bg3);border:1px dashed var(--border);border-radius:8px;padding:.75rem 1rem;cursor:pointer;color:var(--text2);font-size:.85rem">
+            <span style="font-size:1.2rem">📎</span> Changer la photo
+            <input type="file" name="photo" accept="image/*" style="display:none" onchange="previewEditTaskPhoto(this)">
+          </label>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button id="btn-delete-task" class="btn-outline btn-danger-outline" onclick="deleteCurrentTask()" style="margin-right:auto">🗑 Supprimer</button>
+      <button class="btn-outline" onclick="closeModal('editTask')">Annuler</button>
+      <button class="btn-primary" onclick="saveEditTask()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MODIFIER ÉVÉNEMENT -->
+<div class="modal-overlay" id="modal-editEvent">
+  <div class="modal">
+    <div class="modal-header"><h3>Modifier l'événement</h3><button class="btn-icon" onclick="closeModal('editEvent')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-editEvent" class="form-grid">
+        <input type="hidden" name="id">
+        <div class="form-group span2"><label>Nom *</label><input name="name" type="text" required></div>
+        <div class="form-group"><label>Client</label><input name="client" type="text"></div>
+        <div class="form-group"><label>Statut</label><select name="status"><option>En préparation</option><option>Confirmé</option><option>Terminé</option><option>Annulé</option><option>Supprimé</option></select></div>
+        <div class="form-group"><label>Date début *</label><input name="event_date" type="date" required></div>
+        <div class="form-group"><label>Date fin</label><input name="end_date" type="date"></div>
+        <div class="form-group"><label>Heure début</label><input name="start_time" type="time"></div>
+        <div class="form-group"><label>Heure fin</label><input name="end_time" type="time"></div>
+        <div class="form-group span2"><label>Lieu</label><input name="location" type="text"></div>
+        <div class="form-group"><label>Contact</label><input name="contact_name" type="text"></div>
+        <div class="form-group"><label>Téléphone</label><input name="contact_phone" type="tel"></div>
+        <div class="form-group"><label>Participants</label><input name="participants" type="number"></div>
+        <div class="form-group"><label>Montant HT (€)</label><input name="amount_ht" type="number" step="0.01"></div>
+        <div class="form-group span2"><label>Notes</label><textarea name="notes" rows="3"></textarea></div>
+      </form>
+
+      <!-- Tâches liées à l'événement -->
+      <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px">
+        <h4 style="margin:0 0 12px;font-size:.95rem">📋 Tâches liées à cet événement</h4>
+        <div id="event-tasks-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <input id="event-task-input" type="text" class="form-input" placeholder="Nouvelle tâche..." style="flex:1;min-width:150px">
+          <select id="event-task-assignee" class="form-input" style="width:120px">
+            <option value="Romain">Romain</option>
+            <option value="Ketsia">Ketsia</option>
+            <option value="Flora">Flora</option>
+            <option value="Gloria">Gloria</option>
+          </select>
+          <button class="btn-primary" style="padding:8px 14px;font-size:.85rem" onclick="addEventTask()">+ Ajouter</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('editEvent')">Annuler</button>
+      <button class="btn-primary" onclick="saveEditEvent()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DÉTAIL PERSONNEL -->
+<div class="modal-overlay" id="modal-personnelDetail">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <h3 id="personnelDetailTitle">Fiche collaborateur</h3>
+      <button class="btn-icon" onclick="closeModal('personnelDetail')">✕</button>
+    </div>
+    <div class="modal-body" id="personnelDetailBody" style="padding:1.5rem"></div>
+  </div>
+</div>
+
+<!-- MODAL BASE DE CONNAISSANCES -->
+<div class="modal-overlay" id="modal-newKnowledge">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header"><h3>Nouveau document</h3><button class="btn-icon" onclick="closeModal('newKnowledge')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-newKnowledge" class="form-grid">
+        <div class="form-group span2"><label>Titre *</label><input name="title" type="text" placeholder="Titre du document" required></div>
+        <div class="form-group"><label>Catégorie</label><select name="category"><option>Animation micro</option><option>Team Building</option><option>Gonflables</option><option>Logistique</option><option>Commercial</option><option>RH</option><option>Autre</option></select></div>
+        <div class="form-group"><label>Type</label><select name="type"><option value="document">Document</option><option value="checklist">Checklist</option><option value="tutorial">Tutoriel</option><option value="faq">FAQ</option></select></div>
+        <div class="form-group span2"><label>Contenu</label><textarea name="content" rows="8" placeholder="Rédigez votre document ici..." style="font-family:monospace"></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('newKnowledge')">Annuler</button>
+      <button class="btn-primary" onclick="saveNewKnowledge()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVEAU FOURNISSEUR -->
+<div class="modal-overlay" id="modal-newSupplier">
+  <div class="modal">
+    <div class="modal-header"><h3>Nouveau fournisseur</h3><button class="btn-icon" onclick="closeModal('newSupplier')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-newSupplier" class="form-grid">
+        <div class="form-group span2"><label>Nom *</label><input name="name" type="text" placeholder="Nom du fournisseur" required></div>
+        <div class="form-group"><label>Catégorie</label><select name="category"><option>Traiteur</option><option>DJ</option><option>Animateur</option><option>Hôtesse</option><option>Sonorisation</option><option>Artiste</option><option>Domaine</option><option>Autre</option></select></div>
+        <div class="form-group"><label>Téléphone</label><input name="phone" type="tel" placeholder="06 xx xx xx xx"></div>
+        <div class="form-group"><label>Email</label><input name="email" type="email" placeholder="email@example.com"></div>
+        <div class="form-group"><label>Note (1-5)</label><select name="rating"><option>5</option><option selected>4</option><option>3</option><option>2</option><option>1</option></select></div>
+        <div class="form-group span2"><label>💰 Prix / Tarif</label><input name="price" type="text" placeholder="Ex : 800€ la prestation, 50€/h, sur devis..."></div>
+        <div class="form-group span2"><label>Notes</label><textarea name="notes" rows="2" placeholder="Remarques..."></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('newSupplier')">Annuler</button>
+      <button class="btn-primary" onclick="saveNewSupplier()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVEAU CLIENT -->
+<div class="modal-overlay" id="modal-newClient">
+  <div class="modal">
+    <div class="modal-header"><h3>Nouveau client</h3><button class="btn-icon" onclick="closeModal('newClient')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-newClient" class="form-grid">
+        <div class="form-group span2"><label>Société *</label><input name="company" type="text" placeholder="Nom de la société" required></div>
+        <div class="form-group"><label>Contact</label><input name="contact_name" type="text" placeholder="Nom du contact"></div>
+        <div class="form-group"><label>Téléphone</label><input name="phone" type="tel" placeholder="06 xx xx xx xx"></div>
+        <div class="form-group"><label>Email</label><input name="email" type="email" placeholder="email@example.com"></div>
+        <div class="form-group"><label>CA généré (€)</label><input name="revenue" type="number" placeholder="0"></div>
+        <div class="form-group"><label>Potentiel</label><select name="potential"><option>Élevé</option><option selected>Moyen</option><option>Faible</option></select></div>
+        <div class="form-group"><label>Statut</label><select name="status"><option>Prospect</option><option>Actif</option><option>Relance</option><option>Inactif</option></select></div>
+        <div class="form-group span2"><label>Notes</label><textarea name="notes" rows="2" placeholder="Remarques..."></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('newClient')">Annuler</button>
+      <button class="btn-primary" onclick="saveNewClient()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FRAIS KM -->
+<div class="modal-overlay" id="modal-newMileage">
+  <div class="modal">
+    <div class="modal-header"><h3>Nouvelle saisie kilométrique</h3><button class="btn-icon" onclick="closeModal('newMileage')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-newMileage" class="form-grid">
+        <div class="form-group"><label>Date *</label><input name="trip_date" type="date" required></div>
+        <div class="form-group"><label>Collaborateur</label><select name="user_name" onchange="applyMileageRate()"><option>Romain Capdepont</option><option>Ketsia</option><option>Flora Boyer</option><option>Gloria</option></select></div>
+        <div class="form-group"><label>Départ *</label><input name="departure" type="text" placeholder="Ex: Le Tampon" required onblur="autoCalcDistance()"></div>
+        <div class="form-group"><label>Destination *</label><input name="destination" type="text" placeholder="Ex: Cap Homard" required onblur="autoCalcDistance()"></div>
+        <div class="form-group span2"><label>Client</label><input name="client" type="text" placeholder="Ex: Mercialys, Mission Locale…"></div>
+        <div class="form-group"><label>Km *</label><input name="km" type="number" step="0.1" placeholder="0" required oninput="calcMileageAmount()"></div>
+        <div class="form-group"><label>Barème (€/km)</label><input name="rate" type="number" step="0.001" value="0.47" oninput="calcMileageAmount()"></div>
+        <div class="form-group span2" style="display:flex;gap:24px">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
+            <input type="checkbox" name="roundtrip" onchange="calcMileageAmount()" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer">
+            <span>Aller-retour <span style="color:var(--text2);font-size:.85rem">(× 2)</span></span>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
+            <input type="checkbox" name="is_utility" onchange="calcMileageAmount()" style="width:18px;height:18px;accent-color:#27ae60;cursor:pointer">
+            <span style="color:#27ae60">🚐 Utilitaire <span style="color:var(--text2);font-size:.85rem">(0 €)</span></span>
+          </label>
+        </div>
+        <div class="form-group span2">
+          <label>Frais kilométriques</label>
+          <div style="background:var(--bg3);border:1px solid var(--gold);border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:center">
+            <span style="font-size:1.3rem;font-weight:700;color:var(--gold)" id="mileage-calc-total">— €</span>
+          </div>
+        </div>
+        <div class="form-group span2"><label>Motif</label><input name="motif" type="text" placeholder="Ex: Repérage événement"></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('newMileage')">Annuler</button>
+      <button class="btn-primary" onclick="saveNewMileage()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL INVENTAIRE -->
+<div class="modal-overlay" id="modal-newInventory">
+  <div class="modal">
+    <div class="modal-header"><h3>Nouveau matériel</h3><button class="btn-icon" onclick="closeModal('newInventory')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-newInventory" class="form-grid">
+        <div class="form-group span2"><label>Nom *</label><input name="name" type="text" placeholder="Nom du matériel" required></div>
+        <div class="form-group"><label>Quantité</label><input name="quantity" type="number" value="1"></div>
+        <div class="form-group"><label>Emoji</label><input name="emoji" type="text" placeholder="📦" maxlength="4"></div>
+        <div class="form-group"><label>État</label><select name="condition"><option>Bon état</option><option>Vérifier</option><option>À réparer</option></select></div>
+        <div class="form-group"><label>Lieu</label><input name="location" type="text" placeholder="Bureau, Dépôt..."></div>
+        <div class="form-group"><label>Prix/jour (€)</label><input name="price_per_day" type="number" step="0.01" placeholder="0"></div>
+        <div class="form-group"><label>Prix d'achat (€)</label><input name="purchase_price" type="number" step="0.01" placeholder="0"></div>
+        <div class="form-group span2"><label>Notes</label><textarea name="notes" rows="2" placeholder="Remarques..."></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('newInventory')">Annuler</button>
+      <button class="btn-primary" onclick="saveNewInventory()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVELLE FACTURE / DEVIS -->
+<div class="modal-overlay" id="modal-newFinance">
+  <div class="modal">
+    <div class="modal-header"><h3>Nouvelle entrée financière</h3><button class="btn-icon" onclick="closeModal('newFinance')">✕</button></div>
+    <div class="modal-body">
+      <form id="form-newFinance" class="form-grid">
+        <div class="form-group"><label>Type</label><select name="type"><option value="facture">Facture</option><option value="devis">Devis</option></select></div>
+        <div class="form-group"><label>Client *</label><input name="client" type="text" placeholder="Nom du client" required></div>
+        <div class="form-group"><label>Montant (€)</label><input name="amount" type="number" step="0.01" placeholder="0"></div>
+        <div class="form-group"><label>Date</label><input name="invoice_date" type="date"></div>
+        <div class="form-group"><label>Statut</label><select name="status"><option>En attente</option><option>Payée</option><option>En retard</option><option>Envoyé</option><option>Fait</option></select></div>
+        <div class="form-group span2"><label>Notes</label><textarea name="notes" rows="2" placeholder="Remarques..."></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('newFinance')">Annuler</button>
+      <button class="btn-primary" onclick="saveNewFinanceEntry()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+  <!-- PAGE DEVIS À ÉTABLIR -->
+  <section class="page" id="page-devis-requests" style="padding-top:80px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+      <h1 style="margin:0;font-size:1.4rem">📋 Devis à établir</h1>
+      <button class="btn-primary" onclick="resetDevisModal();openModal('newDevisRequest')">+ Nouvelle demande</button>
+      <a href="https://pullup-assistant-equipe.netlify.app" target="_blank" rel="noopener" class="btn-outline" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px">✨ Faire un devis dans l'Assistant</a>
+    </div>
+    <div id="devis-requests-stats" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+      <div style="background:var(--bg2);border-radius:12px;padding:12px 20px;min-width:140px">
+        <div style="font-size:1.6rem;font-weight:700;color:var(--gold)" id="dr-count-todo">—</div>
+        <div style="font-size:.8rem;color:var(--text2)">À faire</div>
+      </div>
+      <div style="background:var(--bg2);border-radius:12px;padding:12px 20px;min-width:140px">
+        <div style="font-size:1.6rem;font-weight:700;color:#4A9EFF" id="dr-count-encours">—</div>
+        <div style="font-size:.8rem;color:var(--text2)">En cours</div>
+      </div>
+      <div style="background:var(--bg2);border-radius:12px;padding:12px 20px;min-width:140px">
+        <div style="font-size:1.6rem;font-weight:700;color:#4CAF50" id="dr-count-envoye">—</div>
+        <div style="font-size:.8rem;color:var(--text2)">Envoyés</div>
+      </div>
+    </div>
+    <div class="events-table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Client</th><th>Contact / Tél</th><th>Événement</th><th>Date évent.</th><th>Lieu</th><th>Invités</th><th>Budget</th><th>Priorité</th><th>Assigné à</th><th>Statut</th><th>Actions</th></tr></thead>
+        <tbody id="devis-requests-main-tbody"><tr><td colspan="10" style="text-align:center;color:var(--text2);padding:2rem">Chargement…</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- LES DEVIS FAITS DANS L'ASSISTANT (table Supabase « devis ») -->
+    <div id="devis-assistant-bloc" style="display:none;margin-top:28px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+        <h2 style="margin:0;font-size:1.15rem">✨ Les devis faits dans l'Assistant</h2>
+        <span id="devis-assistant-total" style="font-size:.85rem;color:var(--text2)"></span>
+      </div>
+      <div id="devis-assistant-stats" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px"></div>
+      <div class="events-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>N° devis</th><th>Client</th><th>Événement</th><th>Date évent.</th><th>Pers.</th><th>Montant HT</th><th>Statut</th><th>Mis à jour</th><th>Actions</th></tr></thead>
+          <tbody id="devis-assistant-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE CHARGES -->
+  <section class="page" id="page-charges" style="padding-top:80px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:24px">
+      <h1 style="margin:0;font-size:1.4rem">💸 Charges</h1>
+      <select id="charges-year-sel" onchange="loadCharges()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text1);font-size:.9rem">
+        <option value="2025">2025</option><option value="2026" selected>2026</option>
+      </select>
+      <button class="btn-primary" style="font-size:.85rem;padding:7px 16px;margin-left:auto" onclick="document.getElementById('qonto-file-input').click()">📥 Importer un export Qonto</button>
+      <input type="file" id="qonto-file-input" accept=".xls,.xlsx,.csv" style="display:none" onchange="importQontoFile(this.files[0]); this.value=''">
+    </div>
+
+    <!-- Bandeau si la table banque n'existe pas encore -->
+    <div id="banque-setup-warning" style="display:none;background:rgba(245,197,24,.12);border:1px solid var(--gold);border-radius:12px;padding:14px 18px;margin-bottom:20px;font-size:.9rem">
+      ⚠️ La table des opérations bancaires n'existe pas encore dans Supabase. Demande à Claude de la créer (fichier <strong>~/pullup-sql/CREER-TABLE-BANQUE.sql</strong> à exécuter dans le SQL Editor Supabase).
+    </div>
+
+    <!-- KPI réel bancaire -->
+    <div id="banque-kpis" style="display:none;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px">
+      <div class="card" style="padding:14px 18px;text-align:center">
+        <div style="font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.05em">Entrées banque</div>
+        <div id="banque-kpi-in" style="font-size:1.3rem;font-weight:800;color:#4CAF50">—</div>
+      </div>
+      <div class="card" style="padding:14px 18px;text-align:center">
+        <div style="font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.05em">Sorties banque</div>
+        <div id="banque-kpi-out" style="font-size:1.3rem;font-weight:800;color:#f44336">—</div>
+      </div>
+      <div class="card" style="padding:14px 18px;text-align:center">
+        <div style="font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.05em">Résultat trésorerie</div>
+        <div id="banque-kpi-net" style="font-size:1.3rem;font-weight:800">—</div>
+      </div>
+      <div class="card" style="padding:14px 18px;text-align:center">
+        <div style="font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.05em">Charges / mois (moyenne)</div>
+        <div id="banque-kpi-avg" style="font-size:1.3rem;font-weight:800;color:var(--gold)">—</div>
+      </div>
+    </div>
+
+    <!-- Tableau mensuel réel (banque) -->
+    <div class="card" style="overflow-x:auto;margin-bottom:20px">
+      <div class="card-header"><h3>🏦 Réel bancaire (Qonto) — mois par mois</h3><span style="font-size:.75rem;color:var(--text2)">Clique sur un mois pour le détail</span></div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Mois</th>
+            <th style="color:#4CAF50">Entrées</th>
+            <th style="color:#f44336">Sorties</th>
+            <th>Résultat tréso</th>
+            <th style="color:var(--gold)">CA facturé</th>
+          </tr>
+        </thead>
+        <tbody id="banque-monthly-tbody"><tr><td colspan="5" style="text-align:center;color:var(--text2);padding:1.2rem">Chargement…</td></tr></tbody>
+        <tfoot>
+          <tr style="font-weight:700;border-top:2px solid var(--border)">
+            <td>TOTAL ANNUEL</td>
+            <td id="banque-annual-in" style="color:#4CAF50"></td>
+            <td id="banque-annual-out" style="color:#f44336"></td>
+            <td id="banque-annual-net"></td>
+            <td id="banque-annual-ca" style="color:var(--gold)"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- Détail d'un mois (catégories + transactions) -->
+    <div class="card" id="banque-detail-card" style="display:none;margin-bottom:20px">
+      <div class="card-header">
+        <h3 id="banque-detail-title">Détail</h3>
+        <button onclick="document.getElementById('banque-detail-card').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:1rem">✕ Fermer</button>
+      </div>
+      <div id="banque-detail-cats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:16px"></div>
+      <div id="banque-detail-liste" style="max-height:420px;overflow-y:auto"></div>
+    </div>
+
+    <!-- Prévisionnel (ancien tableau) -->
+    <div class="card" style="overflow-x:auto;margin-bottom:20px">
+      <div class="card-header"><h3>🎯 Prévisionnel (seuils pour les jauges)</h3><span style="font-size:.75rem;color:var(--text2)">Montants estimés, modifiables à la main</span></div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Mois</th>
+            <th style="color:#f44336">Charges fixes</th>
+            <th style="color:#4A9EFF">Charges variables</th>
+            <th style="color:var(--gold)">Total</th>
+          </tr>
+        </thead>
+        <tbody id="charges-monthly-tbody"></tbody>
+        <tfoot>
+          <tr style="font-weight:700;border-top:2px solid var(--border)">
+            <td>TOTAL ANNUEL</td>
+            <td id="charges-annual-fixes" style="color:#f44336"></td>
+            <td id="charges-annual-vars" style="color:#4A9EFF"></td>
+            <td id="charges-annual-total" style="color:var(--gold)"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex-wrap:wrap">
+
+      <!-- Détail charges fixes -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:10px">
+          <h3 style="margin:0">🔒 Charges fixes</h3>
+          <button class="btn-primary" style="font-size:.8rem;padding:5px 14px" onclick="openModal('newChargeFixe')">+ Ajouter</button>
+        </div>
+        <div style="background:rgba(244,67,54,.1);border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:.85rem;color:var(--text2)">Total charges fixes / mois</span>
+          <span id="charges-fixes-sum" style="font-size:1.1rem;color:#f44336;font-weight:700">—</span>
+        </div>
+        <div id="charges-fixes-detail"></div>
+      </div>
+
+      <!-- Détail charges variables -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:10px">
+          <h3 style="margin:0">📊 Charges variables</h3>
+          <button class="btn-primary" style="font-size:.8rem;padding:5px 14px;background:var(--color-ketsia)" onclick="openModal('newChargeVariable')">+ Ajouter</button>
+        </div>
+        <div style="background:rgba(74,158,255,.1);border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:.85rem;color:var(--text2)">Total charges variables / mois</span>
+          <span id="charges-vars-sum" style="font-size:1.1rem;color:#4A9EFF;font-weight:700">—</span>
+        </div>
+        <div id="charges-vars-detail"></div>
+      </div>
+
+    </div>
+
+    <!-- Modal charge variable -->
+    <div class="modal-overlay" id="modal-newChargeVariable">
+      <div class="modal" style="max-width:400px">
+        <div class="modal-header"><h3 id="modal-cv-title">Nouvelle charge variable</h3><button class="modal-close" onclick="closeModal('newChargeVariable')">✕</button></div>
+        <form id="form-newChargeVariable" onsubmit="saveChargeVariableItem(event)">
+          <input type="hidden" name="id">
+          <div class="form-group"><label>Libellé *</label><input name="label" required placeholder="ex: Google Ads, Essence..."></div>
+          <div class="form-group"><label>Catégorie</label>
+            <select name="categorie">
+              <option>Transport</option><option>Marketing</option><option>Abonnements</option>
+              <option>Équipements</option><option>Autres</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Montant mensuel (€) *</label><input name="montant" type="number" step="0.01" required placeholder="ex: 150"></div>
+          <div class="form-actions">
+            <button type="button" onclick="closeModal('newChargeVariable')" class="btn-secondary">Annuler</button>
+            <button type="submit" class="btn-primary">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal charge fixe -->
+    <div class="modal-overlay" id="modal-newChargeFixe">
+      <div class="modal" style="max-width:400px">
+        <div class="modal-header"><h3 id="modal-cf-title">Nouvelle charge fixe</h3><button class="modal-close" onclick="closeModal('newChargeFixe')">✕</button></div>
+        <form id="form-newChargeFixe" onsubmit="saveChargeFixeItem(event)">
+          <input type="hidden" name="id">
+          <div class="form-group"><label>Libellé *</label><input name="label" required placeholder="ex: Loyer, Spotify..."></div>
+          <div class="form-group"><label>Catégorie</label>
+            <select name="categorie">
+              <option>Salaires</option><option>Comptabilité</option><option>Abonnements</option>
+              <option>Assurances</option><option>Mutuelle</option><option>Loyer</option>
+              <option>Équipements</option><option>Autres</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Montant mensuel (€) *</label><input name="montant" type="number" step="0.01" required placeholder="ex: 150"></div>
+          <div class="form-actions">
+            <button type="button" onclick="closeModal('newChargeFixe')" class="btn-secondary">Annuler</button>
+            <button type="submit" class="btn-primary">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== AMÉLIORATIONS HUB ===== -->
+  <section class="page" id="page-improvements">
+    <h1 style="font-size:1.3rem;font-weight:700;margin-bottom:16px;margin-top:16px">💡 Améliorations Hub</h1>
+
+    <button onclick="openNewImprovement()" style="width:100%;background:var(--gold);color:#000;border:none;border-radius:12px;padding:14px;font-size:1rem;font-weight:700;cursor:pointer;margin-bottom:20px">+ Nouvelle suggestion d'amélioration</button>
+
+    <!-- Filtres statut -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+      <button class="editorial-filter active" onclick="filterImprovements(this,'all')">Toutes</button>
+      <button class="editorial-filter" onclick="filterImprovements(this,'idea')">💡 Idées</button>
+      <button class="editorial-filter" onclick="filterImprovements(this,'todo')">🔧 À faire</button>
+      <button class="editorial-filter" onclick="filterImprovements(this,'done')">✅ Faites</button>
+    </div>
+
+    <div id="improvements-list" style="display:flex;flex-direction:column;gap:12px"></div>
+  </section>
+
+  <!-- Modal nouvelle amélioration -->
+  <div class="modal-overlay" id="modal-newImprovement">
+    <div class="modal" style="max-width:520px">
+      <div class="modal-header">
+        <h3 id="improv-modal-title">Nouvelle amélioration</h3>
+        <button class="modal-close" onclick="closeModal('newImprovement')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Titre</label>
+          <input type="text" id="improv-title" class="form-control" placeholder="Ex: Ajouter un bouton export PDF…">
+        </div>
+        <div class="form-group">
+          <label>Description détaillée</label>
+          <textarea id="improv-desc" class="form-control" rows="5" placeholder="Décris l'amélioration, pourquoi c'est utile, comment tu imagines que ça fonctionne…"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Priorité</label>
+          <select id="improv-priority" class="form-control">
+            <option value="normal">Normal</option>
+            <option value="high">🔥 Urgent / Important</option>
+            <option value="low">Plus tard</option>
+          </select>
+        </div>
+        <input type="hidden" id="improv-edit-id">
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" onclick="closeModal('newImprovement')">Annuler</button>
+        <button class="btn-primary" onclick="saveImprovement()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CALENDRIER ÉDITORIAL ===== -->
+  <section class="page" id="page-editorial">
+    <div class="page-header">
+      <h1>Calendrier éditorial</h1>
+      <button class="btn-primary" onclick="openEditorialModal()">+ Nouvelle publication</button>
+    </div>
+
+    <!-- Navigation mois -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <button class="btn-icon" onclick="editorialNav(-1)">‹</button>
+      <span id="editorial-month-label" style="font-weight:700;font-size:1.1rem;min-width:160px;text-align:center"></span>
+      <button class="btn-icon" onclick="editorialNav(1)">›</button>
+    </div>
+
+    <!-- Filtres réseau -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px" id="editorial-filters">
+      <button class="editorial-filter active" data-net="all" onclick="setEditorialFilter(this,'all')">Tous</button>
+      <button class="editorial-filter" data-net="Instagram" onclick="setEditorialFilter(this,'Instagram')">📸 Instagram</button>
+      <button class="editorial-filter" data-net="Facebook" onclick="setEditorialFilter(this,'Facebook')">📘 Facebook</button>
+      <button class="editorial-filter" data-net="LinkedIn" onclick="setEditorialFilter(this,'LinkedIn')">💼 LinkedIn</button>
+      <button class="editorial-filter" data-net="TikTok" onclick="setEditorialFilter(this,'TikTok')">🎵 TikTok</button>
+      <button class="editorial-filter" data-net="Email" onclick="setEditorialFilter(this,'Email')">✉️ Email</button>
+    </div>
+
+    <!-- Calendrier -->
+    <div id="editorial-calendar"></div>
+  </section>
+
+  <!-- Modal publication -->
+  <div class="modal-overlay" id="modal-editorial">
+    <div class="modal" style="max-width:560px">
+      <div class="modal-header">
+        <h3 id="editorial-modal-title">Nouvelle publication</h3>
+        <button class="modal-close" onclick="closeModal('editorial')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Date de publication</label>
+          <input type="date" id="ed-date" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Réseau</label>
+          <select id="ed-network" class="form-control">
+            <option>Instagram</option>
+            <option>Facebook</option>
+            <option>LinkedIn</option>
+            <option>TikTok</option>
+            <option>Email</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Titre / Sujet</label>
+          <input type="text" id="ed-title" class="form-control" placeholder="Ex: Stories soirée mariage…">
+        </div>
+        <div class="form-group">
+          <label>Contenu / Légende</label>
+          <textarea id="ed-content" class="form-control" rows="4" placeholder="Texte de la publication…"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Statut</label>
+          <select id="ed-status" class="form-control">
+            <option value="idee">💡 Idée</option>
+            <option value="redaction">✍️ En rédaction</option>
+            <option value="pret">✅ Prêt à publier</option>
+            <option value="publie">🚀 Publié</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Assigné à</label>
+          <select id="ed-assignee" class="form-control">
+            <option value="">— Personne —</option>
+            <option>Romain</option>
+            <option>Ketsia</option>
+            <option>Flora</option>
+            <option>Gloria</option>
+          </select>
+        </div>
+        <input type="hidden" id="ed-edit-id">
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" onclick="closeModal('editorial')">Annuler</button>
+        <button class="btn-primary" onclick="saveEditorialPost()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end #app-container -->
+
+<!-- Modal nouvelle demande de devis (hors sections pour toujours visible) -->
+<div class="modal-overlay" id="modal-newDevisRequest">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header"><h3>Nouvelle demande de devis</h3><span id="devis-autosave-indicator" style="font-size:.75rem;color:#4CAF50;font-weight:600;margin-left:8px"></span><button class="modal-close" onclick="closeModal('newDevisRequest')">✕</button></div>
+    <form id="form-newDevisRequest" onsubmit="saveDevisRequest(event)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label>Client / Société *</label><input name="client" required placeholder="Nom du client ou société"></div>
+        <div class="form-group"><label>Nom du contact</label><input name="contact_name" placeholder="Prénom Nom"></div>
+        <div class="form-group"><label>Téléphone</label><input name="phone" placeholder="0692 XX XX XX"></div>
+        <div class="form-group"><label>Email</label><input name="email" type="email" placeholder="contact@exemple.fr"></div>
+        <div class="form-group"><label>Type d'événement</label><input name="event_type" placeholder="Mariage, anniversaire, séminaire…"></div>
+        <div class="form-group"><label>Date de l'événement</label><input name="event_date" type="date"></div>
+        <div class="form-group"><label>Lieu</label><input name="location" placeholder="Ville, salle, domaine…"></div>
+        <div class="form-group"><label>Nombre d'invités</label><input name="guest_count" type="number" placeholder="ex: 150"></div>
+        <div class="form-group"><label>Durée</label><input name="duration" placeholder="ex: 1 journée, soirée, 2 jours…"></div>
+        <div class="form-group"><label>Budget estimé (€)</label><input name="budget_estimate" type="number" step="0.01" placeholder="ex: 8000"></div>
+        <div class="form-group"><label>Priorité</label>
+          <select name="priority"><option>Normal</option><option>Urgent</option><option>Basse</option></select>
+        </div>
+        <div class="form-group"><label>Statut</label>
+          <select name="status"><option>À faire</option><option>En cours</option><option>Envoyé</option></select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1"><label>👤 Assigné à (qui doit faire le devis)</label>
+          <select name="assigned_to" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text1);width:100%">
+            <option value="">— Non assigné —</option>
+            <option value="Romain">Romain</option>
+            <option value="Ketsia">Ketsia</option>
+            <option value="Flora">Flora</option>
+            <option value="Gloria">Gloria</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Services demandés</label><input name="services_requested" placeholder="Animation, sono, décoration, traiteur…"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label>Traiteur / Restauration</label><input name="catering" placeholder="Détails traiteur"></div>
+        <div class="form-group"><label>Décoration</label><input name="decoration" placeholder="Thème, couleurs…"></div>
+        <div class="form-group"><label>Son &amp; Lumières</label><input name="sound_light" placeholder="Sono, éclairage, LED…"></div>
+        <div class="form-group"><label>Animation</label><input name="animation" placeholder="DJ, groupe, animateur…"></div>
+      </div>
+      <div class="form-group"><label>Notes / Observations</label><textarea name="notes" rows="3" placeholder="Toute autre info utile pour établir le devis…" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text1);resize:vertical"></textarea></div>
+      <div class="form-actions">
+        <button type="button" onclick="closeModal('newDevisRequest')" class="btn-secondary">Annuler</button>
+        <button type="submit" class="btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js?v=20260814"></script>
+<script src="app.js?v=20260814"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    // Enregistrer le SW de nettoyage (sans rechargement forcé — l'ancien
+    // mécanisme FORCE_RELOAD faisait recharger la page en boucle)
+    navigator.serviceWorker.register('sw.js');
+  }
+</script>
+
+<!-- MODALE CHARTE D'UTILISATION -->
+<div class="modal-overlay" id="modal-charter" style="z-index:9999;background:rgba(0,0,0,.7)">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header"><h3>📋 Charte d'utilisation</h3></div>
+    <div class="modal-body" style="font-size:.9rem;line-height:1.7;color:var(--text1)">
+      <p>Bienvenue sur <strong>Pull Up Hub</strong>, l'outil interne de gestion de <strong>Pull Up Événements</strong>.</p>
+      <p>En accédant à cette application, vous reconnaissez et acceptez les points suivants :</p>
+      <ul style="padding-left:1.2rem;margin:.8rem 0;display:flex;flex-direction:column;gap:.5rem">
+        <li>Vos données personnelles (nom, congés, frais, présence) sont collectées et traitées dans le cadre de la gestion interne de l'entreprise, conformément au <strong>RGPD</strong>.</li>
+        <li>Ces données sont accessibles uniquement aux membres de l'équipe Pull Up Événements et à l'administrateur.</li>
+        <li>Vous pouvez à tout moment demander à consulter ou corriger vos données en contactant Romain Capdepont.</li>
+        <li>Toute modification ou suppression de données est enregistrée dans un journal d'audit.</li>
+        <li>Cette application est à usage professionnel exclusivement. Toute utilisation inappropriée peut engager votre responsabilité.</li>
+      </ul>
+      <p style="font-size:.8rem;color:var(--text2)">Responsable du traitement : Pull Up Événements — Romain Capdepont — 6 Impasse des Sœurs Brontë, Le Tampon</p>
+    </div>
+    <div class="modal-footer" style="justify-content:center">
+      <button class="btn-primary" style="padding:.7rem 2.5rem;font-size:1rem" onclick="acceptCharter()">✅ J'ai lu et j'accepte</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE JOURNAL D'AUDIT (admin) -->
+<section class="page" id="page-audit" style="display:none">
+  <div class="page-header"><h1>🔍 Journal d'audit</h1></div>
+  <div id="audit-log-container">
+    <p style="color:var(--text2);padding:2rem;text-align:center">Chargement…</p>
+  </div>
+</section>
+
+<script>
+function acceptCharter() {
+  localStorage.setItem('pullup_charter_accepted', '1');
+  document.getElementById('modal-charter').classList.remove('open');
+}
+
+function checkCharter() {
+  if (!localStorage.getItem('pullup_charter_accepted')) {
+    document.getElementById('modal-charter').classList.add('open');
+  }
+}
+
+async function loadAuditLog() {
+  const container = document.getElementById('audit-log-container');
+  if (!container) return;
+  const { data, error } = await sb.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(200);
+  if (error) { container.innerHTML = '<p style="color:var(--danger)">Erreur de chargement</p>'; return; }
+  if (!data.length) { container.innerHTML = '<p style="color:var(--text2);padding:2rem;text-align:center">Aucune action enregistrée</p>'; return; }
+  container.innerHTML = `<table class="data-table" style="width:100%"><thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Détail</th></tr></thead><tbody>
+    ${data.map(r => `<tr>
+      <td style="font-size:.8rem;color:var(--text2);white-space:nowrap">${new Date(r.created_at).toLocaleString('fr-FR')}</td>
+      <td><strong>${r.user_name}</strong></td>
+      <td><span style="background:var(--bg3);border-radius:6px;padding:2px 8px;font-size:.8rem">${r.action}</span></td>
+      <td style="color:var(--text2);font-size:.85rem">${r.details || '—'}</td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+</script>
+
+<!-- Modal détail mois finances -->
+<div class="modal-overlay" id="modal-monthDetail">
+  <div class="modal" style="max-width:720px;width:95%">
+    <div class="modal-header">
+      <h2 id="monthDetail-title">Détail du mois</h2>
+      <button class="modal-close" onclick="closeModal('monthDetail')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <div class="events-table-wrap" style="max-height:420px;overflow-y:auto">
+        <table class="data-table">
+          <thead><tr><th>Date</th><th>Projet</th><th>Client</th><th>CA (€)</th><th style="color:#4CAF50">Bénéfice (€)</th><th>% Marge</th><th>Statut</th></tr></thead>
+          <tbody id="monthDetail-tbody"><tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text2)">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+      <div id="monthDetail-total" style="padding:14px 20px;text-align:right;border-top:1px solid var(--border);font-size:1.05rem"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" onclick="closeModal('monthDetail')">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal édition facture dans détail mois -->
+<div class="modal-overlay" id="modal-editFinanceRow">
+  <div class="modal" style="max-width:480px;width:95%">
+    <div class="modal-header">
+      <h2>Modifier la facture</h2>
+      <button class="modal-close" onclick="closeModal('editFinanceRow')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-editFinanceRow" class="form-grid">
+        <input type="hidden" name="id">
+        <div class="form-group span2"><label>Projet / Description</label><input name="notes" type="text" placeholder="Ex: Animation enfant"></div>
+        <div class="form-group span2"><label>Client</label><input name="client" type="text" placeholder="Ex: Casabona"></div>
+        <div class="form-group"><label>CA (€)</label><input name="amount" type="number" step="0.01" placeholder="0" oninput="calcEditMarge()"></div>
+        <div class="form-group"><label>Bénéfice (€)</label><input name="benef" type="number" step="0.01" placeholder="0" oninput="calcEditMarge()"></div>
+        <div class="form-group span2">
+          <label>% Marge calculée</label>
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:1.1rem;font-weight:700" id="editFinanceRow-marge">—</div>
+        </div>
+        <div class="form-group"><label>Date</label><input name="invoice_date" type="date"></div>
+        <div class="form-group"><label>Statut</label>
+          <select name="status" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+            <option>Payée</option>
+            <option>En attente</option>
+            <option>Non payé</option>
+            <option>En retard</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between">
+      <button class="btn-outline btn-danger-outline" onclick="deleteFinanceRow()">🗑 Supprimer</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn-outline" onclick="closeModal('editFinanceRow')">Annuler</button>
+        <button class="btn-primary" onclick="saveFinanceRow()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Lightbox aperçu fichier/photo -->
+<div id="modal-filePreview" onclick="closeFilePreview()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:16px;cursor:zoom-out">
+  <button onclick="closeFilePreview()" style="position:absolute;top:18px;right:22px;background:none;border:none;color:#fff;font-size:1.8rem;cursor:pointer;line-height:1">✕</button>
+  <img id="filePreview-img" src="" alt="" onclick="event.stopPropagation()" style="max-width:92vw;max-height:85vh;border-radius:10px;object-fit:contain;box-shadow:0 8px 40px rgba(0,0,0,.6)">
+  <a id="filePreview-link" href="#" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--gold);font-size:1.1rem;padding:12px 28px;border:1px solid var(--gold);border-radius:8px;text-decoration:none">Ouvrir le fichier</a>
+</div>
+<style>
+  #modal-filePreview { display:none }
+  #modal-filePreview.active { display:flex }
+</style>
+
+<!-- Modal édition fournisseur -->
+<div class="modal-overlay" id="modal-editSupplier">
+  <div class="modal" style="max-width:520px;width:95%">
+    <div class="modal-header">
+      <h3>Modifier le fournisseur</h3>
+      <button class="modal-close" onclick="closeModal('editSupplier')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editSupplier-id">
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:14px">
+        <div class="form-group span2">
+          <label>Nom</label>
+          <input type="text" id="editSupplier-name" class="form-control" placeholder="Nom du fournisseur">
+        </div>
+        <div class="form-group">
+          <label>Catégorie</label>
+          <select id="editSupplier-category" class="form-control">
+            <option>Traiteur</option>
+            <option>DJ</option>
+            <option>Animateur</option>
+            <option>Hôtesse</option>
+            <option>Sonorisation</option>
+            <option>Artiste</option>
+            <option>Domaine</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Note (étoiles)</label>
+          <select id="editSupplier-rating" class="form-control">
+            <option value="1">★☆☆☆☆</option>
+            <option value="2">★★☆☆☆</option>
+            <option value="3">★★★☆☆</option>
+            <option value="4">★★★★☆</option>
+            <option value="5">★★★★★</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Téléphone</label>
+          <input type="text" id="editSupplier-phone" class="form-control" placeholder="0692...">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="editSupplier-email" class="form-control" placeholder="contact@...">
+        </div>
+        <div class="form-group span2">
+          <label>💰 Prix / Tarif</label>
+          <input type="text" id="editSupplier-price" class="form-control" placeholder="Ex : 800€ la prestation, 50€/h, sur devis...">
+        </div>
+        <div class="form-group span2">
+          <label>Notes / Commentaires</label>
+          <textarea id="editSupplier-notes" class="form-control" rows="3" placeholder="Informations complémentaires..."></textarea>
+        </div>
+        <div class="form-group span2">
+          <label>Apparaît aussi dans… <span style="color:var(--text2);font-size:.8rem">(plusieurs onglets possibles)</span></label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px" id="editSupplier-tags">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.85rem"><input type="checkbox" value="Animateur enfant" style="accent-color:var(--gold)"> Animateur enfant</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.85rem"><input type="checkbox" value="Noël" style="accent-color:var(--gold)"> Noël 🎄</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.85rem"><input type="checkbox" value="Vidéo" style="accent-color:var(--gold)"> Vidéo 🎥</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.85rem"><input type="checkbox" value="Photo cabine" style="accent-color:var(--gold)"> Photo cabine 📸</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.85rem"><input type="checkbox" value="Autre animation" style="accent-color:var(--gold)"> Autre animation</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.85rem"><input type="checkbox" value="DJ" style="accent-color:var(--gold)"> DJ</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.85rem"><input type="checkbox" value="Animateur" style="accent-color:var(--gold)"> Animateur</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.85rem"><input type="checkbox" value="Sonorisation" style="accent-color:var(--gold)"> Sonorisation</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.85rem"><input type="checkbox" value="Traiteur" style="accent-color:var(--gold)"> Traiteur</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between">
+      <button class="btn-outline" style="color:#e53935;border-color:#e53935" onclick="deleteSupplier()">🗑 Supprimer</button>
+      <div style="display:flex;gap:10px">
+        <button class="btn-outline" onclick="closeModal('editSupplier')">Annuler</button>
+        <button class="btn-primary" onclick="saveEditSupplier()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EXPORT PDF KILOMÉTRIQUE -->
+<div class="modal-overlay" id="modal-exportPDF">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header"><h3>📄 Export PDF — Frais kilométriques</h3><button class="btn-icon" onclick="closeModal('exportPDF')">✕</button></div>
+    <div class="modal-body">
+      <p style="color:var(--text2);font-size:.88rem;margin-bottom:16px">Sélectionne les mois à exporter (véhicule utilitaire exclu automatiquement).</p>
+      <div id="exportPDF-months" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('exportPDF')">Annuler</button>
+      <button class="btn-primary" onclick="generateMileagePDF()">Générer le PDF</button>
+    </div>
+  </div>
+</div>
+<style id="21st-hub">
+/* ===== INSPIRATION 21ST.DEV — HUB ===== */
+@media(pointer:fine){
+.stat-card{position:relative;overflow:hidden}
+.stat-card::after{content:"";position:absolute;inset:0;opacity:0;transition:opacity .3s;pointer-events:none;background:radial-gradient(200px circle at var(--mx,50%) var(--my,50%),rgba(245,197,24,.10),transparent 65%)}
+.stat-card:hover::after{opacity:1}
+}
+</style>
+<script id="21st-hub-js">
+(function(){
+  var calme = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* Confettis d'équipe : or Romain, bleu Ketsia, rose Flora, violet Gloria */
+  window.puBravo = function(){
+    if (calme) return;
+    var cv = document.createElement('canvas');
+    cv.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999';
+    cv.width = innerWidth; cv.height = innerHeight;
+    document.body.appendChild(cv);
+    var ctx = cv.getContext('2d');
+    var couleurs = ['#F5C518','#4A9EFF','#FF6B9D','#9B59B6','#fff'];
+    var parts = [];
+    for (var k = 0; k < 60; k++){
+      var a = Math.random()*Math.PI*2, v = 4 + Math.random()*7;
+      parts.push({x:innerWidth/2, y:innerHeight*.35, vx:Math.cos(a)*v, vy:Math.sin(a)*v - 5,
+        w:5+Math.random()*5, h:3+Math.random()*4, rot:Math.random()*Math.PI,
+        vr:(Math.random()-.5)*.3, c:couleurs[k % couleurs.length]});
+    }
+    var t0 = null;
+    function anime(ts){
+      if (!t0) t0 = ts;
+      var fini = (ts - t0) > 2000;
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      parts.forEach(function(pt){
+        pt.vy += .18; pt.x += pt.vx; pt.y += pt.vy; pt.rot += pt.vr;
+        ctx.save(); ctx.translate(pt.x, pt.y); ctx.rotate(pt.rot);
+        ctx.globalAlpha = Math.max(0, 1 - (ts - t0)/2000);
+        ctx.fillStyle = pt.c; ctx.fillRect(-pt.w/2, -pt.h/2, pt.w, pt.h);
+        ctx.restore();
+      });
+      if (fini) cv.remove(); else requestAnimationFrame(anime);
+    }
+    requestAnimationFrame(anime);
+  };
+
+  /* Halo qui suit la souris sur les cartes du tableau de bord */
+  if (matchMedia('(pointer:fine)').matches){
+    document.querySelectorAll('.stat-card').forEach(function(c){
+      c.addEventListener('mousemove', function(e){
+        var r = c.getBoundingClientRect();
+        c.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+        c.style.setProperty('--my', (e.clientY - r.top) + 'px');
+      });
+    });
+  }
+
+  /* Compteurs animés : les chiffres du tableau de bord montent en douceur */
+  if (!calme){
+    var animer = function(el){
+      var t = el.textContent.trim();
+      var m = t.match(/^(\d[\d\s]*)(.*)$/);
+      if (!m) return;
+      var fin = parseInt(m[1].replace(/\s/g,''), 10);
+      if (!fin || fin > 999999) return;
+      var reste = m[2] || '';
+      el.dataset.fige = '1';
+      var t0 = null;
+      function pas(ts){
+        if (!t0) t0 = ts;
+        var pr = Math.min((ts - t0)/900, 1); pr = 1 - Math.pow(1-pr, 3);
+        el.textContent = Math.round(fin*pr).toLocaleString('fr-FR') + reste;
+        if (pr < 1) requestAnimationFrame(pas); else delete el.dataset.fige;
+      }
+      requestAnimationFrame(pas);
+    };
+    var grille = document.getElementById('stats-grid');
+    if (grille){
+      new MutationObserver(function(muts){
+        muts.forEach(function(mu){
+          var el = mu.target.nodeType === 3 ? mu.target.parentElement : mu.target;
+          if (!el || !el.classList || !el.classList.contains('stat-value')) return;
+          if (el.dataset.fige || el.dataset.deja) return;
+          if (!/\d/.test(el.textContent)) return;
+          el.dataset.deja = '1';
+          animer(el);
+        });
+      }).observe(grille, {subtree:true, childList:true, characterData:true});
+    }
+  }
+})();
+</script>
+<style id="21st-hub-v2">
+/* Cascade d'entrée des cartes de tâches */
+@media(prefers-reduced-motion:no-preference){
+.ptask-card{animation:entree21 .4s cubic-bezier(.2,.7,.2,1) both}
+.ptask-card:nth-child(2){animation-delay:.05s}.ptask-card:nth-child(3){animation-delay:.1s}
+.ptask-card:nth-child(4){animation-delay:.15s}.ptask-card:nth-child(5){animation-delay:.2s}
+.ptask-card:nth-child(6){animation-delay:.25s}.ptask-card:nth-child(n+7){animation-delay:.3s}
+@keyframes entree21{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* Effet « presse » : les boutons répondent sous le doigt */
+button:active,.btn:active{transform:scale(.97)}
+button,.btn{transition:transform .1s ease}
+}
+</style>
+</body>
+</html>
