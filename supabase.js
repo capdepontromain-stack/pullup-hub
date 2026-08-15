@@ -3979,15 +3979,17 @@ let _chargesFixes = [];
 let _chargesVarsItems = [];
 
 let _banqueTx = [];
+let _banqueFactures = [];
 
 async function loadCharges() {
   const annee = parseInt(document.getElementById('charges-year-sel')?.value || 2026);
-  const [rm, rf, rv, rb, rfin] = await Promise.all([
+  const [rm, rf, rv, rb, rfin, rfac] = await Promise.all([
     sb.from('charges_monthly').select('*').eq('year', annee).order('month'),
     sb.from('charges_fixes').select('*').order('categorie').order('label'),
     sb.from('charges_variables_items').select('*').order('categorie').order('label'),
     sb.from('banque_transactions').select('*').eq('annee', annee).order('date_op', { ascending: false }),
-    sb.from('finance_monthly').select('*').eq('year', annee)
+    sb.from('finance_monthly').select('*').eq('year', annee),
+    sb.from('banque_factures').select('*').eq('annee', annee).order('date_emission', { ascending: false })
   ]);
   if (rf.error) console.error('charges_fixes error:', rf.error);
   if (rv.error) console.error('charges_variables_items error:', rv.error);
@@ -3995,6 +3997,7 @@ async function loadCharges() {
   _chargesFixes = rf.data || [];
   _chargesVarsItems = rv.data || [];
   _banqueTx = rb.data || [];
+  _banqueFactures = rfac.data || [];
   const warn = document.getElementById('banque-setup-warning');
   if (warn) warn.style.display = (rb.error && rb.error.code === 'PGRST205') ? 'block' : 'none';
   renderBanqueMonthly(annee, rfin.data || []);
@@ -4034,8 +4037,15 @@ function categoriserTransaction(nom, catQonto, methode, credit) {
 function renderBanqueMonthly(annee, finRows) {
   const tbody = document.getElementById('banque-monthly-tbody');
   if (!tbody) return;
+  // CA facturé officiel = factures Qonto (hors annulées) ; à défaut, l'ancien chiffre saisi (finance_monthly)
   const caByMonth = {};
   (finRows || []).forEach(r => { caByMonth[r.month] = parseFloat(r.ca) || 0; });
+  const facByMonth = {};
+  _banqueFactures.forEach(f => {
+    if (f.statut === 'canceled') return;
+    facByMonth[f.mois] = (facByMonth[f.mois] || 0) + (parseFloat(f.ht) || 0);
+  });
+  Object.keys(facByMonth).forEach(m => { caByMonth[m] = facByMonth[m]; });
 
   const byMonth = {};
   _banqueTx.forEach(t => {
@@ -4116,8 +4126,25 @@ function showBanqueMois(annee, mois) {
     </div>`;
   }).join('') || '<p style="color:var(--text2)">Aucune sortie ce mois-ci.</p>';
 
+  // Factures émises ce mois-ci (CA officiel)
+  const facs = _banqueFactures.filter(f => f.mois === mois);
+  const facHtml = facs.length ? `
+    <div style="font-weight:700;font-size:.85rem;margin:4px 0 6px">📄 Factures émises (${facs.filter(f => f.statut !== 'canceled').length})</div>
+    ${facs.map(f => {
+      const badge = f.statut === 'paid' ? '<span style="font-size:.7rem;background:rgba(76,175,80,.18);color:#4CAF50;border-radius:6px;padding:2px 8px">Payée</span>'
+        : f.statut === 'canceled' ? '<span style="font-size:.7rem;background:var(--bg3);color:var(--text3);border-radius:6px;padding:2px 8px">Annulée</span>'
+        : '<span style="font-size:.7rem;background:rgba(245,197,24,.18);color:var(--gold);border-radius:6px;padding:2px 8px">En attente</span>';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:6px 4px;border-bottom:1px solid var(--border);font-size:.85rem;${f.statut === 'canceled' ? 'opacity:.45' : ''}">
+        <span style="color:var(--text2);min-width:86px">${f.numero}</span>
+        <span style="flex:1">${f.client || '—'}</span>
+        ${badge}
+        <strong style="color:var(--gold);${f.statut === 'canceled' ? 'text-decoration:line-through' : ''}">${(parseFloat(f.ht) || 0).toLocaleString('fr-FR')} € HT</strong>
+      </div>`;
+    }).join('')}
+    <div style="font-weight:700;font-size:.85rem;margin:14px 0 6px">🏦 Opérations bancaires (${txs.length})</div>` : '';
+
   // Liste des opérations
-  document.getElementById('banque-detail-liste').innerHTML = txs.map(t => {
+  document.getElementById('banque-detail-liste').innerHTML = facHtml + txs.map(t => {
     const deb = parseFloat(t.debit) || 0;
     const cred = parseFloat(t.credit) || 0;
     const montant = cred ? `<strong style="color:#4CAF50">+${cred.toLocaleString('fr-FR')} €</strong>` : `<strong style="color:#f44336">-${deb.toLocaleString('fr-FR')} €</strong>`;
@@ -4132,7 +4159,8 @@ function showBanqueMois(annee, mois) {
   card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// Import d'un export Qonto (.xls / .xlsx / .csv) directement dans le navigateur
+// Import d'un export Qonto (.xls / .xlsx / .csv) directement dans le navigateur.
+// Détecte tout seul le type de fichier : relevé bancaire (transactions) ou liste de factures.
 async function importQontoFile(file) {
   if (!file) return;
   showToast('Lecture du fichier…');
@@ -4145,8 +4173,11 @@ async function importQontoFile(file) {
         document.head.appendChild(s);
       });
     }
-    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array', FS: ';', codepage: 65001 });
     const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: null });
+    if (rows.length && rows[0]['Number'] !== undefined && rows[0]['Issue Date'] !== undefined) {
+      return importQontoFactures(rows);
+    }
     const ops = [];
     for (const r of rows) {
       const tid = r['Identifiant de transaction'];
@@ -4190,6 +4221,40 @@ async function importQontoFile(file) {
     console.error(e);
     showToast('Erreur pendant l\'import : ' + e.message);
   }
+}
+
+// Import d'un export « Factures » Qonto (CSV invoices) — met aussi à jour les statuts payé/impayé
+async function importQontoFactures(rows) {
+  const facs = [];
+  for (const r of rows) {
+    const num = (r['Number'] || '').toString().trim();
+    const d = (r['Issue Date'] || '').toString().slice(0, 10);
+    if (!num || !/^\d{4}-\d{2}-\d{2}$/.test(d)) continue;
+    facs.push({
+      numero: num,
+      date_emission: d,
+      annee: parseInt(d.slice(0, 4)),
+      mois: parseInt(d.slice(5, 7)),
+      client: r['Client Name'] || null,
+      ht: r['Subtotal'] != null ? parseFloat(r['Subtotal']) : null,
+      tva: r['Vat Amount'] != null ? parseFloat(r['Vat Amount']) : null,
+      ttc: r['Amount Due'] != null ? parseFloat(r['Amount Due']) : null,
+      statut: r['Status'] || null,
+      payee_le: r['Paid At'] ? String(r['Paid At']).slice(0, 10) : null,
+      objet: r['Header'] ? String(r['Header']).slice(0, 200) : null
+    });
+  }
+  if (!facs.length) { showToast('Aucune facture reconnue dans ce fichier'); return; }
+  const { error } = await sb.from('banque_factures').upsert(facs, { onConflict: 'numero' });
+  if (error) {
+    if (error.code === 'PGRST205') showToast('⚠️ La table banque_factures n\'existe pas encore dans Supabase');
+    else showToast('Erreur : ' + error.message);
+    return;
+  }
+  showToast(`✓ ${facs.length} factures importées (statuts payé/impayé mis à jour)`);
+  const sel = document.getElementById('charges-year-sel');
+  if (sel && !facs.some(f => f.annee === parseInt(sel.value))) sel.value = String(facs[0].annee);
+  await loadCharges();
 }
 
 function renderChargesFixesDetail() {
