@@ -2247,6 +2247,16 @@ Afin d'avancer, nous pouvons :
       </table>
     </div>
 
+    <!-- Charges réelles par famille -->
+    <div class="card" id="familles-wrap" style="display:none;overflow-x:auto;margin-bottom:20px">
+      <div class="card-header"><h3>📂 Charges par famille (réel banque)</h3><span style="font-size:.75rem;color:var(--text2)">Calculé automatiquement depuis tes opérations Qonto</span></div>
+      <table class="data-table" style="font-size:.85rem">
+        <thead id="familles-thead"></thead>
+        <tbody id="familles-tbody"></tbody>
+        <tfoot id="familles-tfoot"></tfoot>
+      </table>
+    </div>
+
     <!-- Détail d'un mois (catégories + transactions) -->
     <div class="card" id="banque-detail-card" style="display:none;margin-bottom:20px">
       <div class="card-header">
@@ -2544,7 +2554,7 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260815"></script>
+<script src="supabase.js?v=20260815b"></script>
 <script src="app.js?v=20260814"></script>
 <script>
   if ('serviceWorker' in navigator) {

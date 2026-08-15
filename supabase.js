@@ -4001,6 +4001,7 @@ async function loadCharges() {
   const warn = document.getElementById('banque-setup-warning');
   if (warn) warn.style.display = (rb.error && rb.error.code === 'PGRST205') ? 'block' : 'none';
   renderBanqueMonthly(annee, rfin.data || []);
+  renderChargesFamilles(annee);
   renderChargesMonthly(annee);
   renderChargesFixesDetail();
   renderChargesVarsDetail();
@@ -4008,30 +4009,81 @@ async function loadCharges() {
 
 // ===== RÉEL BANCAIRE (import Qonto) =====
 
-// Catégorisation automatique d'une opération bancaire (même logique que le générateur SQL)
+// Familles de charges considérées comme fixes/récurrentes (badge dans le tableau par famille)
+const FAMILLES_FIXES = ['Abonnements & outils', 'Assurances', 'Ménage', 'Comptable & conseils', 'Frais bancaires', 'Cotisations & retraite'];
+
+// Catégorisation automatique v2 (familles validées avec Romain le 15/08/2026 — même logique que la recatégorisation SQL)
 function categoriserTransaction(nom, catQonto, methode, credit) {
   const norm = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
   const n = norm(nom), c = norm(catQonto);
   if (credit && credit > 0) return 'Encaissements';
   if (['DGFIP', 'DIRECTION GENERALE DES FINANCES', 'SIE SAINT', 'SIE ST', 'TRESOR PUBLIC'].some(k => n.includes(k))) return 'Impôts & TVA';
-  if (['CGSS', 'URSSAF'].some(k => n.includes(k))) return 'Cotisations sociales';
-  if (n.includes('ROMAIN CAPDEPONT')) return 'Virements Romain';
-  if (['MARINE ROULLAND', 'LAW WAN CHUNG', 'HERBERT DIMITRI PITOU', 'MARIE CHOYEN', 'FLORA', 'GLORIA', 'BENJAMIN GAZAR', 'JAGWA'].some(k => n.includes(k))) return 'Salaires & équipe';
+  if (['CGSS', 'URSSAF'].some(k => n.includes(k)) || n === 'CRR') return 'Cotisations & retraite';
+  if (n.includes('ROMAIN CAPDEPONT')) return 'Rémunération Romain';
+  if (['MARINE ROULLAND', 'LAW WAN CHUNG', 'HERBERT DIMITRI PITOU', 'MARIE CHOYEN', 'GUFFLET GLORIA'].some(k => n.includes(k)) || (n.includes('FLORA') && n.includes('BOYER'))) return 'Salaires & équipe';
   if (n.includes('PAPANGUE')) return 'Comptable & conseils';
   if (['APRIL', 'ALLIANZ', 'PRUDENCE CREOLE', 'GROUPAMA', 'GENERALI', 'AXA '].some(k => n.includes(k))) return 'Assurances';
-  if (['EREFERER', 'CYCLONE PUB', 'GOOGLE ADS', 'META '].some(k => n.includes(k))) return 'Marketing & pub';
-  if (['HOSTINGER', 'APPLE.COM', 'ANTHROPIC', 'TELCO', 'NETLIFY', 'UBER *ONE', 'SUMUP *', 'GOOGLE', 'MICROSOFT', 'ADOBE', 'CANVA'].some(k => n.includes(k))) return 'Abonnements & outils';
-  if (['STATION', 'TAMOIL', 'OSDA', 'ENGEN', 'VIVO ENERGY', 'TOTAL ', 'AIRBNB', 'AIR AUSTRAL', 'CORSAIR', 'UBER SHOPPER'].some(k => n.includes(k))) return 'Carburant & déplacements';
-  if (c.includes('IMPOTS')) return 'Impôts & TVA';
-  if (c.includes('PERSONNEL')) return 'Salaires & équipe';
-  if (c.includes('ADMINISTRATIVES')) return 'Administratif';
-  if (c.includes('OPERATIONNELLES')) return 'Achats & fournitures';
-  if (c.includes('TRAVEL')) return 'Carburant & déplacements';
+  if (n.includes('MI DAOU')) return 'Ménage';
+  if (['FREELANCERUN', 'STATION', 'TAMOIL', 'OSDA', 'ENGEN', 'VIVO ENERGY', 'TOTAL '].some(k => n.includes(k))) return 'Véhicules & carburant';
+  if (['EREFERER', 'CYCLONE PUB', 'GOOGLE ADS', 'REUSSIR SA PUBLICITE', 'META '].some(k => n.includes(k))) return 'Marketing & pub';
+  if (['HOSTINGER', 'APPLE.COM', 'ANTHROPIC', 'TELCO', 'MACOMPTA', 'AQUA SERVICE', 'NETLIFY', 'GOOGLE', 'MICROSOFT', 'ADOBE', 'CANVA', 'SUMUP *', 'UBER'].some(k => n.includes(k))) return 'Abonnements & outils';
+  if (n === 'QONTO' || c.includes('BANCAIRES') || methode === "Frais d'abonnement") return 'Frais bancaires';
+  if (['NOBEL APPRO', 'IMPRIMERIE 3.0', 'DIGI LOGISTIC', 'MOUSTACHERIE', 'WORLD IS LIGHT', 'CENTRAKOR', 'HYPER CK', 'LECLERC', 'LEADER PRICE', 'RUN MARKET', 'FOIRFOUILL', 'INTERSPORT', 'BUREAU VALLEE', 'FIGISUD', 'LUBISCA', 'CENTRE COMMERCIA', 'DEVRED'].some(k => n.includes(k)) || n.startsWith('BV ') || n === 'AGENCE') return 'Achats & matériel événements';
   if (c.includes('NOURRITURE')) return 'Repas & courses';
+  if (c.includes('IMPOTS')) return 'Impôts & TVA';
+  if (c.includes('TRAVEL')) return 'Véhicules & carburant';
   if (c.includes('TECHNOLOGIES')) return 'Abonnements & outils';
   if (c.includes('MARKETING')) return 'Marketing & pub';
-  if (c.includes('BANCAIRES') || methode === "Frais d'abonnement") return 'Frais bancaires';
+  if (methode === 'Transférer' || methode === 'Virement' || c.includes('PERSONNEL')) return 'Artistes & prestataires';
+  if (c.includes('OPERATIONNELLES') || c.includes('ADMINISTRATIVES')) return 'Achats & matériel événements';
   return 'Autres';
+}
+
+// Tableau « Charges par famille » : lignes = familles, colonnes = mois avec données, + moyenne mensuelle
+function renderChargesFamilles(annee) {
+  const wrap = document.getElementById('familles-wrap');
+  if (!wrap) return;
+  const debits = _banqueTx.filter(t => parseFloat(t.debit) > 0);
+  if (!debits.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+
+  const moisPresents = [...new Set(debits.map(t => t.mois))].sort((a, b) => a - b);
+  const fams = {};
+  debits.forEach(t => {
+    const f = t.categorie || 'Autres';
+    if (!fams[f]) fams[f] = { total: 0, parMois: {} };
+    const d = parseFloat(t.debit) || 0;
+    fams[f].total += d;
+    fams[f].parMois[t.mois] = (fams[f].parMois[t.mois] || 0) + d;
+  });
+  const famsSorted = Object.entries(fams).sort((a, b) => b[1].total - a[1].total);
+  const fmtE = v => v ? Math.round(v).toLocaleString('fr-FR') + ' €' : '<span style="color:var(--text3)">—</span>';
+
+  document.getElementById('familles-thead').innerHTML = `<tr>
+    <th>Famille</th>
+    ${moisPresents.map(m => `<th>${MOIS_LABELS[m-1].slice(0,4)}.</th>`).join('')}
+    <th style="color:var(--gold)">Total</th>
+    <th style="color:var(--gold)">Moy./mois</th>
+  </tr>`;
+
+  let totGlobal = 0;
+  document.getElementById('familles-tbody').innerHTML = famsSorted.map(([f, d]) => {
+    totGlobal += d.total;
+    const fixe = FAMILLES_FIXES.includes(f);
+    return `<tr>
+      <td style="font-weight:600;white-space:nowrap">${f} ${fixe ? '<span style="font-size:.65rem;background:rgba(74,158,255,.18);color:#4A9EFF;border-radius:6px;padding:1px 7px;vertical-align:middle">fixe</span>' : ''}</td>
+      ${moisPresents.map(m => `<td>${fmtE(d.parMois[m])}</td>`).join('')}
+      <td style="font-weight:700">${fmtE(d.total)}</td>
+      <td style="color:var(--gold);font-weight:700">${fmtE(d.total / moisPresents.length)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('familles-tfoot').innerHTML = `<tr style="font-weight:700;border-top:2px solid var(--border)">
+    <td>TOTAL</td>
+    ${moisPresents.map(m => `<td>${fmtE(famsSorted.reduce((s, [, d]) => s + (d.parMois[m] || 0), 0))}</td>`).join('')}
+    <td>${fmtE(totGlobal)}</td>
+    <td style="color:var(--gold)">${fmtE(totGlobal / moisPresents.length)}</td>
+  </tr>`;
 }
 
 function renderBanqueMonthly(annee, finRows) {
