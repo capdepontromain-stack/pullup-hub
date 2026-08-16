@@ -1787,10 +1787,8 @@ async function loadAndRenderMileage() {
 async function loadAndRenderFinances() {
   const entries = await fetchFinances();
   renderFinances(entries);
-  // Update CA stat on dashboard
-  const total = (entries || []).filter(e => e.type === 'paiement' || e.type === 'recette').reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
-  const el = document.getElementById('stat-ca-count');
-  if (el) el.textContent = total > 0 ? total.toLocaleString('fr-FR') + ' €' : '—';
+  // La carte « CA facturé 2026 » du dashboard est alimentée par le réel Qonto
+  // (renderDashboardCA dans app.js) — ne plus l'écraser avec l'ancienne table manuelle.
 }
 
 function updateDashboardEvents(events) {
