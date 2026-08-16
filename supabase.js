@@ -3641,7 +3641,7 @@ function renderLeaveCards() {
         ? Math.max(0, (auj.getFullYear() - (year - 1)) * 12 + auj.getMonth() - 11)
         : auj.getMonth();
       const acquis = Math.min(LEAVE_TOTAL, Math.round(moisComplets * (LEAVE_TOTAL / 12) * 10) / 10);
-      const posables = Math.max(0, acquis - approved);
+      const posables = Math.max(0, Math.round((acquis - approved) * 10) / 10);
       const fmtJ = v => String(v).replace('.', ',');
       acquisLigne = `<div style="font-size:.75rem;color:var(--text2);margin-bottom:.5rem">Acquis à ce jour : <strong>${fmtJ(acquis)} j</strong> · posables maintenant : <strong style="color:${posables > 0 ? '#4CAF50' : '#f44336'}">${fmtJ(posables)} j</strong></div>`;
     }
