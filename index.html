@@ -1650,6 +1650,187 @@ Afin d'avancer, nous pouvons :
     </div>
   </section>
 
+  <section class="page" id="page-charges">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:24px">
+      <h1 style="margin:0;font-size:1.4rem">💸 Charges</h1>
+      <select id="charges-year-sel" onchange="loadCharges()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text1);font-size:.9rem">
+        <option value="2025">2025</option><option value="2026" selected>2026</option>
+      </select>
+      <button class="btn-primary" style="font-size:.85rem;padding:7px 16px;margin-left:auto" onclick="document.getElementById('qonto-file-input').click()">📥 Importer un export Qonto (relevé ou factures)</button>
+      <input type="file" id="qonto-file-input" accept=".xls,.xlsx,.csv" style="display:none" onchange="importQontoFile(this.files[0]); this.value=''">
+    </div>
+
+    <!-- Bandeau si la table banque n'existe pas encore -->
+    <div id="banque-setup-warning" style="display:none;background:rgba(245,197,24,.12);border:1px solid var(--gold);border-radius:12px;padding:14px 18px;margin-bottom:20px;font-size:.9rem">
+      ⚠️ La table des opérations bancaires n'existe pas encore dans Supabase. Demande à Claude de la créer (fichier <strong>~/pullup-sql/CREER-TABLE-BANQUE.sql</strong> à exécuter dans le SQL Editor Supabase).
+    </div>
+
+    <!-- KPI réel bancaire -->
+    <div id="banque-kpis" style="display:none;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px">
+      <div class="card" style="padding:14px 18px;text-align:center">
+        <div style="font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.05em">Entrées banque</div>
+        <div id="banque-kpi-in" style="font-size:1.3rem;font-weight:800;color:#4CAF50">—</div>
+      </div>
+      <div class="card" style="padding:14px 18px;text-align:center">
+        <div style="font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.05em">Sorties banque</div>
+        <div id="banque-kpi-out" style="font-size:1.3rem;font-weight:800;color:#f44336">—</div>
+      </div>
+      <div class="card" style="padding:14px 18px;text-align:center">
+        <div style="font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.05em">Résultat trésorerie</div>
+        <div id="banque-kpi-net" style="font-size:1.3rem;font-weight:800">—</div>
+      </div>
+      <div class="card" style="padding:14px 18px;text-align:center">
+        <div style="font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.05em">Charges / mois (moyenne)</div>
+        <div id="banque-kpi-avg" style="font-size:1.3rem;font-weight:800;color:var(--gold)">—</div>
+      </div>
+    </div>
+
+    <!-- Tableau mensuel réel (banque) -->
+    <div class="card" style="overflow-x:auto;margin-bottom:20px">
+      <div class="card-header"><h3>🏦 Réel bancaire (Qonto) — mois par mois</h3><span style="font-size:.75rem;color:var(--text2)">Clique sur un mois pour le détail</span></div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Mois</th>
+            <th style="color:#4CAF50">Entrées</th>
+            <th style="color:#f44336">Sorties</th>
+            <th>Résultat tréso</th>
+            <th style="color:var(--gold)">CA facturé</th>
+          </tr>
+        </thead>
+        <tbody id="banque-monthly-tbody"><tr><td colspan="5" style="text-align:center;color:var(--text2);padding:1.2rem">Chargement…</td></tr></tbody>
+        <tfoot>
+          <tr style="font-weight:700;border-top:2px solid var(--border)">
+            <td>TOTAL ANNUEL</td>
+            <td id="banque-annual-in" style="color:#4CAF50"></td>
+            <td id="banque-annual-out" style="color:#f44336"></td>
+            <td id="banque-annual-net"></td>
+            <td id="banque-annual-ca" style="color:var(--gold)"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- Charges réelles par famille -->
+    <div class="card" id="familles-wrap" style="display:none;overflow-x:auto;margin-bottom:20px">
+      <div class="card-header"><h3>📂 Charges par famille (réel banque)</h3><span style="font-size:.75rem;color:var(--text2)">Calculé automatiquement depuis tes opérations Qonto</span></div>
+      <table class="data-table" style="font-size:.85rem">
+        <thead id="familles-thead"></thead>
+        <tbody id="familles-tbody"></tbody>
+        <tfoot id="familles-tfoot"></tfoot>
+      </table>
+    </div>
+
+    <!-- Détail d'un mois (catégories + transactions) -->
+    <div class="card" id="banque-detail-card" style="display:none;margin-bottom:20px">
+      <div class="card-header">
+        <h3 id="banque-detail-title">Détail</h3>
+        <button onclick="document.getElementById('banque-detail-card').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:1rem">✕ Fermer</button>
+      </div>
+      <div id="banque-detail-cats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:16px"></div>
+      <div id="banque-detail-liste" style="max-height:420px;overflow-y:auto"></div>
+    </div>
+
+    <!-- Prévisionnel (ancien tableau) -->
+    <div class="card" style="overflow-x:auto;margin-bottom:20px">
+      <div class="card-header"><h3>🎯 Charges mensuelles — réel & prévisionnel</h3><span style="font-size:.75rem;color:var(--text2)">Mois écoulés = réel bancaire Qonto · mois à venir = estimation modifiable (seuils des jauges)</span></div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Mois</th>
+            <th style="color:#f44336">Charges fixes</th>
+            <th style="color:#4A9EFF">Charges variables</th>
+            <th style="color:var(--gold)">Total</th>
+          </tr>
+        </thead>
+        <tbody id="charges-monthly-tbody"></tbody>
+        <tfoot>
+          <tr style="font-weight:700;border-top:2px solid var(--border)">
+            <td>TOTAL ANNUEL</td>
+            <td id="charges-annual-fixes" style="color:#f44336"></td>
+            <td id="charges-annual-vars" style="color:#4A9EFF"></td>
+            <td id="charges-annual-total" style="color:var(--gold)"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex-wrap:wrap">
+
+      <!-- Détail charges fixes -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:10px">
+          <h3 style="margin:0">🔒 Charges fixes</h3>
+          <button class="btn-primary" style="font-size:.8rem;padding:5px 14px" onclick="openModal('newChargeFixe')">+ Ajouter</button>
+        </div>
+        <div style="background:rgba(244,67,54,.1);border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:.85rem;color:var(--text2)">Total charges fixes / mois</span>
+          <span id="charges-fixes-sum" style="font-size:1.1rem;color:#f44336;font-weight:700">—</span>
+        </div>
+        <div id="charges-fixes-detail"></div>
+      </div>
+
+      <!-- Détail charges variables -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:10px">
+          <h3 style="margin:0">📊 Charges variables</h3>
+          <button class="btn-primary" style="font-size:.8rem;padding:5px 14px;background:var(--color-ketsia)" onclick="openModal('newChargeVariable')">+ Ajouter</button>
+        </div>
+        <div style="background:rgba(74,158,255,.1);border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:.85rem;color:var(--text2)">Total charges variables / mois</span>
+          <span id="charges-vars-sum" style="font-size:1.1rem;color:#4A9EFF;font-weight:700">—</span>
+        </div>
+        <div id="charges-vars-detail"></div>
+      </div>
+
+    </div>
+
+    <!-- Modal charge variable -->
+    <div class="modal-overlay" id="modal-newChargeVariable">
+      <div class="modal" style="max-width:400px">
+        <div class="modal-header"><h3 id="modal-cv-title">Nouvelle charge variable</h3><button class="modal-close" onclick="closeModal('newChargeVariable')">✕</button></div>
+        <form id="form-newChargeVariable" onsubmit="saveChargeVariableItem(event)">
+          <input type="hidden" name="id">
+          <div class="form-group"><label>Libellé *</label><input name="label" required placeholder="ex: Google Ads, Essence..."></div>
+          <div class="form-group"><label>Catégorie</label>
+            <select name="categorie">
+              <option>Transport</option><option>Marketing</option><option>Abonnements</option>
+              <option>Équipements</option><option>Autres</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Montant mensuel (€) *</label><input name="montant" type="number" step="0.01" required placeholder="ex: 150"></div>
+          <div class="form-actions">
+            <button type="button" onclick="closeModal('newChargeVariable')" class="btn-secondary">Annuler</button>
+            <button type="submit" class="btn-primary">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal charge fixe -->
+    <div class="modal-overlay" id="modal-newChargeFixe">
+      <div class="modal" style="max-width:400px">
+        <div class="modal-header"><h3 id="modal-cf-title">Nouvelle charge fixe</h3><button class="modal-close" onclick="closeModal('newChargeFixe')">✕</button></div>
+        <form id="form-newChargeFixe" onsubmit="saveChargeFixeItem(event)">
+          <input type="hidden" name="id">
+          <div class="form-group"><label>Libellé *</label><input name="label" required placeholder="ex: Loyer, Spotify..."></div>
+          <div class="form-group"><label>Catégorie</label>
+            <select name="categorie">
+              <option>Salaires</option><option>Comptabilité</option><option>Abonnements</option>
+              <option>Assurances</option><option>Mutuelle</option><option>Loyer</option>
+              <option>Équipements</option><option>Autres</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Montant mensuel (€) *</label><input name="montant" type="number" step="0.01" required placeholder="ex: 150"></div>
+          <div class="form-actions">
+            <button type="button" onclick="closeModal('newChargeFixe')" class="btn-secondary">Annuler</button>
+            <button type="submit" class="btn-primary">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
 </main>
 
   <!-- CONGÉS -->
@@ -2149,186 +2330,7 @@ Afin d'avancer, nous pouvons :
   </section>
 
   <!-- PAGE CHARGES -->
-  <section class="page" id="page-charges" style="padding-top:80px">
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:24px">
-      <h1 style="margin:0;font-size:1.4rem">💸 Charges</h1>
-      <select id="charges-year-sel" onchange="loadCharges()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text1);font-size:.9rem">
-        <option value="2025">2025</option><option value="2026" selected>2026</option>
-      </select>
-      <button class="btn-primary" style="font-size:.85rem;padding:7px 16px;margin-left:auto" onclick="document.getElementById('qonto-file-input').click()">📥 Importer un export Qonto (relevé ou factures)</button>
-      <input type="file" id="qonto-file-input" accept=".xls,.xlsx,.csv" style="display:none" onchange="importQontoFile(this.files[0]); this.value=''">
-    </div>
-
-    <!-- Bandeau si la table banque n'existe pas encore -->
-    <div id="banque-setup-warning" style="display:none;background:rgba(245,197,24,.12);border:1px solid var(--gold);border-radius:12px;padding:14px 18px;margin-bottom:20px;font-size:.9rem">
-      ⚠️ La table des opérations bancaires n'existe pas encore dans Supabase. Demande à Claude de la créer (fichier <strong>~/pullup-sql/CREER-TABLE-BANQUE.sql</strong> à exécuter dans le SQL Editor Supabase).
-    </div>
-
-    <!-- KPI réel bancaire -->
-    <div id="banque-kpis" style="display:none;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px">
-      <div class="card" style="padding:14px 18px;text-align:center">
-        <div style="font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.05em">Entrées banque</div>
-        <div id="banque-kpi-in" style="font-size:1.3rem;font-weight:800;color:#4CAF50">—</div>
-      </div>
-      <div class="card" style="padding:14px 18px;text-align:center">
-        <div style="font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.05em">Sorties banque</div>
-        <div id="banque-kpi-out" style="font-size:1.3rem;font-weight:800;color:#f44336">—</div>
-      </div>
-      <div class="card" style="padding:14px 18px;text-align:center">
-        <div style="font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.05em">Résultat trésorerie</div>
-        <div id="banque-kpi-net" style="font-size:1.3rem;font-weight:800">—</div>
-      </div>
-      <div class="card" style="padding:14px 18px;text-align:center">
-        <div style="font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.05em">Charges / mois (moyenne)</div>
-        <div id="banque-kpi-avg" style="font-size:1.3rem;font-weight:800;color:var(--gold)">—</div>
-      </div>
-    </div>
-
-    <!-- Tableau mensuel réel (banque) -->
-    <div class="card" style="overflow-x:auto;margin-bottom:20px">
-      <div class="card-header"><h3>🏦 Réel bancaire (Qonto) — mois par mois</h3><span style="font-size:.75rem;color:var(--text2)">Clique sur un mois pour le détail</span></div>
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Mois</th>
-            <th style="color:#4CAF50">Entrées</th>
-            <th style="color:#f44336">Sorties</th>
-            <th>Résultat tréso</th>
-            <th style="color:var(--gold)">CA facturé</th>
-          </tr>
-        </thead>
-        <tbody id="banque-monthly-tbody"><tr><td colspan="5" style="text-align:center;color:var(--text2);padding:1.2rem">Chargement…</td></tr></tbody>
-        <tfoot>
-          <tr style="font-weight:700;border-top:2px solid var(--border)">
-            <td>TOTAL ANNUEL</td>
-            <td id="banque-annual-in" style="color:#4CAF50"></td>
-            <td id="banque-annual-out" style="color:#f44336"></td>
-            <td id="banque-annual-net"></td>
-            <td id="banque-annual-ca" style="color:var(--gold)"></td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-
-    <!-- Charges réelles par famille -->
-    <div class="card" id="familles-wrap" style="display:none;overflow-x:auto;margin-bottom:20px">
-      <div class="card-header"><h3>📂 Charges par famille (réel banque)</h3><span style="font-size:.75rem;color:var(--text2)">Calculé automatiquement depuis tes opérations Qonto</span></div>
-      <table class="data-table" style="font-size:.85rem">
-        <thead id="familles-thead"></thead>
-        <tbody id="familles-tbody"></tbody>
-        <tfoot id="familles-tfoot"></tfoot>
-      </table>
-    </div>
-
-    <!-- Détail d'un mois (catégories + transactions) -->
-    <div class="card" id="banque-detail-card" style="display:none;margin-bottom:20px">
-      <div class="card-header">
-        <h3 id="banque-detail-title">Détail</h3>
-        <button onclick="document.getElementById('banque-detail-card').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:1rem">✕ Fermer</button>
-      </div>
-      <div id="banque-detail-cats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:16px"></div>
-      <div id="banque-detail-liste" style="max-height:420px;overflow-y:auto"></div>
-    </div>
-
-    <!-- Prévisionnel (ancien tableau) -->
-    <div class="card" style="overflow-x:auto;margin-bottom:20px">
-      <div class="card-header"><h3>🎯 Charges mensuelles — réel & prévisionnel</h3><span style="font-size:.75rem;color:var(--text2)">Mois écoulés = réel bancaire Qonto · mois à venir = estimation modifiable (seuils des jauges)</span></div>
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Mois</th>
-            <th style="color:#f44336">Charges fixes</th>
-            <th style="color:#4A9EFF">Charges variables</th>
-            <th style="color:var(--gold)">Total</th>
-          </tr>
-        </thead>
-        <tbody id="charges-monthly-tbody"></tbody>
-        <tfoot>
-          <tr style="font-weight:700;border-top:2px solid var(--border)">
-            <td>TOTAL ANNUEL</td>
-            <td id="charges-annual-fixes" style="color:#f44336"></td>
-            <td id="charges-annual-vars" style="color:#4A9EFF"></td>
-            <td id="charges-annual-total" style="color:var(--gold)"></td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex-wrap:wrap">
-
-      <!-- Détail charges fixes -->
-      <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:10px">
-          <h3 style="margin:0">🔒 Charges fixes</h3>
-          <button class="btn-primary" style="font-size:.8rem;padding:5px 14px" onclick="openModal('newChargeFixe')">+ Ajouter</button>
-        </div>
-        <div style="background:rgba(244,67,54,.1);border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:.85rem;color:var(--text2)">Total charges fixes / mois</span>
-          <span id="charges-fixes-sum" style="font-size:1.1rem;color:#f44336;font-weight:700">—</span>
-        </div>
-        <div id="charges-fixes-detail"></div>
-      </div>
-
-      <!-- Détail charges variables -->
-      <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:10px">
-          <h3 style="margin:0">📊 Charges variables</h3>
-          <button class="btn-primary" style="font-size:.8rem;padding:5px 14px;background:var(--color-ketsia)" onclick="openModal('newChargeVariable')">+ Ajouter</button>
-        </div>
-        <div style="background:rgba(74,158,255,.1);border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:.85rem;color:var(--text2)">Total charges variables / mois</span>
-          <span id="charges-vars-sum" style="font-size:1.1rem;color:#4A9EFF;font-weight:700">—</span>
-        </div>
-        <div id="charges-vars-detail"></div>
-      </div>
-
-    </div>
-
-    <!-- Modal charge variable -->
-    <div class="modal-overlay" id="modal-newChargeVariable">
-      <div class="modal" style="max-width:400px">
-        <div class="modal-header"><h3 id="modal-cv-title">Nouvelle charge variable</h3><button class="modal-close" onclick="closeModal('newChargeVariable')">✕</button></div>
-        <form id="form-newChargeVariable" onsubmit="saveChargeVariableItem(event)">
-          <input type="hidden" name="id">
-          <div class="form-group"><label>Libellé *</label><input name="label" required placeholder="ex: Google Ads, Essence..."></div>
-          <div class="form-group"><label>Catégorie</label>
-            <select name="categorie">
-              <option>Transport</option><option>Marketing</option><option>Abonnements</option>
-              <option>Équipements</option><option>Autres</option>
-            </select>
-          </div>
-          <div class="form-group"><label>Montant mensuel (€) *</label><input name="montant" type="number" step="0.01" required placeholder="ex: 150"></div>
-          <div class="form-actions">
-            <button type="button" onclick="closeModal('newChargeVariable')" class="btn-secondary">Annuler</button>
-            <button type="submit" class="btn-primary">Enregistrer</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Modal charge fixe -->
-    <div class="modal-overlay" id="modal-newChargeFixe">
-      <div class="modal" style="max-width:400px">
-        <div class="modal-header"><h3 id="modal-cf-title">Nouvelle charge fixe</h3><button class="modal-close" onclick="closeModal('newChargeFixe')">✕</button></div>
-        <form id="form-newChargeFixe" onsubmit="saveChargeFixeItem(event)">
-          <input type="hidden" name="id">
-          <div class="form-group"><label>Libellé *</label><input name="label" required placeholder="ex: Loyer, Spotify..."></div>
-          <div class="form-group"><label>Catégorie</label>
-            <select name="categorie">
-              <option>Salaires</option><option>Comptabilité</option><option>Abonnements</option>
-              <option>Assurances</option><option>Mutuelle</option><option>Loyer</option>
-              <option>Équipements</option><option>Autres</option>
-            </select>
-          </div>
-          <div class="form-group"><label>Montant mensuel (€) *</label><input name="montant" type="number" step="0.01" required placeholder="ex: 150"></div>
-          <div class="form-actions">
-            <button type="button" onclick="closeModal('newChargeFixe')" class="btn-secondary">Annuler</button>
-            <button type="submit" class="btn-primary">Enregistrer</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </section>
+  
 
   <!-- ===== AMÉLIORATIONS HUB ===== -->
   <section class="page" id="page-improvements">
@@ -2517,8 +2519,8 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260816k"></script>
-<script src="app.js?v=20260816k"></script>
+<script src="supabase.js?v=20260816l"></script>
+<script src="app.js?v=20260816l"></script>
 <script>
   if ('serviceWorker' in navigator) {
     // Enregistrer le SW de nettoyage (sans rechargement forcé — l'ancien
