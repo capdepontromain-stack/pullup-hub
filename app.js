@@ -844,6 +844,7 @@ async function renderFinanceAnalyse() {
       <td class="fin-editable" onclick="editFinanceCell(2025,${m},'ca',${ca25})" style="cursor:pointer" title="Cliquer pour modifier">
         ${ca25 > 0 ? fmt(ca25) : '<span style="color:var(--text2)">—</span>'}
       </td>
+      <td style="color:var(--gold);font-weight:700">${fac26 > 0 ? fmt(fac26) : '<span style="color:var(--text2)">—</span>'}</td>
       <td>${evol}</td></tr>`;
   }
 
@@ -851,7 +852,16 @@ async function renderFinanceAnalyse() {
   body26.innerHTML = html26 || '<tr><td colspan="5" style="text-align:center;color:var(--text2);padding:1.5rem">Aucune donnée réelle — importe tes exports Qonto dans l\'onglet Charges</td></tr>';
   body25.innerHTML = html25;
   foot26.innerHTML = `<td>TOTAL</td><td style="color:var(--gold)"><strong>${fmtEur(total26fac)}</strong></td><td style="color:#4CAF50"><strong>${fmtEur(reel.totEnc)}</strong></td><td style="color:#f44336"><strong>${fmtEur(reel.totDep)}</strong></td><td style="color:${totRes >= 0 ? '#4CAF50' : '#f44336'}"><strong>${fmtSigne(totRes)}</strong></td>`;
-  foot25.innerHTML = `<td>TOTAL</td><td><strong>${total25ca.toLocaleString('fr-FR')} €</strong></td><td></td>`;
+  // Évolution globale sur les mois comparables (CA présent dans les deux années)
+  let cmp25 = 0, cmp26 = 0;
+  for (let m = 1; m <= 12; m++) {
+    const a = parseFloat(_finMonthlyData[`2025-${m}`]?.ca) || 0, b = reel.facMois[m] || 0;
+    if (a > 0 && b > 0) { cmp25 += a; cmp26 += b; }
+  }
+  const evolTot = cmp25 > 0 ? Math.round(((cmp26 - cmp25) / cmp25) * 100) : 0;
+  foot25.innerHTML = `<td>TOTAL</td><td><strong>${total25ca.toLocaleString('fr-FR')} €</strong></td>` +
+    `<td style="color:var(--gold)"><strong>${total26fac.toLocaleString('fr-FR')} €</strong></td>` +
+    `<td><span class="${evolTot >= 0 ? 'fin-evol-up' : 'fin-evol-down'}" title="Sur les mois présents dans les deux années">${evolTot >= 0 ? '+' : ''}${evolTot}%</span></td>`;
   const tot25El = document.getElementById('ca-2025-total');
   if (tot25El) tot25El.textContent = fmtEur(total25ca);
 
