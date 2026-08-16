@@ -3562,7 +3562,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 // CONGÉS
 // =============================================
 let leaveViewDate = new Date();
-const LEAVE_TOTAL = 30; // jours ouvrés par an (légal France)
+// Légal France (vérifié le 17/08/2026, service-public/economie.gouv) : 2,5 jours OUVRABLES par mois
+// = 30 jours ouvrables par an = 25 jours OUVRÉS (lundi-vendredi). Le Hub compte les congés
+// en jours lun-ven → le total annuel est donc 25, et l'acquisition 25/12 ≈ 2,08 j par mois complet.
+const LEAVE_TOTAL = 25;
 const LEAVE_MEMBERS = ['Romain', 'Ketsia', 'Flora', 'Gloria'];
 const LEAVE_PHOTOS = { Romain: 'photos/romain.jpg', Ketsia: 'photos/ketsia.jpg', Flora: 'photos/flora.jpg', Gloria: 'photos/gloria.jpg' };
 const LEAVE_COLORS = { Romain: 'var(--color-romain)', Ketsia: 'var(--color-ketsia)', Flora: 'var(--color-flora)', Gloria: 'var(--color-gloria)' };
@@ -3628,7 +3631,8 @@ function renderLeaveCards() {
     const pending = yearLeaves.filter(l => l.person_name === name && l.status === 'pending').length;
     const remaining = LEAVE_TOTAL - approved;
     const pct = Math.round((approved / LEAVE_TOTAL) * 100);
-    // Acquisition progressive : 2,5 j par mois complet travaillé (règle Romain 17/08/2026).
+    // Acquisition progressive : 25/12 ≈ 2,08 j ouvrés par mois complet travaillé
+    // (équivalent des 2,5 j ouvrables légaux, le Hub comptant en jours lun-ven).
     // Flora : année de référence du 1er déc N-1 au 30 nov N ; les autres : année civile.
     const auj = new Date();
     let acquisLigne = '';
@@ -3636,7 +3640,7 @@ function renderLeaveCards() {
       const moisComplets = name === 'Flora'
         ? Math.max(0, (auj.getFullYear() - (year - 1)) * 12 + auj.getMonth() - 11)
         : auj.getMonth();
-      const acquis = Math.min(LEAVE_TOTAL, moisComplets * 2.5);
+      const acquis = Math.min(LEAVE_TOTAL, Math.round(moisComplets * (LEAVE_TOTAL / 12) * 10) / 10);
       const posables = Math.max(0, acquis - approved);
       const fmtJ = v => String(v).replace('.', ',');
       acquisLigne = `<div style="font-size:.75rem;color:var(--text2);margin-bottom:.5rem">Acquis à ce jour : <strong>${fmtJ(acquis)} j</strong> · posables maintenant : <strong style="color:${posables > 0 ? '#4CAF50' : '#f44336'}">${fmtJ(posables)} j</strong></div>`;
