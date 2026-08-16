@@ -4101,7 +4101,8 @@ function categoriserTransaction(nom, catQonto, methode, credit, reference, debit
   const n = norm(nom), c = norm(catQonto), ref = norm(reference);
   const d = Math.round(parseFloat(debit) || 0);
   if (credit && credit > 0) return 'Encaissements';
-  if (['DGFIP', 'DIRECTION GENERALE DES FINANCES', 'SIE SAINT', 'SIE ST', 'TRESOR PUBLIC'].some(k => n.includes(k))) return 'Impôts & TVA';
+  if (['DGFIP', 'DIRECTION GENERALE DES FINANCES', 'SIE SAINT', 'SIE ST', 'TRESOR PUBLIC', 'SAISIE ADMINISTRATIVE'].some(k => n.includes(k))) return 'Impôts & TVA';
+  if (n.includes('AFDAS')) return 'Cotisations & retraite';
   if (['CGSS', 'URSSAF'].some(k => n.includes(k)) || n === 'CRR') return 'Cotisations & retraite';
   if (n.includes('ROMAIN CAPDEPONT')) {
     // 50 % du loyer (825 €/mois sur 1 650 €) passe par la société, viré au compte perso de Romain
@@ -4124,11 +4125,11 @@ function categoriserTransaction(nom, catQonto, methode, credit, reference, debit
   if (['FREELANCERUN', 'STATION', 'TAMOIL', 'OSDA', 'ENGEN', 'VIVO ENERGY', 'TOTAL '].some(k => n.includes(k))) return 'Véhicules & carburant';
   // Monticket = cadeaux clients & équipe (précision Romain 16/08) ; Cyclone Pub = supports faits POUR des devis clients → matériel
   if (['EREFERER', 'GOOGLE ADS', 'REUSSIR SA PUBLICITE', 'META ', 'MONTICKET'].some(k => n.includes(k))) return 'Marketing & pub';
-  // Rafaello et Lubisca = petits restos/cafés (Romain 16/08), montants 4-95 € en carte
-  if (['RAFAELLO', 'LUBISCA'].some(k => n.includes(k))) return 'Repas & courses';
+  // Petits restos/cafés/snacks identifiés avec Romain (16-17/08)
+  if (['RAFAELLO', 'LUBISCA', 'MY KREP', 'BRIOCHE DOREE', 'ETE INDIEN', 'LRDP', 'TARO JAPANESE', 'STE DES BRASSERI', 'C MARKET'].some(k => n.includes(k))) return 'Repas & courses';
   if (['HOSTINGER', 'APPLE.COM', 'ANTHROPIC', 'TELCO', 'MACOMPTA', 'AQUA SERVICE', 'NETLIFY', 'GOOGLE', 'MICROSOFT', 'ADOBE', 'CANVA', 'SUMUP *', 'UBER'].some(k => n.includes(k))) return 'Abonnements & outils';
   if (n === 'QONTO' || c.includes('BANCAIRES') || methode === "Frais d'abonnement") return 'Frais bancaires';
-  if (['NOBEL APPRO', 'IMPRIMERIE 3.0', 'DIGI LOGISTIC', 'MOUSTACHERIE', 'WORLD IS LIGHT', 'CENTRAKOR', 'HYPER CK', 'LECLERC', 'LEADER PRICE', 'RUN MARKET', 'FOIRFOUILL', 'INTERSPORT', 'BUREAU VALLEE', 'FIGISUD', 'CYCLONE PUB', 'CENTRE COMMERCIA', 'DEVRED'].some(k => n.includes(k)) || n.startsWith('BV ') || n === 'AGENCE') return 'Achats & matériel événements';
+  if (['NOBEL APPRO', 'IMPRIMERIE 3.0', 'DIGI LOGISTIC', 'MOUSTACHERIE', 'WORLD IS LIGHT', 'CENTRAKOR', 'HYPER CK', 'LECLERC', 'LEADER PRICE', 'RUN MARKET', 'FOIRFOUILL', 'FOIR FOUILLE', 'INTERSPORT', 'BUREAU VALLEE', 'FIGISUD', 'CYCLONE PUB', 'CENTRE COMMERCIA', 'DEVRED', 'AMAZON', 'STARJOUET', 'H S U PITON'].some(k => n.includes(k)) || n.startsWith('BV ') || n === 'AGENCE') return 'Achats & matériel événements';
   if (c.includes('NOURRITURE')) return 'Repas & courses';
   if (c.includes('IMPOTS')) return 'Impôts & TVA';
   if (c.includes('TRAVEL')) return 'Véhicules & carburant';

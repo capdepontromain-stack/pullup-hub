@@ -1661,7 +1661,7 @@ Afin d'avancer, nous pouvons :
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:24px">
       <h1 style="margin:0;font-size:1.4rem">💸 Charges</h1>
       <select id="charges-year-sel" onchange="loadCharges()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text1);font-size:.9rem">
-        <option value="2025">2025</option><option value="2026" selected>2026</option>
+        <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
       </select>
       <button class="btn-primary" style="font-size:.85rem;padding:7px 16px;margin-left:auto" onclick="document.getElementById('qonto-file-input').click()">📥 Importer un export Qonto (relevé ou factures)</button>
       <input type="file" id="qonto-file-input" accept=".xls,.xlsx,.csv" style="display:none" onchange="importQontoFile(this.files[0]); this.value=''">
@@ -2526,8 +2526,8 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260816p"></script>
-<script src="app.js?v=20260816p"></script>
+<script src="supabase.js?v=20260816q"></script>
+<script src="app.js?v=20260816q"></script>
 <script>
   if ('serviceWorker' in navigator) {
     // Enregistrer le SW de nettoyage (sans rechargement forcé — l'ancien
