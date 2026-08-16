@@ -3567,6 +3567,9 @@ let leaveViewDate = new Date();
 // en jours lun-ven → le total annuel est donc 25, et l'acquisition 25/12 ≈ 2,08 j par mois complet.
 const LEAVE_TOTAL = 25;
 const LEAVE_MEMBERS = ['Romain', 'Ketsia', 'Flora', 'Gloria'];
+// Dates d'embauche : les droits à congés démarrent au contrat (prorata la 1re année)
+const LEAVE_HIRE = { 'Gloria': '2026-09-01' };
+const LEAVE_SEMAINE_H = 35; // heures hebdomadaires contractuelles
 const LEAVE_PHOTOS = { Romain: 'photos/romain.jpg', Ketsia: 'photos/ketsia.jpg', Flora: 'photos/flora.jpg', Gloria: 'photos/gloria.jpg' };
 const LEAVE_COLORS = { Romain: 'var(--color-romain)', Ketsia: 'var(--color-ketsia)', Flora: 'var(--color-flora)', Gloria: 'var(--color-gloria)' };
 const LEAVE_COLORS_HEX = { Romain: '#F5C518', Ketsia: '#4A9EFF', Flora: '#FF6B9D', Gloria: '#9B59B6' };
@@ -3590,10 +3593,58 @@ async function loadAndRenderLeaves() {
   if (error) { showToast('Erreur congés : ' + error.message); return; }
   allLeaves = data || [];
 
+  // Les événements de la période, pour les afficher dans le calendrier des congés
+  try {
+    const { data: evs } = await sb.from('events').select('name,event_date,status').gte('event_date', (year-1) + '-12-01').lte('event_date', year + '-12-31');
+    leaveEvents = (evs || []).filter(e => e.status !== 'Annulé' && e.status !== 'Supprimé');
+  } catch (e) { leaveEvents = []; }
+
   renderLeaveCards();
+  renderLeaveHeures();
   renderLeavePending();
   renderLeaveCalendar();
   updateLeavesMonthLabel();
+}
+
+let leaveEvents = [];
+
+// Suivi des 35 h hebdomadaires : chaque semaine sous l'objectif peut être complétée
+// en posant des congés (1 jour de congé = 7 h) — demande Romain 17/08/2026.
+function renderLeaveHeures() {
+  const box = document.getElementById('leaves-heures');
+  if (!box) return;
+  const auj = new Date();
+  const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const lundi = d => { const x = new Date(d); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
+  const semaines = [];
+  for (let i = 3; i >= 0; i--) {
+    const deb = lundi(auj); deb.setDate(deb.getDate() - 7 * i);
+    const fin = new Date(deb); fin.setDate(fin.getDate() + 6);
+    semaines.push({ deb: iso(deb), fin: iso(fin), label: 'Sem. du ' + deb.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }), enCours: i === 0 });
+  }
+  const membres = LEAVE_MEMBERS.filter(n => !(LEAVE_HIRE[n] && iso(auj) < LEAVE_HIRE[n]));
+  let html = `<div class="card-header" style="padding:0 0 12px"><h3>⏱ Heures hebdomadaires — objectif ${LEAVE_SEMAINE_H} h</h3>
+    <span style="font-size:.75rem;color:var(--text2)">congés et maladie comptent (1 jour = 7 h)</span></div>
+    <div style="overflow-x:auto"><table class="data-table" style="min-width:520px"><thead><tr><th></th>${semaines.map(s => `<th>${s.label}${s.enCours ? ' <span style="font-weight:400;color:var(--text2)">(en cours)</span>' : ''}</th>`).join('')}</tr></thead><tbody>`;
+  for (const n of membres) {
+    html += `<tr><td><strong style="color:${LEAVE_COLORS_HEX[n]}">${n}</strong></td>`;
+    for (const s of semaines) {
+      const h = allLeaves.filter(l => l.person_name === n && l.leave_date >= s.deb && l.leave_date <= s.fin)
+        .reduce((t, l) => t + (parseFloat(l.hours) || 0), 0);
+      const delta = Math.round((h - LEAVE_SEMAINE_H) * 10) / 10;
+      let badge = '';
+      if (!s.enCours && h > 0) {
+        badge = delta >= 0
+          ? `<span style="color:#4CAF50;font-size:.72rem;font-weight:700"> ✓${delta > 0 ? ' +' + String(delta).replace('.', ',') + 'h' : ''}</span>`
+          : `<span style="color:#f44336;font-size:.72rem;font-weight:700"> manque ${String(-delta).replace('.', ',')}h (≈ ${String(Math.round(-delta / 7 * 10) / 10).replace('.', ',')} j de congé)</span>`;
+      }
+      html += `<td>${h > 0 ? `<strong>${String(Math.round(h * 10) / 10).replace('.', ',')}h</strong>${badge}` : '<span style="color:var(--text2)">—</span>'}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += `</tbody></table></div>
+    <div style="font-size:.75rem;color:var(--text2);margin-top:10px">Une semaine sous ${LEAVE_SEMAINE_H} h peut être complétée en posant un congé dans le calendrier ci-dessous (1 jour = 7 h).</div>`;
+  box.innerHTML = html;
 }
 
 function updateLeavesMonthLabel() {
@@ -3629,22 +3680,28 @@ function renderLeaveCards() {
       ? allLeaves.filter(l => l.person_name === 'Flora' && l.status === 'approved' && (!l.leave_type || l.leave_type === 'conge') && l.leave_date >= floraStart && l.leave_date <= floraEnd).length
       : yearLeaves.filter(l => l.person_name === name && l.status === 'approved' && (!l.leave_type || l.leave_type === 'conge')).length;
     const pending = yearLeaves.filter(l => l.person_name === name && l.status === 'pending').length;
-    const remaining = LEAVE_TOTAL - approved;
-    const pct = Math.round((approved / LEAVE_TOTAL) * 100);
-    // Acquisition progressive : 25/12 ≈ 2,08 j ouvrés par mois complet travaillé
-    // (équivalent des 2,5 j ouvrables légaux, le Hub comptant en jours lun-ven).
-    // Flora : année de référence du 1er déc N-1 au 30 nov N ; les autres : année civile.
+    // Acquisition : 25/12 ≈ 2,08 j ouvrés par mois complet travaillé (équivalent des
+    // 2,5 j ouvrables légaux). Flora : année du 1er déc N-1 au 30 nov N ; les autres :
+    // année civile. Les droits démarrent à la date d'embauche (prorata — cas Gloria 01/09/2026).
+    const arr1 = v => Math.round(v * 10) / 10;
+    const fmtJ = v => String(arr1(v)).replace('.', ',');
+    const refStart = name === 'Flora' ? `${year-1}-12-01` : `${year}-01-01`;
+    const refEnd   = name === 'Flora' ? `${year}-11-30`  : `${year}-12-31`;
+    const effStart = (LEAVE_HIRE[name] && LEAVE_HIRE[name] > refStart) ? LEAVE_HIRE[name] : refStart;
+    const moisEntre = (a, b) => Math.max(0, (parseInt(b.slice(0,4)) - parseInt(a.slice(0,4))) * 12 + parseInt(b.slice(5,7)) - parseInt(a.slice(5,7)));
+    const droitsAnnee = effStart > refEnd ? 0 : arr1(Math.min(LEAVE_TOTAL, (moisEntre(effStart, refEnd) + 1) * (LEAVE_TOTAL / 12)));
+    const remaining = arr1(Math.max(0, droitsAnnee - approved));
+    const pct = droitsAnnee > 0 ? Math.round((approved / droitsAnnee) * 100) : 0;
     const auj = new Date();
     let acquisLigne = '';
     if (year === auj.getFullYear()) {
-      const moisComplets = name === 'Flora'
-        ? Math.max(0, (auj.getFullYear() - (year - 1)) * 12 + auj.getMonth() - 11)
-        : auj.getMonth();
-      const acquis = Math.min(LEAVE_TOTAL, Math.round(moisComplets * (LEAVE_TOTAL / 12) * 10) / 10);
-      const fmtJ = v => String(v).replace('.', ',');
-      // Politique Pull Up (Romain, 17/08/2026) : tout le solde annuel est posable d'un coup,
-      // pas seulement l'acquis — la ligne « acquis » reste affichée à titre indicatif.
-      acquisLigne = `<div style="font-size:.75rem;color:var(--text2);margin-bottom:.5rem">Acquis à ce jour : <strong>${fmtJ(acquis)} j</strong> · posable d'un coup : <strong style="color:#4CAF50">${remaining} j</strong></div>`;
+      const aujStr = auj.toISOString().slice(0, 10);
+      const moisComplets = aujStr < effStart ? 0 : moisEntre(effStart, aujStr);
+      const acquis = Math.min(droitsAnnee, arr1(moisComplets * (LEAVE_TOTAL / 12)));
+      // Politique Pull Up (Romain, 17/08/2026) : tout le solde annuel est posable d'un coup.
+      acquisLigne = aujStr < effStart
+        ? `<div style="font-size:.75rem;color:var(--gold);margin-bottom:.5rem">Arrive le ${new Date(effStart).toLocaleDateString('fr-FR')} · droits 2026 : ${fmtJ(droitsAnnee)} j</div>`
+        : `<div style="font-size:.75rem;color:var(--text2);margin-bottom:.5rem">Acquis à ce jour : <strong>${fmtJ(acquis)} j</strong> · posable d'un coup : <strong style="color:#4CAF50">${fmtJ(remaining)} j</strong></div>`;
     }
     const color = LEAVE_COLORS_HEX[name];
     const monthHours = monthLeaves.filter(l => l.person_name === name).reduce((s, l) => s + (parseFloat(l.hours) || 0), 0);
@@ -3655,7 +3712,7 @@ function renderLeaveCards() {
       <img src="${LEAVE_PHOTOS[name]}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid ${color};margin:0 auto .75rem;display:block" onerror="this.style.display='none'">
       <div style="font-weight:700;font-size:1rem;margin-bottom:.25rem">${name}</div>
       <div style="font-size:2rem;font-weight:800;color:${color};line-height:1">${remaining}</div>
-      <div style="font-size:.75rem;color:var(--text2);margin-bottom:.4rem">jours restants / ${LEAVE_TOTAL} sur l'année</div>
+      <div style="font-size:.75rem;color:var(--text2);margin-bottom:.4rem">jours restants / ${fmtJ(droitsAnnee)} sur l'année</div>
       ${acquisLigne}
       ${monthHours > 0 ? `<div style="font-size:.78rem;color:var(--text2);margin-bottom:4px">Ce mois : <strong style="color:${color}">${monthHours}h</strong></div>` : ''}
       ${yearHours > 0 ? `<div style="font-size:.75rem;color:var(--text3);margin-bottom:.5rem">Cette année : <strong>${yearHours}h</strong></div>` : ''}
@@ -3745,8 +3802,10 @@ function renderLeaveCalendar() {
 
     const clickAttr = `onclick="requestLeaveDay('${dateStr}')"`;
 
+    const evtsOnDay = leaveEvents.filter(e => e.event_date === dateStr);
     html += `<div style="${cellStyle}" ${clickAttr}>
       <div style="font-size:.8rem;font-weight:${isToday?'700':'400'};color:${isToday?'var(--gold)':'var(--text2)'};margin-bottom:3px">${d}</div>
+      ${evtsOnDay.map(e => `<div style="background:rgba(245,197,24,.16);border:1px solid rgba(245,197,24,.55);color:var(--gold);border-radius:4px;padding:1px 5px;font-size:.66rem;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="Événement : ${(e.name||'').replace(/"/g,'&quot;')}">🎪 ${e.name}</div>`).join('')}
       ${leavesOnDay.map(l => {
         const typeIcons = { maladie:'🤒', formation:'📚', bureau:'🏢', ferie:'🎌', evenement:'🎉', conge:'🏖' };
         const personHex = LEAVE_COLORS_HEX[l.person_name] || '#888';
