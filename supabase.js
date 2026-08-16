@@ -1808,8 +1808,12 @@ function updateDashboardEvents(events) {
     </div>`;
   }).join('') || '<p style="color:var(--text2);padding:1rem;text-align:center">Aucun événement à venir</p>';
 
+  // « À venir » = date pas encore passée ET statut actif — un événement passé non pointé
+  // « Terminé » ne compte plus comme à venir (demande Romain 16/08)
+  const aujourdHui = new Date().toISOString().slice(0, 10);
   const countEl = document.getElementById('stat-events-count');
-  if (countEl) countEl.textContent = events.filter(e => e.status !== 'Terminé' && e.status !== 'Annulé' && e.status !== 'Supprimé').length;
+  if (countEl) countEl.textContent = events.filter(e => e.event_date >= aujourdHui
+    && e.status !== 'Terminé' && e.status !== 'Annulé' && e.status !== 'Supprimé').length;
 }
 
 function updateDashboardTasks(tasks) {

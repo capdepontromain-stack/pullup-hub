@@ -884,10 +884,19 @@ function renderCreancesReelles(factures) {
     .sort((a, b) => (a.date_emission < b.date_emission ? -1 : 1));
   const total = impayees.reduce((s, f) => s + (parseFloat(f.ttc) || 0), 0);
 
+  // Carte du dashboard : seulement les VRAIS retards (échéance 30 j dépassée) —
+  // les factures récentes (Insee, IMPro…) sont normales, pas des alertes (demande Romain 16/08)
+  const aujC = new Date();
+  const enRetardC = impayees.filter(f => (aujC - new Date(f.date_emission)) / 86400000 > 30);
+  const totalRetard = enRetardC.reduce((s, f) => s + (parseFloat(f.ttc) || 0), 0);
   const statEl = document.getElementById('stat-creances-count');
-  if (statEl) statEl.textContent = impayees.length;
+  if (statEl) statEl.textContent = enRetardC.length;
   const dashTotalEl = document.getElementById('stat-creances-total');
-  if (dashTotalEl) dashTotalEl.textContent = total > 0 ? 'Total : ' + fmtEur(total) : '';
+  if (dashTotalEl) {
+    dashTotalEl.textContent = enRetardC.length
+      ? 'En retard : ' + fmtEur(totalRetard) + (total > totalRetard ? ' · à venir : ' + fmtEur(total - totalRetard) : '')
+      : (total > 0 ? 'Rien en retard · à venir : ' + fmtEur(total) : '');
+  }
   const totalEl = document.getElementById('creances-total');
   if (totalEl) totalEl.textContent = fmtEur(total);
 
