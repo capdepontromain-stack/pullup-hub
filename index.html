@@ -930,7 +930,13 @@ try {
     </div>
     <div class="events-table-wrap">
       <table class="data-table">
-        <thead><tr><th>Société</th><th>Contact</th><th>Mail</th><th>CA généré</th><th>Potentiel</th><th>Statut</th></tr></thead>
+        <thead><tr>
+          <th data-tri="company" style="cursor:pointer" title="Cliquer pour trier">Société <span class="tri-fleche"></span></th>
+          <th>Contact</th><th>Mail</th>
+          <th data-tri="revenue" style="cursor:pointer" title="Cliquer pour trier">CA généré <span class="tri-fleche"></span></th>
+          <th data-tri="potential" style="cursor:pointer" title="Cliquer pour trier">Potentiel <span class="tri-fleche"></span></th>
+          <th data-tri="status" style="cursor:pointer" title="Cliquer pour trier">Statut <span class="tri-fleche"></span></th>
+        </tr></thead>
         <tbody>
           <tr>
             <td><strong>Mercialys</strong></td>
@@ -2519,8 +2525,8 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260816m"></script>
-<script src="app.js?v=20260816m"></script>
+<script src="supabase.js?v=20260816n"></script>
+<script src="app.js?v=20260816n"></script>
 <script>
   if ('serviceWorker' in navigator) {
     // Enregistrer le SW de nettoyage (sans rechargement forcé — l'ancien

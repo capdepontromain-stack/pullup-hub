@@ -855,7 +855,44 @@ async function quickDoneTask(id, currentStatus) {
 }
 
 // Render clients table
-function renderClientsTable(clients) {
+// Tri du tableau CRM au clic sur les en-têtes (demande Romain 17/08) :
+// CA → du plus gros au plus petit ; Potentiel → Élevé, Moyen, Faible ; Statut → Actif, Relance, Prospect, Inactif.
+// Un 2e clic sur la même colonne inverse l'ordre.
+let _crmClients = [];
+let _crmTri = { col: null, sens: 1 };
+const _rangPotentiel = { 'Élevé': 0, 'Moyen': 1, 'Faible': 2 };
+const _rangStatut = { 'Actif': 0, 'Relance': 1, 'Prospect': 2, 'Inactif': 3 };
+
+function trierClients(col) {
+  _crmTri.sens = (_crmTri.col === col) ? -_crmTri.sens : 1;
+  _crmTri.col = col;
+  const tri = [..._crmClients];
+  const s = _crmTri.sens;
+  if (col === 'revenue') tri.sort((a, b) => s * ((parseFloat(b.revenue) || 0) - (parseFloat(a.revenue) || 0)));
+  else if (col === 'potential') tri.sort((a, b) => s * ((_rangPotentiel[a.potential] ?? 9) - (_rangPotentiel[b.potential] ?? 9)) || (parseFloat(b.revenue) || 0) - (parseFloat(a.revenue) || 0));
+  else if (col === 'status') tri.sort((a, b) => s * ((_rangStatut[a.status] ?? 9) - (_rangStatut[b.status] ?? 9)) || (parseFloat(b.revenue) || 0) - (parseFloat(a.revenue) || 0));
+  else tri.sort((a, b) => s * (a.company || '').localeCompare(b.company || '', 'fr'));
+  renderClientsTable(tri, true);
+  // Petite flèche sur la colonne triée
+  document.querySelectorAll('#page-crm .data-table thead .tri-fleche').forEach(f => f.textContent = '');
+  const th = document.querySelector(`#page-crm .data-table thead th[data-tri="${col}"] .tri-fleche`);
+  if (th) th.textContent = _crmTri.sens === 1 ? '▼' : '▲';
+}
+
+function initTriCrm() {
+  document.querySelectorAll('#page-crm .data-table thead th[data-tri]').forEach(th => {
+    if (th._triPret) return;
+    th._triPret = true;
+    th.addEventListener('click', () => trierClients(th.dataset.tri));
+  });
+}
+
+function renderClientsTable(clients, dejaTrie) {
+  if (!dejaTrie) {
+    _crmClients = clients; _crmTri.col = null;
+    document.querySelectorAll('#page-crm .data-table thead .tri-fleche').forEach(f => f.textContent = '');
+  }
+  initTriCrm();
   // Les 3 compteurs du haut de la page CRM, calculés depuis les fiches (réel Qonto)
   const actifs = clients.filter(c => c.status === 'Actif' || c.status === 'Relance');
   const elA = document.getElementById('crm-stat-actifs');
