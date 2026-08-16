@@ -3641,9 +3641,10 @@ function renderLeaveCards() {
         ? Math.max(0, (auj.getFullYear() - (year - 1)) * 12 + auj.getMonth() - 11)
         : auj.getMonth();
       const acquis = Math.min(LEAVE_TOTAL, Math.round(moisComplets * (LEAVE_TOTAL / 12) * 10) / 10);
-      const posables = Math.max(0, Math.round((acquis - approved) * 10) / 10);
       const fmtJ = v => String(v).replace('.', ',');
-      acquisLigne = `<div style="font-size:.75rem;color:var(--text2);margin-bottom:.5rem">Acquis à ce jour : <strong>${fmtJ(acquis)} j</strong> · posables maintenant : <strong style="color:${posables > 0 ? '#4CAF50' : '#f44336'}">${fmtJ(posables)} j</strong></div>`;
+      // Politique Pull Up (Romain, 17/08/2026) : tout le solde annuel est posable d'un coup,
+      // pas seulement l'acquis — la ligne « acquis » reste affichée à titre indicatif.
+      acquisLigne = `<div style="font-size:.75rem;color:var(--text2);margin-bottom:.5rem">Acquis à ce jour : <strong>${fmtJ(acquis)} j</strong> · posable d'un coup : <strong style="color:#4CAF50">${remaining} j</strong></div>`;
     }
     const color = LEAVE_COLORS_HEX[name];
     const monthHours = monthLeaves.filter(l => l.person_name === name).reduce((s, l) => s + (parseFloat(l.hours) || 0), 0);
