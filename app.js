@@ -14,7 +14,17 @@ function showPage(id) {
     });
     else if (typeof loadAndRenderEvents === 'function') loadAndRenderEvents();
   }
-  if (id === 'finances') renderFinanceAnalyse().catch(console.error);
+  if (id === 'finances') {
+    // Onglet unique « Finances & Charges » (fusion demandée par Romain le 16/08) :
+    // les sections Rapports et Charges s'affichent à la suite, tout au réel Qonto
+    renderFinanceAnalyse().catch(console.error);
+    if (typeof renderReports === 'function') renderReports().catch(console.error);
+    if (typeof loadCharges === 'function') loadCharges();
+    ['page-reports', 'page-charges'].forEach(pid => {
+      const s = document.getElementById(pid);
+      if (s) s.classList.add('active');
+    });
+  }
   if (id === 'dashboard') { renderDashboardCA().catch(console.error); renderMiniCalendar(); }
   if (id === 'reports') renderReports().catch(console.error);
   if (id === 'leaves') loadAndRenderLeaves();
