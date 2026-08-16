@@ -4032,7 +4032,12 @@ function categoriserTransaction(nom, catQonto, methode, credit, reference, debit
   // Propriétaires : Stéphane Nantille (depuis fin 2025, loyer 1 650 €) et Élise Benistant (avant, 1 400 €)
   if (n.includes('NANTIL') || n.includes('BENISTANT')) return 'Loyer';
   if (n.startsWith('SPOTIFY')) return 'Abonnements & outils';
-  if (['MARINE ROULLAND', 'LAW WAN CHUNG', 'HERBERT DIMITRI PITOU', 'MARIE CHOYEN', 'GUFFLET GLORIA'].some(k => n.includes(k)) || (n.includes('FLORA') && n.includes('BOYER'))) return 'Salaires & équipe';
+  // Salariés : uniquement Ketsia (1 471,57 €) et Flora (1 112,05 € ; 955 € en 2025) — salaire si référence
+  // ou montant de salaire, sinon remboursement de frais (kms, achats avancés). Marine/Titi/Gloria = prestataires.
+  if (n.includes('LAW WAN CHUNG') || (n.includes('FLORA') && (n.includes('BOYER') || n.includes('PULLUP')))) {
+    if (ref.includes('SALAIRE') || [954, 955, 1112, 1113, 1450, 1471, 1472].includes(d)) return 'Salaires & équipe';
+    return 'Remboursements frais équipe';
+  }
   if (n.includes('PAPANGUE')) return 'Comptable & conseils';
   if (['APRIL', 'ALLIANZ', 'PRUDENCE CREOLE', 'GROUPAMA', 'GENERALI', 'AXA '].some(k => n.includes(k))) return 'Assurances';
   if (n.includes('MI DAOU')) return 'Ménage';
