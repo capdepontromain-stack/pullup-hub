@@ -1387,7 +1387,10 @@ function renderFinances(entries) {
 }
 
 // Render créances clients (factures impayées)
+// Depuis le 16/08/2026, les créances viennent des factures Qonto officielles (banque_factures)
+// affichées par renderCreancesReelles() dans app.js — cette ancienne version (saisie manuelle) est désactivée.
 function renderCreances(entries) {
+  return;
   const impayees = entries.filter(e => e.type === 'facture' && e.status !== 'Payée');
   const statEl = document.getElementById('stat-creances-count');
   if (statEl) statEl.textContent = impayees.length;

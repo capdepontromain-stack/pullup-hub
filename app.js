@@ -632,101 +632,87 @@ function fmt(n) {
   return n > 0 ? n.toLocaleString('fr-FR') + ' €' : '—';
 }
 
+// Charge les données réelles de l'année (factures Qonto + banque) — source de vérité depuis le 16/08/2026
+async function fetchReel(annee) {
+  const [rFac, rTx] = await Promise.all([
+    sb.from('banque_factures').select('numero,mois,client,ht,ttc,statut,date_emission').eq('annee', annee),
+    sb.from('banque_transactions').select('mois,debit,credit').eq('annee', annee)
+  ]);
+  const factures = rFac.data || [], txs = rTx.data || [];
+  const facMois = {}, encMois = {}, depMois = {};
+  factures.forEach(f => { if (f.statut !== 'canceled') facMois[f.mois] = (facMois[f.mois] || 0) + (parseFloat(f.ht) || 0); });
+  txs.forEach(t => {
+    if (t.credit) encMois[t.mois] = (encMois[t.mois] || 0) + parseFloat(t.credit);
+    if (t.debit) depMois[t.mois] = (depMois[t.mois] || 0) + parseFloat(t.debit);
+  });
+  const sum = o => Object.values(o).reduce((s, v) => s + v, 0);
+  return { factures, facMois, encMois, depMois, totFac: sum(facMois), totEnc: sum(encMois), totDep: sum(depMois) };
+}
+
+const fmtEur = v => Math.round(v).toLocaleString('fr-FR') + ' €';
+const fmtSigne = v => (v >= 0 ? '+' : '') + Math.round(v).toLocaleString('fr-FR') + ' €';
+
 async function renderDashboardCA() {
   const container = document.getElementById('dashboard-ca-bars');
   if (!container) return;
   const MONTHS = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-  const TARGET = (window.CHARGES_FIXES_MOIS || 8717.96) + (window.CHARGES_VARS_MOIS || 2000);
-
-  // Mettre à jour le titre
+  const TARGET = (window.CHARGES_FIXES_MOIS || 8123) + (window.CHARGES_VARS_MOIS || 2985);
   document.querySelectorAll('[data-charges-label]').forEach(el => {
     el.textContent = TARGET.toLocaleString('fr-FR') + ' €/mois';
   });
 
-  // Charger depuis Supabase
-  const rows = await fetchFinanceMonthly();
-  const byMonth = {};
-  rows.forEach(r => { byMonth[r.month] = r; });
+  const reel = await fetchReel(2026);
+  const resultat = reel.totEnc - reel.totDep;
 
-  // Calculer total CA pour le stat dashboard
-  const totalCA = rows.filter(r => r.year === 2026).reduce((s,r) => s + (parseFloat(r.ca)||0), 0);
-  const totalBenef = rows.filter(r => r.year === 2026).reduce((s,r) => s + (parseFloat(r.benef)||0), 0);
-  const doneMonths = rows.filter(r => r.year === 2026 && (parseFloat(r.ca)||0) > 0).length;
-  const totalChargesYTD = ((window.CHARGES_FIXES_MOIS || 8717.96) + (window.CHARGES_VARS_MOIS || 2000)) * doneMonths;
-  const benefReel = totalBenef - totalChargesYTD;
   const caStatEl = document.getElementById('stat-ca-count');
-  if (caStatEl) caStatEl.textContent = totalCA.toLocaleString('fr-FR') + ' €';
+  if (caStatEl) caStatEl.textContent = fmtEur(reel.totFac);
   const benefLabelEl = document.getElementById('stat-benef-label');
   if (benefLabelEl) {
-    const signB = totalBenef >= 0 ? '+' : '';
-    const signC = benefReel >= 0 ? '+' : '';
     benefLabelEl.innerHTML = `
-      <span style="color:#aaa">Bénéfice : <strong style="color:#4A9EFF">${signB}${Math.round(totalBenef).toLocaleString('fr-FR')} €</strong></span><br>
-      <span style="color:#aaa">Charges : <strong style="color:#f44336">-${Math.round(totalChargesYTD).toLocaleString('fr-FR')} €</strong></span><br>
-      <span style="color:#aaa">Bénéfice réel : <strong style="color:${benefReel >= 0 ? '#4CAF50' : '#f44336'}">${signC}${Math.round(benefReel).toLocaleString('fr-FR')} €</strong></span>`;
+      <span style="color:#aaa">Encaissé : <strong style="color:#4CAF50">${fmtEur(reel.totEnc)}</strong></span><br>
+      <span style="color:#aaa">Dépensé : <strong style="color:#f44336">${fmtEur(reel.totDep)}</strong></span><br>
+      <span style="color:#aaa">Résultat tréso : <strong style="color:${resultat >= 0 ? '#4CAF50' : '#f44336'}">${fmtSigne(resultat)}</strong></span>`;
     benefLabelEl.style.color = '';
   }
 
-  const data2026 = rows.filter(r => r.year === 2026);
-  const maxBenef = Math.max(TARGET, ...data2026.map(d => parseFloat(d.benef) || 0));
-  const targetPct = Math.round((TARGET / maxBenef) * 100);
-
+  // Barres mensuelles : résultat de trésorerie réel (encaissé − dépensé)
+  const moisActifs = [...new Set([...Object.keys(reel.encMois), ...Object.keys(reel.depMois)])].map(Number).sort((a, b) => a - b);
+  const maxAbs = Math.max(1, ...moisActifs.map(m => Math.abs((reel.encMois[m] || 0) - (reel.depMois[m] || 0))));
   let html = '';
-  for (let m = 1; m <= 12; m++) {
-    const d = byMonth[m];
-    const benef = parseFloat(d?.benef) || 0;
-    if (!benef) continue;
-    const atteint = benef >= TARGET;
-    const diff = benef - TARGET;
-    const surplus = Math.max(0, diff);
-    const deficit = Math.min(0, diff);
-    const yellowPct = Math.round((Math.min(benef, TARGET) / maxBenef) * 100);
-    const greenPct  = Math.round((surplus / maxBenef) * 100);
-    const diffLabel = diff >= 0
-      ? `<span style="color:#4CAF50;font-size:.75rem">(+${Math.round(diff).toLocaleString('fr-FR')} €)</span>`
-      : `<span style="color:#f44336;font-size:.75rem">(${Math.round(diff).toLocaleString('fr-FR')} €)</span>`;
-
+  for (const m of moisActifs) {
+    const enc = reel.encMois[m] || 0, dep = reel.depMois[m] || 0;
+    const res = enc - dep;
+    const pct = Math.max(4, Math.round((Math.abs(res) / maxAbs) * 100));
     html += `<div class="objective-item">
-      <div class="obj-label" style="color:${atteint ? '#4CAF50' : 'var(--text)'}">${MONTHS[m]} 2026${atteint ? ' 🏆' : ''}</div>
+      <div class="obj-label" style="color:${res >= 0 ? '#4CAF50' : '#f44336'}">${MONTHS[m]} 2026</div>
       <div class="obj-progress-wrap" style="position:relative;overflow:hidden">
-        <div style="position:absolute;left:0;top:0;bottom:0;width:${yellowPct}%;background:#F5C518;border-radius:4px 0 0 4px"></div>
-        ${greenPct > 0 ? `<div style="position:absolute;left:${yellowPct}%;top:0;bottom:0;width:${greenPct}%;background:#4CAF50;border-radius:0 4px 4px 0"></div>` : ''}
-        <div style="position:absolute;left:${targetPct}%;top:0;bottom:0;width:2px;background:#fff;opacity:.6"></div>
+        <div style="position:absolute;left:0;top:0;bottom:0;width:${pct}%;background:${res >= 0 ? '#4CAF50' : '#f44336'};border-radius:4px"></div>
       </div>
       <div class="obj-values">
-        <span style="color:${atteint ? '#4CAF50' : '#F5C518'};font-weight:700">${benef.toLocaleString('fr-FR')} €</span>
-        ${diffLabel}
-        <span class="obj-target">/ ${TARGET.toLocaleString('fr-FR')} €</span>
+        <span style="color:${res >= 0 ? '#4CAF50' : '#f44336'};font-weight:700">${fmtSigne(res)}</span>
+        <span class="obj-target">encaissé ${fmtEur(enc)} − dépensé ${fmtEur(dep)}</span>
       </div>
     </div>`;
   }
-  container.innerHTML = html || '<p style="color:var(--text2);padding:1rem">Aucune donnée 2026</p>';
+  container.innerHTML = html || '<p style="color:var(--text2);padding:1rem">Aucune opération bancaire 2026 — importe un export Qonto dans l\'onglet Charges</p>';
 
-  // Jauges du dashboard (mêmes données que Finances)
-  const [rfRes, rvRes] = await Promise.all([
-    sb.from('charges_fixes').select('montant'),
-    sb.from('charges_variables_items').select('montant'),
-  ]);
-  const totalCF = (rfRes.data || []).reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
-  const totalCV = (rvRes.data  || []).reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
-  const totalChargesAnnuel = (totalCF + totalCV) * 12;
-  const chargesPct = totalChargesAnnuel > 0 ? Math.min(100, Math.round((totalBenef / totalChargesAnnuel) * 100)) : 0;
-  const caPct = Math.min(100, Math.round((totalCA / 300000) * 100));
-
+  // Jauges dashboard : couverture des dépenses par les encaissements + CA facturé vs objectif
+  const couvPct = reel.totDep > 0 ? Math.min(100, Math.round((reel.totEnc / reel.totDep) * 100)) : 0;
+  const caPct = Math.min(100, Math.round((reel.totFac / 300000) * 100));
   const dSub1 = document.getElementById('dash-gauge-charges-sub');
-  if (dSub1) dSub1.innerHTML = `Bénéfice réalisé : <strong>${totalBenef.toLocaleString('fr-FR')} €</strong> / ${totalChargesAnnuel.toLocaleString('fr-FR')} € de charges annuelles`;
+  if (dSub1) dSub1.innerHTML = `Encaissé : <strong>${fmtEur(reel.totEnc)}</strong> / Dépensé : <strong>${fmtEur(reel.totDep)}</strong>`;
   const dSub2 = document.getElementById('dash-gauge-ca-sub');
-  if (dSub2) dSub2.innerHTML = `CA réalisé : <strong>${totalCA.toLocaleString('fr-FR')} €</strong> / objectif 300 000 €`;
+  if (dSub2) dSub2.innerHTML = `CA facturé : <strong>${fmtEur(reel.totFac)}</strong> / objectif 300 000 €`;
   const dH = document.getElementById('dash-gauge-charges-half');
-  if (dH) dH.textContent = Math.round(totalChargesAnnuel / 2).toLocaleString('fr-FR') + ' €';
+  if (dH) dH.textContent = fmtEur(reel.totDep / 2);
   const dF = document.getElementById('dash-gauge-charges-full');
-  if (dF) dF.textContent = totalChargesAnnuel.toLocaleString('fr-FR') + ' €';
+  if (dF) dF.textContent = fmtEur(reel.totDep);
 
   setTimeout(() => {
     const dg1 = document.getElementById('dash-gauge-charges'); const dp1 = document.getElementById('dash-gauge-charges-pct');
     const dg2 = document.getElementById('dash-gauge-ca');      const dp2 = document.getElementById('dash-gauge-ca-pct');
-    if (dg1) { dg1.style.width = chargesPct + '%'; if (dp1) dp1.textContent = chargesPct + '%'; }
-    if (dg2) { dg2.style.width = caPct + '%';      if (dp2) dp2.textContent = caPct + '%'; }
+    if (dg1) { dg1.style.width = couvPct + '%'; if (dp1) dp1.textContent = couvPct + '%'; }
+    if (dg2) { dg2.style.width = caPct + '%';   if (dp2) dp2.textContent = caPct + '%'; }
   }, 120);
 }
 
@@ -739,58 +725,41 @@ async function renderFinanceAnalyse() {
   const foot25 = document.getElementById('fin-monthly-2025-total');
   if (!body26) return;
 
-  // Load from Supabase
+  // 2026 : données réelles (factures Qonto + banque) — plus de saisie manuelle
+  const reel = await fetchReel(2026);
+  // 2025 : référence saisie (finance_monthly)
   const rows = await fetchFinanceMonthly();
   _finMonthlyData = {};
   rows.forEach(r => { _finMonthlyData[`${r.year}-${r.month}`] = r; });
 
-  // Fallback to static if table empty
-  const get = (year, month) => _finMonthlyData[`${year}-${month}`] || FINANCE_2026[month] || { ca:0, benef:0 };
-
-  const now = new Date();
-  const curMonth = now.getMonth() + 1;
-  let total26ca = 0, total26ben = 0, total25ca = 0;
+  let total26fac = 0, total25ca = 0;
   let html26 = '', html25 = '';
 
   for (let m = 1; m <= 12; m++) {
-    const d26 = get(2026, m);
-    const d25 = get(2025, m);
-    const ca26  = parseFloat(d26.ca)   || 0;
-    const ben26 = parseFloat(d26.benef)|| 0;
-    const ca25  = parseFloat(d25.ca)   || 0;
+    const fac = reel.facMois[m] || 0;
+    const enc = reel.encMois[m] || 0;
+    const dep = reel.depMois[m] || 0;
+    const res = enc - dep;
+    const aBanque = (m in reel.encMois) || (m in reel.depMois);
+    const ca25 = parseFloat(_finMonthlyData[`2025-${m}`]?.ca) || 0;
+    total26fac += fac; total25ca += ca25;
 
-    const isFuture = m > curMonth && !ca26;
-    const rowClass = isFuture ? 'month-future' : 'month-done';
-    total26ca += ca26; total26ben += ben26; total25ca += ca25;
-
-    const marge = ca26 > 0 ? Math.round((ben26 / ca26) * 100) : 0;
-    const margeClass = marge >= 50 ? 'fin-margin-ok' : marge >= 30 ? 'fin-margin-warn' : (ca26 > 0 ? 'fin-margin-bad' : '');
-    const vsCharges = ben26 - CHARGES_FIXES_MOIS;
-    const vsStr = ben26 > 0
-      ? `<span class="${vsCharges >= 0 ? 'fin-evol-up' : 'fin-evol-down'}">${vsCharges >= 0 ? '+' : ''}${Math.round(vsCharges).toLocaleString('fr-FR')} €</span>`
-      : '<span class="fin-evol-neu">—</span>';
-
-    const barPct = Math.min(100, Math.round((ca26 / (window.CHARGES_FIXES_MOIS || 8717.96)) * 100));
-
-    html26 += `<tr class="${rowClass}">
-      <td onclick="showMonthDetail(2026,${m})" style="cursor:pointer" title="Voir le détail des factures"><strong>${MNAMES_FR[m]}</strong> <span style="font-size:.7rem;color:var(--gold);opacity:.7">▶</span></td>
-      <td class="fin-editable" onclick="editFinanceCell(2026,${m},'ca',${ca26})" style="position:relative;cursor:pointer" title="Cliquer pour modifier">
-        <div style="position:absolute;left:0;top:0;bottom:0;width:${barPct}%;background:var(--gold);opacity:.12;border-radius:3px"></div>
-        <span style="position:relative">${ca26 > 0 ? fmt(ca26) : '<span style="color:var(--text2)">—</span>'}</span>
-      </td>
-      <td class="fin-editable ${margeClass}" onclick="editFinanceCell(2026,${m},'benef',${ben26})" style="cursor:pointer" title="Cliquer pour modifier">
-        ${ben26 > 0 ? fmt(ben26) : '<span style="color:var(--text2)">—</span>'}
-      </td>
-      <td class="${margeClass}">${marge > 0 ? marge + '%' : '—'}</td>
-      <td>${vsStr}</td>
-    </tr>`;
+    if (fac || aBanque) {
+      html26 += `<tr class="month-done">
+        <td><strong>${MNAMES_FR[m]}</strong></td>
+        <td style="color:var(--gold);font-weight:700">${fac ? fmt(fac) : '<span style="color:var(--text2)">—</span>'}</td>
+        <td style="color:#4CAF50">${aBanque ? fmt(enc) : '<span style="color:var(--text2)">—</span>'}</td>
+        <td style="color:#f44336">${aBanque ? fmt(dep) : '<span style="color:var(--text2)">—</span>'}</td>
+        <td style="font-weight:700;color:${res >= 0 ? '#4CAF50' : '#f44336'}">${aBanque ? fmtSigne(res) : '<span style="color:var(--text2)">—</span>'}</td>
+      </tr>`;
+    }
 
     let evol = '';
-    if (ca25 > 0 && ca26 > 0) {
-      const diff = Math.round(ca26 - ca25);
-      const pct = Math.round((diff / ca25) * 100);
-      evol = `<span class="${diff >= 0 ? 'fin-evol-up' : 'fin-evol-down'}">${diff >= 0 ? '+' : ''}${pct}%</span>`;
-    } else if (ca26 > 0 && ca25 === 0) {
+    const fac26 = fac;
+    if (ca25 > 0 && fac26 > 0) {
+      const pct = Math.round(((fac26 - ca25) / ca25) * 100);
+      evol = `<span class="${pct >= 0 ? 'fin-evol-up' : 'fin-evol-down'}">${pct >= 0 ? '+' : ''}${pct}%</span>`;
+    } else if (fac26 > 0 && ca25 === 0) {
       evol = `<span class="fin-evol-up">Nouveau</span>`;
     }
     html25 += `<tr><td><strong>${MNAMES_FR[m]}</strong></td>
@@ -800,44 +769,95 @@ async function renderFinanceAnalyse() {
       <td>${evol}</td></tr>`;
   }
 
-  body26.innerHTML = html26;
+  const totRes = reel.totEnc - reel.totDep;
+  body26.innerHTML = html26 || '<tr><td colspan="5" style="text-align:center;color:var(--text2);padding:1.5rem">Aucune donnée réelle — importe tes exports Qonto dans l\'onglet Charges</td></tr>';
   body25.innerHTML = html25;
-  foot26.innerHTML = `<td>TOTAL</td><td><strong>${total26ca.toLocaleString('fr-FR')} €</strong></td><td><strong>${total26ben.toLocaleString('fr-FR')} €</strong></td><td><strong>${total26ca > 0 ? Math.round((total26ben/total26ca)*100) + '%' : '—'}</strong></td><td></td>`;
+  foot26.innerHTML = `<td>TOTAL</td><td style="color:var(--gold)"><strong>${fmtEur(total26fac)}</strong></td><td style="color:#4CAF50"><strong>${fmtEur(reel.totEnc)}</strong></td><td style="color:#f44336"><strong>${fmtEur(reel.totDep)}</strong></td><td style="color:${totRes >= 0 ? '#4CAF50' : '#f44336'}"><strong>${fmtSigne(totRes)}</strong></td>`;
   foot25.innerHTML = `<td>TOTAL</td><td><strong>${total25ca.toLocaleString('fr-FR')} €</strong></td><td></td>`;
 
-  // Récupérer le total annuel des charges depuis Supabase
-  const [rfRes, rvRes] = await Promise.all([
-    sb.from('charges_fixes').select('montant'),
-    sb.from('charges_variables_items').select('montant'),
-  ]);
-  const totalChargesFixes = (rfRes.data || []).reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
-  const totalChargesVars  = (rvRes.data  || []).reduce((s, c) => s + (parseFloat(c.montant) || 0), 0);
-  const totalChargesMoisReel = totalChargesFixes + totalChargesVars;
-  const totalChargesAnnuel = totalChargesMoisReel * 12;
+  // KPI réels du haut de page
+  const kpi = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  kpi('fkpi-facture', fmtEur(total26fac));
+  kpi('fkpi-encaisse', fmtEur(reel.totEnc));
+  kpi('fkpi-depense', fmtEur(reel.totDep));
+  const resEl = document.getElementById('fkpi-resultat');
+  if (resEl) { resEl.textContent = fmtSigne(totRes); resEl.style.color = totRes >= 0 ? '#4CAF50' : '#f44336'; }
 
-  const OBJECTIF_CA = 300000;
+  // Créances : factures Qonto non payées
+  renderCreancesReelles(reel.factures);
 
-  const chargesPct = totalChargesAnnuel > 0 ? Math.min(100, Math.round((total26ben / totalChargesAnnuel) * 100)) : 0;
-  const caPct      = Math.min(100, Math.round((total26ca / OBJECTIF_CA) * 100));
-
-  // Jauge 1 : bénéfice vs charges
+  // Jauge 1 : couverture des dépenses par les encaissements
+  const couvPct = reel.totDep > 0 ? Math.min(100, Math.round((reel.totEnc / reel.totDep) * 100)) : 0;
   const gSub1 = document.getElementById('gauge-charges-subtitle');
-  if (gSub1) gSub1.innerHTML = `Total charges : <strong>${totalChargesMoisReel.toLocaleString('fr-FR')} €/mois × 12 = ${totalChargesAnnuel.toLocaleString('fr-FR')} €</strong> | Bénéfice réalisé : <strong>${total26ben.toLocaleString('fr-FR')} €</strong>`;
-  document.querySelectorAll('.gauge-label-half-charges').forEach(el => el.textContent = Math.round(totalChargesAnnuel / 2).toLocaleString('fr-FR') + ' €');
-  document.querySelectorAll('.gauge-label-full-charges').forEach(el => el.textContent = totalChargesAnnuel.toLocaleString('fr-FR') + ' €');
+  if (gSub1) gSub1.innerHTML = `Encaissé : <strong>${fmtEur(reel.totEnc)}</strong> / Dépensé : <strong>${fmtEur(reel.totDep)}</strong> → résultat <strong style="color:${totRes >= 0 ? '#4CAF50' : '#f44336'}">${fmtSigne(totRes)}</strong>`;
+  document.querySelectorAll('.gauge-label-half-charges').forEach(el => el.textContent = fmtEur(reel.totDep / 2));
+  document.querySelectorAll('.gauge-label-full-charges').forEach(el => el.textContent = fmtEur(reel.totDep));
 
-  // Jauge 2 : CA réalisé vs objectif 300 000 €
+  // Jauge 2 : CA facturé vs objectif 300 000 €
+  const caPct = Math.min(100, Math.round((total26fac / 300000) * 100));
   const gSub2 = document.getElementById('gauge-ca-subtitle');
-  if (gSub2) gSub2.innerHTML = `Objectif annuel : <strong>300 000 €</strong> | CA réalisé à ce jour : <strong>${total26ca.toLocaleString('fr-FR')} €</strong>`;
+  if (gSub2) gSub2.innerHTML = `Objectif annuel : <strong>300 000 €</strong> | CA facturé à ce jour : <strong>${fmtEur(total26fac)}</strong>`;
   document.querySelectorAll('.gauge-label-half-ca').forEach(el => el.textContent = '150 000 €');
   document.querySelectorAll('.gauge-label-full-ca').forEach(el => el.textContent = '300 000 €');
 
   setTimeout(() => {
     const gc  = document.getElementById('gauge-charges'); const gcp  = document.getElementById('gauge-charges-pct');
     const gca = document.getElementById('gauge-ca');      const gcap = document.getElementById('gauge-ca-pct');
-    if (gc)  { gc.style.width  = chargesPct + '%'; if (gcp)  gcp.textContent  = chargesPct + '%'; }
-    if (gca) { gca.style.width = caPct + '%';      if (gcap) gcap.textContent = caPct + '%'; }
+    if (gc)  { gc.style.width  = couvPct + '%'; if (gcp)  gcp.textContent  = couvPct + '%'; }
+    if (gca) { gca.style.width = caPct + '%';   if (gcap) gcap.textContent = caPct + '%'; }
   }, 120);
+}
+
+// Créances : factures Qonto au statut "unpaid" (échéance = émission + 30 jours)
+function renderCreancesReelles(factures) {
+  const impayees = (factures || []).filter(f => f.statut === 'unpaid')
+    .sort((a, b) => (a.date_emission < b.date_emission ? -1 : 1));
+  const total = impayees.reduce((s, f) => s + (parseFloat(f.ttc) || 0), 0);
+
+  const statEl = document.getElementById('stat-creances-count');
+  if (statEl) statEl.textContent = impayees.length;
+  const dashTotalEl = document.getElementById('stat-creances-total');
+  if (dashTotalEl) dashTotalEl.textContent = total > 0 ? 'Total : ' + fmtEur(total) : '';
+  const totalEl = document.getElementById('creances-total');
+  if (totalEl) totalEl.textContent = fmtEur(total);
+
+  const kpiMontant = document.getElementById('fkpi-creances-montant');
+  const kpiLabel = document.getElementById('fkpi-creances-label');
+  if (kpiMontant && kpiLabel) {
+    if (!impayees.length) {
+      kpiMontant.textContent = '✅ 0 €';
+      kpiMontant.className = 'fkpi-val success';
+      kpiLabel.textContent = 'Toutes les factures sont payées';
+    } else {
+      const clients = [...new Set(impayees.map(f => f.client).filter(Boolean))];
+      kpiMontant.textContent = fmtEur(total);
+      kpiMontant.className = 'fkpi-val danger';
+      kpiLabel.innerHTML = `${impayees.length} facture${impayees.length > 1 ? 's' : ''} en attente<br><span style="font-size:.72rem;color:var(--text2)">${clients.slice(0, 3).map(c => c.split(' ').slice(0, 3).join(' ')).join(', ')}${clients.length > 3 ? '…' : ''}</span>`;
+    }
+  }
+
+  const tbody = document.getElementById('creances-tbody');
+  if (!tbody) return;
+  if (!impayees.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text2);padding:2rem">✅ Aucune créance — toutes les factures sont payées</td></tr>';
+    return;
+  }
+  const now = new Date();
+  tbody.innerHTML = impayees.map(f => {
+    const emise = new Date(f.date_emission);
+    const echeance = new Date(emise); echeance.setDate(echeance.getDate() + 30);
+    const retard = Math.floor((now - echeance) / 86400000);
+    const badge = retard > 0
+      ? `<span style="font-size:.75rem;background:rgba(244,67,54,.15);color:#f44336;border-radius:6px;padding:2px 8px;font-weight:700">⚠ ${retard} j de retard</span>`
+      : `<span style="font-size:.75rem;background:rgba(76,175,80,.15);color:#4CAF50;border-radius:6px;padding:2px 8px">dans les délais</span>`;
+    return `<tr>
+      <td style="color:var(--text2)">${f.numero}</td>
+      <td>${f.client || '—'}</td>
+      <td style="font-weight:700;color:var(--gold)">${fmtEur(parseFloat(f.ttc) || 0)}</td>
+      <td>${emise.toLocaleDateString('fr-FR')}</td>
+      <td>${badge}</td>
+    </tr>`;
+  }).join('');
 }
 
 function editFinanceCell(year, month, field, currentVal) {
