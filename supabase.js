@@ -869,6 +869,7 @@ function trierClients(col) {
   const tri = [..._crmClients];
   const s = _crmTri.sens;
   if (col === 'revenue') tri.sort((a, b) => s * ((parseFloat(b.revenue) || 0) - (parseFloat(a.revenue) || 0)));
+  else if (col === 'dernier') tri.sort((a, b) => s * ((b._dContact || '').localeCompare(a._dContact || '')));
   else if (col === 'potential') tri.sort((a, b) => s * ((_rangPotentiel[a.potential] ?? 9) - (_rangPotentiel[b.potential] ?? 9)) || (parseFloat(b.revenue) || 0) - (parseFloat(a.revenue) || 0));
   else if (col === 'status') tri.sort((a, b) => s * ((_rangStatut[a.status] ?? 9) - (_rangStatut[b.status] ?? 9)) || (parseFloat(b.revenue) || 0) - (parseFloat(a.revenue) || 0));
   else tri.sort((a, b) => s * (a.company || '').localeCompare(b.company || '', 'fr'));
@@ -912,6 +913,7 @@ function renderClientsTable(clients, dejaTrie) {
       <td>${c.contact_name || '—'}</td>
       <td>${c.email || '—'}</td>
       <td>${c.revenue ? c.revenue.toLocaleString('fr-FR') + ' €' : '—'}</td>
+      ${celluleDernierContact(c)}
       <td><span class="badge ${potClass}">${c.potential}</span></td>
       <td><span class="badge ${statusClass}">${c.status}</span></td>
       <td>
@@ -1822,7 +1824,38 @@ async function loadAndRenderTasks() {
 
 async function loadAndRenderClients() {
   const clients = await fetchClients();
+  // Dernier contact de chaque fiche : dernière facture (last_contact, rempli depuis Qonto)
+  // ou dernière demande de devis (devis_requests) — la plus récente des deux gagne.
+  try {
+    const { data: dr } = await sb.from('devis_requests').select('client,created_at');
+    const normC = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+    for (const c of clients) {
+      const nc = normC(c.company);
+      let dernierDevis = '';
+      for (const d of (dr || [])) {
+        const nd = normC(d.client);
+        if (nc && nd && (nd.includes(nc) || nc.includes(nd)) && d.created_at > dernierDevis) dernierDevis = d.created_at;
+      }
+      const facture = c.last_contact || '';
+      if (dernierDevis.slice(0, 10) > facture) { c._dContact = dernierDevis.slice(0, 10); c._dType = 'devis'; }
+      else if (facture) { c._dContact = facture; c._dType = 'facture'; }
+      else { c._dContact = ''; c._dType = ''; }
+    }
+  } catch (e) { clients.forEach(c => { c._dContact = c.last_contact || ''; c._dType = c.last_contact ? 'facture' : ''; }); }
   renderClientsTable(clients);
+}
+
+/** La cellule « Dernier contact » : date + ancienneté colorée (vert ≤ 3 mois, orange ≤ 6, rouge au-delà = à relancer) */
+function celluleDernierContact(c) {
+  if (!c._dContact) return '<td style="color:var(--text2)">—</td>';
+  const d = new Date(c._dContact);
+  const jours = Math.floor((new Date() - d) / 86400000);
+  let couleur = '#4CAF50', label = 'récent';
+  if (jours > 180) { couleur = '#f44336'; label = 'à relancer'; }
+  else if (jours > 90) { couleur = '#FF9800'; label = '+ de 3 mois'; }
+  const anciennete = jours < 31 ? jours + ' j' : Math.round(jours / 30.4) + ' mois';
+  return `<td><div>${d.toLocaleDateString('fr-FR')} <span style="font-size:.7rem;color:var(--text2)">(${c._dType})</span></div>
+    <div style="font-size:.72rem;color:${couleur};font-weight:600">${label} · il y a ${anciennete}</div></td>`;
 }
 
 async function loadAndRenderMileage() {
