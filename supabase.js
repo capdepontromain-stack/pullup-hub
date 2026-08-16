@@ -3628,6 +3628,19 @@ function renderLeaveCards() {
     const pending = yearLeaves.filter(l => l.person_name === name && l.status === 'pending').length;
     const remaining = LEAVE_TOTAL - approved;
     const pct = Math.round((approved / LEAVE_TOTAL) * 100);
+    // Acquisition progressive : 2,5 j par mois complet travaillé (règle Romain 17/08/2026).
+    // Flora : année de référence du 1er déc N-1 au 30 nov N ; les autres : année civile.
+    const auj = new Date();
+    let acquisLigne = '';
+    if (year === auj.getFullYear()) {
+      const moisComplets = name === 'Flora'
+        ? Math.max(0, (auj.getFullYear() - (year - 1)) * 12 + auj.getMonth() - 11)
+        : auj.getMonth();
+      const acquis = Math.min(LEAVE_TOTAL, moisComplets * 2.5);
+      const posables = Math.max(0, acquis - approved);
+      const fmtJ = v => String(v).replace('.', ',');
+      acquisLigne = `<div style="font-size:.75rem;color:var(--text2);margin-bottom:.5rem">Acquis à ce jour : <strong>${fmtJ(acquis)} j</strong> · posables maintenant : <strong style="color:${posables > 0 ? '#4CAF50' : '#f44336'}">${fmtJ(posables)} j</strong></div>`;
+    }
     const color = LEAVE_COLORS_HEX[name];
     const monthHours = monthLeaves.filter(l => l.person_name === name).reduce((s, l) => s + (parseFloat(l.hours) || 0), 0);
     const yearHours = yearLeaves.filter(l => l.person_name === name).reduce((s, l) => s + (parseFloat(l.hours) || 0), 0);
@@ -3637,7 +3650,8 @@ function renderLeaveCards() {
       <img src="${LEAVE_PHOTOS[name]}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid ${color};margin:0 auto .75rem;display:block" onerror="this.style.display='none'">
       <div style="font-weight:700;font-size:1rem;margin-bottom:.25rem">${name}</div>
       <div style="font-size:2rem;font-weight:800;color:${color};line-height:1">${remaining}</div>
-      <div style="font-size:.75rem;color:var(--text2);margin-bottom:.75rem">jours restants / ${LEAVE_TOTAL}</div>
+      <div style="font-size:.75rem;color:var(--text2);margin-bottom:.4rem">jours restants / ${LEAVE_TOTAL} sur l'année</div>
+      ${acquisLigne}
       ${monthHours > 0 ? `<div style="font-size:.78rem;color:var(--text2);margin-bottom:4px">Ce mois : <strong style="color:${color}">${monthHours}h</strong></div>` : ''}
       ${yearHours > 0 ? `<div style="font-size:.75rem;color:var(--text3);margin-bottom:.5rem">Cette année : <strong>${yearHours}h</strong></div>` : ''}
       ${yearMaladie > 0 ? `<div style="font-size:.75rem;background:rgba(74,158,255,.12);color:#4A9EFF;border-radius:6px;padding:3px 8px;margin-bottom:.5rem">🤒 ${yearMaladie}j maladie / an${monthMaladie > 0 ? ` · ${monthMaladie}j ce mois` : ''}</div>` : ''}
