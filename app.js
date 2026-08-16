@@ -735,10 +735,21 @@ async function renderBilanClair(reel) {
   for (let m = debutTrim; m <= moisCourant; m++) encTrim += reel.encMois[m] || 0;
   const potImpots = encTrim * 0.17;
 
+  // Avant / après impôts (vision trésorerie : impôts & cotisations réellement payés)
+  const impotsPayes = fam['Impôts & cotisations'] || 0;
+  const avantImpots = resultat + impotsPayes;
+
   box.innerHTML = `
-    <div style="font-size:1.05rem;font-weight:700;margin-bottom:12px;color:${resultat >= 0 ? vert : rouge}">
-      ${resultat >= 0 ? '✅ Rentable' : '⚠️ En perte'} : ${fmtSigne(resultat)} de bénéfice de trésorerie depuis janvier
-      <span style="color:var(--text2);font-weight:400;font-size:.85rem">(≈ ${fmtSigne(parMois)}/mois sur ${moisEcoules} mois)</span>
+    <div style="margin-bottom:12px">
+      <div style="font-size:1.05rem;font-weight:700;color:${resultat >= 0 ? vert : rouge}">
+        ${resultat >= 0 ? '✅ Rentable' : '⚠️ En perte'} : ${fmtSigne(resultat)} de bénéfice net depuis janvier
+        <span style="color:var(--text2);font-weight:400;font-size:.85rem">(≈ ${fmtSigne(parMois)}/mois sur ${moisEcoules} mois)</span>
+      </div>
+      <div style="font-size:.82rem;color:var(--text2);margin-top:3px">
+        Avant impôts : <strong style="color:${avantImpots >= 0 ? vert : rouge}">${fmtSigne(avantImpots)}</strong>
+        &nbsp;→&nbsp; impôts & cotisations payés : <strong style="color:#f44336">−${fmtEur(impotsPayes)}</strong>
+        &nbsp;→&nbsp; après impôts : <strong style="color:${resultat >= 0 ? vert : rouge}">${fmtSigne(resultat)}</strong>
+      </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
       <div>
