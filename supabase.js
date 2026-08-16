@@ -4041,10 +4041,13 @@ function categoriserTransaction(nom, catQonto, methode, credit, reference, debit
   if (['APRIL', 'ALLIANZ', 'PRUDENCE CREOLE', 'GROUPAMA', 'GENERALI', 'AXA '].some(k => n.includes(k))) return 'Assurances';
   if (n.includes('MI DAOU')) return 'Ménage';
   if (['FREELANCERUN', 'STATION', 'TAMOIL', 'OSDA', 'ENGEN', 'VIVO ENERGY', 'TOTAL '].some(k => n.includes(k))) return 'Véhicules & carburant';
-  if (['EREFERER', 'CYCLONE PUB', 'GOOGLE ADS', 'REUSSIR SA PUBLICITE', 'META '].some(k => n.includes(k))) return 'Marketing & pub';
+  // Monticket = cadeaux clients & équipe (précision Romain 16/08) ; Cyclone Pub = supports faits POUR des devis clients → matériel
+  if (['EREFERER', 'GOOGLE ADS', 'REUSSIR SA PUBLICITE', 'META ', 'MONTICKET'].some(k => n.includes(k))) return 'Marketing & pub';
+  // Rafaello et Lubisca = petits restos/cafés (Romain 16/08), montants 4-95 € en carte
+  if (['RAFAELLO', 'LUBISCA'].some(k => n.includes(k))) return 'Repas & courses';
   if (['HOSTINGER', 'APPLE.COM', 'ANTHROPIC', 'TELCO', 'MACOMPTA', 'AQUA SERVICE', 'NETLIFY', 'GOOGLE', 'MICROSOFT', 'ADOBE', 'CANVA', 'SUMUP *', 'UBER'].some(k => n.includes(k))) return 'Abonnements & outils';
   if (n === 'QONTO' || c.includes('BANCAIRES') || methode === "Frais d'abonnement") return 'Frais bancaires';
-  if (['NOBEL APPRO', 'IMPRIMERIE 3.0', 'DIGI LOGISTIC', 'MOUSTACHERIE', 'WORLD IS LIGHT', 'CENTRAKOR', 'HYPER CK', 'LECLERC', 'LEADER PRICE', 'RUN MARKET', 'FOIRFOUILL', 'INTERSPORT', 'BUREAU VALLEE', 'FIGISUD', 'LUBISCA', 'CENTRE COMMERCIA', 'DEVRED'].some(k => n.includes(k)) || n.startsWith('BV ') || n === 'AGENCE') return 'Achats & matériel événements';
+  if (['NOBEL APPRO', 'IMPRIMERIE 3.0', 'DIGI LOGISTIC', 'MOUSTACHERIE', 'WORLD IS LIGHT', 'CENTRAKOR', 'HYPER CK', 'LECLERC', 'LEADER PRICE', 'RUN MARKET', 'FOIRFOUILL', 'INTERSPORT', 'BUREAU VALLEE', 'FIGISUD', 'CYCLONE PUB', 'CENTRE COMMERCIA', 'DEVRED'].some(k => n.includes(k)) || n.startsWith('BV ') || n === 'AGENCE') return 'Achats & matériel événements';
   if (c.includes('NOURRITURE')) return 'Repas & courses';
   if (c.includes('IMPOTS')) return 'Impôts & TVA';
   if (c.includes('TRAVEL')) return 'Véhicules & carburant';
