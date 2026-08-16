@@ -4010,16 +4010,23 @@ async function loadCharges() {
 // ===== RÉEL BANCAIRE (import Qonto) =====
 
 // Familles de charges considérées comme fixes/récurrentes (badge dans le tableau par famille)
-const FAMILLES_FIXES = ['Abonnements & outils', 'Assurances', 'Ménage', 'Comptable & conseils', 'Frais bancaires', 'Cotisations & retraite'];
+const FAMILLES_FIXES = ['Abonnements & outils', 'Assurances', 'Ménage', 'Comptable & conseils', 'Frais bancaires', 'Cotisations & retraite', 'Loyer'];
 
 // Catégorisation automatique v2 (familles validées avec Romain le 15/08/2026 — même logique que la recatégorisation SQL)
-function categoriserTransaction(nom, catQonto, methode, credit) {
+function categoriserTransaction(nom, catQonto, methode, credit, reference, debit) {
   const norm = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
-  const n = norm(nom), c = norm(catQonto);
+  const n = norm(nom), c = norm(catQonto), ref = norm(reference);
+  const d = Math.round(parseFloat(debit) || 0);
   if (credit && credit > 0) return 'Encaissements';
   if (['DGFIP', 'DIRECTION GENERALE DES FINANCES', 'SIE SAINT', 'SIE ST', 'TRESOR PUBLIC'].some(k => n.includes(k))) return 'Impôts & TVA';
   if (['CGSS', 'URSSAF'].some(k => n.includes(k)) || n === 'CRR') return 'Cotisations & retraite';
-  if (n.includes('ROMAIN CAPDEPONT')) return 'Rémunération Romain';
+  if (n.includes('ROMAIN CAPDEPONT')) {
+    // 50 % du loyer (825 €/mois) passe par la société, viré au compte perso de Romain
+    if (ref.includes('LOYER') || d === 825) return 'Loyer';
+    if (ref.includes('SALAIRE') || d === 1050) return 'Rémunération Romain';
+    return 'Remboursements frais Romain';
+  }
+  if (n.startsWith('SPOTIFY')) return 'Abonnements & outils';
   if (['MARINE ROULLAND', 'LAW WAN CHUNG', 'HERBERT DIMITRI PITOU', 'MARIE CHOYEN', 'GUFFLET GLORIA'].some(k => n.includes(k)) || (n.includes('FLORA') && n.includes('BOYER'))) return 'Salaires & équipe';
   if (n.includes('PAPANGUE')) return 'Comptable & conseils';
   if (['APRIL', 'ALLIANZ', 'PRUDENCE CREOLE', 'GROUPAMA', 'GENERALI', 'AXA '].some(k => n.includes(k))) return 'Assurances';
@@ -4246,7 +4253,7 @@ async function importQontoFile(file) {
         mois: parseInt(m[2]),
         libelle: r['Nom de la contrepartie'] || null,
         debit, credit,
-        categorie: categoriserTransaction(r['Nom de la contrepartie'], r['Catégorie de trésorerie'], r['Méthode de paiement'], credit),
+        categorie: categoriserTransaction(r['Nom de la contrepartie'], r['Catégorie de trésorerie'], r['Méthode de paiement'], credit, r['Référence'], debit),
         categorie_qonto: r['Catégorie de trésorerie'] || null,
         methode: r['Méthode de paiement'] || null,
         initiateur: r['Initiateur'] || null,
