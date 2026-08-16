@@ -16,6 +16,7 @@ function showPage(id) {
   }
   if (id === 'finances') renderFinanceAnalyse().catch(console.error);
   if (id === 'dashboard') { renderDashboardCA().catch(console.error); renderMiniCalendar(); }
+  if (id === 'reports') renderReports().catch(console.error);
   if (id === 'leaves') loadAndRenderLeaves();
   if (id === 'flora') loadAndRenderFlora();
   if (id === 'charges' && typeof loadCharges === 'function') loadCharges();
@@ -593,39 +594,12 @@ document.querySelector('.topbar-search input')?.addEventListener('input', functi
 });
 
 // ─── Finance Analyse ───────────────────────────────────────────────────────────
-const FINANCE_2025 = {
-  1:  { ca: 0,         benef: 0 },
-  2:  { ca: 5758,      benef: 0 },
-  3:  { ca: 3792,      benef: 0 },
-  4:  { ca: 10162,     benef: 0 },
-  5:  { ca: 22627,     benef: 0 },
-  6:  { ca: 21357,     benef: 0 },
-  7:  { ca: 1986,      benef: 0 },
-  8:  { ca: 13289,     benef: 0 },
-  9:  { ca: 22072,     benef: 0 },
-  10: { ca: 51453,     benef: 0 },
-  11: { ca: 7170,      benef: 0 },
-  12: { ca: 127347,    benef: 0 },
-};
-
-const FINANCE_2026 = {
-  1:  { ca: 14068,  benef: 7767,  done: true  },
-  2:  { ca: 6675,   benef: 3787,  done: true  },
-  3:  { ca: 13069,  benef: 7029,  done: true  },
-  4:  { ca: 16911,  benef: 8651,  done: true  },
-  5:  { ca: 33619,  benef: 19843, done: true  },
-  6:  { ca: 14421,  benef: 8122,  done: true  },
-  7:  { ca: 7552,   benef: 0,     done: false },
-  8:  { ca: 0,      benef: 0,     done: false },
-  9:  { ca: 0,      benef: 0,     done: false },
-  10: { ca: 2737,   benef: 0,     done: false },
-  11: { ca: 0,      benef: 0,     done: false },
-  12: { ca: 0,      benef: 0,     done: false },
-};
+// (Les anciens tableaux statiques FINANCE_2025/FINANCE_2026 ont été supprimés le 16/08/2026 :
+//  tout vient désormais de banque_factures, banque_transactions et finance_monthly.)
 
 const MNAMES_FR = ['','Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
-let CHARGES_FIXES_MOIS = 8717.96;   // mis à jour dynamiquement depuis Supabase
-let CHARGES_VARS_MOIS  = 2000;
+let CHARGES_FIXES_MOIS = 6432;   // mis à jour dynamiquement depuis Supabase
+let CHARGES_VARS_MOIS  = 2985;
 let OBJECTIF_CA_ANNUEL = CHARGES_FIXES_MOIS * 12;
 
 function fmt(n) {
@@ -656,13 +630,16 @@ async function renderDashboardCA() {
   const container = document.getElementById('dashboard-ca-bars');
   if (!container) return;
   const MONTHS = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-  const TARGET = (window.CHARGES_FIXES_MOIS || 8123) + (window.CHARGES_VARS_MOIS || 2985);
+  const TARGET = (window.CHARGES_FIXES_MOIS || 6432) + (window.CHARGES_VARS_MOIS || 2985);
   document.querySelectorAll('[data-charges-label]').forEach(el => {
     el.textContent = TARGET.toLocaleString('fr-FR') + ' €/mois';
   });
 
   const reel = await fetchReel(2026);
   const resultat = reel.totEnc - reel.totDep;
+
+  // Créances visibles dès le tableau de bord
+  renderCreancesReelles(reel.factures);
 
   const caStatEl = document.getElementById('stat-ca-count');
   if (caStatEl) caStatEl.textContent = fmtEur(reel.totFac);
@@ -893,6 +870,72 @@ function editFinanceCell(year, month, field, currentVal) {
   };
   overlay.querySelector('#fin-edit-save').addEventListener('click', save);
   input.addEventListener('keydown', e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') overlay.remove(); });
+}
+
+// ===== RAPPORTS — tout calculé depuis les factures et la banque Qonto =====
+async function renderReports() {
+  const reel = await fetchReel(2026);
+  const actives = reel.factures.filter(f => f.statut !== 'canceled');
+
+  const kpi = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  kpi('rkpi-factures', actives.length);
+  kpi('rkpi-ca', fmtEur(reel.totFac));
+  kpi('rkpi-clients', new Set(actives.map(f => (f.client || '').trim()).filter(Boolean)).size);
+
+  // Barres CA facturé par mois
+  const bars = document.getElementById('rpt-ca-bars');
+  if (bars) {
+    const MOIS_C = ['', 'Janv', 'Févr', 'Mars', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'];
+    const maxCa = Math.max(1, ...Object.values(reel.facMois));
+    let html = '';
+    for (let m = 1; m <= 12; m++) {
+      const ca = reel.facMois[m];
+      if (ca === undefined) continue;
+      const h = Math.max(6, Math.round((ca / maxCa) * 90));
+      html += `<div class="bar-group" title="${MOIS_C[m]} : ${fmtEur(ca)}"><div class="bar ${ca === maxCa ? 'gold' : ''}" style="height:${h}px"></div><span>${MOIS_C[m]}</span></div>`;
+    }
+    bars.innerHTML = html;
+  }
+
+  // Top clients (CA HT facturé)
+  const tcEl = document.getElementById('rpt-top-clients');
+  if (tcEl) {
+    const parClient = {};
+    actives.forEach(f => {
+      const c = (f.client || '—').trim().split(' ').slice(0, 4).join(' ');
+      parClient[c] = (parClient[c] || 0) + (parseFloat(f.ht) || 0);
+    });
+    const top = Object.entries(parClient).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    const maxC = top.length ? top[0][1] : 1;
+    tcEl.innerHTML = top.map(([c, v]) =>
+      `<div class="tc-row"><span>${c}</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:${Math.round((v / maxC) * 100)}%"></div></div><span>${fmtEur(v)}</span></div>`
+    ).join('');
+  }
+
+  // Top prestataires & artistes (montants payés, depuis la banque)
+  const tpEl = document.getElementById('rpt-top-prestas');
+  if (tpEl) {
+    const { data } = await sb.from('banque_transactions').select('libelle,debit')
+      .eq('annee', 2026).eq('categorie', 'Artistes & prestataires').not('debit', 'is', null);
+    const parPresta = {};
+    (data || []).forEach(t => {
+      const p = (t.libelle || '—').trim();
+      parPresta[p] = (parPresta[p] || 0) + (parseFloat(t.debit) || 0);
+    });
+    const top = Object.entries(parPresta).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    const maxP = top.length ? top[0][1] : 1;
+    tpEl.innerHTML = top.map(([p, v]) =>
+      `<div class="tc-row"><span>${p}</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:${Math.round((v / maxP) * 100)}%"></div></div><span>${fmtEur(v)}</span></div>`
+    ).join('') || '<p style="color:var(--text2);font-size:.85rem">Aucune donnée</p>';
+  }
+
+  // Panier moyen
+  const pEl = document.getElementById('rpt-panier');
+  if (pEl && actives.length) {
+    pEl.textContent = fmtEur(reel.totFac / actives.length);
+    const sub = document.getElementById('rpt-panier-sub');
+    if (sub) sub.textContent = `${fmtEur(reel.totFac)} facturés ÷ ${actives.length} factures`;
+  }
 }
 
 // PWA Service Worker

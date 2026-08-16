@@ -1469,14 +1469,14 @@ Afin d'avancer, nous pouvons :
       </div>
     </div>
 
-    <!-- TAB: Factures -->
+    <!-- TAB: Factures (officielles Qonto — mises à jour par l'import de l'onglet Charges) -->
     <div class="tab-content" id="fin-factures">
       <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
-        <button class="btn-primary" onclick="openModal('newFacture')">+ Nouvelle facture</button>
+        <span style="font-size:.78rem;color:var(--text2)">Source officielle Qonto — pour mettre à jour, réimporte l'export factures dans l'onglet Charges</span>
       </div>
       <div class="events-table-wrap">
         <table class="data-table">
-          <thead><tr><th>Client</th><th>Montant</th><th style="color:#4CAF50">Bénéfice</th><th>Date</th><th>Description</th><th>Statut</th><th></th></tr></thead>
+          <thead><tr><th>Facture</th><th>Client</th><th style="color:var(--gold)">HT</th><th>TTC</th><th>Date</th><th>Objet</th><th>Statut</th></tr></thead>
           <tbody id="fin-factures-body"><tr><td colspan="7" style="text-align:center;color:var(--text2)">Chargement…</td></tr></tbody>
         </table>
       </div>
@@ -1634,54 +1634,31 @@ Afin d'avancer, nous pouvons :
 
   <!-- REPORTS -->
   <section class="page" id="page-reports">
-    <div class="page-header"><h1>Rapports & Statistiques</h1><button class="btn-outline">📄 Exporter</button></div>
-    <div class="report-period">
-      <label>Période :</label>
-      <select><option>Juin 2026</option><option>Mai 2026</option><option>Avril 2026</option><option>T2 2026</option><option>2026 (YTD)</option></select>
-    </div>
+    <div class="page-header"><h1>Rapports & Statistiques</h1><span style="font-size:.8rem;color:var(--text2)">Année 2026 — calculé depuis tes factures et ta banque Qonto</span></div>
     <div class="report-kpis">
-      <div class="rkpi gold"><span class="rkpi-val">~40</span><span>Événements 2026 (janv–juin)</span></div>
-      <div class="rkpi"><span class="rkpi-val">~68 500 €</span><span>CA 2026 (janv–juin)</span></div>
-      <div class="rkpi"><span class="rkpi-val" id="rkpi-charges">8 718 €</span><span>Charges fixes/mois</span></div>
-      <div class="rkpi"><span class="rkpi-val">18</span><span>Clients actifs 2026</span></div>
+      <div class="rkpi gold"><span class="rkpi-val" id="rkpi-factures">—</span><span>Factures émises 2026</span></div>
+      <div class="rkpi"><span class="rkpi-val" id="rkpi-ca">—</span><span>CA facturé 2026 (HT)</span></div>
+      <div class="rkpi"><span class="rkpi-val" id="rkpi-charges">—</span><span>Charges prévues/mois</span></div>
+      <div class="rkpi"><span class="rkpi-val" id="rkpi-clients">—</span><span>Clients facturés 2026</span></div>
     </div>
     <div class="reports-grid">
       <div class="card">
-        <h3>CA réel par mois 2026</h3>
-        <div class="bar-chart">
-          <div class="bar-group"><div class="bar" style="height:51px"></div><span>Janv</span></div>
-          <div class="bar-group"><div class="bar" style="height:24px"></div><span>Févr</span></div>
-          <div class="bar-group"><div class="bar" style="height:37px"></div><span>Mars</span></div>
-          <div class="bar-group"><div class="bar" style="height:34px"></div><span>Avr</span></div>
-          <div class="bar-group"><div class="bar gold" style="height:75px"></div><span>Mai</span></div>
-          <div class="bar-group"><div class="bar" style="height:41px"></div><span>Juin</span></div>
-        </div>
+        <h3>CA facturé par mois 2026 (HT)</h3>
+        <div class="bar-chart" id="rpt-ca-bars"></div>
       </div>
       <div class="card">
-        <h3>Top clients 2026 (CA)</h3>
-        <div class="top-clients">
-          <div class="tc-row"><span>Mercialys</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:100%"></div></div><span>~28 000 €</span></div>
-          <div class="tc-row"><span>Casabona</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:46%"></div></div><span>~13 000 €</span></div>
-          <div class="tc-row"><span>CILAM</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:31%"></div></div><span>~8 700 €</span></div>
-          <div class="tc-row"><span>MIO</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:28%"></div></div><span>~7 900 €</span></div>
-          <div class="tc-row"><span>Lolipop</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:25%"></div></div><span>~7 000 €</span></div>
-        </div>
+        <h3>Top clients 2026 (CA facturé HT)</h3>
+        <div class="top-clients" id="rpt-top-clients"></div>
       </div>
       <div class="card">
-        <h3>Temps par collaborateur (Juin)</h3>
-        <div class="time-chart">
-          <div class="time-row"><span>Romain</span><div class="time-bar-wrap"><div class="time-bar gold" style="width:82%"></div></div><span>164h</span></div>
-          <div class="time-row"><span>Gloria</span><div class="time-bar-wrap"><div class="time-bar" style="width:74%"></div></div><span>148h</span></div>
-          <div class="time-row"><span>Ketsia</span><div class="time-bar-wrap"><div class="time-bar" style="width:68%"></div></div><span>136h</span></div>
-          <div class="time-row"><span>Flora</span><div class="time-bar-wrap"><div class="time-bar" style="width:55%"></div></div><span>110h</span></div>
-        </div>
+        <h3>Top prestataires & artistes 2026 (montants payés)</h3>
+        <div class="top-clients" id="rpt-top-prestas"></div>
       </div>
       <div class="card">
-        <h3>Prestataires les plus utilisés</h3>
-        <div class="top-clients">
-          <div class="tc-row"><span>Traiteur Lyon Prestige</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:100%"></div></div><span>12x</span></div>
-          <div class="tc-row"><span>DJ Mike Events</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:42%"></div></div><span>5x</span></div>
-          <div class="tc-row"><span>Photobooth Studio</span><div class="tc-bar-wrap"><div class="tc-bar" style="width:67%"></div></div><span>8x</span></div>
+        <h3>Panier moyen par facture</h3>
+        <div style="padding:8px 0">
+          <div style="font-size:2rem;font-weight:800;color:var(--gold)" id="rpt-panier">—</div>
+          <div style="font-size:.8rem;color:var(--text2)" id="rpt-panier-sub"></div>
         </div>
       </div>
     </div>
@@ -2554,8 +2531,8 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260816e"></script>
-<script src="app.js?v=20260816c"></script>
+<script src="supabase.js?v=20260816f"></script>
+<script src="app.js?v=20260816f"></script>
 <script>
   if ('serviceWorker' in navigator) {
     // Enregistrer le SW de nettoyage (sans rechargement forcé — l'ancien

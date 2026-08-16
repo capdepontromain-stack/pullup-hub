@@ -1319,51 +1319,12 @@ function renderMileageBoard() {
 
 // Render finances
 function renderFinances(entries) {
-  renderCreances(entries);
   const factures = entries.filter(e => e.type === 'facture');
   _allFactures = factures;
   const devis    = entries.filter(e => e.type === 'devis');
 
-  const facturesTbody = document.getElementById('fin-factures-body');
-  if (facturesTbody) {
-    if (factures.length) {
-      // Grouper par mois
-      const grouped = {};
-      factures.forEach(f => {
-        const key = f.invoice_date ? f.invoice_date.slice(0,7) : '0000-00';
-        if (!grouped[key]) grouped[key] = [];
-        grouped[key].push(f);
-      });
-      const MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-      facturesTbody.innerHTML = Object.keys(grouped).sort().reverse().map(key => {
-        const [yr, mo] = key.split('-');
-        const label = key === '0000-00' ? 'Sans date' : `${MOIS[parseInt(mo)-1]} ${yr}`;
-        const rows = grouped[key].map(f => {
-          const statusColors = { 'Payée':'#4CAF50','En attente':'#F5C518','En retard':'#f44336','Non payé':'#f44336' };
-          const sc = statusColors[f.status] || 'var(--text2)';
-          return `<tr style="cursor:pointer" onclick="openEditFacture('${f.id}')" title="Cliquer pour modifier">
-            <td>${f.client || '—'}</td>
-            <td style="font-weight:700">${f.amount ? parseFloat(f.amount).toLocaleString('fr-FR') + ' €' : '—'}</td>
-            <td style="color:#4CAF50;font-weight:700">${f.benef ? parseFloat(f.benef).toLocaleString('fr-FR') + ' €' : '—'}</td>
-            <td>${f.invoice_date ? new Date(f.invoice_date).toLocaleDateString('fr-FR') : '—'}</td>
-            <td>${f.notes || '—'}</td>
-            <td onclick="event.stopPropagation()">
-              <select onchange="updateFinanceStatus('${f.id}', this.value)" style="background:var(--bg3);color:${sc};border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:.8rem;font-weight:600">
-                ${['En attente','Payée','En retard','Non payé'].map(s=>`<option ${f.status===s?'selected':''}>${s}</option>`).join('')}
-              </select>
-            </td>
-            <td onclick="event.stopPropagation()">
-              ${f.file_url ? `<a href="${f.file_url}" target="_blank" title="Voir la facture" style="margin-right:6px;font-size:1.1rem;text-decoration:none">📄</a>` : ''}
-              <button class="btn-icon" onclick="deleteFinanceEntry('${f.id}')" title="Supprimer">🗑</button>
-            </td>
-          </tr>`;
-        }).join('');
-        return `<tr><td colspan="7" style="padding:1rem 0 .3rem;font-weight:700;font-size:.85rem;color:var(--gold);letter-spacing:.05em;border-bottom:1px solid var(--border);text-transform:uppercase">${label}</td></tr>${rows}`;
-      }).join('');
-    } else {
-      facturesTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">Aucune facture — cliquez sur "+ Nouvelle facture"</td></tr>';
-    }
-  }
+  // Depuis le 16/08/2026, l'onglet Factures affiche les factures officielles Qonto (banque_factures)
+  renderFacturesOfficielles().catch(console.error);
 
   const devisTbody = document.getElementById('fin-devis-body');
   if (devisTbody) {
@@ -1437,6 +1398,44 @@ function renderCreances(entries) {
         </select>
       </td>
     </tr>`).join('');
+}
+
+// Liste des factures officielles Qonto, groupées par mois (lecture seule — la source est Qonto)
+async function renderFacturesOfficielles() {
+  const tbody = document.getElementById('fin-factures-body');
+  if (!tbody) return;
+  const { data, error } = await sb.from('banque_factures').select('*').order('date_emission', { ascending: false });
+  if (error || !data || !data.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">Aucune facture — importe ton export factures Qonto dans l\'onglet Charges</td></tr>';
+    return;
+  }
+  const MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const grouped = {};
+  data.forEach(f => {
+    const key = `${f.annee}-${String(f.mois).padStart(2, '0')}`;
+    (grouped[key] = grouped[key] || []).push(f);
+  });
+  tbody.innerHTML = Object.keys(grouped).sort().reverse().map(key => {
+    const [yr, mo] = key.split('-');
+    const rows = grouped[key].map(f => {
+      const badge = f.statut === 'paid'
+        ? '<span style="font-size:.72rem;background:rgba(76,175,80,.18);color:#4CAF50;border-radius:6px;padding:2px 8px;font-weight:700">Payée</span>'
+        : f.statut === 'canceled'
+        ? '<span style="font-size:.72rem;background:var(--bg3);color:var(--text3);border-radius:6px;padding:2px 8px">Annulée</span>'
+        : '<span style="font-size:.72rem;background:rgba(245,197,24,.18);color:var(--gold);border-radius:6px;padding:2px 8px;font-weight:700">En attente</span>';
+      const dim = f.statut === 'canceled' ? 'opacity:.45;' : '';
+      return `<tr style="${dim}">
+        <td style="color:var(--text2);white-space:nowrap">${f.numero}</td>
+        <td>${(f.client || '—').split(' ').slice(0, 5).join(' ')}</td>
+        <td style="font-weight:700;color:var(--gold);${f.statut === 'canceled' ? 'text-decoration:line-through' : ''}">${(parseFloat(f.ht) || 0).toLocaleString('fr-FR')} €</td>
+        <td>${(parseFloat(f.ttc) || 0).toLocaleString('fr-FR')} €</td>
+        <td style="white-space:nowrap">${new Date(f.date_emission).toLocaleDateString('fr-FR')}</td>
+        <td style="font-size:.82rem;color:var(--text2)">${(f.objet || '—').slice(0, 60)}</td>
+        <td>${badge}</td>
+      </tr>`;
+    }).join('');
+    return `<tr><td colspan="7" style="padding:1rem 0 .3rem;font-weight:700;font-size:.85rem;color:var(--gold);letter-spacing:.05em;border-bottom:1px solid var(--border);text-transform:uppercase">${MOIS[parseInt(mo) - 1]} ${yr}</td></tr>${rows}`;
+  }).join('');
 }
 
 async function saveNewCreance(e) {
@@ -2864,17 +2863,17 @@ async function loadChargesGlobales() {
   const { data } = await sb.from('charges_monthly').select('charges_fixes,charges_variables').eq('year', annee).eq('month', curMonth).single();
   if (data) {
     if (typeof CHARGES_FIXES_MOIS !== 'undefined') {
-      window.CHARGES_FIXES_MOIS = parseFloat(data.charges_fixes) || 8717.96;
-      window.CHARGES_VARS_MOIS  = parseFloat(data.charges_variables) || 2000;
+      window.CHARGES_FIXES_MOIS = parseFloat(data.charges_fixes) || 6432;
+      window.CHARGES_VARS_MOIS  = parseFloat(data.charges_variables) || 2985;
       window.OBJECTIF_CA_ANNUEL = window.CHARGES_FIXES_MOIS * 12;
     }
     // Met à jour les textes statiques dans la page Finance
     document.querySelectorAll('[data-charges-label]').forEach(el => {
-      el.textContent = (window.CHARGES_FIXES_MOIS || 8717.96).toLocaleString('fr-FR') + ' €/mois';
+      el.textContent = (window.CHARGES_FIXES_MOIS || 6432).toLocaleString('fr-FR') + ' €/mois';
     });
     // KPI rapports
     const kpiEl = document.getElementById('rkpi-charges');
-    if (kpiEl) kpiEl.textContent = (window.CHARGES_FIXES_MOIS || 8717.96).toLocaleString('fr-FR') + ' €';
+    if (kpiEl) kpiEl.textContent = (window.CHARGES_FIXES_MOIS || 6432).toLocaleString('fr-FR') + ' €';
   }
 }
 
