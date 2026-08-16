@@ -4024,11 +4024,13 @@ function categoriserTransaction(nom, catQonto, methode, credit, reference, debit
   if (['DGFIP', 'DIRECTION GENERALE DES FINANCES', 'SIE SAINT', 'SIE ST', 'TRESOR PUBLIC'].some(k => n.includes(k))) return 'Impôts & TVA';
   if (['CGSS', 'URSSAF'].some(k => n.includes(k)) || n === 'CRR') return 'Cotisations & retraite';
   if (n.includes('ROMAIN CAPDEPONT')) {
-    // 50 % du loyer (825 €/mois) passe par la société, viré au compte perso de Romain
+    // 50 % du loyer (825 €/mois sur 1 650 €) passe par la société, viré au compte perso de Romain
     if (ref.includes('LOYER') || d === 825) return 'Loyer';
     if (ref.includes('SALAIRE') || d === 1050) return 'Rémunération Romain';
     return 'Remboursements frais Romain';
   }
+  // Propriétaires : Stéphane Nantille (depuis fin 2025, loyer 1 650 €) et Élise Benistant (avant, 1 400 €)
+  if (n.includes('NANTIL') || n.includes('BENISTANT')) return 'Loyer';
   if (n.startsWith('SPOTIFY')) return 'Abonnements & outils';
   if (['MARINE ROULLAND', 'LAW WAN CHUNG', 'HERBERT DIMITRI PITOU', 'MARIE CHOYEN', 'GUFFLET GLORIA'].some(k => n.includes(k)) || (n.includes('FLORA') && n.includes('BOYER'))) return 'Salaires & équipe';
   if (n.includes('PAPANGUE')) return 'Comptable & conseils';
