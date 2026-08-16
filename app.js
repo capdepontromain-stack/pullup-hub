@@ -641,6 +641,9 @@ async function renderDashboardCA() {
   // Créances visibles dès le tableau de bord
   renderCreancesReelles(reel.factures);
 
+  // La situation en un coup d'œil (revue finances du 16/08/2026)
+  renderBilanClair(reel);
+
   const caStatEl = document.getElementById('stat-ca-count');
   if (caStatEl) caStatEl.textContent = fmtEur(reel.totFac);
   const benefLabelEl = document.getElementById('stat-benef-label');
@@ -691,6 +694,74 @@ async function renderDashboardCA() {
     if (dg1) { dg1.style.width = couvPct + '%'; if (dp1) dp1.textContent = couvPct + '%'; }
     if (dg2) { dg2.style.width = caPct + '%';   if (dp2) dp2.textContent = caPct + '%'; }
   }, 120);
+}
+
+// ---- La situation en un coup d'œil : rentable ?, CA vs objectif, ce qui coûte, impayés, à prévoir ----
+async function renderBilanClair(reel) {
+  const box = document.getElementById('bilan-clair');
+  if (!box) return;
+  const maj = document.getElementById('bilan-maj');
+  if (maj) maj.textContent = 'Chiffres réels Qonto — ' + new Date().toLocaleDateString('fr-FR');
+
+  const resultat = reel.totEnc - reel.totDep;
+  const moisEcoules = Math.max(1, Object.keys(reel.encMois).length);
+  const parMois = resultat / moisEcoules;
+
+  // Ce qui coûte : familles de dépenses 2026 (Impôts + Cotisations regroupés pour la lecture)
+  const rCat = await sb.from('banque_transactions').select('categorie,debit').eq('annee', 2026).gt('debit', 0);
+  const fam = {};
+  (rCat.data || []).forEach(t => {
+    let c = t.categorie || 'Autres';
+    if (c === 'Impôts & TVA' || c === 'Cotisations & retraite') c = 'Impôts & cotisations';
+    fam[c] = (fam[c] || 0) + parseFloat(t.debit);
+  });
+  const topFam = Object.entries(fam).sort((a, b) => b[1] - a[1]).slice(0, 4);
+
+  // Impayés : factures unpaid, en retard si émises depuis plus de 30 jours
+  const auj = new Date();
+  const impayees = (reel.factures || []).filter(f => f.statut === 'unpaid');
+  const enRetard = impayees.filter(f => (auj - new Date(f.date_emission)) / 86400000 > 30);
+  const totImp = impayees.reduce((s, f) => s + (parseFloat(f.ttc) || 0), 0);
+  const totRetard = enRetard.reduce((s, f) => s + (parseFloat(f.ttc) || 0), 0);
+  const nomsRetard = enRetard.map(f => `${(f.client || '?').split(' ').slice(0, 3).join(' ')} (${fmtEur(parseFloat(f.ttc) || 0)})`).join(' · ');
+
+  const vert = '#4CAF50', rouge = '#f44336';
+  const caPct = Math.min(100, Math.round((reel.totFac / 300000) * 100));
+
+  box.innerHTML = `
+    <div style="font-size:1.05rem;font-weight:700;margin-bottom:12px;color:${resultat >= 0 ? vert : rouge}">
+      ${resultat >= 0 ? '✅ Rentable' : '⚠️ En perte'} : ${fmtSigne(resultat)} de bénéfice de trésorerie depuis janvier
+      <span style="color:var(--text2);font-weight:400;font-size:.85rem">(≈ ${fmtSigne(parMois)}/mois sur ${moisEcoules} mois)</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+      <div>
+        <div style="font-size:.78rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Chiffre d'affaires</div>
+        <div style="font-size:1.1rem;font-weight:700;color:var(--gold)">${fmtEur(reel.totFac)} <span style="font-size:.75rem;color:var(--text2);font-weight:400">HT facturé</span></div>
+        <div style="font-size:.78rem;color:var(--text2);margin-top:4px">Objectif 300 000 € : <strong style="color:var(--gold)">${caPct} %</strong></div>
+        <div style="font-size:.78rem;color:var(--text2)">Encaissé ${fmtEur(reel.totEnc)} · Dépensé ${fmtEur(reel.totDep)}</div>
+      </div>
+      <div>
+        <div style="font-size:.78rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Ce qui coûte le plus</div>
+        ${topFam.map(([c, v]) => `<div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:3px"><span style="color:var(--text2)">${c}</span><strong>${fmtEur(v)}</strong></div>`).join('')}
+      </div>
+      <div>
+        <div style="font-size:.78rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Impayés</div>
+        <div style="font-size:1.1rem;font-weight:700">${fmtEur(totImp)} <span style="font-size:.75rem;color:var(--text2);font-weight:400">TTC en attente</span></div>
+        ${totRetard > 0
+          ? `<div style="font-size:.8rem;color:${rouge};font-weight:600;margin-top:4px">dont ${fmtEur(totRetard)} en retard (+30 j)</div>
+             <div style="font-size:.74rem;color:var(--text2);margin-top:2px;line-height:1.5">${nomsRetard}</div>`
+          : `<div style="font-size:.8rem;color:${vert};margin-top:4px">Aucun retard de plus de 30 jours 👍</div>`}
+      </div>
+      <div>
+        <div style="font-size:.78rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">À prévoir</div>
+        <div style="font-size:.8rem;color:var(--text2);line-height:1.6">
+          · CGSS trimestre juil-sept : <strong style="color:var(--text)">≈ 3 000 €</strong> vers octobre<br>
+          · TVA après Noël : <strong style="color:var(--text)">≈ 15 000 €</strong> en janvier<br>
+          · Retraite salariés (CRR) : ≈ 215 €/mois<br>
+          <span style="font-size:.72rem">Rappel : l'argent du Noël N finance l'année N+1 — ne pas tout dépenser en janvier.</span>
+        </div>
+      </div>
+    </div>`;
 }
 
 let _finMonthlyData = {}; // cache: { '2026-1': {ca,benef}, ... }
