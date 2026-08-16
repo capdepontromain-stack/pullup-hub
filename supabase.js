@@ -856,6 +856,15 @@ async function quickDoneTask(id, currentStatus) {
 
 // Render clients table
 function renderClientsTable(clients) {
+  // Les 3 compteurs du haut de la page CRM, calculés depuis les fiches (réel Qonto)
+  const actifs = clients.filter(c => c.status === 'Actif' || c.status === 'Relance');
+  const elA = document.getElementById('crm-stat-actifs');
+  if (elA) elA.textContent = actifs.length;
+  const elCA = document.getElementById('crm-stat-ca');
+  if (elCA) elCA.textContent = Math.round(actifs.reduce((s, c) => s + (parseFloat(c.revenue) || 0), 0)).toLocaleString('fr-FR') + ' €';
+  const elP = document.getElementById('crm-stat-prospects');
+  if (elP) elP.textContent = clients.filter(c => c.status === 'Prospect').length;
+
   const tbody = document.querySelector('#page-crm .data-table tbody');
   if (!tbody) return;
   tbody.innerHTML = clients.map(c => {

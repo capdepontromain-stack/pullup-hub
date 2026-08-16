@@ -924,9 +924,9 @@ try {
     <!-- KPIs Clients -->
     <div id="crm-clients">
     <div class="crm-stats">
-      <div class="crm-stat"><span class="crm-stat-val">18</span><span>Clients actifs</span></div>
-      <div class="crm-stat"><span class="crm-stat-val gold">~68 500 €</span><span>CA 2026 (janv–juin)</span></div>
-      <div class="crm-stat"><span class="crm-stat-val">+30</span><span>Prospects CSE 2026</span></div>
+      <div class="crm-stat"><span class="crm-stat-val" id="crm-stat-actifs">—</span><span>Clients actifs</span></div>
+      <div class="crm-stat"><span class="crm-stat-val gold" id="crm-stat-ca">—</span><span>CA facturé 2025-2026 (réel Qonto)</span></div>
+      <div class="crm-stat"><span class="crm-stat-val" id="crm-stat-prospects">—</span><span>Prospects</span></div>
     </div>
     <div class="events-table-wrap">
       <table class="data-table">
@@ -2519,8 +2519,8 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260816l"></script>
-<script src="app.js?v=20260816l"></script>
+<script src="supabase.js?v=20260816m"></script>
+<script src="app.js?v=20260816m"></script>
 <script>
   if ('serviceWorker' in navigator) {
     // Enregistrer le SW de nettoyage (sans rechargement forcé — l'ancien
