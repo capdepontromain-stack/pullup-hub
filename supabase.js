@@ -3711,7 +3711,7 @@ function renderLeaveCards() {
     return `<div class="card" style="text-align:center;padding:1.25rem">
       <img src="${LEAVE_PHOTOS[name]}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid ${color};margin:0 auto .75rem;display:block" onerror="this.style.display='none'">
       <div style="font-weight:700;font-size:1rem;margin-bottom:.25rem">${name}</div>
-      <div style="font-size:2rem;font-weight:800;color:${color};line-height:1">${remaining}</div>
+      <div style="font-size:2rem;font-weight:800;color:${color};line-height:1">${fmtJ(remaining)}</div>
       <div style="font-size:.75rem;color:var(--text2);margin-bottom:.4rem">jours restants / ${fmtJ(droitsAnnee)} sur l'année</div>
       ${acquisLigne}
       ${monthHours > 0 ? `<div style="font-size:.78rem;color:var(--text2);margin-bottom:4px">Ce mois : <strong style="color:${color}">${monthHours}h</strong></div>` : ''}
