@@ -4453,22 +4453,42 @@ function renderChargesMonthly(annee) {
   const tbody = document.getElementById('charges-monthly-tbody');
   if (!tbody) return;
 
+  // Réel bancaire par mois : familles fixes (+ salaires + rémunération Romain) vs le reste.
+  // fixes + variables d'un mois réel = total des sorties du mois (cohérent avec le tableau Réel bancaire).
+  const famillesFixesSeuil = [...FAMILLES_FIXES, 'Salaires & équipe', 'Rémunération Romain'];
+  const reel = {};
+  _banqueTx.forEach(t => {
+    const d = parseFloat(t.debit) || 0;
+    if (!d) return;
+    if (!reel[t.mois]) reel[t.mois] = { fixes: 0, vars: 0 };
+    if (famillesFixesSeuil.includes(t.categorie)) reel[t.mois].fixes += d; else reel[t.mois].vars += d;
+  });
+  // Un mois est « réel » s'il est terminé et qu'on a ses opérations bancaires (mois en cours = encore prévisionnel)
+  const now = new Date();
+  const moisTermine = m => annee < now.getFullYear() || (annee === now.getFullYear() && m < now.getMonth() + 1);
+
   let totalFixes = 0, totalVars = 0;
 
   tbody.innerHTML = MOIS_LABELS.map((label, i) => {
     const mois = i + 1;
+    const estReel = !!reel[mois] && moisTermine(mois);
     const row = _chargesMonthly.find(r => r.month === mois) || { charges_fixes: 0, charges_variables: 0 };
-    const fixes = parseFloat(row.charges_fixes) || 0;
-    const vars = parseFloat(row.charges_variables) || 0;
+    const fixes = estReel ? Math.round(reel[mois].fixes) : (parseFloat(row.charges_fixes) || 0);
+    const vars = estReel ? Math.round(reel[mois].vars) : (parseFloat(row.charges_variables) || 0);
     const total = fixes + vars;
     totalFixes += fixes;
     totalVars += vars;
+    const badge = estReel
+      ? ' <span style="font-size:.65rem;background:rgba(76,175,80,.18);color:#4CAF50;border-radius:6px;padding:1px 7px;vertical-align:middle">réel</span>'
+      : ' <span style="font-size:.65rem;background:rgba(255,255,255,.08);color:var(--text3);border-radius:6px;padding:1px 7px;vertical-align:middle">prévu</span>';
+    const cell = (val, color, field) => estReel
+      ? `<td style="color:${color};font-weight:700">${val.toLocaleString('fr-FR')} €</td>`
+      : `<td class="fin-editable" onclick="editChargeCell(${annee},${mois},'${field}',${val})"
+          style="color:${color};font-weight:700;cursor:pointer">${val.toLocaleString('fr-FR')} €</td>`;
     return `<tr>
-      <td style="font-weight:600">${label}</td>
-      <td class="fin-editable" onclick="editChargeCell(${annee},${mois},'charges_fixes',${fixes})"
-          style="color:#f44336;font-weight:700;cursor:pointer">${fixes.toLocaleString('fr-FR')} €</td>
-      <td class="fin-editable" onclick="editChargeCell(${annee},${mois},'charges_variables',${vars})"
-          style="color:#4A9EFF;font-weight:700;cursor:pointer">${vars.toLocaleString('fr-FR')} €</td>
+      <td style="font-weight:600;white-space:nowrap">${label}${badge}</td>
+      ${cell(fixes, '#f44336', 'charges_fixes')}
+      ${cell(vars, '#4A9EFF', 'charges_variables')}
       <td style="color:var(--gold);font-weight:700">${total.toLocaleString('fr-FR')} €</td>
     </tr>`;
   }).join('');
