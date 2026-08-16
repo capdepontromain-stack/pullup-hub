@@ -728,6 +728,13 @@ async function renderBilanClair(reel) {
   const vert = '#4CAF50', rouge = '#f44336';
   const caPct = Math.min(100, Math.round((reel.totFac / 300000) * 100));
 
+  // Pot impôts : 17 % de l'encaissé du trimestre en cours (ratio réel impôts+cotisations/encaissements 2026 ≈ 16,5 %)
+  const moisCourant = auj.getMonth() + 1;
+  const debutTrim = moisCourant - ((moisCourant - 1) % 3);
+  let encTrim = 0;
+  for (let m = debutTrim; m <= moisCourant; m++) encTrim += reel.encMois[m] || 0;
+  const potImpots = encTrim * 0.17;
+
   box.innerHTML = `
     <div style="font-size:1.05rem;font-weight:700;margin-bottom:12px;color:${resultat >= 0 ? vert : rouge}">
       ${resultat >= 0 ? '✅ Rentable' : '⚠️ En perte'} : ${fmtSigne(resultat)} de bénéfice de trésorerie depuis janvier
@@ -755,6 +762,8 @@ async function renderBilanClair(reel) {
       <div>
         <div style="font-size:.78rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">À prévoir</div>
         <div style="font-size:.8rem;color:var(--text2);line-height:1.6">
+          💰 Pot impôts conseillé : <strong style="color:var(--gold)">${fmtEur(potImpots)}</strong>
+          <span style="font-size:.72rem">(17 % de l'encaissé du trimestre — à garder sur le sous-compte Qonto « Impôts & TVA »)</span><br>
           · CGSS trimestre juil-sept : <strong style="color:var(--text)">≈ 3 000 €</strong> vers octobre<br>
           · TVA après Noël : <strong style="color:var(--text)">≈ 15 000 €</strong> en janvier<br>
           · Retraite salariés (CRR) : ≈ 215 €/mois<br>
