@@ -1459,7 +1459,7 @@ Afin d'avancer, nous pouvons :
         </div>
         <!-- 2025 -->
         <div class="card" style="flex:1;min-width:280px">
-          <div class="card-header"><h3>2025 — Référence</h3><span style="font-size:.75rem;color:var(--text2)">CA total : 287 014 €</span></div>
+          <div class="card-header"><h3>2025 — Facturé officiel</h3><span style="font-size:.75rem;color:var(--text2)">CA total : <span id="ca-2025-total">—</span></span></div>
           <table class="data-table fin-monthly-table">
             <thead><tr><th>Mois</th><th>CA (€)</th><th>Évol. 2026</th></tr></thead>
             <tbody id="fin-monthly-2025-body"></tbody>
@@ -2555,7 +2555,7 @@ Afin d'avancer, nous pouvons :
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js?v=20260816b"></script>
-<script src="app.js?v=20260816b"></script>
+<script src="app.js?v=20260816c"></script>
 <script>
   if ('serviceWorker' in navigator) {
     // Enregistrer le SW de nettoyage (sans rechargement forcé — l'ancien

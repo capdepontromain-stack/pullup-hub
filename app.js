@@ -774,6 +774,8 @@ async function renderFinanceAnalyse() {
   body25.innerHTML = html25;
   foot26.innerHTML = `<td>TOTAL</td><td style="color:var(--gold)"><strong>${fmtEur(total26fac)}</strong></td><td style="color:#4CAF50"><strong>${fmtEur(reel.totEnc)}</strong></td><td style="color:#f44336"><strong>${fmtEur(reel.totDep)}</strong></td><td style="color:${totRes >= 0 ? '#4CAF50' : '#f44336'}"><strong>${fmtSigne(totRes)}</strong></td>`;
   foot25.innerHTML = `<td>TOTAL</td><td><strong>${total25ca.toLocaleString('fr-FR')} €</strong></td><td></td>`;
+  const tot25El = document.getElementById('ca-2025-total');
+  if (tot25El) tot25El.textContent = fmtEur(total25ca);
 
   // KPI réels du haut de page
   const kpi = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
