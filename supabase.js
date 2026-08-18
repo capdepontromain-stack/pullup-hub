@@ -3899,12 +3899,14 @@ async function requestLeaveDay(dateStr) {
     leave_date: dateStr,
     leave_type: leaveType,
     hours: hours,
-    status: (currentUserName === 'Romain' || leaveType === 'bureau') ? 'approved' : 'pending'
+    // Seuls les CONGÉS demandent la validation de Romain ; maladie, formation,
+    // bureau, événement… sont enregistrés directement (demande Romain 18/08/2026)
+    status: (currentUserName === 'Romain' || leaveType !== 'conge') ? 'approved' : 'pending'
   });
   if (error) { showToast('Erreur : ' + error.message); return; }
 
-  // Notification pour Romain
-  if (currentUserName !== 'Romain') {
+  // Notification pour Romain — uniquement pour une demande de congé
+  if (currentUserName !== 'Romain' && leaveType === 'conge') {
     await sb.from('notifications').insert({
       type: 'leave_request',
       title: `Congé demandé par ${currentUserName}`,
@@ -3913,7 +3915,7 @@ async function requestLeaveDay(dateStr) {
     }).catch(() => {});
   }
 
-  showToast(currentUserName === 'Romain' ? 'Congé posé ✓' : 'Demande envoyée à Romain ✓');
+  showToast((currentUserName !== 'Romain' && leaveType === 'conge') ? 'Demande envoyée à Romain ✓' : `${typeLabels[leaveType]} enregistré ✓`);
   await loadAndRenderLeaves();
 }
 
