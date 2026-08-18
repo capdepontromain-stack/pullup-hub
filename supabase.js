@@ -4440,6 +4440,12 @@ async function importQontoFile(file) {
       else showToast('Erreur : ' + error.message);
       return;
     }
+    // Anti-doublons : les opérations provisoires (ajoutées depuis un export simplifié sans
+    // identifiant Qonto, transaction_id commençant par « manuel- ») sont remplacées par les
+    // officielles du relevé → on les supprime sur la période couverte par le fichier importé.
+    const datesOps = ops.map(o => o.date_op).sort();
+    await sb.from('banque_transactions').delete().like('transaction_id', 'manuel-%')
+      .gte('date_op', datesOps[0]).lte('date_op', datesOps[datesOps.length - 1]);
     const { count: apres } = await sb.from('banque_transactions').select('*', { count: 'exact', head: true });
     const ajoutees = (apres || 0) - (avant || 0);
     const deja = ops.length - ajoutees;
