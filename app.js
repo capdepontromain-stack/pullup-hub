@@ -620,6 +620,38 @@ function fmt(n) {
 // numéro → mois 2026 de l'événement. MIO F-2025-093 = services aux Portois, réalisé en janvier 2026.
 const FACTURES_ANTERIEURES_EVENEMENT_2026 = { 'F-2025-093': 1 };
 
+// Impôts payés en 2026 qui concernent l'exercice 2025 (ou avant) — validé transaction par transaction
+// avec Romain le 23/08/2026 : TVA déc. 2025 (4 000 €), DRFIP janv./mars (880,52 €), saisie administrative
+// (700 €), avis de mise en recouvrement du 27/04 (995 €), Teledec liasse 2025 (118,80 €), IS 52 €,
+// solde annuel de TVA CA12 (6 706 €). Restent « exercice 2026 » : CFE 693 € et acompte TVA 10 293 €.
+const IMPOTS_EXERCICE_PRECEDENT = new Set([
+  'sas-capdepont-romain-3520-1-transaction-019bb62a-3b31-75ad-b178-4bec9e-cee22a',
+  'sas-capdepont-romain-3520-1-transaction-019bfe3d-f1f9-741f-be4a-3ec2ec-dabdb7',
+  'sas-capdepont-romain-3520-1-transaction-019bfeff-df08-71a5-b17e-f280f0-0d91ea',
+  'pull-up-evenements-7698-1-transaction-019caee3-0260-7385-8711-988877-be824f',
+  'pull-up-evenements-7698-1-transaction-019d9ab2-df00-7ccb-aed9-996cb8-728894',
+  'pull-up-evenements-7698-1-transaction-019dcd7c-5500-74c1-91a6-b635ff-a273f8',
+  'pull-up-evenements-7698-1-transaction-019dcda2-eae9-78d8-a525-2a28b9-905752',
+  'pull-up-evenements-7698-1-transaction-019dcd80-93f6-73da-bfba-64b4ad-1a6b00',
+  'pull-up-evenements-7698-1-transaction-019dcd80-282f-733d-9890-7114f2-addcc4',
+  'pull-up-evenements-7698-1-transaction-019dcd98-7f65-774d-af38-15beb9-64d082',
+  'pull-up-evenements-7698-1-transaction-019e2a39-a046-7671-869b-9e36ec-8671dc',
+  'pull-up-evenements-7698-1-transaction-019e81da-accb-78d1-8de6-6e7f48-9c4bdc',
+  'pull-up-evenements-7698-1-transaction-019f267f-6ec1-77d9-a5b7-a712fa-a3d297'
+]);
+
+// Un impôt payé l'année N concerne-t-il l'exercice précédent ? Liste validée ci-dessus + deux règles
+// génériques pour les paiements futurs : la TVA de décembre payée en janvier (réf TVA-12AAAA) et le
+// solde annuel de TVA (réf CA12, déclaré en mai) soldent l'exercice précédent. Par défaut : exercice en cours.
+function impotExercicePrecedent(t, annee) {
+  if (IMPOTS_EXERCICE_PRECEDENT.has(t.transaction_id)) return true;
+  const ref = (t.reference || '').toUpperCase();
+  const mTva = ref.match(/TVA-?12(20\d\d)/);
+  if (mTva && parseInt(mTva[1]) < annee) return true;
+  if (ref.includes('CA12')) return true;
+  return false;
+}
+
 // Charge les données réelles de l'année (factures Qonto + banque) — source de vérité depuis le 16/08/2026.
 // Fournit aussi la vue « opérationnelle » (23/08/2026, demande Romain) : CA des événements du mois
 // (Romain facture dans la foulée → facturé du mois = événements du mois, corrigé des décalages Noël),
@@ -629,19 +661,21 @@ async function fetchReel(annee) {
   const numsAnt = Object.keys(FACTURES_ANTERIEURES_EVENEMENT_2026);
   const [rFac, rTx, rAnt] = await Promise.all([
     sb.from('banque_factures').select('numero,mois,client,ht,ttc,statut,date_emission').eq('annee', annee),
-    sb.from('banque_transactions').select('mois,debit,credit,categorie').eq('annee', annee),
+    sb.from('banque_transactions').select('transaction_id,mois,debit,credit,categorie,reference').eq('annee', annee),
     (annee === 2026 && numsAnt.length) ? sb.from('banque_factures').select('numero,ht,statut').in('numero', numsAnt) : Promise.resolve({ data: [] })
   ]);
   const factures = rFac.data || [], txs = rTx.data || [];
-  const facMois = {}, encMois = {}, depMois = {}, depOpMois = {}, impotsMois = {}, caOpMois = {};
+  const facMois = {}, encMois = {}, depMois = {}, depOpMois = {}, impotsPrecMois = {}, impotsCourMois = {}, caOpMois = {};
   factures.forEach(f => { if (f.statut !== 'canceled') facMois[f.mois] = (facMois[f.mois] || 0) + (parseFloat(f.ht) || 0); });
   txs.forEach(t => {
     if (t.credit) encMois[t.mois] = (encMois[t.mois] || 0) + parseFloat(t.credit);
     if (t.debit) {
       const d = parseFloat(t.debit);
       depMois[t.mois] = (depMois[t.mois] || 0) + d;
-      if (t.categorie === 'Impôts & TVA') impotsMois[t.mois] = (impotsMois[t.mois] || 0) + d;
-      else depOpMois[t.mois] = (depOpMois[t.mois] || 0) + d;
+      if (t.categorie === 'Impôts & TVA') {
+        if (impotExercicePrecedent(t, annee)) impotsPrecMois[t.mois] = (impotsPrecMois[t.mois] || 0) + d;
+        else impotsCourMois[t.mois] = (impotsCourMois[t.mois] || 0) + d;
+      } else depOpMois[t.mois] = (depOpMois[t.mois] || 0) + d;
     }
   });
   Object.keys(facMois).forEach(m => { caOpMois[m] = facMois[m]; });
@@ -659,9 +693,10 @@ async function fetchReel(annee) {
   }
   const sum = o => Object.values(o).reduce((s, v) => s + v, 0);
   return {
-    factures, facMois, encMois, depMois, depOpMois, impotsMois, caOpMois,
+    factures, facMois, encMois, depMois, depOpMois, impotsPrecMois, impotsCourMois, caOpMois,
     totFac: sum(facMois), totEnc: sum(encMois), totDep: sum(depMois),
-    totCaOp: sum(caOpMois), totDepOp: sum(depOpMois), totImpots: sum(impotsMois)
+    totCaOp: sum(caOpMois), totDepOp: sum(depOpMois),
+    totImpotsPrec: sum(impotsPrecMois), totImpotsCour: sum(impotsCourMois)
   };
 }
 
@@ -715,18 +750,20 @@ function renderRentabiliteMensuelle(reel) {
   const box = document.getElementById('rentab-body');
   if (!box) return;
   const vert = '#4CAF50', rouge = '#f44336';
-  const moisActifs = [...new Set([...Object.keys(reel.caOpMois), ...Object.keys(reel.depOpMois), ...Object.keys(reel.impotsMois)])].map(Number).sort((a, b) => a - b);
-  let totCa = 0, totDep = 0, totImp = 0;
+  const moisActifs = [...new Set([...Object.keys(reel.caOpMois), ...Object.keys(reel.depOpMois), ...Object.keys(reel.impotsPrecMois), ...Object.keys(reel.impotsCourMois)])].map(Number).sort((a, b) => a - b);
+  let totCa = 0, totDep = 0, totImpP = 0, totImpC = 0;
   const lignes = moisActifs.map(m => {
-    const ca = reel.caOpMois[m] || 0, dep = reel.depOpMois[m] || 0, imp = reel.impotsMois[m] || 0;
+    const ca = reel.caOpMois[m] || 0, dep = reel.depOpMois[m] || 0;
+    const impP = reel.impotsPrecMois[m] || 0, impC = reel.impotsCourMois[m] || 0;
     const res = ca - dep;
-    totCa += ca; totDep += dep; totImp += imp;
+    totCa += ca; totDep += dep; totImpP += impP; totImpC += impC;
     return `<tr>
       <td style="font-weight:600">${MNAMES_FR[m]}</td>
       <td style="color:var(--gold);font-weight:700">${fmtEur(ca)}</td>
       <td style="color:#f44336">${fmtEur(dep)}</td>
       <td style="font-weight:700;color:${res >= 0 ? vert : rouge}">${res >= 0 ? '✅' : '🔴'} ${fmtSigne(res)}</td>
-      <td style="color:var(--text2)">${imp > 0 ? fmtEur(imp) : '—'}</td>
+      <td style="color:var(--text2)">${impP > 0 ? fmtEur(impP) : '—'}</td>
+      <td style="color:var(--text2)">${impC > 0 ? fmtEur(impC) : '—'}</td>
     </tr>`;
   }).join('');
   const totRes = totCa - totDep;
@@ -734,19 +771,21 @@ function renderRentabiliteMensuelle(reel) {
     <p style="font-size:.85rem;color:var(--text2);margin:0 0 12px">
       Tu factures dans la foulée de tes prestations : <strong>le facturé du mois = les événements du mois</strong>
       (corrigé : les Noëls de décembre 2025 facturés en janvier comptent en 2025, la MIO de janvier compte en janvier).
-      Les <strong>impôts & TVA sont comptés à part</strong> — ils concernent souvent l'exercice précédent
-      (ex. solde d'impôt 2025 payé en juillet 2026) et fausseraient la lecture du mois.
+      Les <strong>impôts & TVA sont comptés à part</strong>, en séparant ceux qui soldent
+      <strong>l'exercice 2025</strong> (TVA de décembre, solde annuel CA12, régularisations — validés ensemble
+      le 23/08/2026) de ceux qui concernent <strong>2026</strong> (CFE, acompte de TVA de juillet).
     </p>
     <div style="overflow-x:auto">
       <table class="data-table fin-monthly-table">
-        <thead><tr><th>Mois</th><th style="color:var(--gold)">Événements facturés (HT)</th><th style="color:#f44336">Dépenses du mois</th><th>Rentable ?</th><th style="color:var(--text2)">Impôts payés (à part)</th></tr></thead>
+        <thead><tr><th>Mois</th><th style="color:var(--gold)">Événements facturés (HT)</th><th style="color:#f44336">Dépenses du mois</th><th>Rentable ?</th><th style="color:var(--text2)">Impôts 2025 (à part)</th><th style="color:var(--text2)">Impôts 2026 (à part)</th></tr></thead>
         <tbody>${lignes}</tbody>
         <tfoot><tr style="font-weight:700;border-top:2px solid var(--border)">
           <td>TOTAL</td>
           <td style="color:var(--gold)">${fmtEur(totCa)}</td>
           <td style="color:#f44336">${fmtEur(totDep)}</td>
           <td style="color:${totRes >= 0 ? vert : rouge}">${fmtSigne(totRes)}</td>
-          <td style="color:var(--text2)">${fmtEur(totImp)}</td>
+          <td style="color:var(--text2)">${fmtEur(totImpP)}</td>
+          <td style="color:var(--text2)">${fmtEur(totImpC)}</td>
         </tr></tfoot>
       </table>
     </div>`;
@@ -845,9 +884,11 @@ async function renderDashboardCA() {
   const maxAbs = Math.max(1, ...moisActifs.map(m => Math.abs((reel.caOpMois[m] || 0) - (reel.depOpMois[m] || 0))));
   let html = '';
   for (const m of moisActifs) {
-    const ca = reel.caOpMois[m] || 0, dop = reel.depOpMois[m] || 0, imp = reel.impotsMois[m] || 0;
+    const ca = reel.caOpMois[m] || 0, dop = reel.depOpMois[m] || 0;
+    const impP = reel.impotsPrecMois[m] || 0, impC = reel.impotsCourMois[m] || 0;
     const res = ca - dop;
     const pct = Math.max(4, Math.round((Math.abs(res) / maxAbs) * 100));
+    const impTxt = [impP > 0 ? `impôts 2025 à part ${fmtEur(impP)}` : '', impC > 0 ? `impôts 2026 à part ${fmtEur(impC)}` : ''].filter(Boolean).join(' · ');
     html += `<div class="objective-item">
       <div class="obj-label" style="color:${res >= 0 ? '#4CAF50' : '#f44336'}">${MONTHS[m]} 2026</div>
       <div class="obj-progress-wrap" style="position:relative;overflow:hidden">
@@ -855,7 +896,7 @@ async function renderDashboardCA() {
       </div>
       <div class="obj-values">
         <span style="color:${res >= 0 ? '#4CAF50' : '#f44336'};font-weight:700">${fmtSigne(res)}</span>
-        <span class="obj-target">événements ${fmtEur(ca)} − dépenses ${fmtEur(dop)}${imp > 0 ? ` · impôts à part ${fmtEur(imp)}` : ''}</span>
+        <span class="obj-target">événements ${fmtEur(ca)} − dépenses ${fmtEur(dop)}${impTxt ? ' · ' + impTxt : ''}</span>
       </div>
     </div>`;
   }
