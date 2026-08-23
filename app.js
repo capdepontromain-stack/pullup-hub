@@ -920,17 +920,19 @@ async function renderDashboardCA() {
     </table>
   </div>` : '<p style="color:var(--text2);padding:1rem">Aucune opération bancaire 2026 — importe un export Qonto dans l\'onglet Charges</p>';
 
-  // Jauges dashboard : couverture des dépenses par les encaissements + CA facturé vs objectif
-  const couvPct = reel.totDep > 0 ? Math.min(100, Math.round((reel.totEnc / reel.totDep) * 100)) : 0;
-  const caPct = Math.min(100, Math.round((reel.totFac / 300000) * 100));
+  // Jauges dashboard : mêmes chiffres que le tableau Facturé vs Dépensé ci-dessus
+  // (facturé = événements 2026 ; dépensé = dépenses du mois impôts 2026 compris, hors impôts 2025)
+  const depTab = reel.totDepOp + reel.totImpotsCour;
+  const couvPct = depTab > 0 ? Math.min(100, Math.round((reel.totCaOp / depTab) * 100)) : 0;
+  const caPct = Math.min(100, Math.round((reel.totCaOp / 300000) * 100));
   const dSub1 = document.getElementById('dash-gauge-charges-sub');
-  if (dSub1) dSub1.innerHTML = `Encaissé : <strong>${fmtEur(reel.totEnc)}</strong> / Dépensé : <strong>${fmtEur(reel.totDep)}</strong>`;
+  if (dSub1) dSub1.innerHTML = `Facturé : <strong>${fmtEur(reel.totCaOp)}</strong> / Dépensé : <strong>${fmtEur(depTab)}</strong>`;
   const dSub2 = document.getElementById('dash-gauge-ca-sub');
-  if (dSub2) dSub2.innerHTML = `CA facturé : <strong>${fmtEur(reel.totFac)}</strong> / objectif 300 000 €`;
+  if (dSub2) dSub2.innerHTML = `CA facturé (événements 2026) : <strong>${fmtEur(reel.totCaOp)}</strong> / objectif 300 000 €`;
   const dH = document.getElementById('dash-gauge-charges-half');
-  if (dH) dH.textContent = fmtEur(reel.totDep / 2);
+  if (dH) dH.textContent = fmtEur(depTab / 2);
   const dF = document.getElementById('dash-gauge-charges-full');
-  if (dF) dF.textContent = fmtEur(reel.totDep);
+  if (dF) dF.textContent = fmtEur(depTab);
 
   setTimeout(() => {
     const dg1 = document.getElementById('dash-gauge-charges'); const dp1 = document.getElementById('dash-gauge-charges-pct');
@@ -970,7 +972,8 @@ async function renderBilanClair(reel) {
   const nomsRetard = enRetard.map(f => `${(f.client || '?').split(' ').slice(0, 3).join(' ')} (${fmtEur(parseFloat(f.ttc) || 0)})`).join(' · ');
 
   const vert = '#4CAF50', rouge = '#f44336';
-  const caPct = Math.min(100, Math.round((reel.totFac / 300000) * 100));
+  // Objectif 300 k€ mesuré sur le CA des événements 2026 (même définition que le tableau Facturé vs Dépensé)
+  const caPct = Math.min(100, Math.round((reel.totCaOp / 300000) * 100));
 
   // Pot impôts : 17 % de l'encaissé du trimestre en cours (ratio réel impôts+cotisations/encaissements 2026 ≈ 16,5 %)
   const moisCourant = auj.getMonth() + 1;
@@ -1015,7 +1018,7 @@ async function renderBilanClair(reel) {
       <div>
         <div style="font-size:.78rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Chiffre d'affaires</div>
         <div style="font-size:1.1rem;font-weight:700;color:var(--gold)">${fmtEur(reel.totFac)} <span style="font-size:.75rem;color:var(--text2);font-weight:400">HT facturé</span></div>
-        <div style="font-size:.78rem;color:var(--text2);margin-top:4px">Objectif 300 000 € : <strong style="color:var(--gold)">${caPct} %</strong></div>
+        <div style="font-size:.78rem;color:var(--text2);margin-top:4px">Objectif 300 000 € : <strong style="color:var(--gold)">${caPct} %</strong> <span style="font-size:.7rem">(sur les événements 2026)</span></div>
         <div style="font-size:.78rem;color:var(--text2)">Encaissé ${fmtEur(reel.totEnc)} · Dépensé ${fmtEur(reel.totDep)}</div>
         ${herit ? `<div style="font-size:.78rem;color:var(--text2)">dont événements 2026 : <strong>${fmtEur(herit.caPur)}</strong> HT · Noëls 2025 : ${fmtEur(reel.totFac - herit.caPur)} HT</div>` : ''}
       </div>
@@ -1129,17 +1132,19 @@ async function renderFinanceAnalyse() {
   // Créances : factures Qonto non payées
   renderCreancesReelles(reel.factures);
 
-  // Jauge 1 : couverture des dépenses par les encaissements
-  const couvPct = reel.totDep > 0 ? Math.min(100, Math.round((reel.totEnc / reel.totDep) * 100)) : 0;
+  // Jauge 1 : dépenses couvertes par le FACTURÉ — mêmes chiffres que le tableau Facturé vs Dépensé
+  const depTab = reel.totDepOp + reel.totImpotsCour;
+  const resTab = reel.totCaOp - depTab;
+  const couvPct = depTab > 0 ? Math.min(100, Math.round((reel.totCaOp / depTab) * 100)) : 0;
   const gSub1 = document.getElementById('gauge-charges-subtitle');
-  if (gSub1) gSub1.innerHTML = `Encaissé : <strong>${fmtEur(reel.totEnc)}</strong> / Dépensé : <strong>${fmtEur(reel.totDep)}</strong> → résultat <strong style="color:${totRes >= 0 ? '#4CAF50' : '#f44336'}">${fmtSigne(totRes)}</strong>`;
-  document.querySelectorAll('.gauge-label-half-charges').forEach(el => el.textContent = fmtEur(reel.totDep / 2));
-  document.querySelectorAll('.gauge-label-full-charges').forEach(el => el.textContent = fmtEur(reel.totDep));
+  if (gSub1) gSub1.innerHTML = `Facturé : <strong>${fmtEur(reel.totCaOp)}</strong> / Dépensé : <strong>${fmtEur(depTab)}</strong> → résultat <strong style="color:${resTab >= 0 ? '#4CAF50' : '#f44336'}">${fmtSigne(resTab)}</strong>`;
+  document.querySelectorAll('.gauge-label-half-charges').forEach(el => el.textContent = fmtEur(depTab / 2));
+  document.querySelectorAll('.gauge-label-full-charges').forEach(el => el.textContent = fmtEur(depTab));
 
-  // Jauge 2 : CA facturé vs objectif 300 000 €
-  const caPct = Math.min(100, Math.round((total26fac / 300000) * 100));
+  // Jauge 2 : CA facturé (événements 2026) vs objectif 300 000 €
+  const caPct = Math.min(100, Math.round((reel.totCaOp / 300000) * 100));
   const gSub2 = document.getElementById('gauge-ca-subtitle');
-  if (gSub2) gSub2.innerHTML = `Objectif annuel : <strong>300 000 €</strong> | CA facturé à ce jour : <strong>${fmtEur(total26fac)}</strong>`;
+  if (gSub2) gSub2.innerHTML = `Objectif annuel : <strong>300 000 €</strong> | CA événements 2026 : <strong>${fmtEur(reel.totCaOp)}</strong>`;
   document.querySelectorAll('.gauge-label-half-ca').forEach(el => el.textContent = '150 000 €');
   document.querySelectorAll('.gauge-label-full-ca').forEach(el => el.textContent = '300 000 €');
 

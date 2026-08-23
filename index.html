@@ -340,7 +340,7 @@ try {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
           <!-- Jauge charges -->
           <div>
-            <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">Dépenses couvertes par les encaissements</div>
+            <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">Dépenses couvertes par le facturé</div>
             <div style="font-size:.78rem;color:var(--text2);margin-bottom:10px" id="dash-gauge-charges-sub">Chargement…</div>
             <div class="fin-gauge-bar-wrap" style="margin-bottom:6px">
               <div class="fin-gauge-bar" id="dash-gauge-charges" style="width:0%"></div>
@@ -350,7 +350,7 @@ try {
           </div>
           <!-- Jauge objectif CA -->
           <div>
-            <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">CA facturé vs objectif 300 000 €</div>
+            <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">CA facturé (événements 2026) vs objectif 300 000 €</div>
             <div style="font-size:.78rem;color:var(--text2);margin-bottom:10px" id="dash-gauge-ca-sub">Chargement…</div>
             <div class="fin-gauge-bar-wrap" style="margin-bottom:6px">
               <div class="fin-gauge-bar fin-gauge-ca" id="dash-gauge-ca" style="width:0%"></div>
@@ -1409,7 +1409,7 @@ Afin d'avancer, nous pouvons :
     <div class="fin-gauges-row">
       <!-- Jauge couverture charges (bénéfice vs charges) -->
       <div class="fin-gauge-card">
-        <div class="fin-gauge-title">Dépenses couvertes par les encaissements — 2026</div>
+        <div class="fin-gauge-title">Dépenses couvertes par le facturé — 2026</div>
         <div class="fin-gauge-subtitle" id="gauge-charges-subtitle">Chargement…</div>
         <div class="fin-gauge-bar-wrap">
           <div class="fin-gauge-bar" id="gauge-charges" style="width:0%"></div>
@@ -2547,8 +2547,8 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260823i"></script>
-<script src="app.js?v=20260823i"></script>
+<script src="supabase.js?v=20260823j"></script>
+<script src="app.js?v=20260823j"></script>
 <script>
   if ('serviceWorker' in navigator) {
     // Enregistrer le SW de nettoyage (sans rechargement forcé — l'ancien
