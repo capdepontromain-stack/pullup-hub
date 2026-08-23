@@ -4486,8 +4486,12 @@ async function rapprocherDatesPaiement() {
 
   // Factures encore « impayées » dont le virement est en réalité arrivé (l'export factures est
   // toujours plus vieux que le relevé) : marquées payées si le match est certain — la référence
-  // du virement cite le numéro, OU un crédit unique au montant TTC exact après l'émission.
+  // du virement cite le numéro, OU un crédit unique au montant TTC exact APRÈS l'émission ET dont
+  // le nom du payeur recoupe celui du client (règle durcie le 23/08 : la F-2026-066 Mercialys 2 170 €
+  // avait été confondue avec un virement Handi-Educ de 2 170,01 € antérieur à son émission).
   // Un faux positif serait recorrigé par le prochain export factures Qonto (les statuts officiels priment).
+  const motsU = s => new Set(((s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().match(/[A-Z]{4,}/g)) || []);
+  const communU = (a, b) => [...a].some(x => b.has(x));
   const rUnp = await sb.from('banque_factures').select('numero,client,ttc,statut,date_emission').eq('statut', 'unpaid');
   let payees = 0;
   for (const f of (rUnp.data || [])) {
@@ -4495,8 +4499,10 @@ async function rapprocherDatesPaiement() {
     let m = cle.length >= 6 ? creds.filter(c => c.refnum.includes(cle)) : [];
     if (!m.length) {
       const ttc = parseFloat(f.ttc) || 0;
-      if (ttc > 0) {
-        const cand = creds.filter(c => Math.abs(c.credit - ttc) <= 0.011 && (!f.date_emission || (new Date(c.date_op) - new Date(f.date_emission)) / 86400000 >= -60));
+      if (ttc > 0 && f.date_emission) {
+        const cand = creds.filter(c => Math.abs(c.credit - ttc) <= 0.011
+          && c.date_op >= f.date_emission
+          && communU(motsU(c.libelle), motsU(f.client)));
         if (cand.length === 1) m = cand;
       }
     }
