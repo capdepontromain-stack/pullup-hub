@@ -1541,3 +1541,21 @@ function focusPersonCol(name) {
     });
   });
 })(); */
+
+// ---- Fraîcheur de l'app (23/08/2026) : recharge automatique quand une nouvelle version est déployée ----
+// GitHub Pages + app installée = index.html parfois servi depuis le cache → Romain voyait l'ancien écran
+// après un déploiement. On compare la version de app.js chargée avec celle du index.html en ligne ;
+// si elles diffèrent, on recharge une fois (garde anti-boucle via localStorage).
+async function verifierVersionApp() {
+  try {
+    const html = await (await fetch('index.html', { cache: 'no-store' })).text();
+    const distante = (html.match(/app\.js\?v=([0-9a-z]+)/) || [])[1];
+    const locale = ((document.querySelector('script[src*="app.js?v="]') || {}).src || '').match(/v=([0-9a-z]+)/)?.[1];
+    if (distante && locale && distante !== locale && localStorage.getItem('reload-version-tentee') !== distante) {
+      localStorage.setItem('reload-version-tentee', distante);
+      location.reload();
+    }
+  } catch (e) { /* hors ligne : on réessaiera */ }
+}
+verifierVersionApp();
+setInterval(verifierVersionApp, 10 * 60 * 1000);
