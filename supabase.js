@@ -4453,6 +4453,9 @@ async function importQontoFile(file) {
     const ajoutees = (apres || 0) - (avant || 0);
     const deja = ops.length - ajoutees;
     showToast(`✓ ${ajoutees} opération${ajoutees > 1 ? 's' : ''} importée${ajoutees > 1 ? 's' : ''}${deja > 0 ? ` (${deja} déjà présente${deja > 1 ? 's' : ''})` : ''}`);
+    // De nouveaux virements peuvent dater des paiements de factures → recalage des dates payee_le
+    const recalees = await rapprocherDatesPaiement();
+    if (recalees) showToast(`📌 ${recalees} date${recalees > 1 ? 's' : ''} de paiement recalée${recalees > 1 ? 's' : ''} sur les virements bancaires réels`);
     // Basculer sur l'année du fichier importé si besoin
     const sel = document.getElementById('charges-year-sel');
     if (sel && ops.length && !ops.some(o => o.annee === parseInt(sel.value))) sel.value = String(ops[0].annee);
@@ -4461,6 +4464,86 @@ async function importQontoFile(file) {
     console.error(e);
     showToast('Erreur pendant l\'import : ' + e.message);
   }
+}
+
+// ---- Rapprochement des dates de paiement avec la banque (23/08/2026, validé avec Romain) ----
+// La date « Paid At » de Qonto est celle du POINTAGE du statut, pas celle du virement. Après chaque
+// import, cette fonction recale banque_factures.payee_le sur la date d'arrivée réelle du virement.
+// Règles conservatrices — en cas de doute, on ne touche pas :
+//  ① la référence du virement contient le numéro de facture (chiffres normalisés, ex 2025086)
+//    → date du dernier virement correspondant (le solde) ;
+//  ② un seul crédit au montant TTC exact (pas plus de 60 j avant l'émission de la facture, et nom
+//    compatible ou à moins de 90 j de la date Qonto) ;
+//  ③ sous-groupe de factures du même client pointées « payées » le même jour chez Qonto dont la somme
+//    correspond exactement à UN virement — montants non ambigus (absents des autres factures du client).
+async function rapprocherDatesPaiement() {
+  const [rc, rf] = await Promise.all([
+    sb.from('banque_transactions').select('date_op,libelle,credit,reference').gt('credit', 0),
+    sb.from('banque_factures').select('numero,client,ttc,statut,payee_le,date_emission').eq('statut', 'paid')
+  ]);
+  const creds = (rc.data || []).map(c => ({ ...c, refnum: (c.reference || '').replace(/\D/g, '') }));
+  const facs = rf.data || [];
+  const mots = s => new Set(((s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().match(/[A-Z]{4,}/g)) || []);
+  const commun = (a, b) => [...a].some(x => b.has(x));
+  const jours = (d1, d2) => (new Date(d1) - new Date(d2)) / 86400000;
+  const corrections = {};
+
+  // ① par référence
+  for (const f of facs) {
+    const cle = f.numero.replace(/\D/g, '');
+    if (cle.length < 6) continue;
+    const m = creds.filter(c => c.refnum.includes(cle)).sort((a, b) => a.date_op.localeCompare(b.date_op));
+    if (m.length) corrections[f.numero] = m[m.length - 1].date_op;
+  }
+
+  // ② par montant unique
+  const reste = [];
+  for (const f of facs) {
+    if (corrections[f.numero]) continue;
+    const ttc = parseFloat(f.ttc) || 0;
+    if (ttc <= 0) { reste.push(f); continue; }
+    let cand = creds.filter(c => Math.abs(c.credit - ttc) <= 0.011 && (!f.date_emission || jours(c.date_op, f.date_emission) >= -60));
+    if (cand.length > 1) cand = cand.filter(c => commun(mots(c.libelle), mots(f.client)));
+    if (cand.length === 1 && (commun(mots(cand[0].libelle), mots(f.client)) || (f.payee_le && Math.abs(jours(cand[0].date_op, f.payee_le)) <= 90))) {
+      corrections[f.numero] = cand[0].date_op;
+    } else reste.push(f);
+  }
+
+  // ③ groupes pointés le même jour — sous-combinaisons de la plus grande à la plus petite
+  const combinaisons = (arr, k) => {
+    if (k === 0) return [[]];
+    if (arr.length < k) return [];
+    const [tete, ...queue] = arr;
+    return [...combinaisons(queue, k - 1).map(c => [tete, ...c]), ...combinaisons(queue, k)];
+  };
+  const groupes = {};
+  reste.forEach(f => { if (f.payee_le) (groupes[f.client + '|' + f.payee_le] = groupes[f.client + '|' + f.payee_le] || []).push(f); });
+  for (const grp of Object.values(groupes)) {
+    if (grp.length < 2 || grp.length > 8) continue;
+    let trouve = false;
+    for (let taille = grp.length; taille >= 2 && !trouve; taille--) {
+      for (const combo of combinaisons(grp, taille)) {
+        const numsCombo = new Set(combo.map(f => f.numero));
+        const ttcsCombo = new Set(combo.map(f => Math.round((parseFloat(f.ttc) || 0) * 100)));
+        const ambigu = facs.some(g => g.client === grp[0].client && !numsCombo.has(g.numero) && ttcsCombo.has(Math.round((parseFloat(g.ttc) || 0) * 100)));
+        if (ambigu) continue;
+        const s = combo.reduce((a, f) => a + Math.round((parseFloat(f.ttc) || 0) * 100), 0) / 100;
+        const em = combo.map(f => f.date_emission || '').sort().pop();
+        const cand = creds.filter(c => Math.abs(c.credit - s) <= 0.011 && (!em || jours(c.date_op, em) >= -60));
+        if (cand.length === 1) {
+          combo.forEach(f => { corrections[f.numero] = cand[0].date_op; });
+          trouve = true;
+          break;
+        }
+      }
+    }
+  }
+
+  const changees = facs.filter(f => corrections[f.numero] && corrections[f.numero] !== f.payee_le);
+  for (const f of changees) {
+    await sb.from('banque_factures').update({ payee_le: corrections[f.numero] }).eq('numero', f.numero);
+  }
+  return changees.length;
 }
 
 // Import d'un export « Factures » Qonto (CSV invoices) — met aussi à jour les statuts payé/impayé
@@ -4492,6 +4575,9 @@ async function importQontoFactures(rows) {
     return;
   }
   showToast(`✓ ${facs.length} factures importées (statuts payé/impayé mis à jour)`);
+  // Les dates « Paid At » de Qonto viennent d'écraser payee_le → on recale sur les virements réels
+  const recalees = await rapprocherDatesPaiement();
+  if (recalees) showToast(`📌 ${recalees} date${recalees > 1 ? 's' : ''} de paiement recalée${recalees > 1 ? 's' : ''} sur les virements bancaires réels`);
   const sel = document.getElementById('charges-year-sel');
   if (sel && !facs.some(f => f.annee === parseInt(sel.value))) sel.value = String(facs[0].annee);
   await loadCharges();
