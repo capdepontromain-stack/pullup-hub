@@ -289,6 +289,7 @@ function renderCalendar() {
   for (let d = 1; d <= daysInMonth; d++) {
     const isToday = d === now.getDate() && month === now.getMonth() && year === now.getFullYear();
     const cellDate = new Date(year, month, d);
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const evts = (window.calendarEvents || []).filter(e => {
       if (!e.event_date) return false;
       const [sy, sm, sd] = e.event_date.split('-').map(Number);
@@ -300,9 +301,9 @@ function renderCalendar() {
       }
       return cellDate >= start && cellDate <= end;
     });
-    html += `<div class="cal-cell${isToday ? ' today' : ''}"><div class="cal-num">${d}</div>${evts.map(e => {
+    html += `<div class="cal-cell${isToday ? ' today' : ''}" onclick="calAddEvent('${dateStr}')" title="Cliquer pour ajouter un événement"><div class="cal-num">${d}</div>${evts.map(e => {
       const c = typeof eventColor === 'function' ? eventColor(e) : (typeof clientColor === 'function' ? clientColor(e.client || e.name) : { bg:'var(--gold)', border:'var(--gold)', text:'#000' });
-      return `<div class="cal-event" style="background:${c.bg};border-left:3px solid ${c.border};color:${c.text}" title="${e.client||e.name||''}">${e.name}</div>`;
+      return `<div class="cal-event" style="background:${c.bg};border-left:3px solid ${c.border};color:${c.text}" title="${e.client||e.name||''} — cliquer pour modifier" onclick="event.stopPropagation();openEventDetailById('${e.id}')">${e.name}</div>`;
     }).join('')}</div>`;
   }
   const remaining = 42 - offset - daysInMonth;
@@ -311,6 +312,17 @@ function renderCalendar() {
   }
   html += '</div>';
   wrap.innerHTML = html;
+}
+
+// Clic sur une case du calendrier : ouvre « Nouvel événement » avec la date déjà remplie
+function calAddEvent(dateStr) {
+  const form = document.getElementById('form-newEvent');
+  if (form) {
+    form.reset();
+    const champ = form.querySelector('[name=event_date]');
+    if (champ) champ.value = dateStr;
+  }
+  openModal('newEvent');
 }
 
 function calNav(dir) {

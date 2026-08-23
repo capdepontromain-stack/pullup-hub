@@ -214,7 +214,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .cal-cell.today .cal-num { background: var(--gold); color: #000; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
 .cal-cell.other-month { opacity: .3; }
 .cal-num { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 12px; margin-bottom: 4px; }
-.cal-event { background: #F5C51820; color: var(--gold); font-size: 10px; padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.cal-event { background: #F5C51820; color: var(--gold); font-size: 10px; padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; cursor: pointer; }
+.cal-event:hover { filter: brightness(1.25); }
 
 /* PERSONNEL */
 .personnel-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
