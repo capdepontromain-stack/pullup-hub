@@ -3716,7 +3716,7 @@ function renderLeaveCards() {
       ${acquisLigne}
       ${monthHours > 0 ? `<div style="font-size:.78rem;color:var(--text2);margin-bottom:4px">Ce mois : <strong style="color:${color}">${monthHours}h</strong></div>` : ''}
       ${yearHours > 0 ? `<div style="font-size:.75rem;color:var(--text3);margin-bottom:.5rem">Cette année : <strong>${yearHours}h</strong></div>` : ''}
-      ${yearMaladie > 0 ? `<div style="font-size:.75rem;background:rgba(74,158,255,.12);color:#4A9EFF;border-radius:6px;padding:3px 8px;margin-bottom:.5rem">🤒 ${yearMaladie}j maladie / an${monthMaladie > 0 ? ` · ${monthMaladie}j ce mois` : ''}</div>` : ''}
+      ${yearMaladie > 0 ? `<div style="font-size:.75rem;background:rgba(229,57,53,.12);color:#E53935;border-radius:6px;padding:3px 8px;margin-bottom:.5rem">🤒 ${yearMaladie}j maladie / an${monthMaladie > 0 ? ` · ${monthMaladie}j ce mois` : ''}</div>` : ''}
       ${pending > 0 ? `<div style="font-size:.75rem;background:rgba(245,197,24,.15);color:var(--gold);border-radius:6px;padding:2px 8px;margin-bottom:.5rem">${pending} en attente</div>` : ''}
       <div style="background:var(--bg3);border-radius:99px;height:6px;overflow:hidden">
         <div style="height:100%;width:${pct}%;background:${color};border-radius:99px;transition:.3s"></div>
@@ -3809,10 +3809,11 @@ function renderLeaveCalendar() {
       ${leavesOnDay.map(l => {
         const typeIcons = { maladie:'🤒', formation:'📚', bureau:'🏢', ferie:'🎌', evenement:'🎉', conge:'🏖' };
         const personHex = LEAVE_COLORS_HEX[l.person_name] || '#888';
-        const typeOverride = { maladie:'#4A9EFF', formation:'#9B59B6' };
+        // Congé = jaune, maladie = rouge (demande Romain 23/08/2026)
+        const typeOverride = { conge:'#F5C518', maladie:'#E53935', formation:'#9B59B6' };
         const bg = typeOverride[l.leave_type] || personHex;
         const icon = typeIcons[l.leave_type] || '🏖';
-        const textColor = (l.person_name === 'Romain') ? '#000' : '#fff';
+        const textColor = (bg === '#F5C518') ? '#000' : '#fff';
         return `<div style="background:${bg};border-radius:4px;padding:1px 5px;font-size:.68rem;font-weight:600;color:${textColor};margin-bottom:2px;opacity:${l.status==='pending'?'0.6':'1'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.person_name} ${icon}${l.hours?` · ${l.hours}h`:''}${l.status==='pending'?' (attente)':''}">
           ${icon} ${l.person_name}${l.hours ? ` <span style="opacity:.8">${l.hours}h</span>` : ''}${l.status==='pending'?' ⏳':''}
         </div>`;
@@ -3845,7 +3846,7 @@ async function requestLeaveDay(dateStr) {
         <div style="font-size:.85rem;color:var(--text2);margin-bottom:20px">Quel type d'absence ?</div>
         <div style="display:flex;flex-direction:column;gap:10px">
           <button id="lchoice-conge" style="background:var(--gold);color:#000;border:none;border-radius:10px;padding:12px;font-size:.95rem;font-weight:700;cursor:pointer">🏖 Congé</button>
-          <button id="lchoice-maladie" style="background:#4A9EFF;color:#fff;border:none;border-radius:10px;padding:12px;font-size:.95rem;font-weight:700;cursor:pointer">🤒 Maladie</button>
+          <button id="lchoice-maladie" style="background:#E53935;color:#fff;border:none;border-radius:10px;padding:12px;font-size:.95rem;font-weight:700;cursor:pointer">🤒 Maladie</button>
           <button id="lchoice-formation" style="background:#9B59B6;color:#fff;border:none;border-radius:10px;padding:12px;font-size:.95rem;font-weight:700;cursor:pointer">📚 Formation</button>
           <button id="lchoice-bureau" style="background:#4CAF50;color:#fff;border:none;border-radius:10px;padding:12px;font-size:.95rem;font-weight:700;cursor:pointer">🏢 Bureau</button>
           <button id="lchoice-evenement" style="background:#FF6B9D;color:#fff;border:none;border-radius:10px;padding:12px;font-size:.95rem;font-weight:700;cursor:pointer">🎉 Événement</button>
@@ -3865,7 +3866,7 @@ async function requestLeaveDay(dateStr) {
 
   // Popup étape 2 : nombre d'heures
   const typeLabels = { conge:'Congé', maladie:'Maladie', formation:'Formation', bureau:'Bureau', evenement:'Événement' };
-  const typeColors = { conge:'var(--gold)', maladie:'#4A9EFF', formation:'#9B59B6', bureau:'#4CAF50', evenement:'#FF6B9D' };
+  const typeColors = { conge:'var(--gold)', maladie:'#E53935', formation:'#9B59B6', bureau:'#4CAF50', evenement:'#FF6B9D' };
   const hours = await new Promise(resolve => {
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
