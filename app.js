@@ -710,12 +710,12 @@ async function renderHeritage2025(reel) {
     <details>
       <summary style="cursor:pointer;font-size:.82rem;color:var(--gold)">Voir les ${lignes.length} factures d'événements 2025 encaissées en 2026 (${fmtEur(h.encaisse)})</summary>
       <div style="margin-top:8px">
-        ${lignes.map(l => `<div style="display:flex;gap:10px;align-items:center;padding:5px 4px;border-bottom:1px solid var(--border);font-size:.82rem">
-          <span style="color:var(--text2);min-width:88px">${l.num}</span>
-          <span style="min-width:170px">${l.client || '—'}</span>
-          <span style="flex:1;color:var(--text2)">${(l.objet || '').slice(0, 60)}</span>
+        ${lignes.map(l => `<div style="display:flex;flex-wrap:wrap;gap:2px 10px;align-items:center;padding:6px 4px;border-bottom:1px solid var(--border);font-size:.82rem">
+          <span style="color:var(--text2)">${l.num}</span>
+          <span style="flex:1;min-width:120px">${l.client || '—'}</span>
           ${l.paye ? `<span style="font-size:.72rem;color:var(--text2)">payée ${new Date(l.paye).toLocaleDateString('fr-FR')}</span>` : ''}
-          <strong style="color:var(--gold)">${fmtEur(l.ttc)}</strong>
+          <strong style="color:var(--gold);white-space:nowrap">${fmtEur(l.ttc)}</strong>
+          ${l.objet ? `<span style="width:100%;color:var(--text2);font-size:.74rem">${l.objet.slice(0, 80)}</span>` : ''}
         </div>`).join('')}
       </div>
     </details>`;
