@@ -679,12 +679,21 @@ function classifierImpot(t, annee) {
 async function fetchReel(annee) {
   const numsAnt = Object.keys(FACTURES_ANTERIEURES_EVENEMENT_2026);
   const [rFac, rTx, rAnt] = await Promise.all([
-    sb.from('banque_factures').select('numero,mois,client,ht,ttc,statut,date_emission').eq('annee', annee),
+    sb.from('banque_factures').select('numero,mois,client,ht,tva,ttc,statut,date_emission').eq('annee', annee),
     sb.from('banque_transactions').select('transaction_id,mois,debit,credit,categorie,reference').eq('annee', annee),
-    (annee === 2026 && numsAnt.length) ? sb.from('banque_factures').select('numero,ht,statut').in('numero', numsAnt) : Promise.resolve({ data: [] })
+    (annee === 2026 && numsAnt.length) ? sb.from('banque_factures').select('numero,ht,tva,statut').in('numero', numsAnt) : Promise.resolve({ data: [] })
   ]);
   const factures = rFac.data || [], txs = rTx.data || [];
   const facMois = {}, encMois = {}, depMois = {}, depOpMois = {}, impotsPrecMois = {}, tvaReverseeMois = {}, impotsChargeMois = {}, caOpMois = {};
+  // CA « vitrine » en TTC (demande Romain 23/08 : le CA et l'objectif se lisent en TTC ;
+  // les bénéfices et marges restent en HT pour ne pas être gonflés par la TVA collectée)
+  let totFacTTC = 0, totCaOpTTC = 0;
+  factures.forEach(f => {
+    if (f.statut === 'canceled') return;
+    const ttcReel = (parseFloat(f.ht) || 0) + (parseFloat(f.tva) || 0);
+    totFacTTC += ttcReel;
+    if (annee !== 2026 || !FACTURES_EVENEMENTS_2025.includes(f.numero)) totCaOpTTC += ttcReel;
+  });
   factures.forEach(f => { if (f.statut !== 'canceled') facMois[f.mois] = (facMois[f.mois] || 0) + (parseFloat(f.ht) || 0); });
   txs.forEach(t => {
     if (t.credit) encMois[t.mois] = (encMois[t.mois] || 0) + parseFloat(t.credit);
@@ -709,6 +718,7 @@ async function fetchReel(annee) {
       if (f.statut !== 'canceled') {
         const m = FACTURES_ANTERIEURES_EVENEMENT_2026[f.numero];
         caOpMois[m] = (caOpMois[m] || 0) + (parseFloat(f.ht) || 0);
+        totCaOpTTC += (parseFloat(f.ht) || 0) + (parseFloat(f.tva) || 0);
       }
     });
     // Prestations facturées en avance : le CA passe du mois d'émission au mois de l'événement
@@ -724,7 +734,7 @@ async function fetchReel(annee) {
   const sum = o => Object.values(o).reduce((s, v) => s + v, 0);
   return {
     factures, facMois, encMois, depMois, depOpMois, impotsPrecMois, tvaReverseeMois, impotsChargeMois, caOpMois,
-    totFac: sum(facMois), totEnc: sum(encMois), totDep: sum(depMois),
+    totFac: sum(facMois), totFacTTC, totCaOpTTC, totEnc: sum(encMois), totDep: sum(depMois),
     totCaOp: sum(caOpMois), totDepOp: sum(depOpMois),
     totImpotsPrec: sum(impotsPrecMois), totTvaReversee: sum(tvaReverseeMois), totImpotsCharge: sum(impotsChargeMois)
   };
@@ -901,7 +911,7 @@ async function renderDashboardCA() {
   renderBilanClair(reel);
 
   const caStatEl = document.getElementById('stat-ca-count');
-  if (caStatEl) caStatEl.textContent = fmtEur(reel.totFac);
+  if (caStatEl) caStatEl.textContent = fmtEur(reel.totFacTTC);
   const benefLabelEl = document.getElementById('stat-benef-label');
   if (benefLabelEl) {
     const resOpStat = reel.totCaOp - reel.totDepOp - reel.totImpotsCharge;
@@ -958,11 +968,11 @@ async function renderDashboardCA() {
   // (facturé = événements 2026 ; dépensé = dépenses du mois CFE comprise, hors TVA reversée et impôts 2025)
   const depTab = reel.totDepOp + reel.totImpotsCharge;
   const couvPct = depTab > 0 ? Math.min(100, Math.round((reel.totCaOp / depTab) * 100)) : 0;
-  const caPct = Math.min(100, Math.round((reel.totCaOp / 300000) * 100));
+  const caPct = Math.min(100, Math.round((reel.totCaOpTTC / 300000) * 100));
   const dSub1 = document.getElementById('dash-gauge-charges-sub');
   if (dSub1) dSub1.innerHTML = `Facturé : <strong>${fmtEur(reel.totCaOp)}</strong> / Dépensé : <strong>${fmtEur(depTab)}</strong>`;
   const dSub2 = document.getElementById('dash-gauge-ca-sub');
-  if (dSub2) dSub2.innerHTML = `CA facturé (événements 2026) : <strong>${fmtEur(reel.totCaOp)}</strong> / objectif 300 000 €`;
+  if (dSub2) dSub2.innerHTML = `CA facturé TTC (événements 2026) : <strong>${fmtEur(reel.totCaOpTTC)}</strong> / objectif 300 000 € TTC`;
   const dH = document.getElementById('dash-gauge-charges-half');
   if (dH) dH.textContent = fmtEur(depTab / 2);
   const dF = document.getElementById('dash-gauge-charges-full');
@@ -1007,7 +1017,7 @@ async function renderBilanClair(reel) {
 
   const vert = '#4CAF50', rouge = '#f44336';
   // Objectif 300 k€ mesuré sur le CA des événements 2026 (même définition que le tableau Facturé vs Dépensé)
-  const caPct = Math.min(100, Math.round((reel.totCaOp / 300000) * 100));
+  const caPct = Math.min(100, Math.round((reel.totCaOpTTC / 300000) * 100));
 
   // Pot impôts : 17 % de l'encaissé du trimestre en cours (ratio réel impôts+cotisations/encaissements 2026 ≈ 16,5 %)
   const moisCourant = auj.getMonth() + 1;
@@ -1038,7 +1048,7 @@ async function renderBilanClair(reel) {
   box.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin-bottom:12px">
       ${tuile((resOp >= 0 ? '✅ ' : '🔴 ') + fmtSigne(resOp), resOp >= 0 ? vert : rouge, 'Bénéfice 2026', 'événements facturés − dépenses')}
-      ${tuile(caPct + ' %', 'var(--gold)', 'de l’objectif 300 000 €', fmtEur(reel.totCaOp) + ' facturés (événements 2026)')}
+      ${tuile(caPct + ' %', 'var(--gold)', 'de l’objectif 300 000 € TTC', fmtEur(reel.totCaOpTTC) + ' TTC facturés (événements 2026)')}
       ${tuile(fmtEur(totImp), totRetard > 0 ? rouge : 'var(--text)', 'à encaisser (impayés)', totRetard > 0 ? 'dont ' + fmtEur(totRetard) + ' en retard +30 j' : 'aucun retard de +30 j 👍', totRetard > 0 ? rouge : vert)}
       ${tuile('≈ ' + fmtEur(aProvisionner), 'var(--gold)', 'à garder pour les impôts', 'CGSS, acompte TVA et pot du trimestre')}
     </div>
@@ -1067,8 +1077,8 @@ async function renderBilanClair(reel) {
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
       <div>
         <div style="font-size:.78rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Chiffre d'affaires</div>
-        <div style="font-size:1.1rem;font-weight:700;color:var(--gold)">${fmtEur(reel.totFac)} <span style="font-size:.75rem;color:var(--text2);font-weight:400">HT facturé</span></div>
-        <div style="font-size:.78rem;color:var(--text2);margin-top:4px">Objectif 300 000 € : <strong style="color:var(--gold)">${caPct} %</strong> <span style="font-size:.7rem">(sur les événements 2026)</span></div>
+        <div style="font-size:1.1rem;font-weight:700;color:var(--gold)">${fmtEur(reel.totFacTTC)} <span style="font-size:.75rem;color:var(--text2);font-weight:400">TTC facturé (${fmtEur(reel.totFac)} HT)</span></div>
+        <div style="font-size:.78rem;color:var(--text2);margin-top:4px">Objectif 300 000 € TTC : <strong style="color:var(--gold)">${caPct} %</strong> <span style="font-size:.7rem">(sur les événements 2026)</span></div>
         <div style="font-size:.78rem;color:var(--text2)">Encaissé ${fmtEur(reel.totEnc)} · Dépensé ${fmtEur(reel.totDep)}</div>
         ${herit ? `<div style="font-size:.78rem;color:var(--text2)">dont événements 2026 : <strong>${fmtEur(herit.caPur)}</strong> HT · Noëls 2025 : ${fmtEur(reel.totFac - herit.caPur)} HT</div>` : ''}
       </div>
@@ -1193,9 +1203,9 @@ async function renderFinanceAnalyse() {
   document.querySelectorAll('.gauge-label-full-charges').forEach(el => el.textContent = fmtEur(depTab));
 
   // Jauge 2 : CA facturé (événements 2026) vs objectif 300 000 €
-  const caPct = Math.min(100, Math.round((reel.totCaOp / 300000) * 100));
+  const caPct = Math.min(100, Math.round((reel.totCaOpTTC / 300000) * 100));
   const gSub2 = document.getElementById('gauge-ca-subtitle');
-  if (gSub2) gSub2.innerHTML = `Objectif annuel : <strong>300 000 €</strong> | CA événements 2026 : <strong>${fmtEur(reel.totCaOp)}</strong>`;
+  if (gSub2) gSub2.innerHTML = `Objectif annuel : <strong>300 000 € TTC</strong> | CA événements 2026 : <strong>${fmtEur(reel.totCaOpTTC)} TTC</strong>`;
   document.querySelectorAll('.gauge-label-half-ca').forEach(el => el.textContent = '150 000 €');
   document.querySelectorAll('.gauge-label-full-ca').forEach(el => el.textContent = '300 000 €');
 
@@ -1308,7 +1318,7 @@ async function renderReports() {
 
   const kpi = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   kpi('rkpi-factures', actives.length);
-  kpi('rkpi-ca', fmtEur(reel.totFac));
+  kpi('rkpi-ca', fmtEur(reel.totFacTTC));
   kpi('rkpi-clients', new Set(actives.map(f => (f.client || '').trim()).filter(Boolean)).size);
 
   // Barres CA facturé par mois
@@ -1361,9 +1371,9 @@ async function renderReports() {
   // Panier moyen
   const pEl = document.getElementById('rpt-panier');
   if (pEl && actives.length) {
-    pEl.textContent = fmtEur(reel.totFac / actives.length);
+    pEl.textContent = fmtEur(reel.totFacTTC / actives.length);
     const sub = document.getElementById('rpt-panier-sub');
-    if (sub) sub.textContent = `${fmtEur(reel.totFac)} facturés ÷ ${actives.length} factures`;
+    if (sub) sub.textContent = `${fmtEur(reel.totFacTTC)} TTC facturés ÷ ${actives.length} factures`;
   }
 }
 
