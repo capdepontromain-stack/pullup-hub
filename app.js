@@ -993,11 +993,26 @@ async function renderBilanClair(reel) {
   const resOp = reel.totCaOp - depOp2026;
   const moisOp = Math.max(1, Object.keys(reel.caOpMois).length);
   const cotisations = Math.max(0, impotsPayes - reel.totImpotsPrec - reel.totImpotsCour);
+  // À provisionner d'ici la fin d'année : pot impôts du trimestre + CGSS oct. (~3 000) + 2ᵉ acompte TVA déc. (~7 500)
+  const aProvisionner = potImpots + 3000 + 7500;
+  const tuile = (valeur, couleurVal, titre, sous, couleurSous) => `
+    <div style="background:var(--bg3);border-radius:12px;padding:14px 16px;text-align:center">
+      <div style="font-size:1.45rem;font-weight:800;color:${couleurVal};white-space:nowrap">${valeur}</div>
+      <div style="font-size:.8rem;font-weight:600;margin-top:2px">${titre}</div>
+      <div style="font-size:.72rem;color:${couleurSous || 'var(--text2)'};margin-top:2px">${sous}</div>
+    </div>`;
   box.innerHTML = `
-    <div style="margin-bottom:12px">
-      <div style="font-size:1.05rem;font-weight:700;color:${resOp >= 0 ? vert : rouge}">
-        ${resOp >= 0 ? '🎯 Activité rentable' : '🎯 Activité en perte'} : ${fmtSigne(resOp)} sur les événements 2026
-        <span style="color:var(--text2);font-weight:400;font-size:.85rem">(facturé ${fmtEur(reel.totCaOp)} − dépenses ${fmtEur(depOp2026)} impôts 2026 compris, hors impôts 2025 · ≈ ${fmtSigne(resOp / moisOp)}/mois)</span>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin-bottom:12px">
+      ${tuile((resOp >= 0 ? '✅ ' : '🔴 ') + fmtSigne(resOp), resOp >= 0 ? vert : rouge, 'Bénéfice 2026', 'événements facturés − dépenses')}
+      ${tuile(caPct + ' %', 'var(--gold)', 'de l’objectif 300 000 €', fmtEur(reel.totCaOp) + ' facturés (événements 2026)')}
+      ${tuile(fmtEur(totImp), totRetard > 0 ? rouge : 'var(--text)', 'à encaisser (impayés)', totRetard > 0 ? 'dont ' + fmtEur(totRetard) + ' en retard +30 j' : 'aucun retard de +30 j 👍', totRetard > 0 ? rouge : vert)}
+      ${tuile('≈ ' + fmtEur(aProvisionner), 'var(--gold)', 'à garder pour les impôts', 'CGSS, acompte TVA et pot du trimestre')}
+    </div>
+    <details>
+    <summary style="cursor:pointer;font-size:.82rem;color:var(--gold)">Voir le détail (trésorerie, impôts, héritage 2025, coûts, à prévoir)</summary>
+    <div style="margin:12px 0">
+      <div style="font-size:.82rem;color:var(--text2)">
+        🎯 Rentabilité : facturé ${fmtEur(reel.totCaOp)} − dépenses ${fmtEur(depOp2026)} (impôts 2026 compris, hors impôts 2025) = <strong style="color:${resOp >= 0 ? vert : rouge}">${fmtSigne(resOp)}</strong> · ≈ ${fmtSigne(resOp / moisOp)}/mois
       </div>
       <div style="font-size:.82rem;color:var(--text2);margin-top:4px">
         💶 Trésorerie réelle : <strong style="color:${resultat >= 0 ? vert : rouge}">${fmtSigne(resultat)}</strong>
@@ -1045,7 +1060,8 @@ async function renderBilanClair(reel) {
           <span style="font-size:.72rem">Rappel : l'argent du Noël N finance l'année N+1 — ne pas tout dépenser en janvier.</span>
         </div>
       </div>
-    </div>`;
+    </div>
+    </details>`;
 }
 
 let _finMonthlyData = {}; // cache: { '2026-1': {ca,benef}, ... }
