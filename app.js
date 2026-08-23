@@ -636,6 +636,91 @@ async function fetchReel(annee) {
 const fmtEur = v => Math.round(v).toLocaleString('fr-FR') + ' €';
 const fmtSigne = v => (v >= 0 ? '+' : '') + Math.round(v).toLocaleString('fr-FR') + ' €';
 
+// Factures émises en 2026 mais dont l'événement a eu lieu en 2025 (animations de Noël de décembre 2025,
+// facturées en janvier 2026 — identifiées par leur objet le 23/08/2026). Liste fixe, à compléter à la main
+// si une nouvelle facture « événement 2025 » apparaissait.
+const FACTURES_EVENEMENTS_2025 = ['F-2026-002', 'F-2026-003', 'F-2026-005', 'F-2026-006', 'F-2026-007', 'F-2026-009'];
+
+// « Héritage 2025 » = argent encaissé en 2026 qui vient d'événements réalisés en 2025 :
+// ① factures 2024/2025 payées en 2026 (colonne payee_le) + ② factures 2026 de la liste ci-dessus.
+// Le TTC de banque_factures = « restant dû à l'émission » (acomptes déjà déduits) = ce qui a réellement
+// été encaissé en 2026 pour ces factures.
+async function fetchHeritage2025(reel) {
+  const { data } = await sb.from('banque_factures')
+    .select('numero,client,ttc,objet,payee_le')
+    .lt('annee', 2026).gte('payee_le', '2026-01-01').neq('statut', 'canceled');
+  const anciennes = data || [];
+  const noel = (reel.factures || []).filter(f => FACTURES_EVENEMENTS_2025.includes(f.numero) && f.statut === 'paid');
+  const encAncien = anciennes.reduce((s, f) => s + (parseFloat(f.ttc) || 0), 0);
+  const encNoel = noel.reduce((s, f) => s + (parseFloat(f.ttc) || 0), 0);
+  const htNoel = noel.reduce((s, f) => s + (parseFloat(f.ht) || 0), 0);
+  return {
+    anciennes, noel,
+    encaisse: encAncien + encNoel,        // hérité de 2025, encaissé en 2026
+    caPur: reel.totFac - htNoel,          // CA facturé pour des événements 2026 (HT)
+    encPur: reel.totEnc - encAncien - encNoel,
+    resultatPur: (reel.totEnc - reel.totDep) - encAncien - encNoel
+  };
+}
+
+// Carte « 2026 en propre » de l'onglet Finances
+async function renderHeritage2025(reel) {
+  const box = document.getElementById('heritage-2025-body');
+  if (!box) return;
+  const h = await fetchHeritage2025(reel);
+  const vert = '#4CAF50', rouge = '#f44336';
+  const pct = reel.totEnc > 0 ? Math.round((h.encaisse / reel.totEnc) * 100) : 0;
+  const lignes = [
+    ...h.anciennes.map(f => ({ num: f.numero, client: f.client, objet: f.objet, ttc: parseFloat(f.ttc) || 0, paye: f.payee_le })),
+    ...h.noel.map(f => ({ num: f.numero, client: f.client, objet: 'Animation de Noël — décembre 2025', ttc: parseFloat(f.ttc) || 0, paye: null }))
+  ].sort((a, b) => a.num.localeCompare(b.num));
+  box.innerHTML = `
+    <p style="font-size:.85rem;color:var(--text2);margin:0 0 14px">
+      Ton modèle : les événements de fin d'année sont payés au début de l'année suivante. Cette carte sépare
+      ce que <strong>2026 a gagné toute seule</strong> de l'argent hérité des événements de 2025.
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:14px">
+      <div style="background:var(--bg3);border-radius:10px;padding:12px 14px">
+        <div style="font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">CA facturé — événements 2026</div>
+        <div style="font-size:1.25rem;font-weight:700;color:var(--gold)">${fmtEur(h.caPur)} <span style="font-size:.72rem;font-weight:400;color:var(--text2)">HT</span></div>
+        <div style="font-size:.72rem;color:var(--text2)">sur ${fmtEur(reel.totFac)} facturés au total</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:12px 14px">
+        <div style="font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Encaissé — événements 2026</div>
+        <div style="font-size:1.25rem;font-weight:700;color:${vert}">${fmtEur(h.encPur)}</div>
+        <div style="font-size:.72rem;color:var(--text2)">sur ${fmtEur(reel.totEnc)} encaissés au total</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:12px 14px">
+        <div style="font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Hérité des événements 2025</div>
+        <div style="font-size:1.25rem;font-weight:700;color:var(--gold)">${fmtEur(h.encaisse)}</div>
+        <div style="font-size:.72rem;color:var(--text2)">${pct} % de l'encaissé 2026 (${lignes.length} factures)</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:12px 14px">
+        <div style="font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Trésorerie 2026 sans l'héritage</div>
+        <div style="font-size:1.25rem;font-weight:700;color:${h.resultatPur >= 0 ? vert : rouge}">${fmtSigne(h.resultatPur)}</div>
+        <div style="font-size:.72rem;color:var(--text2)">résultat réel : ${fmtSigne(reel.totEnc - reel.totDep)}</div>
+      </div>
+    </div>
+    <p style="font-size:.78rem;color:var(--text2);margin:0 0 10px;line-height:1.55">
+      ⚠️ À lire sans paniquer : ce chiffre « sans héritage » est sévère, car les dépenses des événements 2025 payées
+      début 2026 (artistes des Noëls…) ne sont pas retirées, et surtout <strong>tes Noëls 2026 joueront exactement le même
+      rôle pour 2027</strong>. L'important : que le CA « événements 2026 » (${fmtEur(h.caPur)} HT) continue de grossir,
+      et que l'héritage de Noël soit provisionné, pas dépensé.
+    </p>
+    <details>
+      <summary style="cursor:pointer;font-size:.82rem;color:var(--gold)">Voir les ${lignes.length} factures d'événements 2025 encaissées en 2026 (${fmtEur(h.encaisse)})</summary>
+      <div style="margin-top:8px">
+        ${lignes.map(l => `<div style="display:flex;gap:10px;align-items:center;padding:5px 4px;border-bottom:1px solid var(--border);font-size:.82rem">
+          <span style="color:var(--text2);min-width:88px">${l.num}</span>
+          <span style="min-width:170px">${l.client || '—'}</span>
+          <span style="flex:1;color:var(--text2)">${(l.objet || '').slice(0, 60)}</span>
+          ${l.paye ? `<span style="font-size:.72rem;color:var(--text2)">payée ${new Date(l.paye).toLocaleDateString('fr-FR')}</span>` : ''}
+          <strong style="color:var(--gold)">${fmtEur(l.ttc)}</strong>
+        </div>`).join('')}
+      </div>
+    </details>`;
+}
+
 async function renderDashboardCA() {
   const container = document.getElementById('dashboard-ca-bars');
   if (!container) return;
@@ -749,6 +834,9 @@ async function renderBilanClair(reel) {
   const impotsPayes = fam['Impôts & cotisations'] || 0;
   const avantImpots = resultat + impotsPayes;
 
+  // 2026 en propre : sans l'argent hérité des événements 2025 (détail dans l'onglet Finances)
+  const herit = await fetchHeritage2025(reel).catch(() => null);
+
   box.innerHTML = `
     <div style="margin-bottom:12px">
       <div style="font-size:1.05rem;font-weight:700;color:${resultat >= 0 ? vert : rouge}">
@@ -760,6 +848,11 @@ async function renderBilanClair(reel) {
         &nbsp;→&nbsp; impôts & cotisations payés : <strong style="color:#f44336">−${fmtEur(impotsPayes)}</strong>
         &nbsp;→&nbsp; après impôts : <strong style="color:${resultat >= 0 ? vert : rouge}">${fmtSigne(resultat)}</strong>
       </div>
+      ${herit ? `<div style="font-size:.82rem;color:var(--text2);margin-top:3px">
+        🎄 Dont hérité des événements 2025 : <strong style="color:var(--gold)">${fmtEur(herit.encaisse)}</strong> encaissés
+        &nbsp;→&nbsp; activité 2026 seule : <strong style="color:${herit.resultatPur >= 0 ? vert : rouge}">${fmtSigne(herit.resultatPur)}</strong>
+        <span style="font-size:.72rem">(détail dans Finances & Charges — les Noëls 2026 feront pareil pour 2027)</span>
+      </div>` : ''}
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
       <div>
@@ -767,6 +860,7 @@ async function renderBilanClair(reel) {
         <div style="font-size:1.1rem;font-weight:700;color:var(--gold)">${fmtEur(reel.totFac)} <span style="font-size:.75rem;color:var(--text2);font-weight:400">HT facturé</span></div>
         <div style="font-size:.78rem;color:var(--text2);margin-top:4px">Objectif 300 000 € : <strong style="color:var(--gold)">${caPct} %</strong></div>
         <div style="font-size:.78rem;color:var(--text2)">Encaissé ${fmtEur(reel.totEnc)} · Dépensé ${fmtEur(reel.totDep)}</div>
+        ${herit ? `<div style="font-size:.78rem;color:var(--text2)">dont événements 2026 : <strong>${fmtEur(herit.caPur)}</strong> HT · Noëls 2025 : ${fmtEur(reel.totFac - herit.caPur)} HT</div>` : ''}
       </div>
       <div>
         <div style="font-size:.78rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Ce qui coûte le plus</div>
@@ -805,6 +899,7 @@ async function renderFinanceAnalyse() {
 
   // 2026 : données réelles (factures Qonto + banque) — plus de saisie manuelle
   const reel = await fetchReel(2026);
+  renderHeritage2025(reel).catch(console.error);
   // 2025 : référence saisie (finance_monthly)
   const rows = await fetchFinanceMonthly();
   _finMonthlyData = {};
