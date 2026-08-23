@@ -751,19 +751,19 @@ function renderRentabiliteMensuelle(reel) {
   if (!box) return;
   const vert = '#4CAF50', rouge = '#f44336';
   const moisActifs = [...new Set([...Object.keys(reel.caOpMois), ...Object.keys(reel.depOpMois), ...Object.keys(reel.impotsPrecMois), ...Object.keys(reel.impotsCourMois)])].map(Number).sort((a, b) => a - b);
-  let totCa = 0, totDep = 0, totImpP = 0, totImpC = 0;
+  let totCa = 0, totDep = 0, totImpP = 0;
   const lignes = moisActifs.map(m => {
-    const ca = reel.caOpMois[m] || 0, dep = reel.depOpMois[m] || 0;
+    const ca = reel.caOpMois[m] || 0;
+    const dep = (reel.depOpMois[m] || 0) + (reel.impotsCourMois[m] || 0);
     const impP = reel.impotsPrecMois[m] || 0, impC = reel.impotsCourMois[m] || 0;
     const res = ca - dep;
-    totCa += ca; totDep += dep; totImpP += impP; totImpC += impC;
+    totCa += ca; totDep += dep; totImpP += impP;
     return `<tr>
       <td style="font-weight:600">${MNAMES_FR[m]}</td>
       <td style="color:var(--gold);font-weight:700">${fmtEur(ca)}</td>
-      <td style="color:#f44336">${fmtEur(dep)}</td>
+      <td style="color:#f44336">${fmtEur(dep)}${impC > 0 ? ` <span style="font-size:.7rem;color:var(--text2)">(dont impôts 2026 : ${fmtEur(impC)})</span>` : ''}</td>
       <td style="font-weight:700;color:${res >= 0 ? vert : rouge}">${res >= 0 ? '✅' : '🔴'} ${fmtSigne(res)}</td>
       <td style="color:var(--text2)">${impP > 0 ? fmtEur(impP) : '—'}</td>
-      <td style="color:var(--text2)">${impC > 0 ? fmtEur(impC) : '—'}</td>
     </tr>`;
   }).join('');
   const totRes = totCa - totDep;
@@ -771,13 +771,13 @@ function renderRentabiliteMensuelle(reel) {
     <p style="font-size:.85rem;color:var(--text2);margin:0 0 12px">
       Tu factures dans la foulée de tes prestations : <strong>le facturé du mois = les événements du mois</strong>
       (corrigé : les Noëls de décembre 2025 facturés en janvier comptent en 2025, la MIO de janvier compte en janvier).
-      Les <strong>impôts & TVA sont comptés à part</strong>, en séparant ceux qui soldent
-      <strong>l'exercice 2025</strong> (TVA de décembre, solde annuel CA12, régularisations — validés ensemble
-      le 23/08/2026) de ceux qui concernent <strong>2026</strong> (CFE, acompte de TVA de juillet).
+      Les dépenses du mois <strong>incluent les impôts de l'exercice 2026</strong> (CFE, acompte de TVA) mais
+      <strong>excluent ceux qui soldent 2025</strong> (TVA de décembre, solde annuel CA12, régularisations —
+      validés ensemble le 23/08/2026), montrés à part dans la dernière colonne.
     </p>
     <div style="overflow-x:auto">
       <table class="data-table fin-monthly-table">
-        <thead><tr><th>Mois</th><th style="color:var(--gold)">Événements facturés (HT)</th><th style="color:#f44336">Dépenses du mois</th><th>Rentable ?</th><th style="color:var(--text2)">Impôts 2025 (à part)</th><th style="color:var(--text2)">Impôts 2026 (à part)</th></tr></thead>
+        <thead><tr><th>Mois</th><th style="color:var(--gold)">Événements facturés (HT)</th><th style="color:#f44336">Dépenses du mois</th><th>Rentable ?</th><th style="color:var(--text2)">Impôts 2025 (à part)</th></tr></thead>
         <tbody>${lignes}</tbody>
         <tfoot><tr style="font-weight:700;border-top:2px solid var(--border)">
           <td>TOTAL</td>
@@ -785,7 +785,6 @@ function renderRentabiliteMensuelle(reel) {
           <td style="color:#f44336">${fmtEur(totDep)}</td>
           <td style="color:${totRes >= 0 ? vert : rouge}">${fmtSigne(totRes)}</td>
           <td style="color:var(--text2)">${fmtEur(totImpP)}</td>
-          <td style="color:var(--text2)">${fmtEur(totImpC)}</td>
         </tr></tfoot>
       </table>
     </div>`;
@@ -871,7 +870,7 @@ async function renderDashboardCA() {
   if (caStatEl) caStatEl.textContent = fmtEur(reel.totFac);
   const benefLabelEl = document.getElementById('stat-benef-label');
   if (benefLabelEl) {
-    const resOpStat = reel.totCaOp - reel.totDepOp;
+    const resOpStat = reel.totCaOp - reel.totDepOp - reel.totImpotsCour;
     benefLabelEl.innerHTML = `
       <span style="color:#aaa">Rentabilité événements : <strong style="color:${resOpStat >= 0 ? 'var(--gold)' : '#f44336'}">${fmtSigne(resOpStat)}</strong></span><br>
       <span style="color:#aaa">Encaissé : <strong style="color:#4CAF50">${fmtEur(reel.totEnc)}</strong></span><br>
@@ -880,29 +879,46 @@ async function renderDashboardCA() {
     benefLabelEl.style.color = '';
   }
 
-  // Barres mensuelles : rentabilité des ÉVÉNEMENTS du mois (facturé HT − dépenses hors impôts) —
-  // demande Romain 23/08/2026 : « suis-je rentable chaque mois par rapport aux événements que je fais ? »
+  // Tableau mensuel Facturé vs Dépensé (demande Romain 23/08/2026) : le facturé du mois = les
+  // événements du mois ; les dépenses du mois INCLUENT les impôts de l'exercice 2026 mais EXCLUENT
+  // ceux qui soldent 2025 (montrés à part) — « comme ça j'ai vraiment une vision claire ».
   const moisActifs = [...new Set([...Object.keys(reel.caOpMois), ...Object.keys(reel.depOpMois)])].map(Number).sort((a, b) => a - b);
-  const maxAbs = Math.max(1, ...moisActifs.map(m => Math.abs((reel.caOpMois[m] || 0) - (reel.depOpMois[m] || 0))));
   let html = '';
+  let tCa = 0, tDep = 0, tImpP = 0;
   for (const m of moisActifs) {
-    const ca = reel.caOpMois[m] || 0, dop = reel.depOpMois[m] || 0;
-    const impP = reel.impotsPrecMois[m] || 0, impC = reel.impotsCourMois[m] || 0;
-    const res = ca - dop;
-    const pct = Math.max(4, Math.round((Math.abs(res) / maxAbs) * 100));
-    const impTxt = [impP > 0 ? `impôts 2025 à part ${fmtEur(impP)}` : '', impC > 0 ? `impôts 2026 à part ${fmtEur(impC)}` : ''].filter(Boolean).join(' · ');
-    html += `<div class="objective-item">
-      <div class="obj-label" style="color:${res >= 0 ? '#4CAF50' : '#f44336'}">${MONTHS[m]} 2026</div>
-      <div class="obj-progress-wrap" style="position:relative;overflow:hidden">
-        <div style="position:absolute;left:0;top:0;bottom:0;width:${pct}%;background:${res >= 0 ? '#4CAF50' : '#f44336'};border-radius:4px"></div>
-      </div>
-      <div class="obj-values">
-        <span style="color:${res >= 0 ? '#4CAF50' : '#f44336'};font-weight:700">${fmtSigne(res)}</span>
-        <span class="obj-target">événements ${fmtEur(ca)} − dépenses ${fmtEur(dop)}${impTxt ? ' · ' + impTxt : ''}</span>
-      </div>
-    </div>`;
+    const ca = reel.caOpMois[m] || 0;
+    const dep = (reel.depOpMois[m] || 0) + (reel.impotsCourMois[m] || 0);
+    const impP = reel.impotsPrecMois[m] || 0;
+    const res = ca - dep;
+    tCa += ca; tDep += dep; tImpP += impP;
+    html += `<tr>
+      <td style="font-weight:600;white-space:nowrap">${MONTHS[m]}</td>
+      <td style="color:var(--gold);font-weight:700;text-align:right">${fmtEur(ca)}</td>
+      <td style="color:#f44336;font-weight:700;text-align:right">${fmtEur(dep)}</td>
+      <td style="font-weight:700;text-align:right;color:${res >= 0 ? '#4CAF50' : '#f44336'}">${res >= 0 ? '✅' : '🔴'} ${fmtSigne(res)}</td>
+      <td style="color:var(--text2);text-align:right;font-size:.8rem">${impP > 0 ? fmtEur(impP) : '—'}</td>
+    </tr>`;
   }
-  container.innerHTML = html || '<p style="color:var(--text2);padding:1rem">Aucune opération bancaire 2026 — importe un export Qonto dans l\'onglet Charges</p>';
+  const tRes = tCa - tDep;
+  container.innerHTML = html ? `<div style="overflow-x:auto;grid-column:1/-1">
+    <table class="data-table" style="width:100%">
+      <thead><tr>
+        <th>Mois</th>
+        <th style="color:var(--gold);text-align:right">Facturé (HT)</th>
+        <th style="color:#f44336;text-align:right">Dépensé</th>
+        <th style="text-align:right">Résultat</th>
+        <th style="color:var(--text2);text-align:right;font-size:.72rem">Impôts 2025 (à part)</th>
+      </tr></thead>
+      <tbody>${html}</tbody>
+      <tfoot><tr style="font-weight:700;border-top:2px solid var(--border)">
+        <td>TOTAL</td>
+        <td style="color:var(--gold);text-align:right">${fmtEur(tCa)}</td>
+        <td style="color:#f44336;text-align:right">${fmtEur(tDep)}</td>
+        <td style="text-align:right;color:${tRes >= 0 ? '#4CAF50' : '#f44336'}">${fmtSigne(tRes)}</td>
+        <td style="color:var(--text2);text-align:right;font-size:.8rem">${fmtEur(tImpP)}</td>
+      </tr></tfoot>
+    </table>
+  </div>` : '<p style="color:var(--text2);padding:1rem">Aucune opération bancaire 2026 — importe un export Qonto dans l\'onglet Charges</p>';
 
   // Jauges dashboard : couverture des dépenses par les encaissements + CA facturé vs objectif
   const couvPct = reel.totDep > 0 ? Math.min(100, Math.round((reel.totEnc / reel.totDep) * 100)) : 0;
@@ -970,14 +986,15 @@ async function renderBilanClair(reel) {
   // 2026 en propre : sans l'argent hérité des événements 2025 (détail dans l'onglet Finances)
   const herit = await fetchHeritage2025(reel).catch(() => null);
 
-  const resOp = reel.totCaOp - reel.totDepOp;
+  const depOp2026 = reel.totDepOp + reel.totImpotsCour;
+  const resOp = reel.totCaOp - depOp2026;
   const moisOp = Math.max(1, Object.keys(reel.caOpMois).length);
   const cotisations = Math.max(0, impotsPayes - reel.totImpotsPrec - reel.totImpotsCour);
   box.innerHTML = `
     <div style="margin-bottom:12px">
       <div style="font-size:1.05rem;font-weight:700;color:${resOp >= 0 ? vert : rouge}">
         ${resOp >= 0 ? '🎯 Activité rentable' : '🎯 Activité en perte'} : ${fmtSigne(resOp)} sur les événements 2026
-        <span style="color:var(--text2);font-weight:400;font-size:.85rem">(facturé ${fmtEur(reel.totCaOp)} − dépenses ${fmtEur(reel.totDepOp)} hors impôts · ≈ ${fmtSigne(resOp / moisOp)}/mois)</span>
+        <span style="color:var(--text2);font-weight:400;font-size:.85rem">(facturé ${fmtEur(reel.totCaOp)} − dépenses ${fmtEur(depOp2026)} impôts 2026 compris, hors impôts 2025 · ≈ ${fmtSigne(resOp / moisOp)}/mois)</span>
       </div>
       <div style="font-size:.82rem;color:var(--text2);margin-top:4px">
         💶 Trésorerie réelle : <strong style="color:${resultat >= 0 ? vert : rouge}">${fmtSigne(resultat)}</strong>
