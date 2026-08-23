@@ -620,6 +620,13 @@ function fmt(n) {
 // numéro → mois 2026 de l'événement. MIO F-2025-093 = services aux Portois, réalisé en janvier 2026.
 const FACTURES_ANTERIEURES_EVENEMENT_2026 = { 'F-2025-093': 1 };
 
+// Factures 2026 émises AVANT leur prestation : numéro → mois réel de l'événement (l'inverse du cas
+// habituel « je facture le lendemain »). Insee ×6 du 06/08 = soirée des 60 ans du 3 SEPTEMBRE 2026
+// (précision Romain 23/08) → leur CA compte en septembre, pas en août.
+const FACTURES_PRESTATION_DECALEE_2026 = {
+  'F-2026-056': 9, 'F-2026-057': 9, 'F-2026-058': 9, 'F-2026-059': 9, 'F-2026-060': 9, 'F-2026-061': 9
+};
+
 // Impôts payés en 2026 qui concernent l'exercice 2025 (ou avant) — validé transaction par transaction
 // avec Romain le 23/08/2026 : TVA déc. 2025 (4 000 €), DRFIP janv./mars (880,52 €), saisie administrative
 // (700 €), avis de mise en recouvrement du 27/04 (995 €), Teledec liasse 2025 (118,80 €), IS 52 €,
@@ -688,6 +695,15 @@ async function fetchReel(annee) {
       if (f.statut !== 'canceled') {
         const m = FACTURES_ANTERIEURES_EVENEMENT_2026[f.numero];
         caOpMois[m] = (caOpMois[m] || 0) + (parseFloat(f.ht) || 0);
+      }
+    });
+    // Prestations facturées en avance : le CA passe du mois d'émission au mois de l'événement
+    factures.forEach(f => {
+      const mCible = FACTURES_PRESTATION_DECALEE_2026[f.numero];
+      if (mCible && f.statut !== 'canceled') {
+        const ht = parseFloat(f.ht) || 0;
+        caOpMois[f.mois] -= ht;
+        caOpMois[mCible] = (caOpMois[mCible] || 0) + ht;
       }
     });
   }
