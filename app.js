@@ -641,6 +641,18 @@ const fmtSigne = v => (v >= 0 ? '+' : '') + Math.round(v).toLocaleString('fr-FR'
 // si une nouvelle facture « événement 2025 » apparaissait.
 const FACTURES_EVENEMENTS_2025 = ['F-2026-002', 'F-2026-003', 'F-2026-005', 'F-2026-006', 'F-2026-007', 'F-2026-009'];
 
+// Corrections du 23/08/2026 après rapprochement avec les virements bancaires réels (validé avec Romain) :
+// le « payee_le » de Qonto est la date de POINTAGE du statut, pas celle du virement. Ces factures ont en
+// réalité été payées en 2025 : F-2025-068/069 (Halloween — virement Mercialys 1 230,40 € du 03/12/2025),
+// F-2025-081/082 (arbre de Noël CILAM — acompte 6 900 € le 06/11/2025 + solde 7 252,76 € le 10/12/2025),
+// F-2025-084 (Lolipop — 1 996,40 € le 24/12/2025), F-2025-092 (Ravate — acompte 3 800 € le 12/11/2025
+// + solde 3 719,05 € le 23/12/2025). Et F-2025-093 (MIO) : facturée en 2025 mais l'événement (mise en
+// avant des services aux Portois) a eu lieu en JANVIER 2026 → ce n'est pas un héritage 2025.
+const HERITAGE_EXCLUSIONS = ['F-2025-068', 'F-2025-069', 'F-2025-081', 'F-2025-082', 'F-2025-084', 'F-2025-092', 'F-2025-093'];
+// Montant réellement encaissé en 2026 quand une partie l'avait déjà été en 2025 :
+// Testoni F-2025-086 = acompte 4 120,22 € encaissé le 12/09/2025, solde 9 613,84 € encaissé le 24/02/2026.
+const HERITAGE_ENCAISSE_2026 = { 'F-2025-086': 9613.84 };
+
 // « Héritage 2025 » = argent encaissé en 2026 qui vient d'événements réalisés en 2025 :
 // ① factures 2024/2025 payées en 2026 (colonne payee_le) + ② factures 2026 de la liste ci-dessus.
 // Le TTC de banque_factures = « restant dû à l'émission » (acomptes déjà déduits) = ce qui a réellement
@@ -649,7 +661,9 @@ async function fetchHeritage2025(reel) {
   const { data } = await sb.from('banque_factures')
     .select('numero,client,ttc,objet,payee_le')
     .lt('annee', 2026).gte('payee_le', '2026-01-01').neq('statut', 'canceled');
-  const anciennes = data || [];
+  const anciennes = (data || [])
+    .filter(f => !HERITAGE_EXCLUSIONS.includes(f.numero))
+    .map(f => HERITAGE_ENCAISSE_2026[f.numero] != null ? { ...f, ttc: HERITAGE_ENCAISSE_2026[f.numero] } : f);
   const noel = (reel.factures || []).filter(f => FACTURES_EVENEMENTS_2025.includes(f.numero) && f.statut === 'paid');
   const encAncien = anciennes.reduce((s, f) => s + (parseFloat(f.ttc) || 0), 0);
   const encNoel = noel.reduce((s, f) => s + (parseFloat(f.ttc) || 0), 0);
