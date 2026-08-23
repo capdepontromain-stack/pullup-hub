@@ -317,7 +317,7 @@ try {
 
 
       <!-- Mini calendrier -->
-      <div class="card span2" data-dash-id="0" style="cursor:pointer" onclick="showPage('events');setTimeout(()=>{document.querySelectorAll('.tab')[1].click()},100)" title="Voir le calendrier complet">
+      <div class="card span2" data-dash-id="0" style="cursor:pointer" onclick="showPage('events')" title="Voir le calendrier complet">
         <div class="card-header">
           <h3>📅 Calendrier</h3>
           <span style="font-size:.8rem;color:var(--text2)">Voir le calendrier →</span>
@@ -372,10 +372,10 @@ try {
       </div>
     </div>
     <div class="tabs">
-      <button class="tab active" onclick="switchTab(this,'cal-list')">Liste</button>
-      <button class="tab" onclick="switchTab(this,'cal-month')">Calendrier</button>
+      <button class="tab active" onclick="switchTab(this,'cal-month')">Calendrier</button>
+      <button class="tab" onclick="switchTab(this,'cal-list')">Liste</button>
     </div>
-    <div class="tab-content active" id="cal-list">
+    <div class="tab-content" id="cal-list">
       <div class="events-table-wrap">
         <table class="data-table">
           <thead><tr><th>Événement</th><th>Client</th><th>Date</th><th>Heure</th><th>Lieu</th><th>Participants</th><th>Montant HT</th><th>Statut</th></tr></thead>
@@ -456,7 +456,7 @@ try {
         </table>
       </div>
     </div>
-    <div class="tab-content" id="cal-month">
+    <div class="tab-content active" id="cal-month">
       <div class="calendar-wrap" id="calendarWrap"></div>
     </div>
 
