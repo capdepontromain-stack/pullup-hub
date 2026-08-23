@@ -327,7 +327,7 @@ try {
 
       <!-- CA Objectifs -->
       <div class="card span2" data-dash-id="0" style="cursor:pointer">
-        <div class="card-header"><h3>💶 Trésorerie 2026 — mois par mois (réel banque)</h3></div>
+        <div class="card-header"><h3>🎯 Rentabilité des événements 2026 — mois par mois</h3><span style="font-size:.72rem;color:var(--text2)">facturé (HT) − dépenses du mois, impôts comptés à part</span></div>
         <div class="objectives-grid" id="dashboard-ca-bars"></div>
       </div>
 
@@ -1427,6 +1427,15 @@ Afin d'avancer, nous pouvons :
         </div>
         <div class="fin-gauge-labels"><span>0 €</span><span class="gauge-label-half-ca">150 000 €</span><span class="gauge-label-full-ca">300 000 €</span></div>
       </div>
+    </div>
+
+    <!-- Rentabilité opérationnelle : événements facturés du mois vs dépenses du mois (impôts à part) -->
+    <div class="card" id="rentab-card" style="margin-bottom:1.5rem">
+      <div class="card-header">
+        <h3>🎯 Est-ce que le mois est rentable ? — événements vs dépenses</h3>
+        <span style="font-size:.75rem;color:var(--text2)">Impôts & TVA comptés à part</span>
+      </div>
+      <div id="rentab-body"><p style="color:var(--text2)">Chargement…</p></div>
     </div>
 
     <!-- 2026 en propre : sans les encaissements des événements réalisés en 2025 -->
@@ -2538,8 +2547,8 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260823e"></script>
-<script src="app.js?v=20260823e"></script>
+<script src="supabase.js?v=20260823f"></script>
+<script src="app.js?v=20260823f"></script>
 <script>
   if ('serviceWorker' in navigator) {
     // Enregistrer le SW de nettoyage (sans rechargement forcé — l'ancien

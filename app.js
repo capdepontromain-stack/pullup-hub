@@ -616,21 +616,53 @@ function fmt(n) {
   return n > 0 ? n.toLocaleString('fr-FR') + ' €' : '—';
 }
 
-// Charge les données réelles de l'année (factures Qonto + banque) — source de vérité depuis le 16/08/2026
+// Factures d'années précédentes dont l'ÉVÉNEMENT a eu lieu en 2026 (facturation anticipée) :
+// numéro → mois 2026 de l'événement. MIO F-2025-093 = services aux Portois, réalisé en janvier 2026.
+const FACTURES_ANTERIEURES_EVENEMENT_2026 = { 'F-2025-093': 1 };
+
+// Charge les données réelles de l'année (factures Qonto + banque) — source de vérité depuis le 16/08/2026.
+// Fournit aussi la vue « opérationnelle » (23/08/2026, demande Romain) : CA des événements du mois
+// (Romain facture dans la foulée → facturé du mois = événements du mois, corrigé des décalages Noël),
+// dépenses hors « Impôts & TVA » (souvent l'exercice précédent, ex. solde SIE 2025 payé en juillet 2026),
+// et les impôts payés montrés à part.
 async function fetchReel(annee) {
-  const [rFac, rTx] = await Promise.all([
+  const numsAnt = Object.keys(FACTURES_ANTERIEURES_EVENEMENT_2026);
+  const [rFac, rTx, rAnt] = await Promise.all([
     sb.from('banque_factures').select('numero,mois,client,ht,ttc,statut,date_emission').eq('annee', annee),
-    sb.from('banque_transactions').select('mois,debit,credit').eq('annee', annee)
+    sb.from('banque_transactions').select('mois,debit,credit,categorie').eq('annee', annee),
+    (annee === 2026 && numsAnt.length) ? sb.from('banque_factures').select('numero,ht,statut').in('numero', numsAnt) : Promise.resolve({ data: [] })
   ]);
   const factures = rFac.data || [], txs = rTx.data || [];
-  const facMois = {}, encMois = {}, depMois = {};
+  const facMois = {}, encMois = {}, depMois = {}, depOpMois = {}, impotsMois = {}, caOpMois = {};
   factures.forEach(f => { if (f.statut !== 'canceled') facMois[f.mois] = (facMois[f.mois] || 0) + (parseFloat(f.ht) || 0); });
   txs.forEach(t => {
     if (t.credit) encMois[t.mois] = (encMois[t.mois] || 0) + parseFloat(t.credit);
-    if (t.debit) depMois[t.mois] = (depMois[t.mois] || 0) + parseFloat(t.debit);
+    if (t.debit) {
+      const d = parseFloat(t.debit);
+      depMois[t.mois] = (depMois[t.mois] || 0) + d;
+      if (t.categorie === 'Impôts & TVA') impotsMois[t.mois] = (impotsMois[t.mois] || 0) + d;
+      else depOpMois[t.mois] = (depOpMois[t.mois] || 0) + d;
+    }
   });
+  Object.keys(facMois).forEach(m => { caOpMois[m] = facMois[m]; });
+  if (annee === 2026) {
+    // Les Noëls de décembre 2025 facturés en janvier sortent de janvier ; la MIO (événement janvier) y entre.
+    factures.forEach(f => {
+      if (f.statut !== 'canceled' && FACTURES_EVENEMENTS_2025.includes(f.numero)) caOpMois[f.mois] -= parseFloat(f.ht) || 0;
+    });
+    (rAnt.data || []).forEach(f => {
+      if (f.statut !== 'canceled') {
+        const m = FACTURES_ANTERIEURES_EVENEMENT_2026[f.numero];
+        caOpMois[m] = (caOpMois[m] || 0) + (parseFloat(f.ht) || 0);
+      }
+    });
+  }
   const sum = o => Object.values(o).reduce((s, v) => s + v, 0);
-  return { factures, facMois, encMois, depMois, totFac: sum(facMois), totEnc: sum(encMois), totDep: sum(depMois) };
+  return {
+    factures, facMois, encMois, depMois, depOpMois, impotsMois, caOpMois,
+    totFac: sum(facMois), totEnc: sum(encMois), totDep: sum(depMois),
+    totCaOp: sum(caOpMois), totDepOp: sum(depOpMois), totImpots: sum(impotsMois)
+  };
 }
 
 const fmtEur = v => Math.round(v).toLocaleString('fr-FR') + ' €';
@@ -675,6 +707,49 @@ async function fetchHeritage2025(reel) {
     encPur: reel.totEnc - encAncien - encNoel,
     resultatPur: (reel.totEnc - reel.totDep) - encAncien - encNoel
   };
+}
+
+// Carte « Est-ce que le mois est rentable ? » de l'onglet Finances (demande Romain 23/08/2026) :
+// événements facturés dans le mois (HT, corrigés des décalages Noël) vs dépenses du mois hors impôts.
+function renderRentabiliteMensuelle(reel) {
+  const box = document.getElementById('rentab-body');
+  if (!box) return;
+  const vert = '#4CAF50', rouge = '#f44336';
+  const moisActifs = [...new Set([...Object.keys(reel.caOpMois), ...Object.keys(reel.depOpMois), ...Object.keys(reel.impotsMois)])].map(Number).sort((a, b) => a - b);
+  let totCa = 0, totDep = 0, totImp = 0;
+  const lignes = moisActifs.map(m => {
+    const ca = reel.caOpMois[m] || 0, dep = reel.depOpMois[m] || 0, imp = reel.impotsMois[m] || 0;
+    const res = ca - dep;
+    totCa += ca; totDep += dep; totImp += imp;
+    return `<tr>
+      <td style="font-weight:600">${MNAMES_FR[m]}</td>
+      <td style="color:var(--gold);font-weight:700">${fmtEur(ca)}</td>
+      <td style="color:#f44336">${fmtEur(dep)}</td>
+      <td style="font-weight:700;color:${res >= 0 ? vert : rouge}">${res >= 0 ? '✅' : '🔴'} ${fmtSigne(res)}</td>
+      <td style="color:var(--text2)">${imp > 0 ? fmtEur(imp) : '—'}</td>
+    </tr>`;
+  }).join('');
+  const totRes = totCa - totDep;
+  box.innerHTML = `
+    <p style="font-size:.85rem;color:var(--text2);margin:0 0 12px">
+      Tu factures dans la foulée de tes prestations : <strong>le facturé du mois = les événements du mois</strong>
+      (corrigé : les Noëls de décembre 2025 facturés en janvier comptent en 2025, la MIO de janvier compte en janvier).
+      Les <strong>impôts & TVA sont comptés à part</strong> — ils concernent souvent l'exercice précédent
+      (ex. solde d'impôt 2025 payé en juillet 2026) et fausseraient la lecture du mois.
+    </p>
+    <div style="overflow-x:auto">
+      <table class="data-table fin-monthly-table">
+        <thead><tr><th>Mois</th><th style="color:var(--gold)">Événements facturés (HT)</th><th style="color:#f44336">Dépenses du mois</th><th>Rentable ?</th><th style="color:var(--text2)">Impôts payés (à part)</th></tr></thead>
+        <tbody>${lignes}</tbody>
+        <tfoot><tr style="font-weight:700;border-top:2px solid var(--border)">
+          <td>TOTAL</td>
+          <td style="color:var(--gold)">${fmtEur(totCa)}</td>
+          <td style="color:#f44336">${fmtEur(totDep)}</td>
+          <td style="color:${totRes >= 0 ? vert : rouge}">${fmtSigne(totRes)}</td>
+          <td style="color:var(--text2)">${fmtEur(totImp)}</td>
+        </tr></tfoot>
+      </table>
+    </div>`;
 }
 
 // Carte « 2026 en propre » de l'onglet Finances
@@ -764,13 +839,14 @@ async function renderDashboardCA() {
     benefLabelEl.style.color = '';
   }
 
-  // Barres mensuelles : résultat de trésorerie réel (encaissé − dépensé)
-  const moisActifs = [...new Set([...Object.keys(reel.encMois), ...Object.keys(reel.depMois)])].map(Number).sort((a, b) => a - b);
-  const maxAbs = Math.max(1, ...moisActifs.map(m => Math.abs((reel.encMois[m] || 0) - (reel.depMois[m] || 0))));
+  // Barres mensuelles : rentabilité des ÉVÉNEMENTS du mois (facturé HT − dépenses hors impôts) —
+  // demande Romain 23/08/2026 : « suis-je rentable chaque mois par rapport aux événements que je fais ? »
+  const moisActifs = [...new Set([...Object.keys(reel.caOpMois), ...Object.keys(reel.depOpMois)])].map(Number).sort((a, b) => a - b);
+  const maxAbs = Math.max(1, ...moisActifs.map(m => Math.abs((reel.caOpMois[m] || 0) - (reel.depOpMois[m] || 0))));
   let html = '';
   for (const m of moisActifs) {
-    const enc = reel.encMois[m] || 0, dep = reel.depMois[m] || 0;
-    const res = enc - dep;
+    const ca = reel.caOpMois[m] || 0, dop = reel.depOpMois[m] || 0, imp = reel.impotsMois[m] || 0;
+    const res = ca - dop;
     const pct = Math.max(4, Math.round((Math.abs(res) / maxAbs) * 100));
     html += `<div class="objective-item">
       <div class="obj-label" style="color:${res >= 0 ? '#4CAF50' : '#f44336'}">${MONTHS[m]} 2026</div>
@@ -779,7 +855,7 @@ async function renderDashboardCA() {
       </div>
       <div class="obj-values">
         <span style="color:${res >= 0 ? '#4CAF50' : '#f44336'};font-weight:700">${fmtSigne(res)}</span>
-        <span class="obj-target">encaissé ${fmtEur(enc)} − dépensé ${fmtEur(dep)}</span>
+        <span class="obj-target">événements ${fmtEur(ca)} − dépenses ${fmtEur(dop)}${imp > 0 ? ` · impôts à part ${fmtEur(imp)}` : ''}</span>
       </div>
     </div>`;
   }
@@ -913,6 +989,7 @@ async function renderFinanceAnalyse() {
 
   // 2026 : données réelles (factures Qonto + banque) — plus de saisie manuelle
   const reel = await fetchReel(2026);
+  renderRentabiliteMensuelle(reel);
   renderHeritage2025(reel).catch(console.error);
   // 2025 : référence saisie (finance_monthly)
   const rows = await fetchFinanceMonthly();
