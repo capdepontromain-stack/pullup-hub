@@ -871,7 +871,9 @@ async function renderDashboardCA() {
   if (caStatEl) caStatEl.textContent = fmtEur(reel.totFac);
   const benefLabelEl = document.getElementById('stat-benef-label');
   if (benefLabelEl) {
+    const resOpStat = reel.totCaOp - reel.totDepOp;
     benefLabelEl.innerHTML = `
+      <span style="color:#aaa">Rentabilité événements : <strong style="color:${resOpStat >= 0 ? 'var(--gold)' : '#f44336'}">${fmtSigne(resOpStat)}</strong></span><br>
       <span style="color:#aaa">Encaissé : <strong style="color:#4CAF50">${fmtEur(reel.totEnc)}</strong></span><br>
       <span style="color:#aaa">Dépensé : <strong style="color:#f44336">${fmtEur(reel.totDep)}</strong></span><br>
       <span style="color:#aaa">Résultat tréso : <strong style="color:${resultat >= 0 ? '#4CAF50' : '#f44336'}">${fmtSigne(resultat)}</strong></span>`;
@@ -968,20 +970,27 @@ async function renderBilanClair(reel) {
   // 2026 en propre : sans l'argent hérité des événements 2025 (détail dans l'onglet Finances)
   const herit = await fetchHeritage2025(reel).catch(() => null);
 
+  const resOp = reel.totCaOp - reel.totDepOp;
+  const moisOp = Math.max(1, Object.keys(reel.caOpMois).length);
+  const cotisations = Math.max(0, impotsPayes - reel.totImpotsPrec - reel.totImpotsCour);
   box.innerHTML = `
     <div style="margin-bottom:12px">
-      <div style="font-size:1.05rem;font-weight:700;color:${resultat >= 0 ? vert : rouge}">
-        ${resultat >= 0 ? '✅ Rentable' : '⚠️ En perte'} : ${fmtSigne(resultat)} de bénéfice net depuis janvier
-        <span style="color:var(--text2);font-weight:400;font-size:.85rem">(≈ ${fmtSigne(parMois)}/mois sur ${moisEcoules} mois)</span>
+      <div style="font-size:1.05rem;font-weight:700;color:${resOp >= 0 ? vert : rouge}">
+        ${resOp >= 0 ? '🎯 Activité rentable' : '🎯 Activité en perte'} : ${fmtSigne(resOp)} sur les événements 2026
+        <span style="color:var(--text2);font-weight:400;font-size:.85rem">(facturé ${fmtEur(reel.totCaOp)} − dépenses ${fmtEur(reel.totDepOp)} hors impôts · ≈ ${fmtSigne(resOp / moisOp)}/mois)</span>
+      </div>
+      <div style="font-size:.82rem;color:var(--text2);margin-top:4px">
+        💶 Trésorerie réelle : <strong style="color:${resultat >= 0 ? vert : rouge}">${fmtSigne(resultat)}</strong>
+        <span style="font-size:.75rem">(encaissé − dépensé, héritage 2025 et impôts compris · avant impôts & cotisations : ${fmtSigne(avantImpots)})</span>
       </div>
       <div style="font-size:.82rem;color:var(--text2);margin-top:3px">
-        Avant impôts : <strong style="color:${avantImpots >= 0 ? vert : rouge}">${fmtSigne(avantImpots)}</strong>
-        &nbsp;→&nbsp; impôts & cotisations payés : <strong style="color:#f44336">−${fmtEur(impotsPayes)}</strong>
-        &nbsp;→&nbsp; après impôts : <strong style="color:${resultat >= 0 ? vert : rouge}">${fmtSigne(resultat)}</strong>
+        🧾 Payé au fisc en 2026 : <strong>${fmtEur(reel.totImpotsPrec)}</strong> soldent l'exercice 2025 ·
+        <strong>${fmtEur(reel.totImpotsCour)}</strong> pour 2026 ·
+        cotisations sociales <strong>${fmtEur(cotisations)}</strong>
       </div>
       ${herit ? `<div style="font-size:.82rem;color:var(--text2);margin-top:3px">
-        🎄 Dont hérité des événements 2025 : <strong style="color:var(--gold)">${fmtEur(herit.encaisse)}</strong> encaissés
-        &nbsp;→&nbsp; activité 2026 seule : <strong style="color:${herit.resultatPur >= 0 ? vert : rouge}">${fmtSigne(herit.resultatPur)}</strong>
+        🎄 Encaissements hérités des événements 2025 : <strong style="color:var(--gold)">${fmtEur(herit.encaisse)}</strong>
+        &nbsp;→&nbsp; trésorerie 2026 seule : <strong style="color:${herit.resultatPur >= 0 ? vert : rouge}">${fmtSigne(herit.resultatPur)}</strong>
         <span style="font-size:.72rem">(détail dans Finances & Charges — les Noëls 2026 feront pareil pour 2027)</span>
       </div>` : ''}
     </div>
@@ -1011,7 +1020,7 @@ async function renderBilanClair(reel) {
           💰 Pot impôts conseillé : <strong style="color:var(--gold)">${fmtEur(potImpots)}</strong>
           <span style="font-size:.72rem">(17 % de l'encaissé du trimestre — à garder sur le sous-compte Qonto « Impôts & TVA »)</span><br>
           · CGSS trimestre juil-sept : <strong style="color:var(--text)">≈ 3 000 €</strong> vers octobre<br>
-          · TVA après Noël : <strong style="color:var(--text)">≈ 15 000 €</strong> en janvier<br>
+          · TVA : 2ᵉ acompte <strong style="color:var(--text)">≈ 7 500 €</strong> en décembre, TVA de décembre en janv. 2027 (l'an passé : 4 000 €), solde 2026 à l'été 2027 — CA en hausse de 47 %, prévoir large<br>
           · Retraite salariés (CRR) : ≈ 215 €/mois<br>
           <span style="font-size:.72rem">Rappel : l'argent du Noël N finance l'année N+1 — ne pas tout dépenser en janvier.</span>
         </div>

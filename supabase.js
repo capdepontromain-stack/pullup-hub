@@ -4483,6 +4483,31 @@ async function rapprocherDatesPaiement() {
   ]);
   const creds = (rc.data || []).map(c => ({ ...c, refnum: (c.reference || '').replace(/\D/g, '') }));
   const facs = rf.data || [];
+
+  // Factures encore « impayées » dont le virement est en réalité arrivé (l'export factures est
+  // toujours plus vieux que le relevé) : marquées payées si le match est certain — la référence
+  // du virement cite le numéro, OU un crédit unique au montant TTC exact après l'émission.
+  // Un faux positif serait recorrigé par le prochain export factures Qonto (les statuts officiels priment).
+  const rUnp = await sb.from('banque_factures').select('numero,client,ttc,statut,date_emission').eq('statut', 'unpaid');
+  let payees = 0;
+  for (const f of (rUnp.data || [])) {
+    const cle = f.numero.replace(/\D/g, '');
+    let m = cle.length >= 6 ? creds.filter(c => c.refnum.includes(cle)) : [];
+    if (!m.length) {
+      const ttc = parseFloat(f.ttc) || 0;
+      if (ttc > 0) {
+        const cand = creds.filter(c => Math.abs(c.credit - ttc) <= 0.011 && (!f.date_emission || (new Date(c.date_op) - new Date(f.date_emission)) / 86400000 >= -60));
+        if (cand.length === 1) m = cand;
+      }
+    }
+    if (m.length) {
+      m.sort((a, b) => a.date_op.localeCompare(b.date_op));
+      await sb.from('banque_factures').update({ statut: 'paid', payee_le: m[m.length - 1].date_op }).eq('numero', f.numero);
+      facs.push({ ...f, statut: 'paid', payee_le: m[m.length - 1].date_op });
+      payees++;
+    }
+  }
+  if (payees) showToast(`💶 ${payees} facture${payees > 1 ? 's' : ''} marquée${payees > 1 ? 's' : ''} payée${payees > 1 ? 's' : ''} (virement retrouvé en banque)`);
   const mots = s => new Set(((s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().match(/[A-Z]{4,}/g)) || []);
   const commun = (a, b) => [...a].some(x => b.has(x));
   const jours = (d1, d2) => (new Date(d1) - new Date(d2)) / 86400000;
