@@ -4500,9 +4500,12 @@ async function rapprocherDatesPaiement() {
     if (!m.length) {
       const ttc = parseFloat(f.ttc) || 0;
       if (ttc > 0 && f.date_emission) {
+        // + le virement ne doit pas déjà avoir servi à payer une autre facture du même montant
+        // (cas ADAPEI 23/08 : facture coupée en deux moitiés de 1 587,49 €, un seul virement reçu)
         const cand = creds.filter(c => Math.abs(c.credit - ttc) <= 0.011
           && c.date_op >= f.date_emission
-          && communU(motsU(c.libelle), motsU(f.client)));
+          && communU(motsU(c.libelle), motsU(f.client))
+          && !facs.some(g => g.numero !== f.numero && g.payee_le === c.date_op && Math.abs((parseFloat(g.ttc) || 0) - ttc) <= 0.011));
         if (cand.length === 1) m = cand;
       }
     }

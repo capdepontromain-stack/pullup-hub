@@ -706,7 +706,9 @@ const fmtSigne = v => (v >= 0 ? '+' : '') + Math.round(v).toLocaleString('fr-FR'
 // Factures émises en 2026 mais dont l'événement a eu lieu en 2025 (animations de Noël de décembre 2025,
 // facturées en janvier 2026 — identifiées par leur objet le 23/08/2026). Liste fixe, à compléter à la main
 // si une nouvelle facture « événement 2025 » apparaissait.
-const FACTURES_EVENEMENTS_2025 = ['F-2026-002', 'F-2026-003', 'F-2026-005', 'F-2026-006', 'F-2026-007', 'F-2026-009'];
+// F-2026-037 ajoutée le 23/08 (précision Romain) : « Diego Fête Noël » CILAM, événement de décembre 2025,
+// refacturé le 18/05/2026 après annulation de la F-2026-001, payé 10 524,50 € le 10/06/2026.
+const FACTURES_EVENEMENTS_2025 = ['F-2026-002', 'F-2026-003', 'F-2026-005', 'F-2026-006', 'F-2026-007', 'F-2026-009', 'F-2026-037'];
 
 // Corrections du 23/08/2026 après rapprochement avec les virements bancaires réels (validé avec Romain) :
 // le « payee_le » de Qonto est la date de POINTAGE du statut, pas celle du virement. Ces factures ont en
