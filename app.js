@@ -38,6 +38,7 @@ function showPage(id) {
   if (id === 'links' && typeof loadAndRenderLinks === 'function') loadAndRenderLinks();
   if (id === 'audit' && typeof loadAuditLog === 'function') loadAuditLog();
   if (id === 'positions' && typeof loadPositionsGoogle === 'function') loadPositionsGoogle();
+  if (id === 'acquisition' && typeof loadAcquisition === 'function') loadAcquisition();
   if (id === 'citations' && typeof loadCitationsNap === 'function') loadCitationsNap();
   if (id === 'gposts' && typeof loadPostsGoogle === 'function') loadPostsGoogle();
   if (id === 'dashboard' && typeof renderAvisBandeau === 'function') renderAvisBandeau();
@@ -2041,4 +2042,220 @@ async function loadPostsGoogle() {
     + 'La case « Citer le client » est à décocher si le client ne doit pas être nommé publiquement. Le lien pointe vers le site du service concerné, changez-le si besoin.</p></div>'
     + cartes
     + (passesNonTermines ? '<p style="font-size:.8rem;color:var(--text2);margin-top:6px">' + passesNonTermines + ' événement(s) à date passée sont encore « Confirmé » ou « En préparation » : passez-les en « Terminé » dans l\'onglet Événements pour générer leur post.</p>' : '');
+}
+
+// ─── Acquisition (sessions, devis, appels, avis, positions : 12 semaines) ─────
+// Sources : fichiers statiques du dépôt (aucune table Supabase)
+//   data/acquisition-ga4.csv  (date,site,sessions,devis_envoye,appel_clic) — futur script GA4
+//   data/positions-hebdo.csv  (rempli par ~/pullup-scripts-seo/suivi-positions-hebdo.py)
+//   data/rapport-ia.csv       (rempli par ~/pullup-scripts-seo/rapport-ia.py)
+//   data/avis.json            (mis à jour par la tâche du lundi)
+// Règle d'affichage : 5 gros chiffres en haut, un graphique replié par indicateur.
+
+const ACQ_COULEURS = ['#F5C518', '#4A9EFF', '#FF6B9D', '#9B59B6', '#4CAF50', '#F5A623', '#E53935', '#2196F3', '#26C6DA', '#8D6E63'];
+
+async function acqLireCsv(fichier) {
+  try {
+    const texte = await (await fetch('data/' + fichier + '?t=' + Date.now(), { cache: 'no-store' })).text();
+    if (texte.trim().startsWith('<')) return []; // page 404 HTML
+    return texte.split('\n').slice(1).map(l => l.trim()).filter(Boolean).map(l => l.split(','));
+  } catch (e) { return []; }
+}
+
+// Lundi de la semaine d'une date (pour regrouper les jours en semaines)
+function acqLundi(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  if (isNaN(d)) return null;
+  const decal = (d.getDay() + 6) % 7; // lundi = 0
+  d.setDate(d.getDate() - decal);
+  return d.toISOString().slice(0, 10);
+}
+
+function acqLabelSemaine(iso) {
+  const d = new Date(iso + 'T12:00:00');
+  return d.getDate() + '/' + (d.getMonth() + 1);
+}
+
+// Graphique en lignes SVG maison (aucune librairie), style du Hub.
+// labels : libellés des semaines ; series : [{nom, valeurs:[nombre|null]}]
+// options.inverse : axe inversé (positions Google : plus bas = mieux, donc en haut)
+function acqGraphe(labels, series, options) {
+  const opt = options || {};
+  const W = 680, H = 220, ml = 42, mr = 12, mt = 12, mb = 26;
+  const iw = W - ml - mr, ih = H - mt - mb;
+  const vals = [];
+  series.forEach(s => s.valeurs.forEach(v => { if (v !== null && v !== undefined && !isNaN(v)) vals.push(v); }));
+  if (!vals.length) return '';
+  let min = Math.min(...vals), max = Math.max(...vals);
+  if (!opt.inverse && min > 0) min = 0; // les volumes partent de zéro
+  if (min === max) { min = Math.max(0, min - 1); max += 1; }
+  // Échelle large : repères en entiers ; échelle fine (positions) : une décimale
+  const fmt = v => (max - min >= 10 ? Math.round(v) : Math.round(v * 10) / 10).toLocaleString('fr-FR');
+  const x = i => ml + (labels.length === 1 ? iw / 2 : i * iw / (labels.length - 1));
+  const y = v => {
+    const t = (v - min) / (max - min);
+    return opt.inverse ? mt + t * ih : mt + (1 - t) * ih;
+  };
+  let g = '';
+  for (let k = 0; k <= 3; k++) {
+    const vv = min + (max - min) * k / 3;
+    const yy = y(vv);
+    g += '<line x1="' + ml + '" y1="' + yy.toFixed(1) + '" x2="' + (W - mr) + '" y2="' + yy.toFixed(1) + '" stroke="var(--border)" stroke-width="1"/>'
+      + '<text x="' + (ml - 6) + '" y="' + (yy + 3).toFixed(1) + '" text-anchor="end" font-size="9" fill="var(--text2)">' + fmt(vv) + '</text>';
+  }
+  const pas = Math.max(1, Math.ceil(labels.length / 6));
+  labels.forEach((lb, i) => {
+    if (i % pas === 0 || i === labels.length - 1) {
+      g += '<text x="' + x(i).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="9" fill="var(--text2)">' + lb + '</text>';
+    }
+  });
+  series.forEach((s, si) => {
+    const couleur = ACQ_COULEURS[si % ACQ_COULEURS.length];
+    let chemin = '', debut = true;
+    s.valeurs.forEach((v, i) => {
+      if (v === null || v === undefined || isNaN(v)) { debut = true; return; }
+      chemin += (debut ? 'M' : 'L') + x(i).toFixed(1) + ' ' + y(v).toFixed(1) + ' ';
+      debut = false;
+      g += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="2.6" fill="' + couleur + '"><title>' + s.nom + ' — semaine du ' + labels[i] + ' : ' + fmt(v) + '</title></circle>';
+    });
+    if (chemin) g = '<path d="' + chemin.trim() + '" fill="none" stroke="' + couleur + '" stroke-width="2" stroke-linejoin="round"/>' + g;
+  });
+  const legende = series.length > 1
+    ? '<div style="display:flex;flex-wrap:wrap;gap:4px 14px;padding:0 16px 12px;font-size:.75rem;color:var(--text2)">'
+      + series.map((s, si) => '<span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:' + ACQ_COULEURS[si % ACQ_COULEURS.length] + ';margin-right:5px"></span>' + s.nom + '</span>').join('')
+      + '</div>'
+    : '';
+  return '<div style="overflow-x:auto;padding:6px 10px"><svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;min-width:420px;max-width:' + W + 'px;display:block">' + g + '</svg></div>' + legende;
+}
+
+// Un bloc dépliable : graphique si données, sinon état d'attente propre
+function acqBloc(titre, sousTitre, contenuGraphe, debloque) {
+  const interieur = contenuGraphe
+    ? contenuGraphe
+    : '<p style="color:var(--text2);text-align:center;padding:1.6rem 1rem">En attente de la première collecte.<br>'
+      + '<span style="font-size:.78rem">' + debloque + '</span></p>';
+  return '<details class="card" style="padding:0;margin-bottom:14px">'
+    + '<summary style="cursor:pointer;padding:14px 16px;font-weight:600;list-style:none">' + titre
+    + ' <span style="float:right;color:var(--text2);font-size:.8rem;font-weight:400">' + (contenuGraphe ? 'ouvrir / fermer' : 'en attente') + '</span>'
+    + (sousTitre ? '<div style="font-size:.75rem;color:var(--text2);font-weight:400;margin-top:3px">' + sousTitre + '</div>' : '')
+    + '</summary>' + interieur + '</details>';
+}
+
+async function loadAcquisition() {
+  const contenu = document.getElementById('acq-contenu');
+  if (!contenu) return;
+
+  // 1. Les trois sources fichiers, en parallèle
+  const [ga4, positions, ia] = await Promise.all([
+    acqLireCsv('acquisition-ga4.csv'),
+    acqLireCsv('positions-hebdo.csv'),
+    acqLireCsv('rapport-ia.csv')
+  ]);
+  let avis = null;
+  try { avis = await (await fetch('data/avis.json?t=' + Date.now(), { cache: 'no-store' })).json(); } catch (e) {}
+
+  const majEl = document.getElementById('acq-maj');
+  const poser = (id, valeur, detail) => {
+    const el = document.getElementById('acq-stat-' + id);
+    const de = document.getElementById('acq-stat-' + id + '-detail');
+    if (el) el.textContent = valeur;
+    if (de) de.textContent = detail || '';
+  };
+
+  // 2. GA4 : lignes (date, site, sessions, devis_envoye, appel_clic) regroupées par semaine
+  const ga4Lignes = ga4.map(c => ({
+    semaine: acqLundi(c[0]), site: c[1],
+    sessions: +c[2] || 0, devis: +c[3] || 0, appels: +c[4] || 0
+  })).filter(r => r.semaine && r.site);
+  const semainesGa4 = [...new Set(ga4Lignes.map(r => r.semaine))].sort().slice(-12);
+  const sitesGa4 = [...new Set(ga4Lignes.map(r => r.site))].sort();
+
+  const serieParSite = champ => sitesGa4.map(site => ({
+    nom: site,
+    valeurs: semainesGa4.map(sem => {
+      const rs = ga4Lignes.filter(r => r.site === site && r.semaine === sem);
+      return rs.length ? rs.reduce((t, r) => t + r[champ], 0) : null;
+    })
+  }));
+
+  if (semainesGa4.length) {
+    const derniereSem = semainesGa4[semainesGa4.length - 1];
+    const semRows = ga4Lignes.filter(r => r.semaine === derniereSem);
+    poser('sessions', semRows.reduce((t, r) => t + r.sessions, 0).toLocaleString('fr-FR'), 'semaine du ' + acqLabelSemaine(derniereSem));
+    poser('devis', semRows.reduce((t, r) => t + r.devis, 0).toLocaleString('fr-FR'), 'formulaires envoyés');
+    poser('appels', semRows.reduce((t, r) => t + r.appels, 0).toLocaleString('fr-FR'), 'clics sur le numéro');
+    if (majEl) majEl.textContent = 'Dernière semaine mesurée : du ' + new Date(derniereSem).toLocaleDateString('fr-FR');
+  } else {
+    poser('sessions', '—', 'en attente du branchement GA4');
+    poser('devis', '—', 'en attente du branchement GA4');
+    poser('appels', '—', 'en attente du branchement GA4');
+  }
+
+  // 3. Avis Google (déjà branché : data/avis.json)
+  if (avis && avis.googleReviewCount) {
+    poser('avis', avis.googleReviewCount, 'objectif ' + (avis.objectif || 150) + ' au ' + (avis.echeanceTexte || '31 décembre 2026'));
+  } else {
+    poser('avis', '—', 'fichier avis.json introuvable');
+  }
+
+  // 4. Positions : requêtes en page 1 (même calcul que l'onglet Positions Google)
+  const posLignes = positions.map(c => ({ date: c[0], site: c[1], requete: c[2], position: c[5] ? +c[5] : null }))
+    .filter(r => r.date && r.requete);
+  const datesPos = [...new Set(posLignes.map(r => r.date))].sort();
+  if (datesPos.length) {
+    const derniere = datesPos[datesPos.length - 1];
+    const meilleure = {};
+    posLignes.filter(r => r.date === derniere && r.position !== null).forEach(r => {
+      if (!meilleure[r.requete] || r.position < meilleure[r.requete]) meilleure[r.requete] = r.position;
+    });
+    poser('page1', Object.values(meilleure).filter(p => p <= 10).length, 'collecte du ' + new Date(derniere).toLocaleDateString('fr-FR'));
+  } else {
+    poser('page1', '—', 'en attente de Search Console');
+  }
+
+  // 5. Les graphiques repliés, un par indicateur
+  const labelsGa4 = semainesGa4.map(acqLabelSemaine);
+  const debloqueGa4 = 'Se débloque en branchant l\'API GA4 : mode d\'emploi dans pullup-scripts-seo/README-suivi-positions.md (partie « Sessions et devis GA4 »).';
+  const debloquePos = 'Se débloque avec l\'autorisation Search Console : python3 ~/pullup-scripts-seo/suivi-positions-hebdo.py --auth (mode d\'emploi : README-suivi-positions.md, 5 minutes).';
+  const debloqueIa = 'Se débloque avec la clé API Anthropic à donner au script ~/pullup-scripts-seo/rapport-ia.py.';
+
+  let html = '';
+  html += acqBloc('Sessions par site', '12 semaines glissantes, visites mesurées par GA4',
+    semainesGa4.length ? acqGraphe(labelsGa4, serieParSite('sessions')) : '', debloqueGa4);
+  html += acqBloc('Devis envoyés par site', '12 semaines glissantes, formulaires de demande de devis',
+    semainesGa4.length ? acqGraphe(labelsGa4, serieParSite('devis')) : '', debloqueGa4);
+  html += acqBloc('Clics téléphone par site', '12 semaines glissantes, clics sur le numéro',
+    semainesGa4.length ? acqGraphe(labelsGa4, serieParSite('appels')) : '', debloqueGa4);
+
+  // Position moyenne des 30 requêtes suivies (meilleure position par requête, moyennée par collecte)
+  let graphePos = '';
+  if (datesPos.length) {
+    const dates12 = datesPos.slice(-12);
+    const moyennes = dates12.map(d => {
+      const meilleure = {};
+      posLignes.filter(r => r.date === d && r.position !== null).forEach(r => {
+        if (!meilleure[r.requete] || r.position < meilleure[r.requete]) meilleure[r.requete] = r.position;
+      });
+      const v = Object.values(meilleure);
+      return v.length ? v.reduce((t, p) => t + p, 0) / v.length : null;
+    });
+    graphePos = acqGraphe(dates12.map(acqLabelSemaine), [{ nom: 'Position moyenne', valeurs: moyennes }], { inverse: true })
+      + '<p style="font-size:.75rem;color:var(--text2);padding:0 16px 12px;margin:0">Axe inversé : plus la courbe est haute, mieux les sites sont placés (position 1 = tout en haut).</p>';
+  }
+  html += acqBloc('Position moyenne des 30 requêtes suivies', 'Meilleure position par requête, moyenne par collecte hebdomadaire', graphePos, debloquePos);
+
+  // Questions IA où Pull Up est cité
+  let grapheIa = '';
+  const iaLignes = ia.map(c => {
+    const cite = c.find(f => { const t = (f || '').trim().toLowerCase(); return t === 'oui' || t === 'non'; });
+    return { date: c[0], cite: cite ? cite.trim().toLowerCase() === 'oui' : null };
+  }).filter(r => r.date && r.cite !== null);
+  const datesIa = [...new Set(iaLignes.map(r => r.date))].sort().slice(-12);
+  if (datesIa.length) {
+    const valeurs = datesIa.map(d => iaLignes.filter(r => r.date === d && r.cite).length);
+    grapheIa = acqGraphe(datesIa.map(acqLabelSemaine), [{ nom: 'Questions avec citation', valeurs }]);
+  }
+  html += acqBloc('Questions IA où Pull Up est cité', 'Nombre de questions posées aux IA où Pull Up Événements apparaît dans la réponse', grapheIa, debloqueIa);
+
+  contenu.innerHTML = html;
 }
