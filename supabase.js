@@ -3034,6 +3034,10 @@ async function openEventDetailById(id) {
   form.querySelector('[name=location]').value = ev.location || '';
   form.querySelector('[name=contact_name]').value = ev.contact_name || '';
   form.querySelector('[name=contact_phone]').value = ev.contact_phone || '';
+  // Machine à avis (colonnes ajoutées par sql/AVIS-MACHINE.sql ; tolère leur absence)
+  if (form.querySelector('[name=contact_email]')) form.querySelector('[name=contact_email]').value = ev.contact_email || '';
+  if (form.querySelector('[name=avis_recu]')) form.querySelector('[name=avis_recu]').checked = !!ev.avis_recu;
+  if (form.querySelector('[name=avis_exclu]')) form.querySelector('[name=avis_exclu]').checked = !!ev.avis_exclu;
   form.querySelector('[name=participants]').value = ev.participants || '';
   form.querySelector('[name=amount_ht]').value = ev.amount_ht || '';
   form.querySelector('[name=notes]').value = ev.notes || '';
@@ -3062,12 +3066,27 @@ async function saveEditEvent() {
     updated_at: new Date()
   };
   if (!data.name) { showToast('Nom obligatoire'); return; }
+  // Machine à avis : champs présents seulement si le SQL AVIS-MACHINE.sql a été collé.
+  // On tente AVEC ; si Supabase refuse (colonnes absentes), on réessaie SANS.
+  const donneesAvis = {
+    contact_email: form.querySelector('[name=contact_email]')?.value || null,
+    avis_recu: !!form.querySelector('[name=avis_recu]')?.checked,
+    avis_exclu: !!form.querySelector('[name=avis_exclu]')?.checked
+  };
   try {
-    const { error } = await sb.from('events').update(data).eq('id', id);
+    let avisIgnores = false;
+    let { error } = await sb.from('events').update({ ...data, ...donneesAvis }).eq('id', id);
+    if (error && /column|contact_email|avis_/i.test(error.message || '')) {
+      const retente = await sb.from('events').update(data).eq('id', id);
+      error = retente.error;
+      avisIgnores = !error;
+    }
     if (error) throw error;
     closeModal('editEvent');
     await loadAndRenderEvents();
-    showToast('Événement modifié ✓');
+    showToast(avisIgnores
+      ? 'Enregistré, SAUF les champs avis : coller sql/AVIS-MACHINE.sql dans Supabase'
+      : 'Événement modifié ✓');
   } catch(e) { showToast('Erreur : ' + e.message); }
 }
 

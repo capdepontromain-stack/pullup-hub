@@ -38,6 +38,8 @@ function showPage(id) {
   if (id === 'links' && typeof loadAndRenderLinks === 'function') loadAndRenderLinks();
   if (id === 'audit' && typeof loadAuditLog === 'function') loadAuditLog();
   if (id === 'positions' && typeof loadPositionsGoogle === 'function') loadPositionsGoogle();
+  if (id === 'citations' && typeof loadCitationsNap === 'function') loadCitationsNap();
+  if (id === 'dashboard' && typeof renderAvisBandeau === 'function') renderAvisBandeau();
   if (typeof initChatDrop === 'function') initChatDrop();
 }
 
@@ -1728,4 +1730,120 @@ async function loadPositionsGoogle() {
   }
 
   contenu.innerHTML = html;
+}
+
+// ─── Bandeau avis Google (machine à avis) ─────────────────────────────────────
+// Chiffre lu dans data/avis.json (mis à jour par ~/pullup-brand/maj-avis.py,
+// appelé par la tâche du lundi 9 h). Aucune table Supabase.
+async function renderAvisBandeau() {
+  const bandeau = document.getElementById('avis-bandeau');
+  if (!bandeau) return;
+  try {
+    const a = await (await fetch('data/avis.json?t=' + Date.now(), { cache: 'no-store' })).json();
+    const n = a.googleReviewCount || 0;
+    const objectif = a.objectif || 150;
+    const pct = Math.min(100, Math.round(n / objectif * 100));
+    bandeau.innerHTML = '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">'
+      + '<span style="font-size:1.4rem">⭐</span>'
+      + '<div style="flex:1;min-width:220px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px">'
+      + '<strong>Avis Google : ' + n + ' / objectif ' + objectif + ' au ' + (a.echeanceTexte || '31 décembre 2026') + '</strong>'
+      + '<span style="font-size:.78rem;color:var(--text2)">mis à jour le ' + (a.lastUpdated ? new Date(a.lastUpdated).toLocaleDateString('fr-FR') : '?') + '</span>'
+      + '</div>'
+      + '<div style="height:8px;background:var(--border);border-radius:4px;margin-top:8px;overflow:hidden">'
+      + '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,var(--gold),#e8b84a);border-radius:4px"></div>'
+      + '</div></div>'
+      + '<span style="font-weight:700;color:var(--gold);font-size:1.1rem">' + pct + ' %</span></div>';
+    bandeau.style.display = '';
+  } catch (e) { bandeau.style.display = 'none'; }
+}
+document.addEventListener('DOMContentLoaded', () => renderAvisBandeau());
+if (document.readyState !== 'loading') renderAvisBandeau();
+
+// ─── Citations externes (checklist NAP) ───────────────────────────────────────
+// Source : data/citations-nap.json du dépôt Hub (état vérifié, versionné).
+// Les modifications faites ici (statut, date, notes) sont gardées dans le
+// navigateur (localStorage) : pour une mise à jour durable et partagée,
+// modifier le fichier data/citations-nap.json puis déployer le Hub.
+const CITATIONS_STATUTS = ['conforme', 'à corriger', 'à créer', 'à contrôler', 'inscrit', 'non confirmé', 'fermé'];
+
+function citationsOverlay() {
+  try { return JSON.parse(localStorage.getItem('pullup_citations_nap') || '{}'); }
+  catch (e) { return {}; }
+}
+
+function citationBadge(statut) {
+  const couleurs = {
+    'conforme': 'var(--success)', 'inscrit': 'var(--success)',
+    'à corriger': '#f44336', 'à créer': 'var(--gold)',
+    'à contrôler': 'var(--text2)', 'non confirmé': 'var(--text2)', 'fermé': '#f44336'
+  };
+  const c = couleurs[statut] || 'var(--text2)';
+  return '<span style="color:' + c + ';font-weight:600">' + statut + '</span>';
+}
+
+function editerNoteCitation(id) {
+  const c = (window._citationsCourantes || {})[id];
+  const n = prompt('Note pour ' + (c ? c.plateforme : id) + ' :', c ? (c.notes || '') : '');
+  if (n !== null) majCitation(id, 'notes', n);
+}
+
+function majCitation(id, champ, valeur) {
+  const o = citationsOverlay();
+  o[id] = o[id] || {};
+  o[id][champ] = valeur;
+  if (champ === 'statut') o[id]['dernier_controle'] = new Date().toISOString().slice(0, 10);
+  localStorage.setItem('pullup_citations_nap', JSON.stringify(o));
+  loadCitationsNap();
+}
+
+async function loadCitationsNap() {
+  const stats = document.getElementById('citations-stats');
+  const contenu = document.getElementById('citations-contenu');
+  const maj = document.getElementById('citations-maj');
+  if (!contenu) return;
+  let base;
+  try {
+    base = await (await fetch('data/citations-nap.json?t=' + Date.now(), { cache: 'no-store' })).json();
+  } catch (e) {
+    contenu.innerHTML = '<div class="card"><p style="color:var(--text2);padding:1rem">Fichier data/citations-nap.json introuvable.</p></div>';
+    return;
+  }
+  const overlay = citationsOverlay();
+  const lignes = (base.citations || []).map(c => Object.assign({}, c, overlay[c.id] || {}));
+  window._citationsCourantes = {};
+  lignes.forEach(c => { window._citationsCourantes[c.id] = c; });
+  if (maj) maj.textContent = 'État vérifié du ' + new Date(base.lastUpdated).toLocaleDateString('fr-FR') + ' (contrôle mensuel)';
+
+  // Les gros chiffres
+  const compte = s => lignes.filter(l => l.statut === s).length;
+  const ok = compte('conforme') + compte('inscrit');
+  document.getElementById('cit-stat-ok').textContent = ok;
+  document.getElementById('cit-stat-corriger').textContent = compte('à corriger');
+  document.getElementById('cit-stat-creer').textContent = compte('à créer');
+  document.getElementById('cit-stat-controler').textContent = compte('à contrôler') + compte('non confirmé');
+  if (stats) stats.style.display = '';
+
+  const ligne = c => {
+    const local = overlay[c.id] ? ' <span title="Modifié sur ce navigateur seulement" style="color:var(--gold)">●</span>' : '';
+    return '<tr>'
+      + '<td><strong>' + c.plateforme + '</strong>' + local + '<br><a href="' + c.url + '" target="_blank" rel="noopener" style="font-size:.75rem;color:var(--text2)">' + c.url.replace('https://', '').slice(0, 45) + '</a></td>'
+      + '<td>' + (c.nom_affiche || '<span style="color:var(--text3)">à relever</span>') + '</td>'
+      + '<td>' + (c.adresse_affichee || '<span style="color:var(--text3)">à relever</span>') + '</td>'
+      + '<td>' + (c.cp || '') + '</td>'
+      + '<td>' + (c.telephone || '') + '</td>'
+      + '<td><select onchange="majCitation(\'' + c.id + '\',\'statut\',this.value)" style="background:transparent;border:1px solid var(--border);border-radius:6px;padding:4px;color:inherit">'
+      + CITATIONS_STATUTS.map(s => '<option' + (s === c.statut ? ' selected' : '') + '>' + s + '</option>').join('') + '</select><br>' + citationBadge(c.statut) + '</td>'
+      + '<td>' + (c.dernier_controle ? new Date(c.dernier_controle).toLocaleDateString('fr-FR') : '<span style="color:var(--text3)">jamais</span>') + '</td>'
+      + '<td style="max-width:220px;font-size:.8rem;color:var(--text2)">' + (c.notes || '')
+      + ' <a href="#" onclick="event.preventDefault();editerNoteCitation(\'' + c.id + '\')" title="Modifier la note" style="color:var(--gold)">✎</a></td>'
+      + '</tr>';
+  };
+
+  contenu.innerHTML = '<div class="card" style="padding:0">'
+    + '<div class="events-table-wrap"><table class="data-table"><thead><tr>'
+    + '<th>Plateforme</th><th>Nom affiché</th><th>Adresse affichée</th><th>CP</th><th>Téléphone</th><th>Statut</th><th>Dernier contrôle</th><th>Notes</th>'
+    + '</tr></thead><tbody>' + lignes.map(ligne).join('') + '</tbody></table></div></div>'
+    + '<p style="font-size:.78rem;color:var(--text2);margin-top:10px">Référence NAP : Pull Up Événements, 6 Impasse des Sœurs Brontë, 97430 Le Tampon, 0693 81 78 82. '
+    + 'Les changements de statut et de notes faits ici restent sur CE navigateur. Pour une mise à jour durable et partagée : modifier data/citations-nap.json dans le dépôt du Hub puis déployer.</p>';
 }

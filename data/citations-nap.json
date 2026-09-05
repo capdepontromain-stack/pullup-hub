@@ -1,0 +1,162 @@
+{
+  "description": "Checklist NAP (Nom, Adresse, Téléphone) des citations externes de Pull Up Événements. Référence : 6 Impasse des Sœurs Brontë, 97430 Le Tampon, 0693 81 78 82. Édition durable : modifier CE fichier puis déployer le Hub (les modifications faites dans le Hub sont gardées sur ce navigateur seulement).",
+  "lastUpdated": "2026-09-05",
+  "citations": [
+    {
+      "id": "pagesjaunes",
+      "plateforme": "Pages Jaunes",
+      "url": "https://www.pagesjaunes.fr/pros/63182047",
+      "nom_affiche": "Pull Up Événements",
+      "adresse_affichee": "6 impasse des Soeurs Bronté, Le Tampon (sans tréma)",
+      "cp": "97430",
+      "telephone": "0693 81 78 82",
+      "statut": "conforme",
+      "dernier_controle": "2026-09-05",
+      "notes": "Adresse écrite « impasse Soeurs Bronté » sans tréma, à peaufiner via Solocal. La fiche fantôme Émile Littré a disparu."
+    },
+    {
+      "id": "mappy",
+      "plateforme": "Mappy",
+      "url": "https://fr.mappy.com/poi/668b691bf29adc15d0b11c04",
+      "nom_affiche": "Pull Up Événements",
+      "adresse_affichee": "Le Tampon",
+      "cp": "97430",
+      "telephone": "",
+      "statut": "conforme",
+      "dernier_controle": "2026-09-05",
+      "notes": "Code postal 97430 corrigé."
+    },
+    {
+      "id": "reunioneventpro",
+      "plateforme": "Reunion Event Pro",
+      "url": "https://www.reunioneventpro.com",
+      "nom_affiche": "",
+      "adresse_affichee": "",
+      "cp": "",
+      "telephone": "",
+      "statut": "à créer",
+      "dernier_controle": "2026-09-05",
+      "notes": "Ancienne fiche supprimée (404). Réinscription à faire via le formulaire CCI. Réintégrer la nouvelle URL dans brand.json ensuite."
+    },
+    {
+      "id": "evenementielpourtous",
+      "plateforme": "Événementiel pour tous",
+      "url": "https://www.evenementielpourtous.com/pull-up-evenement-144519",
+      "nom_affiche": "Pull'Up éVénement (faux)",
+      "adresse_affichee": "Saint-Denis (faux)",
+      "cp": "",
+      "telephone": "",
+      "statut": "à corriger",
+      "dernier_controle": "2026-09-05",
+      "notes": "Nom mal orthographié et ville Saint-Denis au lieu du Tampon. Brouillon Gmail de demande de correction prêt."
+    },
+    {
+      "id": "aleou",
+      "plateforme": "Aleou",
+      "url": "https://www.aleou.fr",
+      "nom_affiche": "Pull Up Événements",
+      "adresse_affichee": "Le Tampon",
+      "cp": "97430",
+      "telephone": "",
+      "statut": "conforme",
+      "dernier_controle": "2026-09-05",
+      "notes": "Fiche 58566, mention « créée en 2017 » correcte."
+    },
+    {
+      "id": "leshotessesaccueil",
+      "plateforme": "Les Hôtesses Accueil / Devis-Market",
+      "url": "https://www.leshotessesaccueil.com",
+      "nom_affiche": "Pull Up Événements",
+      "adresse_affichee": "",
+      "cp": "",
+      "telephone": "",
+      "statut": "inscrit",
+      "dernier_controle": "2026-09-05",
+      "notes": "Inscription faite via Devis-Market."
+    },
+    {
+      "id": "lemagdelevenementiel",
+      "plateforme": "Le Mag de l'Événementiel",
+      "url": "https://www.lemagdelevenementiel.com",
+      "nom_affiche": "",
+      "adresse_affichee": "",
+      "cp": "",
+      "telephone": "",
+      "statut": "non confirmé",
+      "dernier_controle": "2026-09-05",
+      "notes": "Couverture DOM non confirmée : vérifier avant de s'inscrire."
+    },
+    {
+      "id": "reunionnaisdumonde",
+      "plateforme": "Réunionnais du Monde",
+      "url": "https://www.reunionnaisdumonde.com",
+      "nom_affiche": "",
+      "adresse_affichee": "",
+      "cp": "",
+      "telephone": "",
+      "statut": "à créer",
+      "dernier_controle": "2026-09-05",
+      "notes": "Inscription gratuite, fiche à créer."
+    },
+    {
+      "id": "organisationteambuilding",
+      "plateforme": "Organisation Team Building",
+      "url": "https://www.organisationteambuilding.com",
+      "nom_affiche": "",
+      "adresse_affichee": "",
+      "cp": "",
+      "telephone": "",
+      "statut": "à contrôler",
+      "dernier_controle": "",
+      "notes": "À vérifier fin septembre."
+    },
+    {
+      "id": "evenementiel-info",
+      "plateforme": "Evenementiel.info",
+      "url": "https://www.evenementiel.info/prestataire-11-pull-evenements.html",
+      "nom_affiche": "",
+      "adresse_affichee": "",
+      "cp": "",
+      "telephone": "",
+      "statut": "à contrôler",
+      "dernier_controle": "",
+      "notes": "À vérifier fin septembre."
+    },
+    {
+      "id": "faitesvousconnaitre",
+      "plateforme": "Faites-vous connaître",
+      "url": "https://www.faitesvousconnaitre.com",
+      "nom_affiche": "",
+      "adresse_affichee": "",
+      "cp": "",
+      "telephone": "",
+      "statut": "à contrôler",
+      "dernier_controle": "",
+      "notes": "À vérifier fin septembre."
+    },
+    {
+      "id": "internet-reunion",
+      "plateforme": "Internet-Reunion.com",
+      "url": "https://www.internet-reunion.com",
+      "nom_affiche": "",
+      "adresse_affichee": "",
+      "cp": "",
+      "telephone": "",
+      "statut": "à contrôler",
+      "dernier_controle": "",
+      "notes": "4 fiches à contrôler (annuaire multi-rubriques)."
+    },
+    {
+      "id": "zartis",
+      "plateforme": "Zartis.re",
+      "url": "https://www.zartis.re",
+      "nom_affiche": "",
+      "adresse_affichee": "",
+      "cp": "",
+      "telephone": "",
+      "statut": "à contrôler",
+      "dernier_controle": "",
+      "notes": ""
+    }
+  ]
+}
