@@ -37,6 +37,7 @@ function showPage(id) {
   if (id === 'improvements' && typeof loadImprovements === 'function') loadImprovements();
   if (id === 'links' && typeof loadAndRenderLinks === 'function') loadAndRenderLinks();
   if (id === 'audit' && typeof loadAuditLog === 'function') loadAuditLog();
+  if (id === 'positions' && typeof loadPositionsGoogle === 'function') loadPositionsGoogle();
   if (typeof initChatDrop === 'function') initChatDrop();
 }
 
@@ -609,7 +610,7 @@ document.querySelectorAll('.kanban-cards').forEach(col => {
 document.querySelector('.topbar-search input')?.addEventListener('input', function() {
   const val = this.value.toLowerCase().trim();
   if (!val) return;
-  const pages = { 'événement': 'events', 'tâche': 'tasks', 'message': 'messages', 'finance': 'finances', 'facture': 'finances', 'devis': 'finances', 'client': 'crm', 'fournisseur': 'suppliers', 'matériel': 'inventory', 'personnel': 'personnel', 'km': 'mileage', 'ia': 'ai', 'rapport': 'reports' };
+  const pages = { 'événement': 'events', 'tâche': 'tasks', 'message': 'messages', 'finance': 'finances', 'facture': 'finances', 'devis': 'finances', 'client': 'crm', 'fournisseur': 'suppliers', 'matériel': 'inventory', 'personnel': 'personnel', 'km': 'mileage', 'ia': 'ai', 'rapport': 'reports', 'position': 'positions', 'google': 'positions', 'seo': 'positions' };
   for (const [keyword, page] of Object.entries(pages)) {
     if (val.includes(keyword)) { showPage(page); this.value = ''; return; }
   }
@@ -1616,3 +1617,115 @@ async function verifierVersionApp() {
 }
 verifierVersionApp();
 setInterval(verifierVersionApp, 10 * 60 * 1000);
+
+// ─── Positions Google (suivi hebdo Search Console) ────────────────────────────
+// Lit le fichier statique data/positions-hebdo.csv (rempli chaque semaine par
+// ~/pullup-scripts-seo/suivi-positions-hebdo.py) : aucune table Supabase.
+// Règle d'affichage : 4 gros chiffres en haut, le détail replié en dessous.
+async function loadPositionsGoogle() {
+  const attente = document.getElementById('positions-attente');
+  const stats = document.getElementById('positions-stats');
+  const contenu = document.getElementById('positions-contenu');
+  const maj = document.getElementById('positions-maj');
+  if (!contenu) return;
+
+  // 1. Charger et lire le CSV (colonnes : date, site, requête, clics, impressions, position)
+  let lignes = [];
+  try {
+    const texte = await (await fetch('data/positions-hebdo.csv?t=' + Date.now(), { cache: 'no-store' })).text();
+    lignes = texte.split('\n').slice(1).map(l => l.trim()).filter(Boolean).map(l => {
+      const c = l.split(',');
+      return { date: c[0], site: c[1], requete: c[2], clics: +c[3] || 0, impressions: +c[4] || 0, position: c[5] ? +c[5] : null };
+    }).filter(r => r.date && r.site && r.requete);
+  } catch (e) { lignes = []; }
+
+  if (!lignes.length) {
+    if (attente) attente.style.display = '';
+    if (stats) stats.style.display = 'none';
+    contenu.innerHTML = '';
+    if (maj) maj.textContent = '';
+    return;
+  }
+  if (attente) attente.style.display = 'none';
+  if (stats) stats.style.display = '';
+
+  // 2. Dernière collecte + collecte précédente (pour la variation)
+  const dates = [...new Set(lignes.map(r => r.date))].sort();
+  const derniere = dates[dates.length - 1];
+  const precedente = dates.length > 1 ? dates[dates.length - 2] : null;
+  const actuel = lignes.filter(r => r.date === derniere);
+  const avant = {};
+  if (precedente) lignes.filter(r => r.date === precedente).forEach(r => { avant[r.site + '|' + r.requete] = r; });
+  if (maj) maj.textContent = 'Collecte du ' + new Date(derniere).toLocaleDateString('fr-FR') + ' (28 jours de données Google)' + (precedente ? ', comparée au ' + new Date(precedente).toLocaleDateString('fr-FR') : '');
+
+  // 3. Les 4 gros chiffres : meilleure position par requête (tous sites confondus)
+  const meilleure = {};
+  actuel.forEach(r => {
+    if (r.position === null) return;
+    if (!meilleure[r.requete] || r.position < meilleure[r.requete]) meilleure[r.requete] = r.position;
+  });
+  const top3 = Object.values(meilleure).filter(p => p <= 3).length;
+  const page1 = Object.values(meilleure).filter(p => p <= 10).length;
+  const clics = actuel.reduce((s, r) => s + r.clics, 0);
+  document.getElementById('pos-stat-top3').textContent = top3;
+  document.getElementById('pos-stat-page1').textContent = page1;
+  document.getElementById('pos-stat-clics').textContent = clics;
+
+  let meilleureProg = null;
+  actuel.forEach(r => {
+    const a = avant[r.site + '|' + r.requete];
+    if (r.position !== null && a && a.position !== null) {
+      const v = a.position - r.position; // positif = on monte
+      r.variation = Math.round(v * 10) / 10;
+      if (v > 0 && (!meilleureProg || v > meilleureProg.variation)) meilleureProg = { requete: r.requete, site: r.site, variation: r.variation };
+    } else {
+      r.variation = null;
+    }
+  });
+  const progEl = document.getElementById('pos-stat-progression');
+  const progDetail = document.getElementById('pos-stat-progression-detail');
+  if (meilleureProg) {
+    progEl.textContent = '▲ ' + meilleureProg.variation.toLocaleString('fr-FR');
+    progEl.style.color = 'var(--success)';
+    progDetail.textContent = meilleureProg.requete;
+  } else {
+    progEl.textContent = '=';
+    progEl.style.color = '';
+    progDetail.textContent = precedente ? 'Pas de progression cette semaine' : 'Visible dès la 2e collecte';
+  }
+
+  // 4. Détail replié : tableau requête × site × position, trié de la meilleure à la moins bonne
+  const classees = actuel.filter(r => r.position !== null).sort((a, b) => a.position - b.position);
+  const sansPosition = [...new Set(actuel.map(r => r.requete))].filter(q => !(q in meilleure)).sort();
+
+  const fleche = r => {
+    if (r.variation === null || r.variation === undefined) return '<span style="color:var(--text2)">nouveau</span>';
+    if (r.variation > 0) return '<span style="color:var(--success);font-weight:600">▲ ' + r.variation.toLocaleString('fr-FR') + '</span>';
+    if (r.variation < 0) return '<span style="color:var(--danger);font-weight:600">▼ ' + Math.abs(r.variation).toLocaleString('fr-FR') + '</span>';
+    return '<span style="color:var(--text2)">=</span>';
+  };
+  const badgePos = p => {
+    const couleur = p <= 3 ? 'var(--success)' : (p <= 10 ? 'var(--gold)' : 'var(--text2)');
+    return '<strong style="color:' + couleur + '">' + p.toLocaleString('fr-FR') + '</strong>';
+  };
+
+  let html = '<details class="card" style="padding:0" open>'
+    + '<summary style="cursor:pointer;padding:14px 16px;font-weight:600;list-style:none">Détail des positions (' + classees.length + ' lignes avec données)'
+    + ' <span style="float:right;color:var(--text2);font-size:.8rem;font-weight:400">ouvrir / fermer</span></summary>'
+    + '<div class="events-table-wrap"><table class="data-table"><thead><tr>'
+    + '<th>Requête</th><th>Site</th><th>Position</th><th>Variation</th><th>Clics</th><th>Impressions</th>'
+    + '</tr></thead><tbody>'
+    + classees.map(r => '<tr><td>' + r.requete + '</td><td style="color:var(--text2)">' + r.site + '</td>'
+      + '<td>' + badgePos(r.position) + '</td><td>' + fleche(r) + '</td>'
+      + '<td>' + r.clics.toLocaleString('fr-FR') + '</td><td>' + r.impressions.toLocaleString('fr-FR') + '</td></tr>').join('')
+    + '</tbody></table></div></details>';
+
+  if (sansPosition.length) {
+    html += '<details class="card" style="padding:0;margin-top:14px">'
+      + '<summary style="cursor:pointer;padding:14px 16px;font-weight:600;list-style:none">Requêtes encore invisibles (' + sansPosition.length + ')'
+      + ' <span style="float:right;color:var(--text2);font-size:.8rem;font-weight:400">aucune impression Google sur 28 jours</span></summary>'
+      + '<div style="padding:0 16px 14px;color:var(--text2);font-size:.85rem;line-height:1.9">' + sansPosition.join('<br>') + '</div></details>';
+  }
+
+  contenu.innerHTML = html;
+}
