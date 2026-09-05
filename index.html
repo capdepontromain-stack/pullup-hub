@@ -146,6 +146,10 @@ try {
       <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
       <span>Citations externes</span>
     </a>
+    <a class="nav-item" data-page="gposts">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>Posts Google</span>
+    </a>
     <a class="nav-item" data-page="improvements" style="position:relative">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
       <span>Améliorations</span>
@@ -1916,6 +1920,17 @@ Afin d'avancer, nous pouvons :
   <div id="positions-contenu"></div>
 </section>
 
+<!-- PAGE POSTS GOOGLE (générateur de posts fiche Google Business, prêt-à-copier) -->
+<section class="page" id="page-gposts">
+  <div class="page-header">
+    <h1>Posts Google</h1>
+    <span style="font-size:.8rem;color:var(--text2)">Textes prêts à copier pour la fiche Google Business, à partir des événements terminés</span>
+  </div>
+  <div id="gposts-contenu">
+    <div class="card"><p style="color:var(--text2);text-align:center;padding:2rem">Chargement des événements terminés…</p></div>
+  </div>
+</section>
+
 <!-- PAGE CITATIONS EXTERNES (checklist NAP, données statiques data/citations-nap.json) -->
 <section class="page" id="page-citations">
   <div class="page-header">
@@ -2655,7 +2670,7 @@ Afin d'avancer, nous pouvons :
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js?v=20260823q"></script>
-<script src="app.js?v=20260905a"></script>
+<script src="app.js?v=20260905b"></script>
 <script>
   if ('serviceWorker' in navigator) {
     // Enregistrer le SW de nettoyage (sans rechargement forcé — l'ancien

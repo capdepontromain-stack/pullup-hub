@@ -39,6 +39,7 @@ function showPage(id) {
   if (id === 'audit' && typeof loadAuditLog === 'function') loadAuditLog();
   if (id === 'positions' && typeof loadPositionsGoogle === 'function') loadPositionsGoogle();
   if (id === 'citations' && typeof loadCitationsNap === 'function') loadCitationsNap();
+  if (id === 'gposts' && typeof loadPostsGoogle === 'function') loadPostsGoogle();
   if (id === 'dashboard' && typeof renderAvisBandeau === 'function') renderAvisBandeau();
   if (typeof initChatDrop === 'function') initChatDrop();
 }
@@ -1846,4 +1847,198 @@ async function loadCitationsNap() {
     + '</tr></thead><tbody>' + lignes.map(ligne).join('') + '</tbody></table></div></div>'
     + '<p style="font-size:.78rem;color:var(--text2);margin-top:10px">Référence NAP : Pull Up Événements, 6 Impasse des Sœurs Brontë, 97430 Le Tampon, 0693 81 78 82. '
     + 'Les changements de statut et de notes faits ici restent sur CE navigateur. Pour une mise à jour durable et partagée : modifier data/citations-nap.json dans le dépôt du Hub puis déployer.</p>';
+}
+
+// =============================================
+// POSTS GOOGLE — générateur de posts fiche Google Business
+// Liste les événements au statut « Terminé » récemment passés et
+// prépare pour chacun un texte prêt à copier (pas d'API : Romain
+// publie lui-même depuis son compte Google Business).
+// =============================================
+
+// Sites de destination : le lien du post pointe vers la page service
+// qui correspond au type d'événement (déduit des mots du nom, des notes
+// et du lieu). L'ordre compte : premier match gagnant.
+const GPOSTS_SITES = [
+  { url: 'https://teambuilding974.re', label: 'teambuilding974.re', mots: ['team building', 'teambuilding', 'team-building', 'cohésion', 'cohesion', 'olympiade', 'totem', 'koh lanta', 'incentive'] },
+  { url: 'https://arbredenoel974.re', label: 'arbredenoel974.re', mots: ['noël', 'noel', 'père noël', 'pere noel', 'hotte'] },
+  { url: 'https://productionvideo974.re', label: 'productionvideo974.re', mots: ['vidéo', 'video', 'captation', 'aftermovie', 'tournage', 'drone', 'montage', 'film'] },
+  { url: 'https://hotesse-reunion.re', label: 'hotesse-reunion.re', mots: ['hôtesse', 'hotesse', 'hôtesses', 'hotesses', 'émargement', 'emargement', 'accueil vip'] },
+  { url: 'https://seminaire974.re', label: 'seminaire974.re', mots: ['séminaire', 'seminaire', 'convention', 'congrès', 'congres', 'conférence', 'conference', 'plénière', 'pleniere'] },
+  { url: 'https://animationenfant974.re', label: 'animationenfant974.re', mots: ['enfant', 'kermesse', 'mascotte', 'gonflable', 'maquillage', 'sculpture ballon', 'chasse aux oeufs', 'chasse aux œufs'] },
+  { url: 'https://soiree974.re', label: 'soiree974.re', mots: ['soirée', 'soiree', 'gala', 'dj ', 'concert', 'cocktail', 'vœux', 'voeux', 'inauguration'] },
+  { url: 'https://pullup.re', label: 'pullup.re', mots: [] }
+];
+
+function gpostsDevinerSite(ev) {
+  const texte = ((ev.name || '') + ' ' + (ev.notes || '') + ' ' + (ev.location || '')).toLowerCase();
+  for (const site of GPOSTS_SITES) {
+    if (site.mots.some(m => texte.includes(m))) return site.url;
+  }
+  return 'https://pullup.re';
+}
+
+// Gabarits variés : chaque événement démarre sur un gabarit différent
+// (déterminé par son id) et le bouton « Autre formule » fait tourner.
+// Règles : ton simple et chaleureux, jamais de tiret cadratin, jamais
+// « depuis 2017 » seul (si ancienneté : « marque créée en 2017, société depuis 2022 »).
+const GPOSTS_GABARITS = [
+  function (c) {
+    return 'Belle journée pour Pull Up Événements : ' + c.quoi + c.fragClient + c.fragLieu + c.fragNbVirgule + '. Merci pour la confiance et pour l\'énergie, on a passé un très bon moment ensemble.'
+      + '\n\nEnvie de vivre la même chose avec votre équipe ? Demandez votre devis, réponse en 24 h : ' + c.lien;
+  },
+  function (c) {
+    return c.quoi + c.fragClient + ' : mission accomplie !' + (c.nb ? ' ' + c.nb + ' participants' : ' Une belle équipe réunie') + c.fragLieu + ', des sourires du début à la fin et une organisation réglée comme du papier à musique.'
+      + '\n\nVous préparez un événement à La Réunion ? Parlez-nous de votre projet : ' + c.lien;
+  },
+  function (c) {
+    return 'Retour en images sur ' + c.quoi + c.fragClient + '.' + (c.nb ? ' ' + c.nb + ' personnes réunies' + c.fragLieu + ',' : ' Une équipe réunie' + c.fragLieu + ',') + ' une ambiance au top et un client heureux : c\'est exactement pour ça qu\'on fait ce métier.'
+      + '\n\nOn organise le vôtre quand vous voulez, devis en 24 h : ' + c.lien;
+  },
+  function (c) {
+    return 'Encore un bel événement de fait : ' + c.quoi + c.fragClient + c.fragLieu + '.' + (c.nb ? ' Avec ' + c.nb + ' participants au compteur, l\'équipe Pull Up a mis toute son énergie pour que chacun reparte avec le sourire.' : ' L\'équipe Pull Up a mis toute son énergie pour que chacun reparte avec le sourire.')
+      + '\n\nRacontez-nous votre projet, on s\'occupe du reste : ' + c.lien;
+  },
+  function (c) {
+    return 'Merci' + (c.fragClientNu ? ' à ' + c.fragClientNu : ' à notre client') + ' pour sa confiance : ' + c.quoi + c.fragLieu + ', c\'était un vrai plaisir à organiser et à animer.' + (c.nb ? ' ' + c.nb + ' participants, zéro temps mort, que des bons souvenirs.' : ' Zéro temps mort, que des bons souvenirs.')
+      + '\n\nVotre équipe mérite aussi son moment : demandez votre devis, réponse en 24 h : ' + c.lien;
+  },
+  function (c) {
+    return 'Ça, c\'est fait ! ' + c.quoi + c.fragClient + c.fragNbAvec + c.fragLieu + '. Une préparation aux petits oignons, une équipe d\'animateurs à fond et un public conquis.'
+      + '\n\nUn événement en tête pour les prochains mois ? Écrivez-nous, on vous répond en 24 h : ' + c.lien;
+  }
+];
+
+// État local de la page (formule choisie, client cité ou non, site du lien)
+const _gpostsEtat = {};
+let _gpostsEvents = [];
+
+function gpostsContexte(ev, etat) {
+  const citer = etat.citer !== false;
+  const client = (ev.client || '').trim();
+  const nb = parseInt(ev.participants) || 0;
+  const lieu = (ev.location || '').trim();
+  return {
+    quoi: (ev.name || 'notre dernier événement').trim(),
+    fragClient: (citer && client) ? ' pour ' + client : '',
+    fragClientNu: (citer && client) ? client : '',
+    nb: nb || 0,
+    fragNbVirgule: nb ? ', avec ' + nb + ' participants' : '',
+    fragNbAvec: nb ? ' avec ' + nb + ' participants' : '',
+    fragLieu: lieu ? ' à ' + lieu : '',
+    lien: etat.site
+  };
+}
+
+function gpostsTexte(ev) {
+  const etat = _gpostsEtat[ev.id];
+  const idx = ((etat.tpl % GPOSTS_GABARITS.length) + GPOSTS_GABARITS.length) % GPOSTS_GABARITS.length;
+  return GPOSTS_GABARITS[idx](gpostsContexte(ev, etat));
+}
+
+function gpostsGraine(id) {
+  let h = 0;
+  const s = String(id);
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 997;
+  return h;
+}
+
+function gpostsRafraichirCarte(id) {
+  const ev = _gpostsEvents.find(e => String(e.id) === String(id));
+  const zone = document.getElementById('gpost-texte-' + id);
+  if (ev && zone) zone.value = gpostsTexte(ev);
+}
+
+function gpostsAutreFormule(id) {
+  _gpostsEtat[id].tpl++;
+  gpostsRafraichirCarte(id);
+}
+
+function gpostsCiterClient(id, coche) {
+  _gpostsEtat[id].citer = coche;
+  gpostsRafraichirCarte(id);
+}
+
+function gpostsChangerSite(id, url) {
+  _gpostsEtat[id].site = url;
+  gpostsRafraichirCarte(id);
+}
+
+function gpostsCopier(id) {
+  const zone = document.getElementById('gpost-texte-' + id);
+  if (!zone) return;
+  const texte = zone.value;
+  const ok = () => showToast('Texte copié, prêt à coller dans Google Business ✓');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(texte).then(ok).catch(() => { zone.select(); document.execCommand('copy'); ok(); });
+  } else {
+    zone.select(); document.execCommand('copy'); ok();
+  }
+}
+
+async function loadPostsGoogle() {
+  const contenu = document.getElementById('gposts-contenu');
+  if (!contenu) return;
+  const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  let events = [];
+  try {
+    events = await fetchEvents();
+  } catch (e) {
+    contenu.innerHTML = '<div class="card"><p style="color:var(--text2);padding:1.5rem">Impossible de charger les événements : ' + esc(e.message || e) + '</p></div>';
+    return;
+  }
+  const aujourdhui = new Date(); aujourdhui.setHours(23, 59, 59, 999);
+  const limite = new Date(); limite.setDate(limite.getDate() - 180);
+
+  const termines = (events || [])
+    .filter(ev => ev.status === 'Terminé' && ev.event_date && new Date(ev.event_date) <= aujourdhui && new Date(ev.event_date) >= limite)
+    .sort((a, b) => new Date(b.event_date) - new Date(a.event_date))
+    .slice(0, 12);
+
+  const passesNonTermines = (events || []).filter(ev =>
+    ev.event_date && new Date(ev.event_date) < aujourdhui
+    && (ev.status === 'Confirmé' || ev.status === 'En préparation')
+    && new Date(ev.event_date) >= limite).length;
+
+  _gpostsEvents = termines;
+
+  if (!termines.length) {
+    contenu.innerHTML = '<div class="card"><p style="color:var(--text2);text-align:center;padding:2rem">Aucun événement au statut « Terminé » sur les 6 derniers mois.<br>'
+      + '<span style="font-size:.8rem">Passez un événement réalisé au statut « Terminé » dans l\'onglet Événements et il apparaîtra ici avec son post prêt à copier.</span></p></div>'
+      + (passesNonTermines ? '<p style="font-size:.8rem;color:var(--text2);margin-top:10px">' + passesNonTermines + ' événement(s) à date passée sont encore « Confirmé » ou « En préparation » : pensez à les passer en « Terminé ».</p>' : '');
+    return;
+  }
+
+  const cartes = termines.map(ev => {
+    if (!_gpostsEtat[ev.id]) {
+      _gpostsEtat[ev.id] = { tpl: gpostsGraine(ev.id), citer: true, site: gpostsDevinerSite(ev) };
+    }
+    const etat = _gpostsEtat[ev.id];
+    const date = ev.event_date ? new Date(ev.event_date).toLocaleDateString('fr-FR') : '';
+    const infos = [date, ev.client ? esc(ev.client) : '', ev.participants ? ev.participants + ' pers.' : '', ev.location ? esc(ev.location) : ''].filter(Boolean).join(' · ');
+    return '<div class="card" style="margin-bottom:16px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:10px">'
+      + '<div><strong style="font-size:1rem">' + esc(ev.name) + '</strong><br><span style="font-size:.8rem;color:var(--text2)">' + infos + '</span></div>'
+      + '<span class="badge badge-info" style="flex-shrink:0">Terminé</span>'
+      + '</div>'
+      + '<textarea id="gpost-texte-' + ev.id + '" rows="6" style="width:100%;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:.88rem;line-height:1.5;resize:vertical">' + esc(gpostsTexte(ev)) + '</textarea>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px">'
+      + '<button class="btn-primary" onclick="gpostsCopier(\'' + ev.id + '\')">Copier le texte</button>'
+      + '<button class="btn-secondary" onclick="gpostsAutreFormule(\'' + ev.id + '\')">Autre formule</button>'
+      + '<label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;font-size:.82rem;font-weight:400"><input type="checkbox"' + (etat.citer ? ' checked' : '') + ' onchange="gpostsCiterClient(\'' + ev.id + '\', this.checked)"> Citer le client</label>'
+      + '<label style="display:flex;align-items:center;gap:6px;margin:0;font-size:.82rem;font-weight:400">Lien du post :'
+      + '<select onchange="gpostsChangerSite(\'' + ev.id + '\', this.value)" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:.8rem;cursor:pointer">'
+      + GPOSTS_SITES.map(s => '<option value="' + s.url + '"' + (etat.site === s.url ? ' selected' : '') + '>' + s.label + '</option>').join('')
+      + '</select></label>'
+      + '</div>'
+      + '<p style="font-size:.78rem;color:var(--gold);margin:10px 0 0">📷 Pensez à joindre une ou deux photos de l\'événement au post : un post avec photo est bien plus vu.</p>'
+      + '</div>';
+  }).join('');
+
+  contenu.innerHTML =
+    '<div class="card" style="margin-bottom:16px;padding:14px 18px"><p style="font-size:.82rem;color:var(--text2);margin:0">'
+    + 'Mode d\'emploi : copiez le texte, ouvrez votre fiche Google Business (bouton « Ajouter un post »), collez, joignez une photo de l\'événement et publiez. '
+    + 'La case « Citer le client » est à décocher si le client ne doit pas être nommé publiquement. Le lien pointe vers le site du service concerné, changez-le si besoin.</p></div>'
+    + cartes
+    + (passesNonTermines ? '<p style="font-size:.8rem;color:var(--text2);margin-top:6px">' + passesNonTermines + ' événement(s) à date passée sont encore « Confirmé » ou « En préparation » : passez-les en « Terminé » dans l\'onglet Événements pour générer leur post.</p>' : '');
 }
