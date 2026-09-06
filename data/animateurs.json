@@ -1,0 +1,110 @@
+{
+  "commentaire": "Vivier animateurs affiché dans la vue « Animateurs » du Hub. Ce fichier sert de secours tant que la table Supabase « animateurs » n'existe pas (SQL prêt : sql/CREER-TABLE-ANIMATEURS.sql, à coller dans Supabase, SQL Editor, Run). Une fois la table créée, la vue lit et écrit Supabase et ce fichier n'est plus utilisé. FORMAT D'UNE FICHE (aussi pour les candidatures Gmail de la tâche de 9 h) : nom (obligatoire), telephone, email, photo_url, competences (tableau parmi : enfants, micro, hotesse, video, sport, musique, commercial, coordination), zones (tableau parmi : Nord, Sud, Ouest, Est), dispo_weekend / dispo_semaine / dispo_decembre (true, false, ou null = pas encore demandé), note (texte libre : source de la fiche, retours après mission). Ne jamais inventer une compétence : null ou vide = à compléter par Romain.",
+  "lastUpdated": "2026-09-06",
+  "animateurs": [
+    {
+      "id": "romain",
+      "nom": "Romain Capdepont",
+      "telephone": "",
+      "email": "romain@pullup.re",
+      "photo_url": "",
+      "competences": ["micro", "sport", "coordination"],
+      "zones": ["Nord", "Sud", "Ouest", "Est"],
+      "dispo_weekend": true,
+      "dispo_semaine": true,
+      "dispo_decembre": true,
+      "note": "Fondateur. Anime la plupart des team buildings et ouvre les journées au micro."
+    },
+    {
+      "id": "ketsia",
+      "nom": "Ketsia",
+      "telephone": "0693 49 19 02",
+      "email": "",
+      "photo_url": "",
+      "competences": ["hotesse", "coordination"],
+      "zones": [],
+      "dispo_weekend": null,
+      "dispo_semaine": null,
+      "dispo_decembre": null,
+      "note": "Cheffe hôtesse (téléphone pro hôtesses). Sur les team buildings : service petit-déjeuner, arbitrage et points, logistique des épreuves. Zones et disponibilités à compléter par Romain."
+    },
+    {
+      "id": "titi",
+      "nom": "Titi le Comik",
+      "telephone": "",
+      "email": "",
+      "photo_url": "",
+      "competences": ["micro"],
+      "zones": [],
+      "dispo_weekend": null,
+      "dispo_semaine": null,
+      "dispo_decembre": null,
+      "note": "Humoriste. Co-anime les team buildings (Université de La Réunion, EAM Alice Verdun). Zones et disponibilités à compléter par Romain."
+    },
+    {
+      "id": "benjam",
+      "nom": "Benjam",
+      "telephone": "",
+      "email": "",
+      "photo_url": "",
+      "competences": ["musique"],
+      "zones": [],
+      "dispo_weekend": null,
+      "dispo_semaine": null,
+      "dispo_decembre": null,
+      "note": "Chanteur maloya (Benjam, sans i). Ateliers écriture et chant, présent sur le séminaire EGC. Zones et disponibilités à compléter par Romain."
+    },
+    {
+      "id": "dj-ken",
+      "nom": "DJ Ken",
+      "telephone": "",
+      "email": "",
+      "photo_url": "",
+      "competences": ["musique"],
+      "zones": [],
+      "dispo_weekend": null,
+      "dispo_semaine": null,
+      "dispo_decembre": null,
+      "note": "DJ. Détail des prestations, zones et disponibilités à compléter par Romain."
+    },
+    {
+      "id": "marine",
+      "nom": "Marine",
+      "telephone": "",
+      "email": "",
+      "photo_url": "",
+      "competences": [],
+      "zones": [],
+      "dispo_weekend": null,
+      "dispo_semaine": null,
+      "dispo_decembre": null,
+      "note": "Équipe Pull Up. Compétences terrain, zones et disponibilités à compléter par Romain."
+    },
+    {
+      "id": "flora",
+      "nom": "Flora",
+      "telephone": "",
+      "email": "",
+      "photo_url": "",
+      "competences": [],
+      "zones": [],
+      "dispo_weekend": null,
+      "dispo_semaine": null,
+      "dispo_decembre": null,
+      "note": "Équipe Pull Up (commercial et administratif). Compétences terrain d'animation, zones et disponibilités à compléter par Romain."
+    },
+    {
+      "id": "gloria",
+      "nom": "Gloria",
+      "telephone": "",
+      "email": "",
+      "photo_url": "",
+      "competences": [],
+      "zones": [],
+      "dispo_weekend": null,
+      "dispo_semaine": null,
+      "dispo_decembre": null,
+      "note": "Commerciale (CDD depuis le 01/09/2026, cachets possibles en plus). Prévue maîtresse de cérémonie sur l'animation Halloween Casabona si le devis est gagné. Compétences terrain, zones et disponibilités à compléter par Romain."
+    }
+  ]
+}

@@ -92,6 +92,10 @@ try {
       <svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>
       <span>Personnel</span>
     </a>
+    <a class="nav-item" data-page="animateurs">
+      <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      <span>Animateurs</span>
+    </a>
     <a class="nav-item" data-page="tasks" style="position:relative">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
       <span>Tâches</span>
@@ -101,6 +105,10 @@ try {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
       <span>Devis à établir</span>
       <span id="nav-badge-devis" style="display:none;position:absolute;top:6px;right:6px;background:#f44336;color:#fff;font-size:.6rem;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;line-height:1"></span>
+    </a>
+    <a class="nav-item" data-page="relances">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>Devis en attente</span>
     </a>
     <a class="nav-item" data-page="knowledge">
       <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
@@ -2029,6 +2037,111 @@ Afin d'avancer, nous pouvons :
   <div id="citations-contenu"></div>
 </section>
 
+<!-- PAGE DEVIS EN ATTENTE (relances : table Supabase devis + secours data/devis-attente.json) -->
+<section class="page" id="page-relances">
+  <div class="page-header">
+    <h1>Devis en attente</h1>
+    <span style="font-size:.8rem;color:var(--text2)" id="relances-maj"></span>
+  </div>
+
+  <div class="stats-grid" id="relances-stats" style="display:none">
+    <div class="stat-card gold">
+      <div class="stat-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+      <div class="stat-info">
+        <span class="stat-value" id="rel-stat-total">0 €</span>
+        <span class="stat-label">En attente de réponse (HT)</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      <div class="stat-info">
+        <span class="stat-value" id="rel-stat-nb">0</span>
+        <span class="stat-label">Devis sans réponse</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon warning"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div class="stat-info">
+        <span class="stat-value" id="rel-stat-arelancer">0</span>
+        <span class="stat-label">À relancer maintenant</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="color:#f44336"><svg style="stroke:#f44336" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+      <div class="stat-info">
+        <span class="stat-value" id="rel-stat-rouge">0</span>
+        <span class="stat-label">En rouge (plus de 12 jours)</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="relances-contenu">
+    <div class="card"><p style="color:var(--text2);text-align:center;padding:2rem">Chargement des devis en attente…</p></div>
+  </div>
+</section>
+
+<!-- PAGE ANIMATEURS (vivier : table Supabase animateurs si créée, sinon data/animateurs.json + modifications gardées dans le navigateur) -->
+<section class="page" id="page-animateurs">
+  <div class="page-header">
+    <h1>Animateurs</h1>
+    <span style="font-size:.8rem;color:var(--text2)" id="anim-maj"></span>
+  </div>
+
+  <div class="stats-grid" id="anim-stats" style="display:none">
+    <div class="stat-card gold">
+      <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+      <div class="stat-info">
+        <span class="stat-value" id="anim-stat-total">0</span>
+        <span class="stat-label">Personnes au vivier</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon success"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+      <div class="stat-info">
+        <span class="stat-value" id="anim-stat-completes">0</span>
+        <span class="stat-label">Fiches complètes</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon warning"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+      <div class="stat-info">
+        <span class="stat-value" id="anim-stat-decembre">0</span>
+        <span class="stat-label">Confirmés dispo en décembre</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="anim-recherche" style="display:none;margin-bottom:1.2rem">
+    <strong style="display:block;margin-bottom:10px">Qui est dispo ?</strong>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <label style="font-size:.85rem;color:var(--text2)">Date de la mission
+        <input type="date" id="anim-filtre-date" style="display:block;margin-top:4px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text1)">
+      </label>
+      <label style="font-size:.85rem;color:var(--text2)">Zone
+        <select id="anim-filtre-zone" style="display:block;margin-top:4px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text1)">
+          <option value="">Toute l'île</option>
+          <option>Nord</option><option>Sud</option><option>Ouest</option><option>Est</option>
+        </select>
+      </label>
+      <label style="font-size:.85rem;color:var(--text2)">Compétence
+        <select id="anim-filtre-comp" style="display:block;margin-top:4px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text1)">
+          <option value="">Toutes</option>
+          <option value="enfants">Enfants</option><option value="micro">Micro</option><option value="hotesse">Hôtesse</option>
+          <option value="video">Vidéo</option><option value="sport">Sport</option><option value="musique">Musique</option>
+          <option value="commercial">Commercial</option><option value="coordination">Coordination</option>
+        </select>
+      </label>
+      <button class="btn-primary" style="margin-top:18px" onclick="renderAnimateurs()">Chercher</button>
+      <button class="btn-secondary" style="margin-top:18px" onclick="document.getElementById('anim-filtre-date').value='';document.getElementById('anim-filtre-zone').value='';document.getElementById('anim-filtre-comp').value='';renderAnimateurs()">Tout afficher</button>
+      <button class="btn-secondary" style="margin-top:18px;margin-left:auto" onclick="ouvrirFicheAnimateur()">+ Ajouter une personne</button>
+    </div>
+  </div>
+
+  <div id="anim-contenu">
+    <div class="card"><p style="color:var(--text2);text-align:center;padding:2rem">Chargement du vivier…</p></div>
+  </div>
+</section>
+
 </main>
 
   <!-- CONGÉS -->
@@ -2727,7 +2840,7 @@ Afin d'avancer, nous pouvons :
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js?v=20260823q"></script>
-<script src="app.js?v=20260905c"></script>
+<script src="app.js?v=20260906a"></script>
 <script>
   if ('serviceWorker' in navigator) {
     // Enregistrer le SW de nettoyage (sans rechargement forcé — l'ancien

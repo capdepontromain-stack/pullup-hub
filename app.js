@@ -41,6 +41,8 @@ function showPage(id) {
   if (id === 'acquisition' && typeof loadAcquisition === 'function') loadAcquisition();
   if (id === 'citations' && typeof loadCitationsNap === 'function') loadCitationsNap();
   if (id === 'gposts' && typeof loadPostsGoogle === 'function') loadPostsGoogle();
+  if (id === 'relances' && typeof loadRelancesDevis === 'function') loadRelancesDevis();
+  if (id === 'animateurs' && typeof loadAnimateurs === 'function') loadAnimateurs();
   if (id === 'dashboard' && typeof renderAvisBandeau === 'function') renderAvisBandeau();
   if (typeof initChatDrop === 'function') initChatDrop();
 }
@@ -2258,4 +2260,487 @@ async function loadAcquisition() {
   html += acqBloc('Questions IA où Pull Up est cité', 'Nombre de questions posées aux IA où Pull Up Événements apparaît dans la réponse', grapheIa, debloqueIa);
 
   contenu.innerHTML = html;
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// DEVIS EN ATTENTE (relances) — session 26.4 du 06/09/2026
+// Sources : la table Supabase « devis » (statuts Envoyé / Relancé / Négociation,
+// alimentée par Pull Up Assistant) + le fichier de secours data/devis-attente.json
+// (fusion par numéro de devis, Supabase prioritaire).
+// Les cases « relancé le … » restent dans le navigateur (localStorage).
+// Code couleur : jours depuis la DERNIÈRE action (envoi ou relance cochée) :
+// vert < 5 j, orange 5 à 12 j, rouge > 12 j.
+// ═════════════════════════════════════════════════════════════════════════════
+
+const RELANCE_SIGNATURE = '\n\nBien cordialement,\nRomain Capdepont\nPull Up Événements';
+
+function relanceSalutation(d) {
+  const qui = d.salutation || d.contact;
+  return qui ? 'Bonjour ' + qui + ',' : 'Bonjour,';
+}
+
+// 5 gabarits (team building, Noël, soirée, séminaire, vidéo) + un neutre,
+// chacun en 2 paliers : J+5 (doux) et J+12 (avec un élément utile).
+// Jamais de remise dans une relance, jamais de tiret long.
+const GABARITS_RELANCE = {
+  teambuilding: {
+    j5: d => relanceSalutation(d) + '\n\nJe me permets de revenir vers vous au sujet de notre proposition de team building (' + d.evenement + ').\n\nOù en êtes-vous de votre réflexion ? Si certains points méritent d\'être ajustés (déroulé, horaires, nombre de participants), on en parle quand vous voulez : le programme s\'adapte facilement.\n\nJe reste à votre écoute.' + RELANCE_SIGNATURE,
+    j12: d => relanceSalutation(d) + '\n\nPetit point d\'agenda au sujet de notre proposition de team building (' + d.evenement + ') : nos équipes d\'animation sont très demandées en ce moment et je vous réserve encore la date sans engagement de votre part.\n\nPour vous garantir l\'équipe au complet (animateurs, sono, matériel des épreuves), l\'idéal serait de caler cela dans les prochains jours. Si une question reste ouverte sur le déroulé ou le devis, je suis disponible pour un appel rapide.' + RELANCE_SIGNATURE
+  },
+  noel: {
+    j5: d => relanceSalutation(d) + '\n\nJe reviens vers vous au sujet de notre proposition pour votre événement de fin d\'année (' + d.evenement + ').\n\nOù en êtes-vous de votre réflexion ? Si vous souhaitez ajuster le programme, les animations ou le format, tout reste ouvert à ce stade.\n\nJe reste à votre disposition.' + RELANCE_SIGNATURE,
+    j12: d => relanceSalutation(d) + '\n\nJe me permets une relance au sujet de votre événement de fin d\'année (' + d.evenement + ') : le calendrier de décembre se remplit très vite chez nous, plusieurs journées sont déjà réservées.\n\nJe garde encore votre date de côté, mais pour vous assurer l\'équipe et le matériel au complet, le mieux serait de valider rapidement. Un appel de 10 minutes suffit si des questions restent en suspens.' + RELANCE_SIGNATURE
+  },
+  soiree: {
+    j5: d => relanceSalutation(d) + '\n\nJe reviens vers vous concernant notre proposition d\'animation (' + d.evenement + ').\n\nOù en êtes-vous de votre réflexion ? Si le format ou le contenu méritent un ajustement, on peut en reparler simplement, rien n\'est figé.\n\nAu plaisir d\'échanger.' + RELANCE_SIGNATURE,
+    j12: d => relanceSalutation(d) + '\n\nJe me permets de revenir vers vous au sujet de notre proposition d\'animation (' + d.evenement + ').\n\nCôté organisation, nous commençons à caler les plannings de nos animateurs sur cette période : je peux encore vous garantir l\'équipe prévue, à condition de confirmer prochainement. Si un point du devis mérite d\'être discuté, je suis joignable quand vous voulez.' + RELANCE_SIGNATURE
+  },
+  seminaire: {
+    j5: d => relanceSalutation(d) + '\n\nJe me permets de revenir vers vous au sujet de notre proposition (' + d.evenement + ').\n\nOù en êtes-vous de votre réflexion ? Si certains éléments doivent évoluer (programme, intervenants, logistique), nous pouvons adapter la proposition sans difficulté.\n\nJe reste à votre écoute.' + RELANCE_SIGNATURE,
+    j12: d => relanceSalutation(d) + '\n\nJe reviens vers vous concernant notre proposition (' + d.evenement + ').\n\nPour tenir les dates envisagées, nous devons bientôt bloquer les intervenants et la logistique : je préfère vous le signaler pour que vous gardiez la priorité sur le planning. Si un arbitrage interne est en cours, dites-moi simplement où vous en êtes, cela m\'aide à vous réserver le créneau.' + RELANCE_SIGNATURE
+  },
+  video: {
+    j5: d => relanceSalutation(d) + '\n\nJe reviens vers vous au sujet de notre proposition vidéo (' + d.evenement + ').\n\nOù en êtes-vous de votre réflexion ? Si le périmètre doit bouger (captation, montage, livrables), on ajuste la proposition sans problème.\n\nJe reste à votre disposition.' + RELANCE_SIGNATURE,
+    j12: d => relanceSalutation(d) + '\n\nJe me permets une relance concernant notre proposition vidéo (' + d.evenement + ').\n\nNotre planning de tournage et de montage se remplit sur cette période : pour vous garantir l\'équipe technique et la livraison des films dans les délais, l\'idéal serait de confirmer prochainement. Je suis disponible pour un point rapide si besoin.' + RELANCE_SIGNATURE
+  },
+  autre: {
+    j5: d => relanceSalutation(d) + '\n\nJe me permets de revenir vers vous au sujet de notre proposition (' + d.evenement + ').\n\nOù en êtes-vous de votre réflexion ? Si certains points méritent d\'être précisés ou ajustés, je suis à votre écoute.\n\nBonne journée.' + RELANCE_SIGNATURE,
+    j12: d => relanceSalutation(d) + '\n\nJe reviens vers vous concernant notre proposition (' + d.evenement + ').\n\nPour vous garantir l\'équipe et la logistique prévues à cette date, nous aurions besoin d\'une confirmation prochainement : je vous réserve encore le créneau. Si une question reste ouverte, un appel rapide suffit à la régler.' + RELANCE_SIGNATURE
+  }
+};
+
+const RELANCE_TYPE_LABEL = { teambuilding: 'Team building', noel: 'Noël', soiree: 'Soirée / animation', seminaire: 'Séminaire', video: 'Vidéo', autre: 'Autre' };
+
+function relancesOverlay() {
+  try { return JSON.parse(localStorage.getItem('pullup_relances_devis') || '{}'); }
+  catch (e) { return {}; }
+}
+
+function relanceTypeDepuisTexte(t) {
+  const s = (t || '').toLowerCase();
+  if (s.includes('team')) return 'teambuilding';
+  if (s.includes('noël') || s.includes('noel') || s.includes('arbre')) return 'noel';
+  if (s.includes('soir')) return 'soiree';
+  if (s.includes('séminaire') || s.includes('seminaire') || s.includes('cohésion') || s.includes('cohesion')) return 'seminaire';
+  if (s.includes('vid')) return 'video';
+  return 'autre';
+}
+
+function joursDepuis(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr + (dateStr.length === 10 ? 'T00:00:00' : ''));
+  if (isNaN(d)) return null;
+  return Math.max(0, Math.floor((Date.now() - d.getTime()) / 86400000));
+}
+
+async function loadRelancesDevis() {
+  const contenu = document.getElementById('relances-contenu');
+  const stats = document.getElementById('relances-stats');
+  const maj = document.getElementById('relances-maj');
+  if (!contenu) return;
+
+  // 1. Le fichier de secours (toujours lu)
+  let base = { devis: [] };
+  try { base = await (await fetch('data/devis-attente.json?t=' + Date.now(), { cache: 'no-store' })).json(); } catch (e) {}
+  const parNumero = {};
+  (base.devis || []).forEach(d => { d.source = 'fichier'; parNumero[d.numero] = d; });
+
+  // 2. La table Supabase « devis » (Pull Up Assistant), si connecté
+  let supabaseOk = false;
+  try {
+    if (typeof sb !== 'undefined') {
+      const { data, error } = await sb.from('devis').select('*').in('statut', ['Envoyé', 'Relancé', 'Négociation']);
+      if (!error && Array.isArray(data)) {
+        supabaseOk = true;
+        data.forEach(r => {
+          const numero = r.numero || ('devis-' + r.id);
+          const existant = parNumero[numero];
+          const fiche = {
+            numero: numero,
+            client: r.client || (existant && existant.client) || 'Client inconnu',
+            contact: r.contact_name || (existant && existant.contact) || '',
+            email: r.email || (existant && existant.email) || '',
+            type: (existant && existant.type) || relanceTypeDepuisTexte(r.event_type),
+            montant_ht: parseFloat(r.total_ht) || (existant && existant.montant_ht) || 0,
+            date_envoi: (existant && existant.date_envoi) || (r.created_at || '').slice(0, 10),
+            evenement: (existant && existant.evenement) || [r.event_type, r.event_date ? new Date(r.event_date + 'T00:00:00').toLocaleDateString('fr-FR') : '', r.location].filter(Boolean).join(', ') || 'prestation à venir',
+            date_evenement: r.event_date || (existant && existant.date_evenement) || null,
+            statut: r.statut,
+            note: (existant && existant.note) || '',
+            source: 'supabase',
+            supabase_id: r.id
+          };
+          parNumero[numero] = fiche;
+        });
+      }
+    }
+  } catch (e) {}
+
+  // 3. Ancienneté + relances cochées
+  const overlay = relancesOverlay();
+  const liste = Object.values(parNumero).map(d => {
+    const o = overlay[d.numero] || {};
+    d.relance1 = o.r1 || null;
+    d.relance2 = o.r2 || null;
+    d.joursEnvoi = joursDepuis(d.date_envoi);
+    const derniereAction = d.relance2 || d.relance1 || d.date_envoi;
+    d.joursAction = joursDepuis(derniereAction);
+    d.palier = (d.relance1 || (d.joursEnvoi !== null && d.joursEnvoi > 12)) ? 'j12' : 'j5';
+    return d;
+  }).sort((a, b) => (b.montant_ht || 0) - (a.montant_ht || 0));
+  window._relancesCourantes = {};
+  liste.forEach((d, i) => { d._idx = i; window._relancesCourantes[i] = d; });
+
+  if (maj) maj.textContent = supabaseOk
+    ? 'Table devis Supabase + fichier data/devis-attente.json (fusion par numéro)'
+    : 'Fichier data/devis-attente.json (la table devis Supabase se branche automatiquement une fois connecté)';
+
+  if (!liste.length) {
+    if (stats) stats.style.display = 'none';
+    contenu.innerHTML = '<div class="card"><p style="color:var(--text2);padding:2rem;text-align:center">Aucun devis en attente. La vue lit la table Supabase « devis » (statuts Envoyé, Relancé, Négociation) et le fichier data/devis-attente.json du dépôt : ajouter un devis dans l\'un des deux et il apparaît ici.</p></div>';
+    return;
+  }
+
+  // 4. Les gros chiffres
+  const eur = n => (n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' €';
+  const aRelancer = liste.filter(d => d.joursAction !== null && d.joursAction >= 5);
+  const rouges = liste.filter(d => d.joursAction !== null && d.joursAction > 12);
+  document.getElementById('rel-stat-total').textContent = eur(liste.reduce((s, d) => s + (d.montant_ht || 0), 0));
+  document.getElementById('rel-stat-nb').textContent = liste.length;
+  document.getElementById('rel-stat-arelancer').textContent = aRelancer.length;
+  document.getElementById('rel-stat-rouge').textContent = rouges.length;
+  if (stats) stats.style.display = '';
+
+  // 5. Le tableau, trié par montant décroissant
+  const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  const badgeAge = d => {
+    if (d.joursAction === null) return '<span style="color:var(--text2)">?</span>';
+    const c = d.joursAction < 5 ? 'var(--success)' : (d.joursAction <= 12 ? '#FF9800' : '#f44336');
+    return '<span style="background:' + c + '22;color:' + c + ';font-weight:700;border-radius:10px;padding:3px 10px;white-space:nowrap">' + d.joursAction + ' j</span>';
+  };
+
+  let html = '<div class="card" style="padding:0"><div class="events-table-wrap"><table class="data-table"><thead><tr>'
+    + '<th>Devis</th><th>Prestation</th><th>Montant HT</th><th>Envoyé le</th><th>Ancienneté</th><th>Relance</th>'
+    + '</tr></thead><tbody>';
+
+  liste.forEach(d => {
+    const gab = GABARITS_RELANCE[d.type] || GABARITS_RELANCE.autre;
+    const texte = (d.palier === 'j12' ? gab.j12 : gab.j5)(d);
+    const doitRelancer = d.joursAction !== null && d.joursAction >= 5;
+    const etatRelance = d.relance2
+      ? '2e relance le ' + new Date(d.relance2 + 'T00:00:00').toLocaleDateString('fr-FR')
+      : (d.relance1 ? 'Relancé le ' + new Date(d.relance1 + 'T00:00:00').toLocaleDateString('fr-FR') : '');
+    html += '<tr>'
+      + '<td><strong>' + esc(d.numero) + '</strong><br><span style="font-size:.82rem">' + esc(d.client) + '</span>'
+      + (d.contact ? '<br><span style="font-size:.75rem;color:var(--text2)">' + esc(d.contact) + '</span>' : '')
+      + '<br><span style="font-size:.7rem;color:var(--text2)">' + esc(d.statut || '') + '</span></td>'
+      + '<td style="max-width:280px"><span style="font-size:.72rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.5px">' + (RELANCE_TYPE_LABEL[d.type] || d.type) + '</span>'
+      + '<br><span style="font-size:.82rem">' + esc(d.evenement) + '</span>'
+      + (d.note ? '<br><span style="font-size:.72rem;color:var(--text2);font-style:italic">' + esc(d.note) + '</span>' : '') + '</td>'
+      + '<td style="font-weight:700;color:var(--gold);white-space:nowrap">' + (d.montant_ht || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) + ' €</td>'
+      + '<td style="white-space:nowrap">' + (d.date_envoi ? new Date(d.date_envoi + 'T00:00:00').toLocaleDateString('fr-FR') : '?')
+      + (d.joursEnvoi !== null ? '<br><span style="font-size:.72rem;color:var(--text2)">il y a ' + d.joursEnvoi + ' j</span>' : '') + '</td>'
+      + '<td>' + badgeAge(d) + '</td>'
+      + '<td style="white-space:nowrap">'
+      + (doitRelancer
+        ? '<button class="btn-sm" onclick="toggleRelance(' + d._idx + ')">' + (d.palier === 'j12' ? 'Relance J+12' : 'Relance J+5') + ' ▾</button>'
+        : '<span style="font-size:.78rem;color:var(--success)">Encore frais, on attend</span>')
+      + (etatRelance ? '<br><span style="font-size:.74rem;color:var(--success)">✓ ' + etatRelance + '</span>' : '')
+      + '</td></tr>';
+    if (doitRelancer) {
+      html += '<tr id="relance-detail-' + d._idx + '" style="display:none"><td colspan="6" style="background:var(--bg2)">'
+        + '<div style="padding:6px 4px">'
+        + '<div style="font-size:.78rem;color:var(--text2);margin-bottom:6px">'
+        + (d.palier === 'j12' ? 'Palier J+12 : relance avec un élément utile (planning qui se remplit). ' : 'Palier J+5 : relance douce. ')
+        + 'Texte à copier puis coller dans un mail' + (d.email ? ' à <strong>' + esc(d.email) + '</strong>' : '') + '. Jamais de remise dans une relance.</div>'
+        + '<textarea id="relance-texte-' + d._idx + '" readonly style="width:100%;min-height:190px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text1);font-size:.85rem;line-height:1.5;font-family:inherit;resize:vertical">' + esc(texte) + '</textarea>'
+        + '<div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;align-items:center">'
+        + '<button class="btn-primary" onclick="copierRelance(' + d._idx + ')">📋 Copier la relance</button>'
+        + '<label style="font-size:.85rem;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer">'
+        + '<input type="checkbox" onchange="marquerRelance(' + d._idx + ', this.checked)"' + ((d.palier === 'j12' ? d.relance2 : d.relance1) ? ' checked' : '') + '> Relancé le ' + new Date().toLocaleDateString('fr-FR') + '</label>'
+        + '</div></div></td></tr>';
+    }
+  });
+  html += '</tbody></table></div></div>'
+    + '<p style="font-size:.75rem;color:var(--text2);margin-top:10px">Code couleur : vert moins de 5 jours, orange 5 à 12 jours, rouge plus de 12 jours depuis la dernière action (envoi ou relance cochée). Les cases cochées restent dans ce navigateur. Mise à jour durable des devis : table Supabase « devis » (via Pull Up Assistant) ou fichier data/devis-attente.json puis ./deploy.sh.</p>';
+  contenu.innerHTML = html;
+}
+
+function toggleRelance(idx) {
+  const tr = document.getElementById('relance-detail-' + idx);
+  if (tr) tr.style.display = tr.style.display === 'none' ? '' : 'none';
+}
+
+function copierRelance(idx) {
+  const ta = document.getElementById('relance-texte-' + idx);
+  if (!ta) return;
+  navigator.clipboard.writeText(ta.value).then(() => showToast('Relance copiée, prête à coller dans un mail'))
+    .catch(() => { ta.select(); document.execCommand('copy'); showToast('Relance copiée'); });
+}
+
+function marquerRelance(idx, coche) {
+  const d = (window._relancesCourantes || {})[idx];
+  if (!d) return;
+  const o = relancesOverlay();
+  o[d.numero] = o[d.numero] || {};
+  const champ = d.palier === 'j12' ? 'r2' : 'r1';
+  if (coche) o[d.numero][champ] = new Date().toISOString().slice(0, 10);
+  else delete o[d.numero][champ];
+  localStorage.setItem('pullup_relances_devis', JSON.stringify(o));
+  // Si le devis vient de la table Supabase, on aligne aussi son statut (visible dans l'Assistant)
+  if (coche && d.source === 'supabase' && d.supabase_id && typeof sb !== 'undefined') {
+    sb.from('devis').update({ statut: 'Relancé', updated_at: new Date().toISOString() }).eq('id', d.supabase_id).then(() => {});
+  }
+  loadRelancesDevis();
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// VIVIER ANIMATEURS — session 27.2 du 06/09/2026
+// Stockage : la table Supabase « animateurs » si elle existe (SQL prêt dans
+// sql/CREER-TABLE-ANIMATEURS.sql), sinon data/animateurs.json + modifications
+// gardées dans le navigateur (localStorage), comme la vue Citations externes.
+// Fonction clé : « qui est dispo le [date] dans le [zone] » pour planifier
+// les arbres de Noël de décembre.
+// ═════════════════════════════════════════════════════════════════════════════
+
+const ANIM_COMPETENCES = { enfants: 'Enfants', micro: 'Micro', hotesse: 'Hôtesse', video: 'Vidéo', sport: 'Sport', musique: 'Musique', commercial: 'Commercial', coordination: 'Coordination' };
+const ANIM_ZONES = ['Nord', 'Sud', 'Ouest', 'Est'];
+
+function animOverlay() {
+  try { return JSON.parse(localStorage.getItem('pullup_animateurs_overlay') || '{}'); }
+  catch (e) { return {}; }
+}
+function animAjouts() {
+  try { return JSON.parse(localStorage.getItem('pullup_animateurs_ajouts') || '[]'); }
+  catch (e) { return []; }
+}
+
+async function loadAnimateurs() {
+  const contenu = document.getElementById('anim-contenu');
+  if (!contenu) return;
+  let liste = [], mode = 'local';
+
+  // 1. La table Supabase si elle existe
+  try {
+    if (typeof sb !== 'undefined') {
+      const { data, error } = await sb.from('animateurs').select('*').order('nom');
+      if (!error && Array.isArray(data) && data.length) {
+        mode = 'supabase';
+        liste = data.map(r => ({
+          id: r.id, nom: r.nom, telephone: r.telephone || '', email: r.email || '', photo_url: r.photo_url || '',
+          competences: Array.isArray(r.competences) ? r.competences : [], zones: Array.isArray(r.zones) ? r.zones : [],
+          dispo_weekend: r.dispo_weekend, dispo_semaine: r.dispo_semaine, dispo_decembre: r.dispo_decembre,
+          note: r.note || '', actif: r.actif !== false
+        })).filter(a => a.actif);
+      }
+    }
+  } catch (e) {}
+
+  // 2. Sinon : fichier data/animateurs.json + modifications locales
+  if (mode === 'local') {
+    let base = { animateurs: [] };
+    try { base = await (await fetch('data/animateurs.json?t=' + Date.now(), { cache: 'no-store' })).json(); } catch (e) {}
+    const overlay = animOverlay();
+    liste = (base.animateurs || []).concat(animAjouts()).map(a => Object.assign({}, a, overlay[a.id] || {}));
+  }
+
+  window._animState = { mode: mode, liste: liste };
+  const maj = document.getElementById('anim-maj');
+  if (maj) maj.textContent = mode === 'supabase'
+    ? 'Table Supabase animateurs : les fiches sont partagées avec toute l\'équipe'
+    : 'Fichier data/animateurs.json, modifications gardées dans CE navigateur';
+
+  document.getElementById('anim-recherche').style.display = '';
+  renderAnimateurs();
+}
+
+function animFicheComplete(a) {
+  return !!(a.telephone && a.competences && a.competences.length && a.zones && a.zones.length
+    && a.dispo_weekend !== null && a.dispo_semaine !== null && a.dispo_decembre !== null
+    && a.dispo_weekend !== undefined && a.dispo_semaine !== undefined && a.dispo_decembre !== undefined);
+}
+
+// Classement d'une fiche face au filtre : 'oui' (dispo), 'aconfirmer' (fiche
+// incomplète sur un critère demandé), 'non' (indispo ou pas la compétence)
+function animMatch(a, dateStr, zone, comp) {
+  let inconnu = false;
+  if (dateStr) {
+    const dte = new Date(dateStr + 'T00:00:00');
+    const we = dte.getDay() === 0 || dte.getDay() === 6;
+    const champ = we ? a.dispo_weekend : a.dispo_semaine;
+    if (champ === false) return 'non';
+    if (champ === null || champ === undefined) inconnu = true;
+    if (dte.getMonth() === 11) {
+      if (a.dispo_decembre === false) return 'non';
+      if (a.dispo_decembre === null || a.dispo_decembre === undefined) inconnu = true;
+    }
+  }
+  if (zone) {
+    const zs = a.zones || [];
+    if (zs.length && !zs.includes(zone)) return 'non';
+    if (!zs.length) inconnu = true;
+  }
+  if (comp) {
+    const cs = a.competences || [];
+    if (cs.length && !cs.includes(comp)) return 'non';
+    if (!cs.length) inconnu = true;
+  }
+  return inconnu ? 'aconfirmer' : 'oui';
+}
+
+function renderAnimateurs() {
+  const st = window._animState;
+  const contenu = document.getElementById('anim-contenu');
+  if (!st || !contenu) return;
+  const liste = st.liste;
+  const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+
+  // Les gros chiffres
+  document.getElementById('anim-stat-total').textContent = liste.length;
+  document.getElementById('anim-stat-completes').textContent = liste.filter(animFicheComplete).length;
+  document.getElementById('anim-stat-decembre').textContent = liste.filter(a => a.dispo_decembre === true).length;
+  document.getElementById('anim-stats').style.display = '';
+
+  const dateStr = (document.getElementById('anim-filtre-date') || {}).value || '';
+  const zone = (document.getElementById('anim-filtre-zone') || {}).value || '';
+  const comp = (document.getElementById('anim-filtre-comp') || {}).value || '';
+  const filtreActif = !!(dateStr || zone || comp);
+
+  const chip = (txt, c) => '<span style="background:' + c + '22;color:' + c + ';font-size:.7rem;font-weight:600;border-radius:10px;padding:2px 8px;white-space:nowrap">' + txt + '</span>';
+  const dispoChip = (label, v) => v === true ? chip(label + ' ✓', 'var(--success)') : (v === false ? chip(label + ' ✗', '#f44336') : chip(label + ' ?', 'var(--text2)'));
+
+  const carte = a => {
+    const initiales = esc((a.nom || '?').split(/\s+/).map(m => m[0]).join('').slice(0, 2).toUpperCase());
+    return '<div class="card" style="display:flex;flex-direction:column;gap:8px">'
+      + '<div style="display:flex;align-items:center;gap:12px">'
+      + (a.photo_url
+        ? '<img src="' + esc(a.photo_url) + '" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover">'
+        : '<div style="width:44px;height:44px;border-radius:50%;background:var(--gold);color:#000;display:flex;align-items:center;justify-content:center;font-weight:700">' + initiales + '</div>')
+      + '<div style="flex:1;min-width:0"><strong>' + esc(a.nom) + '</strong>'
+      + (a.telephone ? '<br><a href="tel:' + esc(a.telephone.replace(/\s/g, '')) + '" style="color:var(--gold);font-size:.82rem;text-decoration:none">📞 ' + esc(a.telephone) + '</a>' : '<br><span style="font-size:.78rem;color:var(--text2)">téléphone à compléter</span>')
+      + '</div>'
+      + '<button class="btn-sm" onclick="ouvrirFicheAnimateur(\'' + esc(a.id) + '\')">Modifier</button></div>'
+      + '<div style="display:flex;gap:5px;flex-wrap:wrap">'
+      + ((a.competences || []).map(c => chip(ANIM_COMPETENCES[c] || c, 'var(--gold)')).join('') || chip('compétences à compléter', 'var(--text2)'))
+      + '</div>'
+      + '<div style="display:flex;gap:5px;flex-wrap:wrap">'
+      + ((a.zones || []).length ? (a.zones || []).map(z => chip(z, '#4A9EFF')).join('') : chip('zone à compléter', 'var(--text2)'))
+      + dispoChip('Week-end', a.dispo_weekend) + dispoChip('Semaine', a.dispo_semaine) + dispoChip('Décembre', a.dispo_decembre)
+      + '</div>'
+      + (a.note ? '<div style="font-size:.78rem;color:var(--text2);line-height:1.45">' + esc(a.note) + '</div>' : '')
+      + '</div>';
+  };
+  const grille = cartes => '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;margin-bottom:1.2rem">' + cartes.join('') + '</div>';
+
+  let html = '';
+  if (st.mode === 'local') {
+    html += '<div class="card" style="border-color:#FF980055;margin-bottom:1.2rem"><p style="font-size:.83rem;color:var(--text2);line-height:1.5"><strong style="color:#FF9800">Mode secours :</strong> les fiches viennent de data/animateurs.json et tes modifications restent sur ce navigateur. Pour un vivier partagé avec toute l\'équipe : Supabase → SQL Editor → coller le fichier <strong>sql/CREER-TABLE-ANIMATEURS.sql</strong> → Run, puis recharger la page. La vue bascule toute seule.</p></div>';
+  }
+
+  if (!liste.length) {
+    contenu.innerHTML = html + '<div class="card"><p style="color:var(--text2);text-align:center;padding:2rem">Le vivier est vide. Ajouter une personne avec le bouton ci-dessus, ou remplir data/animateurs.json.</p></div>';
+    return;
+  }
+
+  if (filtreActif) {
+    const groupes = { oui: [], aconfirmer: [], non: [] };
+    liste.forEach(a => groupes[animMatch(a, dateStr, zone, comp)].push(a));
+    let critere = [];
+    if (dateStr) {
+      const dte = new Date(dateStr + 'T00:00:00');
+      critere.push('le ' + dte.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) + (dte.getMonth() === 11 ? ' (décembre : période arbres de Noël)' : ''));
+    }
+    if (zone) critere.push('zone ' + zone);
+    if (comp) critere.push('compétence ' + (ANIM_COMPETENCES[comp] || comp));
+    html += '<h3 style="margin-bottom:10px;font-size:.95rem">Disponibles ' + critere.join(', ') + ' : <span style="color:var(--success)">' + groupes.oui.length + '</span></h3>';
+    html += groupes.oui.length ? grille(groupes.oui.map(carte)) : '<div class="card" style="margin-bottom:1.2rem"><p style="color:var(--text2);padding:.6rem">Personne de confirmé sur ces critères pour l\'instant.</p></div>';
+    if (groupes.aconfirmer.length) {
+      html += '<h3 style="margin-bottom:10px;font-size:.95rem;color:var(--text2)">À confirmer (fiche incomplète sur un critère) : ' + groupes.aconfirmer.length + '</h3>' + grille(groupes.aconfirmer.map(carte));
+    }
+    if (groupes.non.length) {
+      html += '<details style="margin-top:.4rem"><summary style="cursor:pointer;color:var(--text2);font-size:.85rem;padding:6px 0">Non disponibles ou hors critères (' + groupes.non.length + ')</summary>' + grille(groupes.non.map(carte)) + '</details>';
+    }
+  } else {
+    html += grille(liste.map(carte));
+  }
+  contenu.innerHTML = html;
+}
+
+// ─── Fiche animateur (ajout / modification) ──────────────────────────────────
+function ouvrirFicheAnimateur(id) {
+  const st = window._animState || { liste: [] };
+  const a = st.liste.find(x => String(x.id) === String(id)) || { id: null, nom: '', telephone: '', email: '', photo_url: '', competences: [], zones: [], dispo_weekend: null, dispo_semaine: null, dispo_decembre: null, note: '' };
+  const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  const triState = (nom, v) => '<label style="font-size:.85rem;color:var(--text2)">' + nom
+    + '<select data-anim-dispo="' + nom + '" style="display:block;margin-top:4px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text1)">'
+    + '<option value=""' + (v === null || v === undefined ? ' selected' : '') + '>Pas encore demandé</option>'
+    + '<option value="oui"' + (v === true ? ' selected' : '') + '>Oui</option>'
+    + '<option value="non"' + (v === false ? ' selected' : '') + '>Non</option></select></label>';
+
+  let m = document.getElementById('anim-modal');
+  if (m) m.remove();
+  m = document.createElement('div');
+  m.id = 'anim-modal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:900;display:flex;align-items:center;justify-content:center;padding:16px';
+  m.innerHTML = '<div class="card" style="max-width:560px;width:100%;max-height:90vh;overflow:auto">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><strong>' + (a.id ? 'Fiche : ' + esc(a.nom) : 'Ajouter une personne au vivier') + '</strong>'
+    + '<button onclick="document.getElementById(\'anim-modal\').remove()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:1.1rem">✕</button></div>'
+    + '<div style="display:grid;gap:12px">'
+    + '<label style="font-size:.85rem;color:var(--text2)">Nom<input id="anim-f-nom" value="' + esc(a.nom) + '" style="display:block;width:100%;margin-top:4px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text1)"></label>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    + '<label style="font-size:.85rem;color:var(--text2)">Téléphone<input id="anim-f-tel" value="' + esc(a.telephone) + '" style="display:block;width:100%;margin-top:4px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text1)"></label>'
+    + '<label style="font-size:.85rem;color:var(--text2)">E-mail<input id="anim-f-email" value="' + esc(a.email) + '" style="display:block;width:100%;margin-top:4px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text1)"></label></div>'
+    + '<label style="font-size:.85rem;color:var(--text2)">Photo (adresse de l\'image, optionnel)<input id="anim-f-photo" value="' + esc(a.photo_url) + '" style="display:block;width:100%;margin-top:4px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text1)"></label>'
+    + '<div><span style="font-size:.85rem;color:var(--text2)">Compétences</span><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">'
+    + Object.keys(ANIM_COMPETENCES).map(c => '<label style="font-size:.82rem;display:flex;gap:4px;align-items:center;cursor:pointer"><input type="checkbox" data-anim-comp="' + c + '"' + ((a.competences || []).includes(c) ? ' checked' : '') + '>' + ANIM_COMPETENCES[c] + '</label>').join('')
+    + '</div></div>'
+    + '<div><span style="font-size:.85rem;color:var(--text2)">Zones</span><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">'
+    + ANIM_ZONES.map(z => '<label style="font-size:.82rem;display:flex;gap:4px;align-items:center;cursor:pointer"><input type="checkbox" data-anim-zone="' + z + '"' + ((a.zones || []).includes(z) ? ' checked' : '') + '>' + z + '</label>').join('')
+    + '</div></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">' + triState('Week-end', a.dispo_weekend) + triState('Semaine', a.dispo_semaine) + triState('Décembre', a.dispo_decembre) + '</div>'
+    + '<label style="font-size:.85rem;color:var(--text2)">Note interne (retours après mission, source de la fiche)<textarea id="anim-f-note" style="display:block;width:100%;margin-top:4px;min-height:80px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text1);font-family:inherit">' + esc(a.note) + '</textarea></label>'
+    + '<div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn-secondary" onclick="document.getElementById(\'anim-modal\').remove()">Annuler</button>'
+    + '<button class="btn-primary" onclick="sauverFicheAnimateur(' + (a.id ? '\'' + esc(a.id) + '\'' : 'null') + ')">Enregistrer</button></div>'
+    + '</div></div>';
+  document.body.appendChild(m);
+}
+
+async function sauverFicheAnimateur(id) {
+  const val = i => (document.getElementById(i) || {}).value || '';
+  const nom = val('anim-f-nom').trim();
+  if (!nom) { showToast('Le nom est obligatoire'); return; }
+  const lireDispo = nomD => {
+    const s = document.querySelector('[data-anim-dispo="' + nomD + '"]');
+    return !s || s.value === '' ? null : s.value === 'oui';
+  };
+  const fiche = {
+    nom: nom, telephone: val('anim-f-tel').trim(), email: val('anim-f-email').trim(), photo_url: val('anim-f-photo').trim(),
+    competences: [...document.querySelectorAll('[data-anim-comp]:checked')].map(c => c.dataset.animComp),
+    zones: [...document.querySelectorAll('[data-anim-zone]:checked')].map(z => z.dataset.animZone),
+    dispo_weekend: lireDispo('Week-end'), dispo_semaine: lireDispo('Semaine'), dispo_decembre: lireDispo('Décembre'),
+    note: val('anim-f-note').trim()
+  };
+  const st = window._animState || { mode: 'local' };
+  if (st.mode === 'supabase' && typeof sb !== 'undefined') {
+    const req = id ? sb.from('animateurs').update(Object.assign({ updated_at: new Date().toISOString() }, fiche)).eq('id', id) : sb.from('animateurs').insert(fiche);
+    const { error } = await req;
+    if (error) { showToast('Erreur : ' + error.message); return; }
+    showToast('Fiche enregistrée, visible par toute l\'équipe');
+  } else {
+    if (id) {
+      const ajouts = animAjouts();
+      const idxAjout = ajouts.findIndex(x => String(x.id) === String(id));
+      if (idxAjout >= 0) { ajouts[idxAjout] = Object.assign(ajouts[idxAjout], fiche); localStorage.setItem('pullup_animateurs_ajouts', JSON.stringify(ajouts)); }
+      else { const o = animOverlay(); o[id] = Object.assign(o[id] || {}, fiche); localStorage.setItem('pullup_animateurs_overlay', JSON.stringify(o)); }
+    } else {
+      const ajouts = animAjouts();
+      fiche.id = 'ajout-' + Date.now();
+      ajouts.push(fiche);
+      localStorage.setItem('pullup_animateurs_ajouts', JSON.stringify(ajouts));
+    }
+    showToast('Fiche enregistrée dans ce navigateur (coller le SQL animateurs pour partager)');
+  }
+  const modal = document.getElementById('anim-modal');
+  if (modal) modal.remove();
+  loadAnimateurs();
 }
