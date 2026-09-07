@@ -2239,8 +2239,8 @@ async function autoCalcDistance() {
   }
 }
 
-// Barème kilométrique par collaborateur (Flora : voiture 4 CV, trajets courts)
-const MILEAGE_RATES = { 'Flora Boyer': 0.606 };
+// Barème kilométrique par collaborateur (Flora : voiture 4 CV, trajets courts ; Gloria : 0,374 €/km)
+const MILEAGE_RATES = { 'Flora Boyer': 0.606, 'Gloria': 0.374 };
 const MILEAGE_RATE_DEFAULT = 0.47;
 function mileageRateFor(name) { return MILEAGE_RATES[name] || MILEAGE_RATE_DEFAULT; }
 
