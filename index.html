@@ -3064,7 +3064,8 @@ async function loadAuditLog() {
   <div class="modal" style="max-width:480px">
     <div class="modal-header"><h3>📄 Export PDF — Frais kilométriques</h3><button class="btn-icon" onclick="closeModal('exportPDF')">✕</button></div>
     <div class="modal-body">
-      <p style="color:var(--text2);font-size:.88rem;margin-bottom:16px">Sélectionne les mois à exporter (véhicule utilitaire exclu automatiquement).</p>
+      <p style="color:var(--text2);font-size:.88rem;margin-bottom:12px">L'attestation est établie au nom du collaborateur choisi (véhicule utilitaire exclu automatiquement).</p>
+      <div class="form-group" style="margin-bottom:14px"><label>Collaborateur</label><select id="exportPDF-person" onchange="exportPDFPersonChanged()"></select></div>
       <div id="exportPDF-months" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
     </div>
     <div class="modal-footer">
