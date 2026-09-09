@@ -4468,9 +4468,13 @@ function dateQontoVersISO(v) {
   if (jma) return `${jma[3]}-${jma[2]}-${jma[1]}`;
   const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);            // 2026-09-09 ou 2026-09-09T08:25:51
   if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
-  if (typeof v === 'number' && isFinite(v) && v > 20000 && v < 80000 && window.XLSX) {
-    const d = XLSX.SSF.parse_date_code(v);                      // numéro de série Excel
-    if (d && d.y) return `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
+  if (typeof v === 'number' && isFinite(v) && v > 20000 && v < 80000) {  // numéro de série Excel
+    if (window.XLSX && XLSX.SSF) {
+      const d = XLSX.SSF.parse_date_code(v);
+      if (d && d.y) return `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
+    }
+    const j = new Date(Math.round((v - 25569) * 86400000));      // repli sans SheetJS
+    if (!isNaN(j)) return j.toISOString().slice(0, 10);
   }
   return null;
 }
