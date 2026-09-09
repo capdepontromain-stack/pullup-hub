@@ -4479,6 +4479,14 @@ function dateQontoVersISO(v) {
   return null;
 }
 
+// Montants d'un export Qonto : « 1 234,56 » (virgule décimale française) comme « 1234.56 ».
+function montantQonto(v) {
+  if (v == null || v === '') return null;
+  if (typeof v === 'number') return v;
+  const n = parseFloat(String(v).replace(/[\s\u00A0]/g, '').replace(',', '.'));
+  return isFinite(n) ? n : null;
+}
+
 // Import d'un export Qonto (.xls / .xlsx / .csv) directement dans le navigateur.
 // Détecte tout seul le type de fichier : relevé bancaire (transactions) ou liste de factures.
 async function importQontoFile(file) {
@@ -4493,8 +4501,13 @@ async function importQontoFile(file) {
         document.head.appendChild(s);
       });
     }
-    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array', FS: ';', codepage: 65001 });
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: null });
+    // ⚠️ raw: true est INDISPENSABLE (09/09/2026). Sans lui, SheetJS reformate les cellules selon la
+    // locale : « 09-09-2026 10:08:03 » devient « 9/9/26 » (le filtre de date le rejetait et sautait
+    // la ligne) et « 28,33 » devient 2 833 (virgule prise pour un séparateur de milliers). Les deux
+    // ensemble ont fait perdre 1 404 opérations sur 3 271 et multiplié des montants par 100.
+    // En brut, tout arrive en texte et c'est nous qui convertissons, en dessous.
+    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array', FS: ';', codepage: 65001, raw: true });
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: null, raw: true });
     if (rows.length && rows[0]['Number'] !== undefined && rows[0]['Issue Date'] !== undefined) {
       return importQontoFactures(rows);
     }
@@ -4505,8 +4518,8 @@ async function importQontoFile(file) {
       if (!tid || typeof tid !== 'string' || dateStr == null || dateStr === '') continue;
       const iso = dateQontoVersISO(dateStr);
       if (!iso) continue;
-      const debit = r['Débit'] != null ? parseFloat(r['Débit']) : null;
-      const credit = r['Crédit'] != null ? parseFloat(r['Crédit']) : null;
+      const debit = montantQonto(r['Débit']);
+      const credit = montantQonto(r['Crédit']);
       ops.push({
         transaction_id: tid,
         date_op: iso,
@@ -4692,9 +4705,9 @@ async function importQontoFactures(rows) {
       annee: parseInt(d.slice(0, 4)),
       mois: parseInt(d.slice(5, 7)),
       client: r['Client Name'] || null,
-      ht: r['Subtotal'] != null ? parseFloat(r['Subtotal']) : null,
-      tva: r['Vat Amount'] != null ? parseFloat(r['Vat Amount']) : null,
-      ttc: r['Amount Due'] != null ? parseFloat(r['Amount Due']) : null,
+      ht: montantQonto(r['Subtotal']),
+      tva: montantQonto(r['Vat Amount']),
+      ttc: montantQonto(r['Amount Due']),
       statut: r['Status'] || null,
       payee_le: dateQontoVersISO(r['Paid At']),
       objet: r['Header'] ? String(r['Header']).slice(0, 200) : null
