@@ -22,7 +22,7 @@ try {
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Pull Up">
 <link rel="apple-touch-icon" href="logo-512.png">
-<link rel="stylesheet" href="style.css?v=20260731">
+<link rel="stylesheet" href="style.css?v=20260909t1138">
 </head>
 <body>
 
@@ -186,6 +186,11 @@ try {
     </div>
     <button id="btn-logout" title="Déconnexion" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:1.1rem;padding:4px;margin-left:auto;" onclick="signOut()">⏻</button>
   </div>
+
+  <!-- Repère de version (09/09/2026) : permet à chacun de vérifier qu'il est bien sur la dernière
+       version du Hub, et de forcer la mise à jour d'un clic si son navigateur garde l'ancienne. -->
+  <div id="sidebar-version" onclick="forcerMiseAJour()" title="Cliquer pour forcer la mise à jour"
+       style="padding:8px 16px 12px;font-size:.68rem;color:var(--text3);cursor:pointer;user-select:none;line-height:1.5;text-align:center"></div>
 </aside>
 
 <!-- TOPBAR -->
@@ -2839,8 +2844,8 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260823q"></script>
-<script src="app.js?v=20260906a"></script>
+<script src="supabase.js?v=20260909t1138"></script>
+<script src="app.js?v=20260909t1138"></script>
 <script>
   if ('serviceWorker' in navigator) {
     // Enregistrer le SW de nettoyage (sans rechargement forcé — l'ancien

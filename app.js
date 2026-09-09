@@ -1606,6 +1606,45 @@ function focusPersonCol(name) {
   });
 })(); */
 
+// ---- Repère de version visible (09/09/2026) ----
+// Flora ne voyait pas un déploiement : son navigateur avait gardé l'ancien supabase.js, car son
+// adresse (?v=…) n'avait pas changé. deploy.sh horodate désormais les scripts à chaque envoi ;
+// ici on affiche cette empreinte en bas du menu pour que chacun puisse vérifier sa version.
+function versionChargee() {
+  const s = (document.querySelector('script[src*="app.js?v="]') || {}).src || '';
+  return (s.match(/v=([0-9a-zA-Z._-]+)/) || [])[1] || '';
+}
+
+// 20260909t0930 → « 09/09/2026 à 09:30 » ; tout autre format est affiché tel quel
+function versionLisible(v) {
+  const m = /^(\d{4})(\d{2})(\d{2})t(\d{2})(\d{2})$/.exec(v || '');
+  if (m) return `${m[3]}/${m[2]}/${m[1]} à ${m[4]}:${m[5]}`;
+  const j = /^(\d{4})(\d{2})(\d{2})/.exec(v || '');
+  if (j) return `${j[3]}/${j[2]}/${j[1]}`;
+  return v || 'inconnue';
+}
+
+function afficherVersionApp() {
+  const el = document.getElementById('sidebar-version');
+  if (!el) return;
+  el.innerHTML = `Version du ${versionLisible(versionChargee())}<br><span style="color:var(--gold)">Forcer la mise à jour</span>`;
+}
+document.addEventListener('DOMContentLoaded', afficherVersionApp);
+afficherVersionApp();
+
+// Vide tous les caches, désinscrit le service worker et recharge depuis le serveur
+async function forcerMiseAJour() {
+  try {
+    if (window.caches) { const cles = await caches.keys(); await Promise.all(cles.map(c => caches.delete(c))); }
+    if (navigator.serviceWorker) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+    localStorage.removeItem('reload-version-tentee');
+  } catch (e) { /* rien à vider */ }
+  location.replace(location.pathname + '?maj=' + Date.now());
+}
+
 // ---- Fraîcheur de l'app (23/08/2026) : recharge automatique quand une nouvelle version est déployée ----
 // GitHub Pages + app installée = index.html parfois servi depuis le cache → Romain voyait l'ancien écran
 // après un déploiement. On compare la version de app.js chargée avec celle du index.html en ligne ;
@@ -1613,8 +1652,8 @@ function focusPersonCol(name) {
 async function verifierVersionApp() {
   try {
     const html = await (await fetch('index.html', { cache: 'no-store' })).text();
-    const distante = (html.match(/app\.js\?v=([0-9a-z]+)/) || [])[1];
-    const locale = ((document.querySelector('script[src*="app.js?v="]') || {}).src || '').match(/v=([0-9a-z]+)/)?.[1];
+    const distante = (html.match(/app\.js\?v=([0-9a-zA-Z._-]+)/) || [])[1];
+    const locale = versionChargee();
     if (distante && locale && distante !== locale && localStorage.getItem('reload-version-tentee') !== distante) {
       localStorage.setItem('reload-version-tentee', distante);
       location.reload();
