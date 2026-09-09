@@ -1303,6 +1303,13 @@ async function renderTresorerie(factures) {
   });
   const totalCreances = impayees.reduce((s, f) => s + (parseFloat(f.ttc) || 0), 0);
   const enRetard = tranches['En retard 1 à 30 j'] + tranches['En retard 31 à 60 j'] + tranches['En retard + de 60 j'];
+  // La TVA (8,5 % à La Réunion) contenue dans les créances appartient au fisc dès l'encaissement :
+  // elle transite par le compte, elle n'est jamais à nous. On la calcule facture par facture quand
+  // le HT est connu, sinon on la reconstitue au taux de 8,5 %.
+  const tvaCreances = impayees.reduce((s, f) => {
+    const ttc = parseFloat(f.ttc) || 0, ht = parseFloat(f.ht) || 0;
+    return s + (ht > 0 ? ttc - ht : ttc - ttc / 1.085);
+  }, 0);
 
   // Projection sur le mois en cours + 3 mois (rien d'autre que les factures déjà émises en entrée)
   const MOIS_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
@@ -1333,6 +1340,20 @@ async function renderTresorerie(factures) {
       ${bloc('Dont en retard', enRetard, enRetard > 0 ? '#f44336' : '#4CAF50', enRetard > 0 ? 'À relancer maintenant' : 'Rien en retard')}
       ${bloc('Compte + créances', solde + totalCreances, '#4CAF50', 'Si tout rentre')}
       ${bloc('Charges par mois', chargeMens, 'var(--text1)', 'Moyenne des 6 derniers mois')}
+    </div>
+
+    <div style="background:var(--bg2);border:1px solid rgba(201,150,46,.35);border-radius:10px;padding:12px 14px;margin-bottom:18px">
+      <div style="font-weight:700;font-size:.85rem;margin-bottom:8px">Si tout l'argent dehors rentrait aujourd'hui, ce qui serait vraiment à toi</div>
+      <table style="width:100%;font-size:.85rem;border-collapse:collapse">
+        <tr><td style="padding:3px 0">Sur le compte</td><td style="text-align:right">${fmtEur(solde)}</td></tr>
+        <tr><td style="padding:3px 0">+ les ${impayees.length} factures impayées</td><td style="text-align:right;color:#4CAF50">+${fmtEur(totalCreances)}</td></tr>
+        <tr style="border-top:1px solid var(--border)"><td style="padding:5px 0;font-weight:600">= trésorerie brute</td><td style="text-align:right;font-weight:600">${fmtEur(solde + totalCreances)}</td></tr>
+        <tr><td style="padding:3px 0">− TVA 8,5 % contenue dans ces factures</td><td style="text-align:right;color:#f44336">−${fmtEur(tvaCreances)}</td></tr>
+        <tr style="border-top:1px solid var(--border)"><td style="padding:5px 0;font-weight:700">= à toi, avant impôt sur les bénéfices</td><td style="text-align:right;font-weight:700;color:var(--gold)">${fmtEur(solde + totalCreances - tvaCreances)}</td></tr>
+      </table>
+      <div style="font-size:.72rem;color:var(--text2);margin-top:8px;line-height:1.5">
+        Reste ensuite l'impôt sur les bénéfices, que seul le comptable peut arrêter : à titre indicatif, 15 % jusqu'à 42 500 € de bénéfice puis 25 % au-delà. Sur le bénéfice acquis au 09/09/2026, l'ordre de grandeur est de 20 000 €, mais les charges de Noël du dernier trimestre le feront baisser.
+      </div>
     </div>
 
     <div style="font-weight:700;font-size:.85rem;margin:6px 0 8px">Âge des créances</div>
