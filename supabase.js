@@ -4456,6 +4456,25 @@ function showBanqueMois(annee, mois) {
   card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+// Dates d'un export Qonto lu par SheetJS → « AAAA-MM-JJ ».
+// ⚠️ Piège découvert le 09/09/2026 : sur un même fichier, SheetJS rend une partie des dates en
+// texte (« 09-09-2026 10:08:03 ») et une autre en numéro de série Excel (46274.42). L'ancien code
+// ne reconnaissait que le texte et ignorait silencieusement les autres : 1 404 opérations sur
+// 3 271 (43 %) n'avaient jamais été importées, ce qui faussait tous les chiffres du Hub.
+function dateQontoVersISO(v) {
+  if (v == null || v === '') return null;
+  const s = String(v);
+  const jma = s.match(/^(\d{2})-(\d{2})-(\d{4})/);            // 09-09-2026 10:08:03
+  if (jma) return `${jma[3]}-${jma[2]}-${jma[1]}`;
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);            // 2026-09-09 ou 2026-09-09T08:25:51
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  if (typeof v === 'number' && isFinite(v) && v > 20000 && v < 80000 && window.XLSX) {
+    const d = XLSX.SSF.parse_date_code(v);                      // numéro de série Excel
+    if (d && d.y) return `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
+  }
+  return null;
+}
+
 // Import d'un export Qonto (.xls / .xlsx / .csv) directement dans le navigateur.
 // Détecte tout seul le type de fichier : relevé bancaire (transactions) ou liste de factures.
 async function importQontoFile(file) {
@@ -4479,16 +4498,16 @@ async function importQontoFile(file) {
     for (const r of rows) {
       const tid = r['Identifiant de transaction'];
       const dateStr = r["Date de l'opération (local)"] || r["Date de l'opération (UTC)"];
-      if (!tid || typeof tid !== 'string' || !dateStr) continue;
-      const m = String(dateStr).match(/^(\d{2})-(\d{2})-(\d{4})/);
-      if (!m) continue;
+      if (!tid || typeof tid !== 'string' || dateStr == null || dateStr === '') continue;
+      const iso = dateQontoVersISO(dateStr);
+      if (!iso) continue;
       const debit = r['Débit'] != null ? parseFloat(r['Débit']) : null;
       const credit = r['Crédit'] != null ? parseFloat(r['Crédit']) : null;
       ops.push({
         transaction_id: tid,
-        date_op: `${m[3]}-${m[2]}-${m[1]}`,
-        annee: parseInt(m[3]),
-        mois: parseInt(m[2]),
+        date_op: iso,
+        annee: parseInt(iso.slice(0, 4)),
+        mois: parseInt(iso.slice(5, 7)),
         libelle: r['Nom de la contrepartie'] != null ? String(r['Nom de la contrepartie']) : null,
         debit, credit,
         categorie: categoriserTransaction(r['Nom de la contrepartie'], r['Catégorie de trésorerie'], r['Méthode de paiement'], credit, r['Référence'], debit),
@@ -4648,8 +4667,8 @@ async function importQontoFactures(rows) {
   const facs = [];
   for (const r of rows) {
     const num = (r['Number'] || '').toString().trim();
-    const d = (r['Issue Date'] || '').toString().slice(0, 10);
-    if (!num || !/^\d{4}-\d{2}-\d{2}$/.test(d)) continue;
+    const d = dateQontoVersISO(r['Issue Date']);
+    if (!num || !d) continue;
     facs.push({
       numero: num,
       date_emission: d,
@@ -4660,7 +4679,7 @@ async function importQontoFactures(rows) {
       tva: r['Vat Amount'] != null ? parseFloat(r['Vat Amount']) : null,
       ttc: r['Amount Due'] != null ? parseFloat(r['Amount Due']) : null,
       statut: r['Status'] || null,
-      payee_le: r['Paid At'] ? String(r['Paid At']).slice(0, 10) : null,
+      payee_le: dateQontoVersISO(r['Paid At']),
       objet: r['Header'] ? String(r['Header']).slice(0, 200) : null
     });
   }
