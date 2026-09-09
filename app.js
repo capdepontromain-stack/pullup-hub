@@ -1328,7 +1328,7 @@ async function renderTresorerie(factures) {
 
   body.innerHTML = `
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
-      ${bloc('Sur le compte', solde, solde > 0 ? 'var(--gold)' : '#f44336', 'Solde Qonto réel')}
+      ${bloc('Sur le compte', solde, solde > 0 ? 'var(--gold)' : '#f44336', 'Opérations en cours comprises')}
       ${bloc('Argent dehors', totalCreances, '#f44336', impayees.length + ' facture' + (impayees.length > 1 ? 's' : '') + ' non payée' + (impayees.length > 1 ? 's' : ''))}
       ${bloc('Dont en retard', enRetard, enRetard > 0 ? '#f44336' : '#4CAF50', enRetard > 0 ? 'À relancer maintenant' : 'Rien en retard')}
       ${bloc('Compte + créances', solde + totalCreances, '#4CAF50', 'Si tout rentre')}
