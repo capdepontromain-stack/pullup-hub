@@ -488,15 +488,35 @@ function eventColor(ev) {
   return clientColor(ev.client || ev.name);
 }
 
+// Le tableau affiche par défaut les événements du jour et à venir.
+// Les événements passés sont regroupés sous une ligne repliable (demande Romain 09/09/2026)
+// pour ne plus avoir à faire défiler tout l'historique pour voir ce qui arrive.
 function renderEventsTable(events) {
   const tbody = document.querySelector('#page-events .data-table tbody');
   if (!tbody) return;
+  window._allEvents = events;
   if (!events.length) {
     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">Aucun événement — cliquez sur "+ Nouvel événement"</td></tr>';
     return;
   }
-  tbody.innerHTML = events.map(ev => {
+
+  // Date du jour au format YYYY-MM-DD (comparaison de chaînes : pas de piège de fuseau horaire)
+  const now = new Date();
+  const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+  const dayOf = ev => (ev.event_date || '').slice(0, 10);
+  // Un événement sans date n'est pas « passé » : il reste visible, il est à planifier
+  const isPast = ev => dayOf(ev) !== '' && dayOf(ev) < todayStr;
+
+  const past = events.filter(isPast).sort((a, b) => dayOf(b).localeCompare(dayOf(a)));       // les plus récents d'abord
+  const upcoming = events.filter(ev => !isPast(ev)).sort((a, b) => {
+    if (!dayOf(a)) return 1;                                                                  // sans date en bas
+    if (!dayOf(b)) return -1;
+    return dayOf(a).localeCompare(dayOf(b));                                                  // le plus proche d'abord
+  });
+
+  const rowFor = ev => {
     const date = ev.event_date ? new Date(ev.event_date).toLocaleDateString('fr-FR') : '—';
+    const isToday = dayOf(ev) === todayStr;
     const c = eventColor(ev);
     const evTasks = (window._allTasks || []).filter(t => t.event_id === ev.id);
     const todoTasks = evTasks.filter(t => t.status !== 'done' && t.status !== 'fait');
@@ -518,7 +538,7 @@ function renderEventsTable(events) {
         </td>
       </tr>` : '';
     return `<tr style="border-left:3px solid ${c.border};background:${c.bg}">
-      <td onclick="openEventDetailById('${ev.id}')" style="cursor:pointer"><strong>${ev.name}</strong></td>
+      <td onclick="openEventDetailById('${ev.id}')" style="cursor:pointer"><strong>${ev.name}</strong>${isToday ? ' <span style="background:var(--gold);color:#1C1A17;border-radius:5px;padding:1px 7px;font-size:.68rem;font-weight:700;vertical-align:middle">AUJOURD\'HUI</span>' : ''}</td>
       <td><span style="color:${c.text};font-weight:600">${ev.client || '—'}</span></td>
       <td>${date}</td>
       <td>${ev.start_time ? ev.start_time.slice(0,5) : '—'}${ev.end_time ? ' → ' + ev.end_time.slice(0,5) : ''}</td>
@@ -534,7 +554,31 @@ function renderEventsTable(events) {
         </select>
       </td>
     </tr>${tasksHtml}`;
-  }).join('');
+  };
+
+  let html = upcoming.length
+    ? upcoming.map(rowFor).join('')
+    : '<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:1.6rem">Aucun événement à venir</td></tr>';
+
+  if (past.length) {
+    const open = !!window._showPastEvents;
+    html += `<tr class="past-toggle-row">
+      <td colspan="8" onclick="togglePastEvents()" title="Cliquer pour ${open ? 'replier' : 'afficher'} les événements passés"
+        style="cursor:pointer;user-select:none;padding:12px;background:var(--bg3);border-top:2px solid var(--border);color:var(--gold);font-weight:600;font-size:.88rem">
+        ${open ? '▼' : '▶'} Événements passés (${past.length})
+        <span style="color:var(--text2);font-weight:400;font-size:.78rem;margin-left:8px">${open ? 'cliquer pour replier' : 'cliquer pour afficher'}</span>
+      </td>
+    </tr>`;
+    if (open) html += past.map(rowFor).join('');
+  }
+
+  tbody.innerHTML = html;
+}
+
+// Ouvre / referme la liste des événements passés
+function togglePastEvents() {
+  window._showPastEvents = !window._showPastEvents;
+  renderEventsTable(window._allEvents || []);
 }
 
 async function updateEventStatus(id, status, selectEl) {
