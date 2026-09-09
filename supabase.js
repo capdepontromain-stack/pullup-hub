@@ -4536,7 +4536,11 @@ async function importQontoFile(file) {
     }
     if (!ops.length) { showToast('Aucune opération reconnue — est-ce bien un export Qonto ?'); return; }
     const { count: avant } = await sb.from('banque_transactions').select('*', { count: 'exact', head: true });
-    const { error } = await sb.from('banque_transactions').upsert(ops, { onConflict: 'transaction_id', ignoreDuplicates: true });
+    // ignoreDuplicates: false → un réimport CORRIGE les lignes déjà en base au lieu de les laisser
+    // telles quelles. Indispensable le 09/09/2026 pour réparer les montants divisés/multipliés par
+    // la lecture locale de SheetJS, et sans risque : l'export Qonto est la source de vérité et
+    // aucune de ces colonnes n'est modifiable à la main dans le Hub.
+    const { error } = await sb.from('banque_transactions').upsert(ops, { onConflict: 'transaction_id', ignoreDuplicates: false });
     if (error) {
       if (error.code === 'PGRST205') { showToast('⚠️ La table banque_transactions n\'existe pas encore dans Supabase'); const w = document.getElementById('banque-setup-warning'); if (w) w.style.display = 'block'; }
       else showToast('Erreur : ' + error.message);
