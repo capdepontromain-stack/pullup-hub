@@ -4562,6 +4562,19 @@ async function importQontoFile(file) {
 //    compatible ou à moins de 90 j de la date Qonto) ;
 //  ③ sous-groupe de factures du même client pointées « payées » le même jour chez Qonto dont la somme
 //    correspond exactement à UN virement — montants non ambigus (absents des autres factures du client).
+// Une référence de virement cite-t-elle bien CETTE facture ?
+// On compare les chiffres (« FACTURE 2026060 » doit matcher F-2026-060), mais on refuse quand la
+// référence nomme explicitement un autre type de document : « ACOMPTE D-2026-060 » est un DEVIS,
+// il porte les mêmes chiffres que la facture F-2026-060 d'un tout autre client (piège du 09/09/2026).
+function refCiteFacture(reference, numero) {
+  const s = String(reference ?? '').toUpperCase();
+  const cle = String(numero).replace(/\D/g, '');
+  if (cle.length < 6 || !s.replace(/\D/g, '').includes(cle)) return false;
+  const lettreFacture = (String(numero).match(/[A-Za-z]/) || ['F'])[0].toUpperCase();
+  const cite = s.match(/([A-Z])\s*-\s*\d{4}\s*-\s*\d+/);
+  return !(cite && cite[1] !== lettreFacture);
+}
+
 async function rapprocherDatesPaiement() {
   const [rc, rf] = await Promise.all([
     sb.from('banque_transactions').select('date_op,libelle,credit,reference').gt('credit', 0),
@@ -4581,8 +4594,10 @@ async function rapprocherDatesPaiement() {
   const rUnp = await sb.from('banque_factures').select('numero,client,ttc,statut,date_emission').eq('statut', 'unpaid');
   let payees = 0;
   for (const f of (rUnp.data || [])) {
-    const cle = f.numero.replace(/\D/g, '');
-    let m = cle.length >= 6 ? creds.filter(c => c.refnum.includes(cle)) : [];
+    // Garde-fou du 09/09/2026 : un virement ne peut pas payer une facture pas encore émise.
+    // Sans lui, l'acompte EXA SERVICES « ACOMPTE D-2026-060 » du 02/09 avait marqué payée la
+    // facture Insee F-2026-060 du 06/08, avec une date de paiement au 09/02 (six mois avant l'émission).
+    let m = creds.filter(c => refCiteFacture(c.reference, f.numero) && (!f.date_emission || c.date_op >= f.date_emission));
     if (!m.length) {
       const ttc = parseFloat(f.ttc) || 0;
       if (ttc > 0 && f.date_emission) {
@@ -4610,9 +4625,7 @@ async function rapprocherDatesPaiement() {
 
   // ① par référence
   for (const f of facs) {
-    const cle = f.numero.replace(/\D/g, '');
-    if (cle.length < 6) continue;
-    const m = creds.filter(c => c.refnum.includes(cle)).sort((a, b) => a.date_op.localeCompare(b.date_op));
+    const m = creds.filter(c => refCiteFacture(c.reference, f.numero)).sort((a, b) => a.date_op.localeCompare(b.date_op));
     if (m.length) corrections[f.numero] = m[m.length - 1].date_op;
   }
 
