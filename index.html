@@ -22,7 +22,7 @@ try {
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Pull Up">
 <link rel="apple-touch-icon" href="logo-512.png">
-<link rel="stylesheet" href="style.css?v=20260909t1138">
+<link rel="stylesheet" href="style.css?v=20260909t1428">
 </head>
 <body>
 
@@ -1437,6 +1437,16 @@ Afin d'avancer, nous pouvons :
       </div>
     </div>
 
+    <!-- Trésorerie (09/09/2026) : solde réel du compte, âge des créances et projection.
+         Tout est calculé depuis banque_transactions + banque_factures — aucune saisie manuelle. -->
+    <div class="card" id="treso-card" style="margin-bottom:1.5rem">
+      <div class="card-header">
+        <h3>💶 Trésorerie — ce qu'il y a en caisse et ce qui rentre</h3>
+        <span style="font-size:.75rem;color:var(--text2)" id="treso-maj">Chargement…</span>
+      </div>
+      <div id="treso-body"><p style="color:var(--text2)">Chargement…</p></div>
+    </div>
+
     <!-- Jauges objectifs -->
     <div class="fin-gauges-row">
       <!-- Jauge couverture charges (bénéfice vs charges) -->
@@ -1549,8 +1559,8 @@ Afin d'avancer, nous pouvons :
       </div>
       <div class="events-table-wrap">
         <table class="data-table">
-          <thead><tr><th>Facture</th><th>Client</th><th>Montant TTC</th><th>Émise le</th><th>Échéance</th></tr></thead>
-          <tbody id="creances-tbody"><tr><td colspan="5" style="text-align:center;color:var(--text2);padding:2rem">Chargement…</td></tr></tbody>
+          <thead><tr><th>Facture</th><th>Client</th><th>Montant TTC</th><th>Émise le</th><th>Échéance</th><th>Relance</th></tr></thead>
+          <tbody id="creances-tbody"><tr><td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">Chargement…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -2844,8 +2854,8 @@ Afin d'avancer, nous pouvons :
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js?v=20260909t1138"></script>
-<script src="app.js?v=20260909t1138"></script>
+<script src="supabase.js?v=20260909t1428"></script>
+<script src="app.js?v=20260909t1428"></script>
 <script>
   if ('serviceWorker' in navigator) {
     // Enregistrer le SW de nettoyage (sans rechargement forcé — l'ancien

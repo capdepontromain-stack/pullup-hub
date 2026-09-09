@@ -1211,6 +1211,8 @@ async function renderFinanceAnalyse() {
 
   // Créances : factures Qonto non payées
   renderCreancesReelles(reel.factures);
+  // Trésorerie : solde du compte, âge des créances, projection (09/09/2026)
+  renderTresorerie(reel.factures).catch(console.error);
 
   // Jauge 1 : dépenses couvertes par le FACTURÉ — mêmes chiffres que le tableau Facturé vs Dépensé
   const depTab = reel.totDepOp + reel.totImpotsCharge;
@@ -1234,6 +1236,128 @@ async function renderFinanceAnalyse() {
     if (gc)  { gc.style.width  = couvPct + '%'; if (gcp)  gcp.textContent  = couvPct + '%'; }
     if (gca) { gca.style.width = caPct + '%';   if (gcap) gcap.textContent = caPct + '%'; }
   }, 120);
+}
+
+// ===== TRÉSORERIE (ajouté le 09/09/2026) =====
+// Le solde réel du compte = cumul de TOUTES les opérations Qonto depuis l'ouverture (08/08/2022,
+// compte parti de 0). Vérifié le 09/09/2026 sur l'export : le cumul retombe exactement sur le solde
+// affiché par Qonto (42 512,47 €). Supabase renvoie 1 000 lignes maxi par requête → on pagine.
+async function fetchToutesTransactionsBanque() {
+  const out = [];
+  let debut = 0;
+  for (;;) {
+    const { data, error } = await sb.from('banque_transactions')
+      .select('date_op,debit,credit,categorie').order('date_op').range(debut, debut + 999);
+    if (error || !data || !data.length) break;
+    out.push(...data);
+    if (data.length < 1000) break;
+    debut += 1000;
+  }
+  return out;
+}
+
+// Tableau de bord trésorerie : solde en caisse, âge des créances, projection sur 4 mois.
+// Volontairement prudent : la projection ne compte QUE les factures déjà émises (rien d'espéré).
+async function renderTresorerie(factures) {
+  const body = document.getElementById('treso-body');
+  if (!body) return;
+  const txs = await fetchToutesTransactionsBanque();
+  if (!txs.length) {
+    body.innerHTML = '<p style="color:var(--text2)">Aucune opération bancaire — importe un export Qonto dans l\'onglet Charges.</p>';
+    return;
+  }
+  const solde = txs.reduce((s, t) => s + (parseFloat(t.credit) || 0) - (parseFloat(t.debit) || 0), 0);
+  const derniere = txs[txs.length - 1].date_op;
+  const majEl = document.getElementById('treso-maj');
+  if (majEl) majEl.textContent = 'Dernière opération : ' + new Date(derniere + 'T00:00:00').toLocaleDateString('fr-FR');
+
+  // Charges mensuelles réelles = moyenne des sorties des 6 mois complets précédents
+  const auj = new Date();
+  const clefMois = d => d.getFullYear() * 12 + d.getMonth();
+  const moisCourant = clefMois(auj);
+  const sorties = {};
+  txs.forEach(t => {
+    const d = new Date(t.date_op + 'T00:00:00');
+    const k = clefMois(d);
+    if (k < moisCourant && k >= moisCourant - 6) sorties[k] = (sorties[k] || 0) + (parseFloat(t.debit) || 0);
+  });
+  const moisRef = Object.values(sorties);
+  const chargeMens = moisRef.length ? moisRef.reduce((a, b) => a + b, 0) / moisRef.length : 0;
+
+  // Créances : âge et mois d'encaissement attendu (échéance = 30 j après émission, usage Pull Up)
+  const impayees = (factures || []).filter(f => f.statut === 'unpaid');
+  const tranches = { 'À échoir': 0, 'En retard 1 à 30 j': 0, 'En retard 31 à 60 j': 0, 'En retard + de 60 j': 0 };
+  const attenduParMois = {};
+  impayees.forEach(f => {
+    const ech = new Date(f.date_emission + 'T00:00:00');
+    ech.setDate(ech.getDate() + 30);
+    const jours = Math.floor((auj - ech) / 86400000);
+    const ttc = parseFloat(f.ttc) || 0;
+    if (jours <= 0) tranches['À échoir'] += ttc;
+    else if (jours <= 30) tranches['En retard 1 à 30 j'] += ttc;
+    else if (jours <= 60) tranches['En retard 31 à 60 j'] += ttc;
+    else tranches['En retard + de 60 j'] += ttc;
+    // Une facture déjà échue est attendue sur le mois en cours
+    const k = Math.max(moisCourant, clefMois(ech));
+    attenduParMois[k] = (attenduParMois[k] || 0) + ttc;
+  });
+  const totalCreances = impayees.reduce((s, f) => s + (parseFloat(f.ttc) || 0), 0);
+  const enRetard = tranches['En retard 1 à 30 j'] + tranches['En retard 31 à 60 j'] + tranches['En retard + de 60 j'];
+
+  // Projection sur le mois en cours + 3 mois (rien d'autre que les factures déjà émises en entrée)
+  const MOIS_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+  const joursDuMois = new Date(auj.getFullYear(), auj.getMonth() + 1, 0).getDate();
+  const partMoisEnCours = (joursDuMois - auj.getDate()) / joursDuMois;
+  let courant = solde;
+  const lignes = [];
+  for (let i = 0; i < 4; i++) {
+    const k = moisCourant + i;
+    const entrees = attenduParMois[k] || 0;
+    const charges = chargeMens * (i === 0 ? partMoisEnCours : 1);
+    courant += entrees - charges;
+    lignes.push({ label: MOIS_FR[k % 12] + ' ' + Math.floor(k / 12), entrees, charges, fin: courant });
+  }
+  const creuse = lignes.find(l => l.fin < 15000);
+  const passeParDecembre = lignes.some(l => l.label.startsWith('Décembre'));
+
+  const bloc = (titre, val, couleur, sous) => `<div style="flex:1;min-width:150px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px">
+      <div style="font-size:.72rem;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">${titre}</div>
+      <div style="font-size:1.25rem;font-weight:700;color:${couleur};margin-top:3px">${fmtEur(val)}</div>
+      ${sous ? `<div style="font-size:.72rem;color:var(--text2);margin-top:2px">${sous}</div>` : ''}
+    </div>`;
+
+  body.innerHTML = `
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      ${bloc('Sur le compte', solde, solde > 0 ? 'var(--gold)' : '#f44336', 'Solde Qonto réel')}
+      ${bloc('Argent dehors', totalCreances, '#f44336', impayees.length + ' facture' + (impayees.length > 1 ? 's' : '') + ' non payée' + (impayees.length > 1 ? 's' : ''))}
+      ${bloc('Dont en retard', enRetard, enRetard > 0 ? '#f44336' : '#4CAF50', enRetard > 0 ? 'À relancer maintenant' : 'Rien en retard')}
+      ${bloc('Compte + créances', solde + totalCreances, '#4CAF50', 'Si tout rentre')}
+      ${bloc('Charges par mois', chargeMens, 'var(--text1)', 'Moyenne des 6 derniers mois')}
+    </div>
+
+    <div style="font-weight:700;font-size:.85rem;margin:6px 0 8px">Âge des créances</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
+      ${Object.entries(tranches).map(([k, v]) => `<div style="flex:1;min-width:130px;background:var(--bg2);border:1px solid ${v > 0 && k !== 'À échoir' ? 'rgba(244,67,54,.4)' : 'var(--border)'};border-radius:9px;padding:10px 12px">
+        <div style="font-size:.72rem;color:var(--text2)">${k}</div>
+        <div style="font-weight:700;color:${v === 0 ? 'var(--text2)' : (k === 'À échoir' ? '#4CAF50' : '#f44336')}">${fmtEur(v)}</div>
+      </div>`).join('')}
+    </div>
+
+    <div style="font-weight:700;font-size:.85rem;margin:6px 0 8px">Projection du compte (prudente : uniquement les factures déjà émises)</div>
+    <table class="data-table" style="margin-bottom:8px">
+      <thead><tr><th>Mois</th><th style="color:#4CAF50">Ce qui rentre</th><th style="color:#f44336">Charges estimées</th><th>Compte en fin de mois</th></tr></thead>
+      <tbody>${lignes.map(l => `<tr>
+        <td>${l.label}</td>
+        <td style="color:#4CAF50">${l.entrees ? '+' + fmtEur(l.entrees) : '—'}</td>
+        <td style="color:#f44336">−${fmtEur(l.charges)}</td>
+        <td style="font-weight:700;color:${l.fin < 0 ? '#f44336' : l.fin < 10000 ? '#ff9800' : '#4CAF50'}">${fmtEur(l.fin)}</td>
+      </tr>`).join('')}</tbody>
+    </table>
+    <p style="font-size:.75rem;color:var(--text2);line-height:1.5">
+      Aucune facture future n'est comptée dans « ce qui rentre » : tout devis signé d'ici là améliore la projection.
+      ${creuse ? `<br><strong style="color:#ff9800">⚠️ Point de vigilance : ${creuse.label}</strong> — le compte descend à ${fmtEur(creuse.fin)} sans nouvelle rentrée.` : ''}
+      ${passeParDecembre ? `<br><strong style="color:#ff9800">🎄 Décembre est structurellement dans le rouge</strong> : sur les 4 dernières années, il coûte toujours plus qu'il ne rapporte (décembre 2025 : −35 300 € de trésorerie) parce que les prestataires et les achats de Noël se paient en décembre alors que les Noëls s'encaissent en janvier (janvier 2025 : +74 000 € encaissés). Prévoir le matelas avant fin novembre.` : ''}
+    </p>`;
 }
 
 // Créances : factures Qonto au statut "unpaid" (échéance = émission + 30 jours)
@@ -1276,25 +1400,71 @@ function renderCreancesReelles(factures) {
   const tbody = document.getElementById('creances-tbody');
   if (!tbody) return;
   if (!impayees.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text2);padding:2rem">✅ Aucune créance — toutes les factures sont payées</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">✅ Aucune créance — toutes les factures sont payées</td></tr>';
     return;
   }
   const now = new Date();
-  tbody.innerHTML = impayees.map(f => {
-    const emise = new Date(f.date_emission);
+  window._creancesCourantes = {};
+  tbody.innerHTML = impayees.map((f, i) => {
+    const emise = new Date(f.date_emission + 'T00:00:00');
     const echeance = new Date(emise); echeance.setDate(echeance.getDate() + 30);
     const retard = Math.floor((now - echeance) / 86400000);
+    window._creancesCourantes[i] = { ...f, retard, echeance: echeance.toLocaleDateString('fr-FR') };
     const badge = retard > 0
       ? `<span style="font-size:.75rem;background:rgba(244,67,54,.15);color:#f44336;border-radius:6px;padding:2px 8px;font-weight:700">⚠ ${retard} j de retard</span>`
-      : `<span style="font-size:.75rem;background:rgba(76,175,80,.15);color:#4CAF50;border-radius:6px;padding:2px 8px">dans les délais</span>`;
+      : `<span style="font-size:.75rem;background:rgba(76,175,80,.15);color:#4CAF50;border-radius:6px;padding:2px 8px">échéance le ${echeance.toLocaleDateString('fr-FR')}</span>`;
     return `<tr>
       <td style="color:var(--text2)">${f.numero}</td>
       <td>${f.client || '—'}</td>
       <td style="font-weight:700;color:var(--gold)">${fmtEur(parseFloat(f.ttc) || 0)}</td>
       <td>${emise.toLocaleDateString('fr-FR')}</td>
       <td>${badge}</td>
-    </tr>`;
+      <td>${retard > 0
+        ? `<button class="btn-sm" onclick="toggleRelanceFacture(${i})">Relance ▾</button>`
+        : '<span style="font-size:.78rem;color:var(--text2)">on attend</span>'}</td>
+    </tr>
+    ${retard > 0 ? `<tr id="relance-fac-${i}" style="display:none"><td colspan="6" style="background:var(--bg2)">
+      <div style="padding:6px 4px">
+        <div style="font-size:.78rem;color:var(--text2);margin-bottom:6px">${texteEnteteRelance(retard)} Texte à copier puis coller dans un mail.</div>
+        <textarea id="relance-fac-txt-${i}" readonly style="width:100%;min-height:180px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text1);font-size:.85rem;line-height:1.5;font-family:inherit;resize:vertical">${genererRelanceFacture(window._creancesCourantes[i])}</textarea>
+        <div style="margin-top:8px"><button class="btn-primary" onclick="copierRelanceFacture(${i})">📋 Copier la relance</button></div>
+      </div></td></tr>` : ''}`;
   }).join('');
+}
+
+// ---- Relances de paiement (09/09/2026) ----
+// Trois paliers selon le retard. Toujours poli : la plupart des clients de Pull Up sont des
+// collectivités et des CSE qui paient en fin de circuit administratif, pas des mauvais payeurs.
+function texteEnteteRelance(retard) {
+  if (retard <= 15) return 'Palier 1 (retard récent) : rappel simple et courtois.';
+  if (retard <= 45) return 'Palier 2 : rappel ferme, on redemande une date de paiement.';
+  return 'Palier 3 (plus de 45 jours) : dernier rappel avant mise en demeure.';
+}
+
+function genererRelanceFacture(f) {
+  const montant = (parseFloat(f.ttc) || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) + ' €';
+  const emise = new Date(f.date_emission + 'T00:00:00').toLocaleDateString('fr-FR');
+  const base = `Objet : Facture ${f.numero} (${montant}) : point de règlement\n\nBonjour,\n\n`;
+  const pied = `\n\nSi le règlement est déjà parti, merci de ne pas tenir compte de ce message et de m'indiquer simplement la date d'envoi.\n\nBien cordialement,\n\nRomain Capdepont\nPull Up Événements\n0693 81 78 82 / romain@pullup.re`;
+  if (f.retard <= 15) {
+    return base + `Je me permets un petit rappel au sujet de la facture ${f.numero} d'un montant de ${montant}, émise le ${emise} et arrivée à échéance le ${f.echeance}.\n\nPourriez-vous me confirmer qu'elle est bien engagée au paiement ?` + pied;
+  }
+  if (f.retard <= 45) {
+    return base + `Sauf erreur de ma part, la facture ${f.numero} (${montant}), émise le ${emise}, reste impayée à ce jour. Son échéance était fixée au ${f.echeance}, soit ${f.retard} jours de retard.\n\nPourriez-vous me communiquer la date de règlement prévue ? Si un document vous manque (RIB, bon de commande, procès-verbal de service fait), dites-le moi, je vous l'envoie dans la journée.` + pied;
+  }
+  return base + `La facture ${f.numero} d'un montant de ${montant}, émise le ${emise} et échue depuis le ${f.echeance}, accuse aujourd'hui ${f.retard} jours de retard, malgré mes précédentes relances.\n\nJe vous remercie de bien vouloir procéder à son règlement sous huitaine. Passé ce délai, je serai contraint d'adresser une mise en demeure et d'appliquer les pénalités de retard prévues à l'article L441-10 du code de commerce (indemnité forfaitaire de 40 € pour frais de recouvrement).\n\nJe reste bien entendu disponible pour en échanger par téléphone.` + pied;
+}
+
+function toggleRelanceFacture(i) {
+  const tr = document.getElementById('relance-fac-' + i);
+  if (tr) tr.style.display = tr.style.display === 'none' ? '' : 'none';
+}
+
+function copierRelanceFacture(i) {
+  const ta = document.getElementById('relance-fac-txt-' + i);
+  if (!ta) return;
+  navigator.clipboard.writeText(ta.value).then(() => showToast('Relance copiée, prête à coller dans un mail'))
+    .catch(() => { ta.select(); document.execCommand('copy'); showToast('Relance copiée'); });
 }
 
 function editFinanceCell(year, month, field, currentVal) {
