@@ -1872,7 +1872,7 @@ async function loadAndRenderClients() {
   // ou dernière demande de devis (devis_requests) — la plus récente des deux gagne.
   try {
     const { data: dr } = await sb.from('devis_requests').select('client,created_at');
-    const normC = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+    const normC = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
     for (const c of clients) {
       const nc = normC(c.company);
       let dernierDevis = '';
@@ -4241,7 +4241,7 @@ const FAMILLES_FIXES = ['Abonnements & outils', 'Assurances', 'Ménage', 'Compta
 
 // Catégorisation automatique v2 (familles validées avec Romain le 15/08/2026 — même logique que la recatégorisation SQL)
 function categoriserTransaction(nom, catQonto, methode, credit, reference, debit) {
-  const norm = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+  const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
   const n = norm(nom), c = norm(catQonto), ref = norm(reference);
   const d = Math.round(parseFloat(debit) || 0);
   if (credit && credit > 0) return 'Encaissements';
@@ -4489,13 +4489,13 @@ async function importQontoFile(file) {
         date_op: `${m[3]}-${m[2]}-${m[1]}`,
         annee: parseInt(m[3]),
         mois: parseInt(m[2]),
-        libelle: r['Nom de la contrepartie'] || null,
+        libelle: r['Nom de la contrepartie'] != null ? String(r['Nom de la contrepartie']) : null,
         debit, credit,
         categorie: categoriserTransaction(r['Nom de la contrepartie'], r['Catégorie de trésorerie'], r['Méthode de paiement'], credit, r['Référence'], debit),
         categorie_qonto: r['Catégorie de trésorerie'] || null,
         methode: r['Méthode de paiement'] || null,
         initiateur: r['Initiateur'] || null,
-        reference: r['Référence'] || null
+        reference: r['Référence'] != null && r['Référence'] !== '' ? String(r['Référence']) : null
       });
     }
     if (!ops.length) { showToast('Aucune opération reconnue — est-ce bien un export Qonto ?'); return; }
@@ -4553,7 +4553,7 @@ async function rapprocherDatesPaiement() {
   // le nom du payeur recoupe celui du client (règle durcie le 23/08 : la F-2026-066 Mercialys 2 170 €
   // avait été confondue avec un virement Handi-Educ de 2 170,01 € antérieur à son émission).
   // Un faux positif serait recorrigé par le prochain export factures Qonto (les statuts officiels priment).
-  const motsU = s => new Set(((s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().match(/[A-Z]{4,}/g)) || []);
+  const motsU = s => new Set((String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().match(/[A-Z]{4,}/g)) || []);
   const communU = (a, b) => [...a].some(x => b.has(x));
   const rUnp = await sb.from('banque_factures').select('numero,client,ttc,statut,date_emission').eq('statut', 'unpaid');
   let payees = 0;
@@ -4580,7 +4580,7 @@ async function rapprocherDatesPaiement() {
     }
   }
   if (payees) showToast(`💶 ${payees} facture${payees > 1 ? 's' : ''} marquée${payees > 1 ? 's' : ''} payée${payees > 1 ? 's' : ''} (virement retrouvé en banque)`);
-  const mots = s => new Set(((s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().match(/[A-Z]{4,}/g)) || []);
+  const mots = s => new Set((String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().match(/[A-Z]{4,}/g)) || []);
   const commun = (a, b) => [...a].some(x => b.has(x));
   const jours = (d1, d2) => (new Date(d1) - new Date(d2)) / 86400000;
   const corrections = {};
