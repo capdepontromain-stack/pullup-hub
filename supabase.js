@@ -4259,10 +4259,20 @@ function categoriserTransaction(nom, catQonto, methode, credit, reference, debit
   if (n.startsWith('SPOTIFY')) return 'Abonnements & outils';
   // Salariés : uniquement Ketsia (1 471,57 €) et Flora (1 112,05 € ; 955 € en 2025) — salaire si référence
   // ou montant de salaire, sinon remboursement de frais (kms, achats avancés). Marine/Titi/Gloria = prestataires.
+  // + Gloria Gufflet (CDD depuis le 01/09/2026). Depuis octobre 2026 les montants varient (1 086, 1 139,
+  // 1 162, 1 483, 1 580) et la référence est souvent « Envoye depuis Qonto » → tout virement ≥ 900 € = salaire.
   if (n.includes('LAW WAN CHUNG') || (n.includes('FLORA') && (n.includes('BOYER') || n.includes('PULLUP')))) {
-    if (ref.includes('SALAIRE') || [954, 955, 1112, 1113, 1450, 1471, 1472].includes(d)) return 'Salaires & équipe';
+    if (ref.includes('SALAIRE') || d >= 900 || [954, 955, 1112, 1113, 1450, 1471, 1472].includes(d)) return 'Salaires & équipe';
     return 'Remboursements frais équipe';
   }
+  // Gloria : prestataire jusqu'en août 2026 (animations payées à la prestation), salariée depuis le 01/09
+  if (n.includes('GUFFLET')) {
+    if (ref.includes('SALAIRE') || d >= 900) return 'Salaires & équipe';
+    if (ref.includes('KILO') || ref.includes('FRAIS') || ref.includes('REMBOURS')) return 'Remboursements frais équipe';
+    return 'Artistes & prestataires';
+  }
+  // Marie-Mélinda Armoogum = traiteur des événements (barquettes, repas d'équipe sur prestation), pas un resto
+  if (n.includes('ARMOOGUM')) return 'Artistes & prestataires';
   if (n.includes('PAPANGUE')) return 'Comptable & conseils';
   if (['APRIL', 'ALLIANZ', 'PRUDENCE CREOLE', 'GROUPAMA', 'GENERALI', 'AXA '].some(k => n.includes(k))) return 'Assurances';
   if (n.includes('MI DAOU')) return 'Ménage';
