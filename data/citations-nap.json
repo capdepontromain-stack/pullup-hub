@@ -1,6 +1,6 @@
 {
   "description": "Checklist NAP (Nom, Adresse, Téléphone) des citations externes de Pull Up Événements. Référence : 6 Impasse des Sœurs Brontë, 97430 Le Tampon, 0693 81 78 82. Édition durable : modifier CE fichier puis déployer le Hub (les modifications faites dans le Hub sont gardées sur ce navigateur seulement).",
-  "lastUpdated": "2026-10-04",
+  "lastUpdated": "2026-11-03",
   "citations": [
     {
       "id": "pagesjaunes",
@@ -11,8 +11,8 @@
       "cp": "97430",
       "telephone": "06 93 81 78 82",
       "statut": "conforme",
-      "dernier_controle": "2026-10-04",
-      "notes": "Lu au navigateur le 04/10 : NAP exact, lien pullup.re. Graphie « Soeurs Bronté » = normalisation PagesJaunes, tolérée."
+      "dernier_controle": "2026-11-03",
+      "notes": "Lu au navigateur le 03/11 : NAP exact (06 93 81 78 82, 97430), lien pullup.re. Graphie « Soeurs Bronté » = normalisation PagesJaunes, tolérée."
     },
     {
       "id": "mappy",
@@ -20,11 +20,11 @@
       "url": "https://fr.mappy.com/poi/668b691bf29adc15d0b11c04",
       "nom_affiche": "Pull Up Événements",
       "adresse_affichee": "6 imp Soeurs Bronté, Le Tampon",
-      "cp": "97418 (version robots) / 97430 (navigateur)",
+      "cp": "97418 (version moteurs)",
       "telephone": "bouton Téléphone",
       "statut": "à corriger",
-      "dernier_controle": "2026-10-04",
-      "notes": "Le 04/10 : la page servie aux moteurs affiche encore 97418 (47 occurrences, titre compris) ; le navigateur la réécrit en 97430. Brouillon Gmail à informations@mappy.com prêt (04/10). Sinon « Signaler une erreur » sur la fiche."
+      "dernier_controle": "2026-11-03",
+      "notes": "Inchangé le 03/11 : la page servie aux moteurs affiche toujours 97418 (47 occurrences, titre compris), aucun 97430. Brouillon Gmail à informations@mappy.com du 04/10 toujours NON ENVOYÉ (pas de doublon créé) : à envoyer par Romain, ou « Signaler une erreur » sur la fiche."
     },
     {
       "id": "reunioneventpro",
@@ -35,8 +35,8 @@
       "cp": "",
       "telephone": "",
       "statut": "à créer",
-      "dernier_controle": "2026-10-04",
-      "notes": "Ancienne fiche toujours en 404 le 04/10. Réinscription à faire par Romain (formulaire CCI, 0262 94 20 00). Réintégrer la nouvelle URL dans brand.json ensuite."
+      "dernier_controle": "2026-11-03",
+      "notes": "Aucune fiche Pull Up trouvée le 03/11. Réinscription à faire par Romain (formulaire CCI, 0262 94 20 00). Réintégrer la nouvelle URL dans brand.json (sameAs) ensuite."
     },
     {
       "id": "evenementielpourtous",
@@ -47,8 +47,8 @@
       "cp": "97411 (faux)",
       "telephone": "",
       "statut": "à corriger",
-      "dernier_controle": "2026-10-04",
-      "notes": "Inchangé le 04/10 : nom faux, ville Saint-Denis, pas d'adresse ni de lien. Brouillon Gmail à info@evenementielpourtous.com créé le 04/10 (à envoyer par Romain)."
+      "dernier_controle": "2026-11-03",
+      "notes": "Inchangé le 03/11 : « Pull'Up Événement », Saint-Denis 97411, pas d'adresse, de téléphone ni de lien. Brouillon Gmail à info@evenementielpourtous.com du 04/10 toujours NON ENVOYÉ (pas de doublon créé)."
     },
     {
       "id": "aleou",
@@ -59,8 +59,8 @@
       "cp": "97430",
       "telephone": "",
       "statut": "conforme",
-      "dernier_controle": "2026-10-04",
-      "notes": "Lu au navigateur le 04/10 : adresse exacte, lien pullup.re. À peaufiner par Romain : « 10 à 400 participants » (sites : 1000) et un tiret long dans le texte."
+      "dernier_controle": "2026-11-03",
+      "notes": "Lu au navigateur le 03/11 : adresse exacte 6 Impasse des Sœurs Brontë 97430, lien pullup.re. À peaufiner par Romain : « 10 à 400 participants » (sites : 1000) et tirets longs dans le texte."
     },
     {
       "id": "leshotessesaccueil",
@@ -71,8 +71,8 @@
       "cp": "97430",
       "telephone": "",
       "statut": "conforme",
-      "dernier_controle": "2026-10-04",
-      "notes": "NAP exact le 04/10. Aucun lien vers hotesse-reunion.re : remplir le champ site dans l'espace pro Devis-Market."
+      "dernier_controle": "2026-11-03",
+      "notes": "NAP exact le 03/11 (URL redirigée vers ..._agence-dhotesse-daccueil-le-tampon_f336635.html). Texte de présentation à jour (500 événements, 4,9/5, 24 h) mais contient un tiret long. Toujours aucun lien vers hotesse-reunion.re (espace pro Devis-Market)."
     },
     {
       "id": "agencesevenementielles",
@@ -83,8 +83,8 @@
       "cp": "97430",
       "telephone": "",
       "statut": "conforme",
-      "dernier_controle": "2026-10-04",
-      "notes": "NAP exact le 04/10. Aucun lien vers pullup.re : remplir le champ site dans l'espace pro Devis-Market (même compte)."
+      "dernier_controle": "2026-11-03",
+      "notes": "NAP exact le 03/11, texte de présentation à jour (contient un tiret long). Toujours aucun lien vers pullup.re : champ site à remplir dans l'espace pro Devis-Market."
     },
     {
       "id": "organisationteambuilding",
@@ -94,9 +94,9 @@
       "adresse_affichee": "6 Impasse des soeurs Brontë, Le Tampon",
       "cp": "97430",
       "telephone": "",
-      "statut": "conforme",
-      "dernier_controle": "2026-10-04",
-      "notes": "Fiche f336634 trouvée le 04/10, NAP exact. Pas de lien site ; sous-titre tronqué « gence événementielle… » (A manquant) à corriger dans l'espace pro."
+      "statut": "à contrôler",
+      "dernier_controle": "2026-11-03",
+      "notes": "Le 03/11 tout le site organisationteambuilding.com répond « Service Unavailable » (503), accueil compris : panne passagère probable. Conforme au 04/10, à recontrôler le mois prochain."
     },
     {
       "id": "lemagdelevenementiel",
@@ -107,8 +107,8 @@
       "cp": "97430",
       "telephone": "0693817882",
       "statut": "conforme",
-      "dernier_controle": "2026-10-04",
-      "notes": "NAP exact + lien dofollow pullup.re. Texte encore faux le 04/10 : « 4,8/5 », « plus de 60 avis », « sous 48 heures » (textes corrigés : ~/seo/corrections/lemagdelevenementiel.md, via l'espace pro)."
+      "dernier_controle": "2026-11-03",
+      "notes": "NAP exact + lien pullup.re le 03/11. Texte toujours faux : « 4,8/5 », « plus de 60 avis » (textes corrigés : ~/seo/corrections/lemagdelevenementiel.md, via l'espace pro)."
     },
     {
       "id": "reunionnaisdumonde",
@@ -119,8 +119,8 @@
       "cp": "",
       "telephone": "+262 0693817882 (préfixe doublé)",
       "statut": "à corriger",
-      "dernier_controle": "2026-10-04",
-      "notes": "Fiche existante (pas à créer). Inchangée le 04/10 : téléphone faux depuis l'étranger, pas de CP, LinkedIn = URL admin/dashboard, tiret long. Correction par Romain depuis son compte membre."
+      "dernier_controle": "2026-11-03",
+      "notes": "Inchangé le 03/11 : téléphone « +262 0693817882 » (préfixe doublé), pas de CP ni de ville dans les coordonnées, LinkedIn = URL admin/dashboard, un tiret long. Correction par Romain depuis son compte membre (pas d'adresse de contact publique, donc pas de brouillon)."
     },
     {
       "id": "evenementiel-info",
@@ -130,9 +130,9 @@
       "adresse_affichee": "6 impasse des Soeurs Brontë, Le Tampon",
       "cp": "97430",
       "telephone": "0693817882",
-      "statut": "à contrôler",
-      "dernier_controle": "2026-10-04",
-      "notes": "Conforme au 15/09. Le 04/10 le site est en panne (certificat invalide, accueil vide, fiche en 404) : à recontrôler le mois prochain avant de conclure à une fermeture."
+      "statut": "fermé",
+      "dernier_controle": "2026-11-03",
+      "notes": "2e contrôle en panne : le 03/11 accueil vide, fiche en 404, certificat auto-signé (serveur Dedibox). Considéré fermé. Il reste dans le sameAs de brand.json : à retirer si Romain valide."
     },
     {
       "id": "faitesvousconnaitre",
@@ -143,8 +143,8 @@
       "cp": "",
       "telephone": "",
       "statut": "conforme",
-      "dernier_controle": "2026-10-04",
-      "notes": "En ligne le 04/10, lien pullup.re. Pas de champ adresse ni téléphone affiché."
+      "dernier_controle": "2026-11-03",
+      "notes": "En ligne le 03/11, lien pullup.re. Pas de champ adresse ni téléphone affiché."
     },
     {
       "id": "internet-reunion",
@@ -155,8 +155,8 @@
       "cp": "",
       "telephone": "",
       "statut": "conforme",
-      "dernier_controle": "2026-10-04",
-      "notes": "En ligne le 04/10 : nom exact, contact@pullup.re, lien pullup.re (nofollow). L'annuaire n'affiche ni adresse ni téléphone."
+      "dernier_controle": "2026-11-03",
+      "notes": "En ligne le 03/11 : nom exact, lien pullup.re. L'annuaire n'affiche ni adresse ni téléphone."
     },
     {
       "id": "zartis",
@@ -167,8 +167,8 @@
       "cp": "",
       "telephone": "",
       "statut": "à corriger",
-      "dernier_controle": "2026-10-04",
-      "notes": "Inchangé le 04/10 : lien site vide (« Devis et idées sur [] »), pas de ville ni de téléphone, « 10 à 800 participants ». À compléter par Romain depuis son compte."
+      "dernier_controle": "2026-11-03",
+      "notes": "Inchangé le 03/11 : lien site vide (« Devis et idées sur [] »), pas de ville ni de téléphone, « 10 à 800 participants » (liens Facebook et YouTube présents). À compléter par Romain depuis son compte."
     }
   ]
 }
