@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Pull Up Score</title>
+<meta name="description" content="Saisie des résultats du team building Proxim'Services par les animateurs et classement en direct.">
+<link rel="icon" href="logo-192.png">
+<style>
+  :root { --noir:#1C1A17; --creme:#F1ECE2; --or:#C9962E; --gris:#5A554B; --blanc:#fff; --vert:#2E7D4F; --rouge:#B23A3A; --a:#FBF4E4; --b:#E8E4DC; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:Arial, Helvetica, sans-serif; background:var(--creme); color:var(--noir); font-size:16px; }
+  header { background:var(--noir); color:#fff; padding:12px 16px; display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:5; }
+  header .dot { width:12px; height:12px; border-radius:50%; background:var(--or); }
+  header h1 { font-size:15px; margin:0; letter-spacing:.5px; }
+  header small { color:#cfc7b8; font-size:12px; display:block; }
+  nav { display:flex; background:#fff; border-bottom:2px solid var(--or); position:sticky; top:50px; z-index:5; }
+  nav button { flex:1; border:0; background:#fff; padding:12px 4px; font-size:14px; font-weight:bold; color:var(--gris); }
+  nav button.on { color:var(--noir); border-bottom:4px solid var(--noir); }
+  main { padding:14px; max-width:720px; margin:0 auto; }
+  .card { background:#fff; border-radius:12px; padding:14px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+  label { font-size:13px; color:var(--gris); display:block; margin-bottom:4px; }
+  select, input[type=text], input[type=number] { width:100%; font-size:17px; padding:10px; border:1px solid #cbc5b9; border-radius:8px; background:#fff; }
+  .row { display:flex; gap:10px; }
+  .row > * { flex:1; }
+  .manche { border:1px solid #e3ddd0; border-radius:10px; padding:10px; margin-bottom:10px; background:#fff; }
+  .manche.ok { border-color:var(--vert); background:#f3faf5; }
+  .manche.pending { border-color:var(--or); }
+  .manche h3 { margin:0 0 8px; font-size:15px; }
+  .manche h3 span { color:var(--gris); font-weight:normal; font-size:13px; }
+  .teams { display:flex; align-items:center; gap:6px; margin-bottom:8px; font-weight:bold; }
+  .team { flex:1; padding:8px; border-radius:8px; text-align:center; }
+  .team.a { background:var(--a); } .team.b { background:var(--b); }
+  .team small { display:block; font-weight:normal; color:var(--gris); font-size:12px; }
+  .btns { display:flex; gap:6px; }
+  .btns button { flex:1; padding:12px 4px; font-size:14px; font-weight:bold; border-radius:8px; border:2px solid #cbc5b9; background:#fff; color:var(--noir); }
+  .btns button.sel { background:var(--noir); color:#fff; border-color:var(--noir); }
+  .scores { display:flex; gap:8px; margin-top:8px; align-items:center; }
+  .scores input { text-align:center; font-size:20px; font-weight:bold; }
+  .status { font-size:12px; margin-top:6px; color:var(--gris); }
+  .status.ok { color:var(--vert); } .status.pending { color:#9a6d10; } .status.err { color:var(--rouge); }
+  .banner { background:#FFF3CD; border:1px solid #E0C25C; color:#6b4e00; padding:10px 12px; border-radius:10px; font-size:14px; margin-bottom:12px; }
+  .banner.err { background:#FBE4E4; border-color:#D9A3A3; color:#7a1f1f; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { padding:7px 6px; border-bottom:1px solid #eee6d8; text-align:center; }
+  th { background:var(--noir); color:#fff; font-size:12px; }
+  td.l { text-align:left; font-weight:bold; }
+  tr.top1 td { background:#FBF0D2; font-weight:bold; }
+  tr.top2 td { background:#F2EEE6; } tr.top3 td { background:#F6F2EC; }
+  .big { font-size:34px; font-weight:bold; line-height:1.1; }
+  .prize { background:var(--noir); color:#fff; border-radius:12px; padding:14px; margin-bottom:12px; }
+  .prize .t { color:var(--or); font-size:12px; letter-spacing:1px; text-transform:uppercase; }
+  .grid { display:grid; grid-template-columns:repeat(9, 1fr); gap:3px; font-size:11px; }
+  .grid div { padding:6px 0; text-align:center; border-radius:4px; background:#e9e3d6; }
+  .grid div.h { background:transparent; font-weight:bold; color:var(--gris); }
+  .grid div.ok { background:#cfe9d8; } .grid div.pend { background:#f6e1b0; }
+  .muted { color:var(--gris); font-size:13px; }
+  .pin { text-align:center; padding:30px 10px; }
+  .pin input { font-size:28px; text-align:center; letter-spacing:4px; }
+  .btn { display:inline-block; padding:12px 18px; border-radius:10px; background:var(--or); color:var(--noir); font-weight:bold; border:0; font-size:16px; }
+  .btn.dark { background:var(--noir); color:#fff; }
+  footer { text-align:center; color:var(--gris); font-size:11px; padding:20px; }
+</style>
+</head>
+<body>
+<header><div class="dot"></div><div><h1>PULL UP SCORE</h1><small>Journée de cohésion Proxim'Services · samedi 14 novembre 2026</small></div></header>
+<nav id="nav" style="display:none">
+  <button data-v="stand" class="on">Mon stand</button>
+  <button data-v="classement">Classement</button>
+  <button data-v="saisies">Saisies</button>
+</nav>
+<main id="main"></main>
+<footer>Pull Up Événements · 06 93 81 78 82 · Les feuilles papier restent la sauvegarde : notez toujours sur les feuilles de route.</footer>
+
+<script>
+// ---------- Réglages ----------
+const SUPABASE_URL = 'https://vincxrmtfjbenlzhjwby.supabase.co';
+const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpbmN4cm10ZmpiZW5semhqd2J5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyOTI1MTksImV4cCI6MjA5Nzg2ODUxOX0.M9_ChGDlOIUKKZtbBHs1xn4cdy4FwUAQKN0aYyXefQY';
+const TABLE = 'tb_scores';
+const EVENT = 'proxim-2026-11-14';
+const CODE = 'PULLUP14';          // code d'accès donné au briefing
+const QUIZ_STAND = 5;              // le stand qui donne le prix spécial
+const N_STANDS = 15, N_MANCHES = 8;
+const STATIONS = ['Les catapultes','Les roues',"L'épreuve Kapla","L'Archery Tag",'Le quiz Culture G péi','Le parcours gonflable','Le tir à la corde',"L'épreuve des lettres",'Les cibles géantes','La chorégraphie','Photos & vidéos','Le théâtre',"À l'aveugle",'Le clou','Transport en cohésion'];
+const COULEURS = ['Rouge','Bleu roi','Vert','Jaune','Orange','Violet','Rose','Blanc','Noir','Turquoise','Bordeaux','Bleu ciel','Vert anis','Gris','Doré'];
+const couleur = t => COULEURS[(t-1)%15];
+// Même formule que la grille papier : A = (s - r) mod 15 + 1 ; B = (s + r + 2) mod 15 + 16 (s et r à partir de 0)
+function paire(stand, manche){ const s=stand-1, r=manche-1; return [ ((s-r)%15+15)%15+1, (s+r+2)%15+16 ]; }
+
+// ---------- État ----------
+const LS = k => 'pus_'+EVENT+'_'+k;
+let state = { view:'stand', stand: +(localStorage.getItem(LS('stand'))||0), nom: localStorage.getItem(LS('nom'))||'', pin: localStorage.getItem(LS('pin'))==='1', rows:{}, dbOk:null, lastErr:'' };
+let queue = JSON.parse(localStorage.getItem(LS('queue'))||'{}');   // clé stand-manche -> ligne à envoyer
+let local = JSON.parse(localStorage.getItem(LS('local'))||'{}');   // copie locale de tout ce qu'on a saisi
+const key = (s,m)=> s+'-'+m;
+const saveLS = ()=>{ localStorage.setItem(LS('queue'),JSON.stringify(queue)); localStorage.setItem(LS('local'),JSON.stringify(local)); };
+
+// ---------- Supabase (REST, sans bibliothèque) ----------
+const H = { 'apikey':ANON, 'Authorization':'Bearer '+ANON, 'Content-Type':'application/json' };
+async function dbSelect(){
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?event=eq.${EVENT}&select=stand,manche,team_a,team_b,result,score_a,score_b,animateur,updated_at`, {headers:H});
+  if(!r.ok){ throw new Error(await r.text()); }
+  return r.json();
+}
+async function dbUpsert(row){
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?on_conflict=event,stand,manche`, {method:'POST', headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'}, body:JSON.stringify(row)});
+  if(!r.ok){ throw new Error(await r.text()); }
+}
+async function flush(){
+  const keys = Object.keys(queue); if(!keys.length) return;
+  for(const k of keys){ try{ await dbUpsert(queue[k]); delete queue[k]; } catch(e){ state.lastErr = String(e.message||e); break; } }
+  saveLS(); render();
+}
+async function refresh(){
+  try{ const rows = await dbSelect(); state.rows={}; rows.forEach(x=>state.rows[key(x.stand,x.manche)]=x); state.dbOk=true; state.lastErr=''; }
+  catch(e){ state.dbOk=false; state.lastErr=String(e.message||e); }
+  render();
+}
+function enregistrer(stand, manche, result, sa, sb){
+  const [a,b] = paire(stand, manche);
+  const row = { event:EVENT, stand, manche, team_a:a, team_b:b, result, score_a: sa===''?null:+sa, score_b: sb===''?null:+sb, animateur: state.nom||null, code:CODE, updated_at:new Date().toISOString() };
+  local[key(stand,manche)] = row; queue[key(stand,manche)] = row; saveLS(); render(); flush();
+}
+
+// ---------- Calculs ----------
+function donnees(){ // fusion base + local (le local prime s'il est plus récent)
+  const all = {...state.rows};
+  Object.values(local).forEach(r=>{ const k=key(r.stand,r.manche); if(!all[k] || (all[k].updated_at||'') < r.updated_at) all[k]=r; });
+  return all;
+}
+function classement(){
+  const pts={}, wins={}, quiz={}, joue={};
+  for(let t=1;t<=30;t++){ pts[t]=0; wins[t]=0; quiz[t]=null; joue[t]=0; }
+  const all = donnees();
+  Object.values(all).forEach(r=>{
+    if(!r.result) return;
+    joue[r.team_a]++; joue[r.team_b]++;
+    if(r.result==='A'){ pts[r.team_a]+=3; pts[r.team_b]+=1; wins[r.team_a]++; }
+    else if(r.result==='B'){ pts[r.team_b]+=3; pts[r.team_a]+=1; wins[r.team_b]++; }
+    else { pts[r.team_a]+=2; pts[r.team_b]+=2; }
+    if(r.stand===QUIZ_STAND){ if(r.score_a!=null) quiz[r.team_a]=r.score_a; if(r.score_b!=null) quiz[r.team_b]=r.score_b; }
+  });
+  const ordre = Object.keys(pts).map(Number).sort((x,y)=> pts[y]-pts[x] || wins[y]-wins[x] || (quiz[y]||0)-(quiz[x]||0) || x-y);
+  const general = ordre[0];
+  const quizOrdre = Object.keys(quiz).map(Number).filter(t=>quiz[t]!=null).sort((x,y)=> quiz[y]-quiz[x] || pts[y]-pts[x] || x-y);
+  const prixQuiz = quizOrdre.find(t=>t!==general) ?? null;
+  const saisies = Object.values(all).filter(r=>r.result).length;
+  return { pts, wins, quiz, joue, ordre, general, prixQuiz, saisies, all };
+}
+
+// ---------- Rendu ----------
+const $ = sel => document.querySelector(sel);
+function render(){
+  const main=$('#main'), nav=$('#nav');
+  if(!state.pin){ nav.style.display='none'; main.innerHTML = `<div class="card pin"><div class="big" style="font-size:22px;margin-bottom:10px">Code d'accès</div><p class="muted">Donné au briefing du matin.</p><input type="text" id="pin" inputmode="text" autocapitalize="characters" placeholder="CODE"><p></p><button class="btn dark" onclick="verifPin()">Entrer</button></div>`; return; }
+  nav.style.display='flex';
+  nav.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.v===state.view));
+  let html='';
+  if(state.dbOk===false){ html += `<div class="banner err"><b>Base non joignable.</b> Les saisies sont gardées sur ce téléphone et seront envoyées dès que possible. Continuez à noter sur les feuilles papier.<br><small>${(state.lastErr||'').slice(0,160)}</small></div>`; }
+  const nq = Object.keys(queue).length; if(nq) html += `<div class="banner">${nq} saisie(s) en attente d'envoi.</div>`;
+  if(state.view==='stand') html += vueStand(); else if(state.view==='classement') html += vueClassement(); else html += vueSaisies();
+  main.innerHTML = html;
+}
+function vueStand(){
+  let h = `<div class="card"><div class="row"><div><label>Mon stand</label><select id="selStand" onchange="setStand(this.value)"><option value="0">Choisir…</option>${STATIONS.map((n,i)=>`<option value="${i+1}" ${state.stand===i+1?'selected':''}>Stand ${i+1} · ${n}</option>`).join('')}</select></div></div>
+    <div style="margin-top:8px"><label>Mon prénom (animateur)</label><input type="text" id="nom" value="${state.nom}" onchange="setNom(this.value)" placeholder="Prénom"></div></div>`;
+  if(!state.stand) return h + `<p class="muted">Choisis ton stand : les 8 manches s'affichent avec les deux équipes attendues. Au gong de fin, appuie sur l'équipe qui gagne (ou Égalité). C'est tout.</p>`;
+  const all = donnees();
+  h += `<div class="card"><div class="big" style="font-size:20px">Stand ${state.stand} · ${STATIONS[state.stand-1]}</div><p class="muted">Victoire 3 points, égalité 2, défaite 1.${state.stand===QUIZ_STAND?' <b>Ce stand donne le prix spécial Proxim\'Services : saisis aussi le nombre de bonnes réponses de chaque équipe (sur 10).</b>':''}</p></div>`;
+  for(let m=1;m<=N_MANCHES;m++){
+    const [a,b]=paire(state.stand,m); const r=all[key(state.stand,m)]; const pend = queue[key(state.stand,m)];
+    const sel = v => r && r.result===v ? 'sel':'';
+    h += `<div class="manche ${r&&r.result?'ok':''} ${pend?'pending':''}"><h3>Manche ${m} <span>${r&&r.animateur?'· noté par '+r.animateur:''}</span></h3>
+      <div class="teams"><div class="team a">Équipe ${a}<small>${couleur(a)}</small></div><div>vs</div><div class="team b">Équipe ${b}<small>${couleur(b)}</small></div></div>
+      ${state.stand===QUIZ_STAND?`<div class="scores"><input type="number" min="0" max="10" id="sa${m}" placeholder="/10" value="${r&&r.score_a!=null?r.score_a:''}"><span class="muted">bonnes réponses</span><input type="number" min="0" max="10" id="sb${m}" placeholder="/10" value="${r&&r.score_b!=null?r.score_b:''}"></div>`:''}
+      <div class="btns"><button class="${sel('A')}" onclick="choix(${m},'A')">Équipe ${a} gagne</button><button class="${sel('N')}" onclick="choix(${m},'N')">Égalité</button><button class="${sel('B')}" onclick="choix(${m},'B')">Équipe ${b} gagne</button></div>
+      <div class="status ${pend?'pending':(r&&r.result?'ok':'')}">${pend?'En attente d\'envoi…':(r&&r.result?'Enregistré':'À saisir au gong de fin')}</div></div>`;
+  }
+  return h;
+}
+function vueClassement(){
+  const c = classement();
+  let h = `<div class="card"><div class="row"><div><div class="big">${c.saisies}<span style="font-size:16px;color:var(--gris)"> / ${N_STANDS*N_MANCHES}</span></div><div class="muted">manches saisies</div></div><div style="text-align:right"><button class="btn" onclick="refresh()">Actualiser</button></div></div></div>`;
+  if(c.saisies){
+    h += `<div class="prize"><div class="t">Grand prix de la cohésion</div><div class="big">Équipe ${c.general} <span style="font-size:16px;color:#cfc7b8">${couleur(c.general)}</span></div><div>${c.pts[c.general]} points · ${c.wins[c.general]} victoires</div></div>`;
+    if(c.prixQuiz!=null) h += `<div class="prize" style="background:var(--or);color:var(--noir)"><div class="t" style="color:var(--noir)">Prix spécial Proxim'Services (quiz, stand ${QUIZ_STAND})</div><div class="big">Équipe ${c.prixQuiz} <span style="font-size:16px">${couleur(c.prixQuiz)}</span></div><div>${c.quiz[c.prixQuiz]} bonnes réponses sur 10${c.ordre[0]!==c.prixQuiz?'':''}</div></div>`;
+    else h += `<div class="banner">Prix spécial quiz : en attente des saisies du stand ${QUIZ_STAND} (bonnes réponses sur 10).</div>`;
+  }
+  h += `<div class="card"><table><tr><th>#</th><th style="text-align:left">Équipe</th><th>Pts</th><th>Vict.</th><th>Quiz</th><th>Manches</th></tr>`;
+  c.ordre.forEach((t,i)=>{ h += `<tr class="${i<3?'top'+(i+1):''}"><td>${i+1}</td><td class="l">Équipe ${t} <span class="muted">${couleur(t)}</span></td><td>${c.pts[t]}</td><td>${c.wins[t]}</td><td>${c.quiz[t]==null?'·':c.quiz[t]}</td><td>${c.joue[t]}/8</td></tr>`; });
+  h += `</table><p class="muted">Égalité : nombre de victoires, puis score au quiz, puis tir à la corde devant le podium. Le prix spécial va à la meilleure équipe du quiz qui n'a pas déjà le grand prix.</p></div>`;
+  return h;
+}
+function vueSaisies(){
+  const all = donnees();
+  let h = `<div class="card"><p class="muted">Vert = saisi, orange = en attente d'envoi, gris = manquant. Touchez un stand pour saisir à sa place (table de marque).</p><div class="grid"><div class="h">Stand</div>${Array.from({length:8},(_,i)=>`<div class="h">M${i+1}</div>`).join('')}`;
+  for(let s=1;s<=N_STANDS;s++){ h += `<div class="h" style="cursor:pointer" onclick="setStand(${s});state.view='stand';render()">${s}</div>`; for(let m=1;m<=N_MANCHES;m++){ const r=all[key(s,m)]; const p=queue[key(s,m)]; h += `<div class="${p?'pend':(r&&r.result?'ok':'')}">${r&&r.result?(r.result==='N'?'=':r.result==='A'?r.team_a:r.team_b):''}</div>`; } }
+  h += `</div></div>`;
+  return h;
+}
+// ---------- Actions ----------
+window.verifPin = ()=>{ const v=($('#pin').value||'').trim().toUpperCase(); if(v===CODE){ state.pin=true; localStorage.setItem(LS('pin'),'1'); render(); refresh(); } else alert('Code incorrect'); };
+window.setStand = v=>{ state.stand=+v; localStorage.setItem(LS('stand'),state.stand); render(); };
+window.setNom = v=>{ state.nom=v.trim(); localStorage.setItem(LS('nom'),state.nom); };
+window.choix = (m,v)=>{ const sa = $('#sa'+m)?.value ?? ''; const sb = $('#sb'+m)?.value ?? ''; enregistrer(state.stand,m,v,sa,sb); };
+window.refresh = refresh;
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{ state.view=b.dataset.v; render(); if(state.view!=='stand') refresh(); });
+window.addEventListener('online', flush);
+setInterval(()=>{ flush(); if(state.view!=='stand') refresh(); }, 20000);
+render(); if(state.pin) refresh();
+</script>
+</body>
+</html>
