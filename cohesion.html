@@ -463,7 +463,7 @@ async function lireMessages(silencieux){
     if(avant!==state.chatOuvert && state.view==='chat'){ const el=document.getElementById('msgTxt'); const brouillon=el?el.value:''; render(); const el2=document.getElementById('msgTxt'); if(el2) el2.value=brouillon; }
     const vus = new Set(r.map(x=>x.cid)); Object.keys(local.m).forEach(c=>{ if(vus.has(c)) delete local.m[c]; });
     state.messages = r.filter(x=>!/^__CHAT_/.test(x.texte)).reverse();
-    const ann = annonce(); if(ann && !state.org && lsGet('annonce_vibree','')!==ann.cid){ lsSet('annonce_vibree',ann.cid); vibre([120,60,120]); if(state.view!=='home') dire('📣 Nouveau message de l\'organisation'); }
+    const ann = annonce(); if(ann && !state.org && confirmee() && nomEq(state.team) && lsGet('annonce_vibree','')!==ann.cid){ lsSet('annonce_vibree',ann.cid); vibre([120,60,120]); if(state.view!=='home') dire('📣 Nouveau message de l\'organisation'); }
   }catch(e){ state.chatOk=false; }
   if(!silencieux){ if(state.view==='chat' || (state.view==='org' && state.orgTab==='messages')) majFil(); majBas(); }
 }
