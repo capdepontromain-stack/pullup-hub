@@ -320,6 +320,7 @@ function vueParDefaut(){
   return lsGet('accueil_vu',false) ? 'brief' : 'accueil';
 }
 function renderDoux(){
+  majChoix();                                                            // sans toucher au champ en cours de saisie
   const a=document.activeElement;
   if(a && (a.tagName==='INPUT'||a.tagName==='SELECT')) return;          // on ne touche pas à un écran en cours de saisie
   if(['saisie','bravo','landing','regles'].includes(state.view)) return;
@@ -327,7 +328,7 @@ function renderDoux(){
   if(state.view==='chat' || (state.view==='org' && state.orgTab==='messages')){ majFil(); majBas(); return; }
   if(state.view==='brief'){                                              // un autre téléphone de l'équipe a déjà inscrit l'équipe
     if(!state.edition && (confirmee()||state.orgRetour) && equipe(state.team) && equipe(state.team).nom){ state.view=''; render(); }
-    else if(!state.team || (!state.edition && !confirmee())) majChoix();          // la liste des équipes déjà inscrites se met à jour
+    else majChoix();          // si le numéro tapé vient d'être inscrit par un autre téléphone, on propose de rejoindre l'équipe
     return;
   }
   render();
@@ -351,11 +352,31 @@ function blocOrg(){
   return state.org ? `<button class="btn marine" onclick="aller('org')">Espace organisation</button>`
    : `<div class="card"><p class="muted">Organisation Pull Up</p><input type="password" id="codeOrg" autocomplete="off" autocapitalize="none" placeholder="Code organisation"><button class="btn clair" onclick="entrerOrg()">Entrer</button></div>`;
 }
-function optionsNumeros(){
-  return `<option value="0">Choisir…</option>` + Array.from({length:N_EQUIPES},(_,i)=>{ const t=i+1; return `<option value="${t}" ${state.team===t?'selected':''}>Équipe ${t} · tissu ${couleur(t).toLowerCase()}${nomEq(t)?' · déjà inscrite':''}</option>`; }).join('');
+function majChoix(){ const t=state.team; if(state.view!=='brief' || !t || state.edition || !nomEq(t)) return;
+  if(!document.getElementById('dejaInscrite') || (state.photos[t] && !document.querySelector('#zoneEquipe .hero'))) majZone(); }   // la boîte « déjà inscrite » apparaît, puis sa photo dès qu'elle est chargée
+function photoForm(){ const t=state.team; return (figee()||state.edition) && t ? (state.photos[t]||okPhoto(lsGet('photo_'+t,''))) : okPhoto(lsGet('photo_brouillon','')); }
+function figee(){ const t=state.team, e=t?equipe(t):null; return !!(state.orgRetour || (t && tQ===t) || (confirmee() && e && e.nom)); }   // numéro figé : lien direct d'une équipe, ou équipe déjà inscrite sur ce téléphone
+function htmlZone(){
+  const t=state.team, e=t?equipe(t):null;
+  if(t && e && e.nom && !state.edition){
+    chargerPhoto(t); const pe=state.photos[t]||'';
+    return `<div id="dejaInscrite" class="banner bleu" style="margin-top:14px"><b>L'équipe ${t} est déjà inscrite :</b><br><span style="font-size:19px;font-weight:800">${esc(e.nom)}</span><br>Capitaine : ${esc(e.capitaine||'')}</div>
+      ${pe?`<div class="hero" style="background-image:url('${pe}')"></div>`:''}
+      <button class="btn orange" onclick="rejoindre()">Oui, c'est mon équipe</button>
+      <p class="muted" style="margin-top:12px">Ce n'est pas vous ? Vérifiez votre numéro d'équipe et corrigez-le ci-dessus. Si une autre équipe a pris votre numéro par erreur, demandez à un animateur.</p>
+      <button class="lnk" onclick="modifierEquipe()">Corriger cette inscription (animateur)</button>`;
+  }
+  const p=photoForm();
+  return `<label>Nom de l'équipe</label><input type="text" id="fNom" maxlength="28" placeholder="Exemple : Les Pirates" value="${esc(lsGet('brouillon_nom',''))}" oninput="garderBrouillon()">
+      <label>Pseudo du capitaine</label><input type="text" id="fCap" maxlength="24" placeholder="Exemple : Barbe Noire" value="${esc(lsGet('brouillon_cap',''))}" oninput="garderBrouillon()">
+      <label>Photo de toute l'équipe</label>
+      ${p?`<div class="hero" style="background-image:url('${p}')"><span>Photo enregistrée</span></div>`:''}
+      <input type="file" id="fPhoto" accept="image/*" capture="environment" style="display:none" onchange="photoChoisie(this)">
+      <button class="btn clair" onclick="garderBrouillon();document.getElementById('fPhoto').click()">${p?'Reprendre la photo':'Prendre la photo de l\'équipe'}</button>
+      <button class="btn orange" onclick="inscrire()">OK</button>
+      ${p?'':'<button class="lnk" onclick="inscrire(true)">Continuer sans photo</button>'}`;
 }
-function majChoix(){ const el=document.getElementById('selNum'); if(el && document.activeElement!==el){ const v=el.value; el.innerHTML=optionsNumeros(); el.value=v; }
-  const t=state.team; if(t && !state.edition && nomEq(t) && !document.getElementById('dejaInscrite')){ garderBrouillon(); render(); } }
+function majZone(){ const z=document.getElementById('zoneEquipe'); if(z) z.innerHTML=htmlZone(); }
 const REGLES = `<ul class="regles">
       <li><span class="num" style="background:var(--bleu)">1</span><div><b>Faites un maximum d'épreuves</b> pour gagner un maximum de points. Il y en a 14, dans l'ordre que vous voulez.</div></li>
       <li><span class="num" style="background:var(--orange)">2</span><div><b>N'oubliez pas la culture d'entreprise :</b> elle rapporte le double de points.</div></li>
@@ -376,29 +397,11 @@ function vRegles(){
       <button class="btn orange" style="font-size:20px;padding:17px" onclick="reglesVues()">OK, voir les épreuves</button></div>`;
 }
 function vBrief(){
-  const t=state.team; const p = t ? (state.photos[t]||okPhoto(lsGet('photo_'+t,''))) : ''; const e = t ? equipe(t) : null;
-  const verrou = state.orgRetour || (t && tQ===t) || (confirmee() && e && e.nom);      // numéro figé : lien direct d'une équipe, ou équipe déjà inscrite sur ce téléphone
+  const t=state.team;
   let h = `<div class="card"><h2>Votre équipe</h2>`;
-  if(!verrou) h += `<label>Numéro de votre équipe (écrit sur le tissu de couleur)</label><select id="selNum" onchange="choisirNumero(this.value)">${optionsNumeros()}</select>`;
-  else h += `<p style="font-weight:800;color:var(--marine);font-size:18px;margin:0">Équipe ${t} <span class="muted" style="font-weight:400">· tissu ${couleur(t).toLowerCase()}</span></p>`;
-  if(!t) h += `<p class="muted" style="margin-top:12px">Choisissez d'abord le numéro de votre équipe : vous donnerez ensuite un nom à votre équipe.</p>`;
-  else if(e && e.nom && !state.edition){
-    chargerPhoto(t);
-    h += `<div id="dejaInscrite" class="banner bleu" style="margin-top:14px"><b>L'équipe ${t} est déjà inscrite :</b><br><span style="font-size:19px;font-weight:800">${esc(e.nom)}</span><br>Capitaine : ${esc(e.capitaine||'')}</div>
-      ${p?`<div class="hero" style="background-image:url('${p}')"></div>`:''}
-      <button class="btn orange" onclick="rejoindre()">Oui, c'est mon équipe</button>
-      <p class="muted" style="margin-top:12px">Ce n'est pas vous ? Vérifiez le numéro écrit sur votre tissu et changez-le ci-dessus. Si une autre équipe a pris votre numéro par erreur, demandez à un animateur.</p>
-      <button class="lnk" onclick="modifierEquipe()">Corriger cette inscription (animateur)</button>`;
-  } else h += `
-      <label>Nom de l'équipe</label><input type="text" id="fNom" maxlength="28" placeholder="Trouvez un nom qui claque" value="${esc(lsGet('brouillon_nom',''))}">
-      <label>Prénom du capitaine</label><input type="text" id="fCap" maxlength="24" placeholder="Capitaine" value="${esc(lsGet('brouillon_cap',''))}">
-      <label>Photo de toute l'équipe</label>
-      ${p?`<div class="hero" style="background-image:url('${p}')"><span>Photo enregistrée</span></div>`:''}
-      <input type="file" id="fPhoto" accept="image/*" capture="environment" style="display:none" onchange="photoChoisie(this)">
-      <button class="btn clair" onclick="garderBrouillon();document.getElementById('fPhoto').click()">${p?'Reprendre la photo':'Prendre la photo de l\'équipe'}</button>
-      <button class="btn orange" onclick="inscrire()">OK</button>
-      ${p?'':'<button class="lnk" onclick="inscrire(true)">Continuer sans photo</button>'}`;
-  h += `</div>`;
+  if(figee()) h += `<p style="font-weight:800;color:var(--marine);font-size:18px;margin:0">Équipe ${t}</p>`;
+  else h += `<label>Numéro d'équipe</label><input type="number" id="fNum" inputmode="numeric" min="1" max="${N_EQUIPES}" placeholder="Exemple : 12" value="${t||''}" oninput="saisirNumero(this.value)">`;
+  h += `<div id="zoneEquipe">${htmlZone()}</div></div>`;
   if(state.orgRetour) h += `<button class="btn marine" onclick="aller('org')">Retour à l'organisation</button>`;
   return h;
 }
@@ -416,7 +419,7 @@ function vHome(){
   let h = state.orgRetour?`<button class="btn marine" style="margin:0 0 12px" onclick="aller('org')">Retour à l'organisation</button>`:'';
   const ann = annonce(); if(ann) h += `<div class="banner bleu"><b>Message de l'organisation :</b> ${esc(ann.texte)}<br><button class="lnk" style="padding:4px 0 0" onclick="annonceVue('${ann.cid}')">J'ai lu</button></div>`;
   h += `<div class="card"><div class="equipe"><div class="ph" style="${photo?`background-image:url('${photo}')`:''}"></div>
-      <div><div class="nom">${esc(eqp.nom||'')}</div><div class="muted">Équipe ${t} · tissu ${couleur(t).toLowerCase()}<br>Capitaine : ${esc(eqp.capitaine||'')}</div></div></div>
+      <div><div class="nom">${esc(eqp.nom||'')}</div><div class="muted">Équipe ${t}<br>Capitaine : ${esc(eqp.capitaine||'')}</div></div></div>
     <div class="scores"><div><b>${nb}/14</b><span>épreuves faites</span></div><div><b>${14-nb}</b><span>encore à faire</span></div></div>
     <div class="prog"><div style="width:${100*nb/14}%"></div></div>
     <p class="muted" style="margin:10px 0 0">Chaque épreuve affiche les points à gagner. Vos points sont notés par les animateurs et restent secrets jusqu'au podium.</p></div>`;
@@ -429,7 +432,7 @@ function vHome(){
   if(aFaire.length){ if(reste.length) h += `<h3>À faire (${aFaire.length})</h3>` + reste.map(x=>carteEp(x)).join(''); }
   else h += `<div class="bravo"><div class="p">14/14</div><p style="margin-top:8px"><b>Toutes les épreuves sont faites. Bravo !</b></p></div>`;
   if(faites.length) h += `<h3 style="color:var(--rouge)">Déjà faites (${faites.length})</h3>` + faites.map(x=>`<button class="faite" onclick="ouvrir(${x.n})"><i>✓</i>${x.n}. ${x.nom}<span>FAIT</span></button>`).join('');
-  h += `<div class="card" style="margin-top:14px"><h3 style="margin-top:0">Rappel des règles</h3>${REGLES}<p class="muted" style="margin-top:8px">Chaque épreuve une seule fois. Plusieurs téléphones de l'équipe peuvent scanner le QR code et choisir le même numéro.</p>
+  h += `<div class="card" style="margin-top:14px"><h3 style="margin-top:0">Rappel des règles</h3>${REGLES}<p class="muted" style="margin-top:8px">Chaque épreuve une seule fois. Plusieurs téléphones de l'équipe peuvent scanner le QR code et entrer le même numéro d'équipe.</p>
     <button class="lnk" onclick="modifierEquipe()">Modifier le nom ou la photo (animateur)</button><br><button class="lnk" onclick="changerEquipe()">Ce n'est pas mon équipe : changer de numéro</button></div>`;
   return h;
 }
@@ -452,7 +455,7 @@ function vSaisie(){
   else if(e.type==='chrono') champ = `<div class="row"><div><label>Minutes</label><input type="number" id="mm" inputmode="numeric" min="0" max="59" placeholder="min"></div><div><label>Secondes</label><input type="number" id="ss" inputmode="numeric" min="0" max="59" placeholder="s"></div></div>`;
   else champ = `<label>${{points:'Total de points de l\'équipe', jury:'Note du jury (de 0 à 10)', quiz:'Bonnes réponses (de 0 à 10)', hauteur:'Hauteur de la tour (en cm)'}[e.type]}</label><input type="number" id="mv" inputmode="numeric" min="0" ${(e.type==='jury'||e.type==='quiz')?'max="10"':''}>`;
   const bb = (k,l)=>`<button class="${s.bonus[k]?'sel':''}" onclick="setBonus('${k}')">${l}<br><small>+1</small></button>`;
-  return `<div class="anim"><h2>Espace animateur</h2><p class="muted">Épreuve ${e.n} · ${e.nom}<br>${titreEq(t)} (tissu ${couleur(t).toLowerCase()})</p>
+  return `<div class="anim"><h2>Espace animateur</h2><p class="muted">Épreuve ${e.n} · ${e.nom}<br>${titreEq(t)}</p>
     ${champ}
     <label>Bonus (facultatif)</label><div class="choix">${bb('a','Ambiance')}${bb('c','Cohésion')}${bb('f','Fair-play')}</div>
     ${state.org?'<p class="muted" style="margin-top:12px">Mode organisation : pas de code à saisir.</p>':`<label>Code de l'animateur</label><input type="password" id="codeA" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Code animateur">`}
@@ -528,9 +531,10 @@ function vOrg(){
 // =============== Actions ===============
 function aller(v){ state.view=v; if(v==='org'){ state.orgRetour=false; } render(); if(v!=='chat') window.scrollTo(0,0); if(v==='org'||v==='home') refresh(); if(v==='chat') lireMessages(); }
 window.aller=aller;
-window.choisirNumero = v=>{ garderBrouillon(); const anc=state.team, t=(+v>=1&&+v<=N_EQUIPES)?+v:0;
-  if(anc && t && t!==anc){ const loc=okPhoto(lsGet('photo_'+anc,'')); if(loc){ lsSet('photo_'+t,loc); state.photos[t]=loc; } lsSet('photo_'+anc,''); delete state.photos[anc]; }   // la photo déjà prise suit le nouveau numéro
-  state.team=t; render(); if(t) refresh(); };
+window.saisirNumero = v=>{ const n=parseInt(v,10); const t=(n>=1&&n<=N_EQUIPES)?n:0; if(t===state.team) return;
+  const avant=!!document.getElementById('dejaInscrite'); state.team=t; const apres=!!(t && nomEq(t) && !state.edition);
+  if(avant||apres) majZone();                    // on ne redessine que le bas du formulaire : le champ du numéro garde le curseur
+  if(t) refresh(); };
 window.recommencerEssai = ()=>{ if(!ESSAI || !confirm('Effacer l\'essai en cours sur ce téléphone ?')) return; Object.keys(localStorage).filter(k=>k.indexOf('pxc_'+EVENT+'_')===0).forEach(k=>localStorage.removeItem(k)); location.href = location.pathname + '?essai'; };
 window.debuter = ()=>{ lsSet('accueil_vu',true); state.view='brief'; render(); window.scrollTo(0,0); };
 window.reglesVues = ()=>{ lsSet('regles_vues',true); state.view='home'; render(); window.scrollTo(0,0); refresh(); };
@@ -565,23 +569,25 @@ window.photoChoisie = inp=>{
   const url=URL.createObjectURL(f); const im=new Image();
   im.onload=()=>{ const max=800, k=Math.min(1,max/Math.max(im.width,im.height)); const cv=document.createElement('canvas'); cv.width=Math.round(im.width*k); cv.height=Math.round(im.height*k);
     cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height); const data=cv.toDataURL('image/jpeg',0.7); URL.revokeObjectURL(url);
-    state.photos[state.team]=data; lsSet('photo_'+state.team,data); render(); };
+    if((figee()||state.edition) && state.team){ state.photos[state.team]=data; lsSet('photo_'+state.team,data); } else lsSet('photo_brouillon',data);
+    garderBrouillon(); majZone(); };
   im.onerror=()=>alert('Photo illisible, réessayez.'); im.src=url;
 };
 window.inscrire = async sansPhoto=>{
-  const t=state.team; if(!t){ alert('Choisissez le numéro de votre équipe.'); return; }
-  const nom=($('#fNom').value||'').trim(), cap=($('#fCap').value||'').trim(); const photo=state.photos[t]||okPhoto(lsGet('photo_'+t,''));
+  const t=state.team; if(!t){ alert('Indiquez votre numéro d\'équipe (de 1 à '+N_EQUIPES+').'); const el=document.getElementById('fNum'); if(el) el.focus(); return; }
+  const nom=($('#fNom').value||'').trim(), cap=($('#fCap').value||'').trim(); const photo=photoForm();
   if(!nom){ alert('Donnez un nom à votre équipe.'); return; }
-  if(!cap){ alert('Indiquez le prénom du capitaine.'); return; }
+  if(!cap){ alert('Indiquez le pseudo du capitaine.'); return; }
   if(!photo && !sansPhoto){ alert('Prenez la photo de toute l\'équipe (ou touchez « Continuer sans photo »).'); return; }
   if(!state.edition){            // un autre téléphone vient peut-être d'inscrire ce numéro : on vérifie avant d'écraser
     garderBrouillon();
-    try{ const r=await dbGet('tb_equipes',`team=eq.${t}&select=team,nom,capitaine,updated_at`); if(r[0] && r[0].nom){ state.equipes[t]=r[0]; render(); alert(`L'équipe ${t} vient d'être inscrite sous le nom « ${r[0].nom} ». Si c'est bien votre équipe, touchez « Oui, c'est mon équipe ».`); return; } }catch(e){}
+    try{ const r=await dbGet('tb_equipes',`team=eq.${t}&select=team,nom,capitaine,updated_at`); if(r[0] && r[0].nom){ state.equipes[t]=r[0]; majZone(); alert(`L'équipe ${t} vient d'être inscrite sous le nom « ${r[0].nom} ». Si c'est bien votre équipe, touchez « Oui, c'est mon équipe ».`); return; } }catch(e){}
   }
   const row={ event:EVENT, team:t, nom, capitaine:cap, code:CLE, updated_at:new Date().toISOString() };
   local.e[t]={team:t,nom,capitaine:cap,updated_at:row.updated_at};
+  if(photo){ state.photos[t]=photo; lsSet('photo_'+t,photo); }
   pousser('tb_equipes','event,team','e-'+t, photo ? {...row, photo} : row);
-  lsSet('team',t); lsSet('brouillon_nom',''); lsSet('brouillon_cap','');
+  lsSet('team',t); lsSet('brouillon_nom',''); lsSet('brouillon_cap',''); lsSet('photo_brouillon','');
   const modif=state.edition; state.edition=false; state.view = (modif || state.orgRetour) ? 'home' : 'regles'; render(); window.scrollTo(0,0);
 };
 window.modifierEquipe = ()=>{
