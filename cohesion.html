@@ -147,6 +147,27 @@
   .filtre button.on { background:var(--marine); border-color:var(--marine); color:#fff; }
   td .detail { font-size:11.5px; color:var(--gris); font-weight:700; margin-top:2px; line-height:1.3; }
   .btn:disabled { opacity:.55; }
+  header.top .titre { max-width:70vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } header.top .titre.eq { background:var(--marine); }
+  .passage { text-align:center; color:#fff; background:linear-gradient(170deg,var(--marine),var(--nuit)); border-radius:24px; padding:30px 20px 22px; box-shadow:0 10px 26px rgba(7,43,76,.35); }
+  .passage .mainP { font-size:74px; line-height:1; animation:tendre 1.4s ease-in-out infinite; }
+  @keyframes tendre { 0%,100% { transform:translateX(-10px) rotate(-8deg); } 50% { transform:translateX(10px) rotate(8deg); } }
+  .passage .pt { color:var(--jaune); font-weight:900; letter-spacing:1.5px; text-transform:uppercase; font-size:13px; margin-top:12px; }
+  .passage h1 { color:#fff; font-size:31px; margin:6px 0 16px; }
+  .passage .qui2 { display:flex; gap:12px; align-items:center; text-align:left; background:rgba(255,255,255,.1); border-radius:16px; padding:12px; font-size:15px; }
+  .passage .qui2 .avatar { flex:0 0 56px; height:56px; font-size:22px; border-width:2px; box-shadow:0 0 0 2px var(--jaune); }
+  details.conseils { background:rgba(253,204,26,.12); border:1px solid rgba(253,204,26,.45); border-radius:14px; margin:12px 0 2px; }
+  details.conseils summary { list-style:none; padding:10px 12px; font-weight:900; color:var(--jaune); font-size:15px; } details.conseils summary::-webkit-details-marker { display:none; }
+  details.conseils ul { margin:0; padding:0 14px 10px 30px; font-size:14px; color:#EAF3FA; } details.conseils li { margin:4px 0; }
+  .chrono { display:flex; gap:8px; align-items:center; margin-top:10px; }
+  .chrono .aff { flex:1; font-family:var(--titre); font-weight:800; font-size:30px; color:var(--jaune); background:rgba(0,0,0,.25); border-radius:14px; padding:6px 12px; text-align:center; font-variant-numeric:tabular-nums; }
+  .chrono button { border:0; border-radius:14px; padding:14px 14px; font-weight:900; font-size:16px; background:#2DBB6C; color:#fff; }
+  .chrono button.run { background:#F05A5A; } .chrono button.z { background:rgba(255,255,255,.15); }
+  .rendre { text-align:center; background:var(--jaune); color:var(--nuit); font-weight:900; border-radius:14px; padding:10px; margin-bottom:10px; animation:pouls 1.4s ease-in-out 3; }
+  .palier { display:inline-block; margin-top:12px; background:var(--jaune); color:var(--nuit); font-weight:900; border-radius:20px; padding:6px 14px; animation:revele .7s cubic-bezier(.2,1.4,.4,1) both; }
+  .rappelDefis { display:flex; gap:12px; align-items:center; width:100%; text-align:left; border:0; border-radius:18px; padding:14px 16px; margin-bottom:12px; background:linear-gradient(135deg,#7B4FC4,#E2558C); color:#fff; font:inherit; box-shadow:var(--ombre); }
+  .rappelDefis span { font-size:34px; }
+  .aller { display:flex; gap:8px; margin:12px 0 0; } .aller input { flex:1; font-size:17px; padding:11px 12px; } .aller button { border:0; border-radius:14px; padding:0 16px; background:var(--marine); color:#fff; font-weight:900; font-size:15px; }
+  .row .btn { margin-top:12px; }
   /* ---------- Saisie animateur ---------- */
   .anim { background:linear-gradient(170deg,var(--marine),var(--nuit)); color:#fff; border-radius:22px; padding:18px; margin-bottom:14px; box-shadow:0 10px 26px rgba(7,43,76,.35); }
   .anim h2 { color:var(--jaune); margin:0; }
@@ -206,7 +227,9 @@
   .direct i { width:9px; height:9px; border-radius:50%; background:var(--vert); display:inline-block; animation:pouls 1.6s infinite; } .direct.ko i { background:var(--rouge); animation:none; }
   .rond { width:46px; height:46px; border-radius:50%; border:0; background:#fff; color:var(--marine); font-size:22px; font-weight:900; box-shadow:var(--ombre); }
   nav.tabs { display:flex; background:#fff; border-radius:16px; overflow:hidden; margin-bottom:14px; box-shadow:var(--ombre); position:sticky; top:var(--haut,108px); z-index:5; }
-  nav.tabs button { flex:1; border:0; background:#fff; padding:12px 2px; font-weight:900; color:var(--gris); font-size:13.5px; white-space:nowrap; }
+  nav.tabs { overflow-x:auto; scrollbar-width:none; } nav.tabs::-webkit-scrollbar { display:none; }
+  nav.tabs button { flex:1 0 auto; border:0; background:#fff; padding:12px 8px; font-weight:900; color:var(--gris); font-size:13.5px; white-space:nowrap; }
+  @media (max-width:360px){ nav.tabs button { font-size:12.5px; padding:12px 6px; } }
   nav.tabs .pastille { margin-left:3px; padding:0 5px; min-width:17px; font-size:11px; }
   nav.tabs button.on { background:var(--marine); color:#fff; }
   .kpis { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
@@ -308,7 +331,7 @@ const COULEURS = ['Rouge','Bleu roi','Vert','Jaune','Orange','Violet','Rose','Bl
 const couleur = t => COULEURS[(t-1)%14];
 const TEINTES = ['#E3222B','#0085B2','#22A45D','#F2B705','#F7941D','#7B4FC4','#E2558C','#3E8FB0','#2C3E50','#14A3A3','#8C1C3A','#4FA8E0','#8DBB2A','#7A8A99'];
 // Code des animateurs : trois mots au choix, valables sur toutes les épreuves. Seules les empreintes sont ici.
-const EMPREINTES = /*EMPREINTES*/{org:'a6ca8ea66d7c7a26b79fab5298620f3efb5d4f7f66244fbe6c6affab93bb8cf4',mots:['96f99aa2ff66d5d72f426153fbc18bffef24b9021a1205ea2628104ea0c772bd','ff29bece9439c435bd6344efba9fef08d27452a98ec9bd8478cb75f42a487ad5','7bcb70b7feaeb1b11fa4dcbac9138b9f04a81f39a16f5efa1f25c9cde82a0871']};
+const EMPREINTES = /*EMPREINTES*/{org:'a6ca8ea66d7c7a26b79fab5298620f3efb5d4f7f66244fbe6c6affab93bb8cf4',mots:['96f99aa2ff66d5d72f426153fbc18bffef24b9021a1205ea2628104ea0c772bd','ff29bece9439c435bd6344efba9fef08d27452a98ec9bd8478cb75f42a487ad5','7bcb70b7feaeb1b11fa4dcbac9138b9f04a81f39a16f5efa1f25c9cde82a0871'],lien:'de3eaa536eaa09313575392ba967fff3490b0630521514f81b3f0f9cfe33f126'};
 // type : duel / chrono (secondes) / points / jury (note sur 10) / quiz (bonnes réponses sur 10) / hauteur (cm)
 const EP = [            // programme validé le 10/11 (présentation complète) : 13 épreuves + les défis photo et vidéo en parallèle
  {n:1, nom:'La catapulte', ico:'🏐', type:'duel', places:2, min:7, desc:"Volley géant avec des catapultes : deux équipes se renvoient des ballons de baudruche remplis d'eau. Un match d'environ 7 minutes."},
@@ -351,6 +374,22 @@ const ptsBonus = r => BONUS.reduce((s,b)=>s+(r&&r[b.col]?b.pts:0),0);
 const icoBonus = r => BONUS.filter(b=>r&&r[b.col]).map(b=>b.ico).join('');
 const DEPART_PLAN = [[1,2],[2,4],[3,3],[4,2],[5,2],[6,2],[7,2],[8,2],[9,2],[10,2],[11,2],[12,3],[13,1]];   // 29 équipes réparties sur les 13 épreuves au départ
 const DEPART = {}; (()=>{ let t=1; DEPART_PLAN.forEach(([s,n])=>{ for(let i=0;i<n;i++) DEPART[t++]=s; }); })();
+// Rappels pour l'animateur (repris du briefing de la présentation complète)
+const CONSEILS = {
+ 1:["Annoncez un match d'environ 7 minutes : parlez en durée, pas en points.","Ne dites ni le score ni le temps restant.","4 équipes ensemble : deux équipes alliées contre deux."],
+ 2:["Pas de pied en dehors de la bâche, sinon pénalité.","5 roues : 5 équipes ensemble ou à la suite.","Entrez le temps : l'application classe toutes les équipes toute seule."],
+ 3:["5 minutes pour construire, puis une petite minute de présentation à l'oral.","Notez l'œuvre et la présentation sur 10."],
+ 4:["Quand on est touché, on passe l'arc à un coéquipier.","Plusieurs équipes : alliances, 2 contre 2.","Une hôtesse peut compter les points."],
+ 5:["Toute l'équipe passe, jusqu'au dernier.","2 équipes peuvent être chronométrées en même temps.","Entrez le temps : l'application fait le classement."],
+ 6:["Jamais la corde enroulée autour du bras ou de la taille.","Un cri de guerre avant de tirer, et un moment pour la stratégie."],
+ 7:["Plusieurs équipes ensemble : faites des duels.","Faites remettre les lettres en tas pour les suivants.","Entrez le nombre de mots trouvés."],
+ 8:["Un tir par participant, environ 15 tirs.","Petit échauffement possible. 2 équipes possibles."],
+ 9:["La sécurité d'abord : un seul lanceur à la fois, les autres derrière la ligne.","Un lancer par participant, environ 15 lancers."],
+ 10:["Un participant guidé à la fois, marteau toujours maîtrisé.","Entrez le temps : l'application fait le classement, pas besoin de grille."],
+ 11:["8 minutes de préparation maximum, 2 minutes pour jouer.","Une réplique « compétents et solidaires », une promotion surprise…","Applaudissez chaque scène."],
+ 12:["10 minutes maximum : boostez les équipes, un prix spécial est remis.","Entrez le nombre de bonnes réponses : l'application double les points."],
+ 13:["Faites réfléchir l'équipe pour que personne ne se blesse.","Pour valider, montez tout en haut. Et la photo de la pyramide !"]
+};
 const ANNONCES = [ ['📸','Pensez aux défis photo et vidéo : ils rapportent des points !'], ['⏰','Plus que 30 minutes d\'épreuves : foncez !'], ['⏰','Plus que 10 minutes : dernière épreuve !'], ['🎓','N\'oubliez pas la culture d\'entreprise : points doublés !'], ['🏆','Les épreuves sont terminées : tout le monde au podium !'] ];
 
 // =============== Petits outils ===============
@@ -395,6 +434,10 @@ const codeStandOk = (stand, code) => !!code && ((EMPREINTES.mots||[]).includes(e
 let toastT=0;
 function cacherToast(){ const el=$('#toast'); if(el) el.className=''; }
 function dire(msg, genre){ const el=$('#toast'); if(!el) return; el.textContent=msg; el.className='on '+(genre||''); clearTimeout(toastT); toastT=setTimeout(()=>{ el.className=''; }, genre==='err'?4200:2800); if(genre==='err') vibre([60,40,60]); }
+// Petit carillon de validation (sans fichier son)
+function son(fort){ try{ const A=window.AudioContext||window.webkitAudioContext; if(!A) return; const c=son.c||(son.c=new A()); if(c.state==='suspended') c.resume();
+  (fort?[[784,0],[988,.11],[1319,.22]]:[[880,0],[1319,.12]]).forEach(([f,d])=>{ const o=c.createOscillator(), g=c.createGain(); o.type='sine'; o.frequency.value=f; const t=c.currentTime+d;
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.22,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.45); o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+0.5); }); }catch(e){} }
 // Confettis (sans bibliothèque)
 function confettis(fort){
   if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -540,16 +583,16 @@ function calcul(){
       v.forEach(r=>{ const mieux=v.filter(x=> asc ? +x.mesure<+r.mesure : +x.mesure>+r.mesure).length; pts[kp(e.n,r.team)] = 10-2*Math.floor(5*mieux/n); rang[kp(e.n,r.team)]={r:mieux+1,n}; }); }
   });
   const eq={};
-  for(let t=1;t<=N_EQUIPES;t++) eq[t]={t,faits:0,base:0,bonus:0,coeurs:0,photos:0,nbDefis:0,total:0,quiz:null};
+  for(let t=1;t<=N_EQUIPES;t++) eq[t]={t,faits:0,base:0,bonus:0,coeurs:0,fairplay:0,photos:0,nbDefis:0,total:0,quiz:null};
   rows.forEach(r=>{ const e=eq[r.team]; if(!e) return; const p=pts[kp(r.stand,r.team)]; if(p==null) return;
     const b=ptsBonus(r);
-    e.faits++; e.base+=p; e.bonus+=b; e.coeurs+=r.b_coeur?1:0; e.total+=p+b; if(r.stand===CULTURE) e.quiz=Math.max(0,Math.min(10,Math.round(+r.mesure||0))); });
+    e.faits++; e.base+=p; e.bonus+=b; e.coeurs+=r.b_coeur?1:0; e.fairplay+=r.b_fairplay?1:0; e.total+=p+b; if(r.stand===CULTURE) e.quiz=Math.max(0,Math.min(10,Math.round(+r.mesure||0))); });
   const dfs = Object.values(defis()).filter(r=>r.envoye || r.note!=null);
   dfs.forEach(r=>{ const e=eq[r.team]; if(!e) return; const p=ptsDefi(r); e.photos+=p; e.total+=p; if(r.envoye) e.nbDefis++; });
   const ordre = Object.values(eq).sort((a,b)=> b.total-a.total || b.faits-a.faits || (b.quiz||0)-(a.quiz||0) || a.t-b.t).map(e=>e.t);
   const general = eq[ordre[0]].total>0 ? ordre[0] : null;
   const qz = Object.values(eq).filter(e=>e.quiz!=null && e.t!==general).sort((a,b)=> b.quiz-a.quiz || b.total-a.total || a.t-b.t);
-  const amb = Object.values(eq).filter(e=>e.bonus>0).sort((a,b)=> b.coeurs-a.coeurs || b.bonus-a.bonus || b.total-a.total || a.t-b.t);
+  const amb = Object.values(eq).filter(e=>e.coeurs+e.fairplay>0).sort((a,b)=> (b.coeurs+b.fairplay)-(a.coeurs+a.fairplay) || b.coeurs-a.coeurs || b.bonus-a.bonus || b.total-a.total || a.t-b.t);   // trophée « coups de cœur et fair-play »
   return { pts, rang, eq, ordre, rows, dfs, general, prixQuiz: qz.length?qz[0].t:null, ambiance: amb.length?amb[0].t:null, saisies: rows.length + dfs.length };
 }
 function texteResultat(r, e){
@@ -571,7 +614,10 @@ function temps(){
   const hms = (h?h+' h ':'')+String(m).padStart(h?2:1,'0')+' min '+String(ss).padStart(2,'0')+' s';
   return { etat: s<600?'urgent':'encours', txt:'⏱ Il reste '+hms, court: (h?h+' h ':'')+String(m).padStart(2,'0')+' min', ecoule: Math.floor((d-DEBUT_EPREUVES)/60000) };
 }
-function majRebours(){
+function majEnTete(){ const el=document.querySelector('header.top .titre'); if(!el) return; const t=state.team, n=nomEq(t);
+  const montrer = t && n && !(state.org && !state.orgRetour) && !['accueil','landing','org','podium'].includes(state.view);
+  const txt = montrer ? `Équipe ${t} · ${n}` : 'Journée de cohésion · 14.11'; if(el.textContent!==txt) el.textContent=txt; el.classList.toggle('eq', !!montrer); }
+function majRebours(){ majEnTete();
   const el=document.getElementById('rebours'); if(el){ const t=temps(); el.textContent=t.txt; el.className='rebours'+(t.etat==='urgent'?' urgent':'')+(t.etat==='fini'?' fini':''); }
   const m=document.getElementById('majHeure'); if(m) m.textContent=depuis();
 }
@@ -593,7 +639,7 @@ function renderDoux(){
   majChoix();                                                            // sans toucher au champ en cours de saisie
   const a=document.activeElement;
   if(a && (a.tagName==='INPUT'||a.tagName==='SELECT'||a.tagName==='TEXTAREA')) { majBas(); return; }
-  if(['saisie','bravo','landing','regles','podium','defi','envoiPhoto'].includes(state.view)) return;
+  if(['saisie','bravo','landing','regles','podium','defi','envoiPhoto','passage'].includes(state.view)) return;
   if(state.view==='accueil'){ if(confirmee() && equipe(state.team) && equipe(state.team).nom){ state.view=''; render(); } return; }
   if(state.view==='chat' || (state.view==='org' && state.orgTab==='messages')){ majFil(); majBas(); return; }
   if(state.view==='brief'){                                              // un autre téléphone de l'équipe a déjà inscrit l'équipe
@@ -609,14 +655,14 @@ function render(doux){
   if(state.view==='home' && !(state.team && equipe(state.team) && equipe(state.team).nom)) state.view='brief';
   let h='';
   if(ESSAI && state.view!=='podium') h += MODE==='demo'
-    ? `<div class="banner bleu"><b>DÉMONSTRATION :</b> une journée simulée avec 28 équipes, pour découvrir l'application. Rien ne compte.</div>`
+    ? `<div class="banner bleu"><b>DÉMONSTRATION :</b> une journée simulée avec ${N_EQUIPES} équipes, pour découvrir l'application. Rien ne compte.</div>`
     : `<div class="banner"><b>PÉRIODE DE TEST</b> jusqu'à samedi 9h40 : rien ne compte. À 9h40, l'application repart toute seule à zéro pour la vraie journée. <button class="lnk" onclick="recommencerEssai()">Recommencer le test à zéro sur ce téléphone</button></div>`;
   const nq=enAttente(), nr=refuses();
   if(state.dbOk===false && state.view!=='podium') h += `<div class="banner err"><b>📶 Pas de réseau pour l'instant.</b> ${nq?pl(nq,'envoi')+' en attente : ils partiront tout seuls dès que le réseau revient.':'Tout est gardé sur ce téléphone.'} Continuez à jouer.</div>`;
   else if(nq && nr<nq && !['podium','bravo'].includes(state.view)) h += `<div class="banner">Envoi en cours (${nq})…</div>`;
   if(nr) h += `<div class="banner err"><b>${pl(nr,'résultat')} refusé${nr>1?'s':''} par la base.</b> Montrez ce téléphone à l'organisation.</div>`;
   if(AVANT_JOUR_J && !state.org && !['landing','org','podium'].includes(state.view)){ $('#main').innerHTML = vAvant(); majBas(); majRebours(); return; }
-  h += ({accueil:vAccueil, regles:vRegles, landing:vLanding, brief:vBrief, home:vHome, ep:vEpreuve, defi:vDefi, envoiPhoto:vEnvoiPhoto, saisie:vSaisie, bravo:vBravo, org:vOrg, chat:vChat, podium:vPodium}[state.view]||vLanding)();
+  h += ({accueil:vAccueil, regles:vRegles, landing:vLanding, brief:vBrief, home:vHome, ep:vEpreuve, passage:vPassage, defi:vDefi, envoiPhoto:vEnvoiPhoto, saisie:vSaisie, bravo:vBravo, org:vOrg, chat:vChat, podium:vPodium}[state.view]||vLanding)();
   const main=$('#main');
   if(doux && h===dernierHTML){ majBas(); majRebours(); return; }
   const ouverts=[...document.querySelectorAll('details[id][open]')].map(d=>d.id);
@@ -716,7 +762,9 @@ function vHome(){
   const encour = nb===0 ? 'Première épreuve : allez-y !' : nb>=NB_EP ? 'Tout est fait, bravo !' : nb>=10 ? 'Superbe, encore un effort !' : nb>=5 ? 'Belle lancée, continuez !' : 'C\'est parti, enchaînez !';
   h += `<div class="card entree"><div class="eqCarte">${avatar(t)}<div><div class="nom">${esc(eqp.nom||'')}</div><div class="det">Équipe ${t} · Capitaine ${esc(eqp.capitaine||'')}</div></div></div>
     <div class="avance">${anneau(nb)}<div class="txt">${encour}<span class="muted">${NB_EP-nb===0?NB_EP+' épreuves sur '+NB_EP:pl(NB_EP-nb,'épreuve')+' encore à faire'} · vos points restent secrets jusqu'au podium</span></div></div></div>`;
-  if(tp.etat==='fini') h += `<div class="finCarte entree"><div style="font-size:44px">🏆</div><div class="p">C'est terminé !</div><p style="margin:8px 0 0;font-size:17px"><b>Rendez-vous au podium</b> pour les résultats.</p></div>`;
+  if(tp.etat==='fini') h += `<div class="finCarte entree"><div style="font-size:44px">🏆</div><div class="p">C'est terminé !</div><p style="margin:8px 0 0;font-size:17px"><b>Rendez-vous au podium</b> pour les résultats.</p><p style="margin:10px 0 0">Votre bilan : <b>${pl(nb,'épreuve')}</b> et <b>${pl(nbDefis(t),'défi')}</b> photo-vidéo. Bravo à toute l'équipe !</p></div>`;
+  if(tp.etat==='urgent') h += `<div class="banner err entree" style="font-size:16px"><b>⏰ Dernière ligne droite :</b> moins de 10 minutes ! Finissez l'épreuve en cours.</div>`;
+  if(tp.etat!=='fini' && nbDefis(t)===0 && (nb>=3 || tp.ecoule>=40)) h += `<button class="rappelDefis entree" onclick="ouvrir(${DEFI_EP})"><span>📸</span><div><b>Et les défis photo et vidéo ?</b><br>Vous n'en avez envoyé aucun : ils rapportent des points, faites-les pendant l'attente !</div></button>`;
   if(nb===0 && tp.etat!=='fini') h += `<div class="banner bleu entree"><b>Pour bien démarrer :</b> commencez par l'épreuve ${DEPART[t]}, ${EPN[DEPART[t]].nom}. Ensuite, allez où vous voulez.</div>`;
   if(!fait(CULTURE,t)){ const cl = nb>=3 || tp.ecoule>=60;
     h += `<button class="vedette entree ${cl?'clignote':''}" onclick="ouvrir(${CULTURE})"><div class="img" style="background-image:url('${img(CULTURE)}')"></div><div class="txt">
@@ -737,10 +785,10 @@ function vEpreuve(){
   let h = `<div class="heroEp entree ${e.n===CULTURE?'logo':''}" style="background-image:url('${img(e.n)}')"><div class="tt"><small>Épreuve ${e.n} sur ${NB_EP}</small><div>${e.nom}</div></div></div>
     <div class="card entree"><p style="font-size:17px">${e.desc}</p>
       <p style="margin:0"><span class="tag pts">${MAXPTS(e)} points à gagner</span>${e.type==='duel'?'<span class="tag duel">DUEL : trouvez une équipe adverse</span>':''}${e.n===CULTURE?'<span class="tag double">POINTS DOUBLÉS</span>':''}<span class="tag gris">⏱ ${e.min} min</span><span class="tag gris">${pl(e.places,'équipe')} à la fois</span></p>
-      <p class="muted" style="margin:12px 0 0"><b>Comment on gagne :</b> ${BAREME[e.type]}. L'animateur peut ajouter des bonus : ambiance, cohésion, fair-play et coup de cœur.</p></div>`;
+      <p class="muted" style="margin:12px 0 0">L'animateur note votre résultat et peut ajouter des bonus : ambiance, cohésion, fair-play et coup de cœur. Les points restent secrets jusqu'au podium.</p></div>`;
   if(deja) h += `<div class="fait entree"><div class="gros">✓ Épreuve faite</div><p style="margin:6px 0 0">Résultat enregistré par l'animateur. Passez à une autre épreuve !</p></div>
       ${epSuivante()?`<button class="btn orange" onclick="suivante()">Épreuve suivante →</button>`:''}<button class="btn clair" onclick="aller('home')">Voir toutes les épreuves</button><p style="text-align:center"><button class="lnk" onclick="demarrerSaisie()">Corriger ce résultat (animateur)</button></p>`;
-  else h += `<button class="btn vert gros entree" onclick="demarrerSaisie()">Épreuve terminée :<br>je tends le téléphone à l'animateur</button>`;
+  else h += `<button class="btn vert gros entree" onclick="passerTelephone()">Épreuve terminée :<br>je tends le téléphone à l'animateur</button>`;
   return h;
 }
 // ---------- Défis photo et vidéo (en parallèle des épreuves) ----------
@@ -797,6 +845,11 @@ async function preparerPhotoEquipe(){
   prepaPhoto=true; try{ const D=DEFIS[0]; const r=await photoAvecBandeau(p, legendeDefi(t,D), nomFichier(t,D,'jpg')); state.defi={d:0, fichier:r.fichier, apercu:r.apercu}; if(state.view==='envoiPhoto') render(); }catch(e){} prepaPhoto=false;
 }
 
+function vPassage(){ const e=EPN[state.ep], t=state.team;
+  return `<div class="passage entree"><div class="mainP">📲</div><div class="pt">Épreuve terminée !</div><h1>Tendez le téléphone à l'animateur</h1>
+    <div class="qui2">${avatar(t)}<div><b>${titreEq(t)}</b><br>${e.ico} ${e.nom}</div></div>
+    <button class="btn or gros" onclick="demarrerSaisie()">Je suis l'animateur : noter le résultat</button>
+    <button class="lnk" style="color:#CFE4F3" onclick="aller('ep')">← Pas encore fini</button></div>`; }
 // ---------- Saisie de l'animateur ----------
 function vSaisie(){
   const e=EPN[state.ep], s=state.saisie, t=state.team;
@@ -807,13 +860,17 @@ function vSaisie(){
       <button class="chipAnim ${s.contreAnim?'sel':''}" onclick="contreAnimateurs(this)">Contre les animateurs</button>
       <div class="advNom" id="advNom"></div>
       <label>Résultat de l'équipe ${t}</label><div class="choix" id="grpRes"><button class="v ${s.res==='V'?'sel':''}" onclick="choisirRes('V',this)">Gagné</button><button class="${s.res==='N'?'sel':''}" onclick="choisirRes('N',this)">Égalité</button><button class="d ${s.res==='D'?'sel':''}" onclick="choisirRes('D',this)">Perdu</button></div>`;
-  } else if(e.type==='chrono') champ = `<label>Temps de l'équipe</label><div class="row"><div><input type="number" id="mm" inputmode="numeric" pattern="[0-9]*" min="0" max="59" placeholder="min" oninput="majRecap()" value="${s.mm??''}"></div><div><input type="number" id="ss" inputmode="numeric" pattern="[0-9]*" min="0" max="59" placeholder="secondes" oninput="majRecap()" value="${s.ss??''}"></div></div>`;
+  } else if(e.type==='chrono') champ = `<label>Temps de l'équipe</label><div class="row"><div><input type="number" id="mm" inputmode="numeric" pattern="[0-9]*" min="0" max="59" placeholder="min" oninput="majRecap()" value="${s.mm??''}"></div><div><input type="number" id="ss" inputmode="numeric" pattern="[0-9]*" min="0" max="59" placeholder="secondes" oninput="majRecap()" value="${s.ss??''}"></div></div>
+    <div class="chrono"><div class="aff" id="chAff">0:00.0</div><button id="chBtn" onclick="chronoBouton()">▶ Chrono</button><button class="z" onclick="chronoZero()" aria-label="Remettre à zéro">↺</button></div>
+    <p class="muted" style="margin:6px 0 0">Chronométrez ici ou avec votre propre chrono : le temps se remplit tout seul à l'arrêt.</p>`;
   else if(e.type==='jury' || e.type==='quiz') champ = `<label>${e.type==='jury'?'Note du jury (sur 10)':'Nombre de bonnes réponses (sur 10)'}</label><div class="notes" id="grpNote">${Array.from({length:11},(_,i)=>`<button class="${s.note===i?'sel':''}" onclick="choisirNote(${i},this)">${i}</button>`).join('')}</div>`;
   else champ = `<label>${e.type==='points'?(e.unite||'Total des points de l\'équipe'):'Hauteur de la tour (en cm)'}</label><input type="number" id="mv" inputmode="decimal" min="0" placeholder="${e.type==='points'?'Exemple : 45':'Exemple : 120'}" oninput="majRecap()" value="${s.mv??''}">`;
   const bb = b=>`<button class="${b.k} ${s.bonus[b.k]?'sel':''}" onclick="basculerBonus('${b.k}',this)"><span class="e">${b.ico}</span><span>${b.nom}<small>+${b.pts} point${b.pts>1?'s':''}</small></span></button>`;
   const existe = valide(passages()[kp(e.n,t)]);
+  const cons = CONSEILS[e.n]||[];
   return `<div class="anim entree"><h2>Espace animateur</h2>
-    <div class="qui">${avatar(t)}<div><div style="font-weight:900;font-size:17px">${titreEq(t)}</div><div class="muted">${e.ico} Épreuve ${e.n} · ${e.nom}</div></div></div>
+    <div class="qui">${avatar(t)}<div><div style="font-weight:900;font-size:18px">${titreEq(t)}</div><div class="muted">${e.ico} Épreuve ${e.n} · ${e.nom}</div></div></div>
+    ${cons.length?`<details class="conseils"><summary>💡 Rappel pour l'animateur</summary><ul>${cons.map(c=>`<li>${c}</li>`).join('')}<li>Les points restent secrets : ne montrez ni le code ni le barème.</li></ul></details>`:''}
     ${champ}
     <label>Bonus (facultatif)</label><div class="bonus">${BONUS.map(bb).join('')}</div>
     <div class="recap" id="recap"></div>
@@ -844,8 +901,9 @@ function majRecap(){
 }
 function vBravo(){
   const b=state.bravo||{}; const e=EPN[b.ep]||{}; const nb=EP.filter(x=>x.n!==DEFI_EP && fait(x.n,state.team)).length;
-  return `<div class="bravo"><svg class="coche" viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27 l7.5 7.5 L37.5 19"/></svg>
-      <h2>Bravo ${esc(nomEq(state.team)||'l\'équipe '+state.team)} !</h2><div class="ep2">${e.ico||''} ${esc(e.nom||'')} : c'est dans la boîte</div>
+  const palier = nb===NB_EP ? '🏆 Les 13 épreuves sont faites !' : (nb===10 ? '🔥 10 épreuves déjà !' : (nb===5 ? '⭐ 5 épreuves, belle lancée !' : ''));
+  return `<div class="rendre">📱 Animateur : rendez le téléphone à l'équipe</div><div class="bravo"><svg class="coche" viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27 l7.5 7.5 L37.5 19"/></svg>
+      ${palier?`<div class="palier">${palier}</div>`:''}<h2>Bravo ${esc(nomEq(state.team)||'l\'équipe '+state.team)} !</h2><div class="ep2">${e.ico||''} ${esc(e.nom||'')} : c'est dans la boîte</div>
       <p style="margin:10px 0 0;font-size:16px">${nb} épreuve${nb>1?'s':''} sur ${NB_EP}. Les points restent secrets jusqu'au podium.</p>
       <div class="etatEnvoi" id="etatEnvoi">${texteEnvoi()}</div></div>
     ${epSuivante()&&nb<NB_EP?`<button class="btn orange gros" onclick="suivante()">Épreuve suivante →</button>`:''}
@@ -881,6 +939,7 @@ function vuePrecedente(){
   if(v==='ep') return 'home';
   if(v==='defi') return 'ep';
   if(v==='envoiPhoto') return null;
+  if(v==='passage') return 'ep';
   if(v==='saisie') return state.apresSaisie==='org' ? 'org' : (state.org && state.orgRetour ? 'home' : 'ep');
   if(v==='bravo') return 'home';
   if(v==='chat') return state.org && !state.team ? 'org' : (state.avantChat||'home');
@@ -913,25 +972,27 @@ function vOrg(){
     <nav class="tabs">${[['direct','Direct'],['epreuves','Épreuves'],['equipes','Équipes'],['photos','Photos'],['messages','Messages']].map(([k,l])=>`<button class="${state.orgTab===k?'on':''}" onclick="orgTab('${k}')">${l}${k==='messages'&&state.orgTab!=='messages'&&nl?`<span class="pastille">${nl}</span>`:''}${k==='photos'&&state.orgTab!=='photos'&&aNoterNb()?`<span class="pastille">${aNoterNb()}</span>`:''}</button>`).join('')}</nav>`;
   if(state.orgTab==='direct'){
     h += `<div class="kpis entree"><div><b>${inscrites}<small style="font-size:15px;color:var(--gris)">/${N_EQUIPES}</small></b><span>équipes inscrites</span></div><div><b>${c.saisies}</b><span>résultats saisis</span></div><div><b style="font-size:19px;padding-top:5px">${temps().court}</b><span>fin des épreuves</span></div></div>`;
+    h += `<div class="aller entree"><input type="number" id="allerEq" inputmode="numeric" pattern="[0-9]*" min="1" max="${N_EQUIPES}" placeholder="N° d'équipe" onkeydown="if(event.key==='Enter')allerEquipe()"><button onclick="allerEquipe()">Voir l'équipe</button></div>`;
     h += `<button class="btn or gros entree" onclick="ouvrirPodium()">🏆 Lancer le podium</button>`;
     if(c.general){ [c.general,c.prixQuiz,c.ambiance].forEach(t=>t&&chargerPhoto(t));
       h += `<h3>Les prix en ce moment</h3>`;
       h += `<div class="prix entree" style="background:linear-gradient(150deg,var(--bleu),var(--marine))" onclick="voirEquipe(${c.general})">${phPrix(c.general,'🏆')}<div><div class="t">Grand prix de la cohésion</div><div class="n">${titreEq(c.general)}</div><div>${c.eq[c.general].total} points · ${pl(c.eq[c.general].faits,'épreuve')}</div><div style="font-size:13px;opacity:.9">${pourquoi(c.eq[c.general])}</div></div></div>`;
-      h += c.prixQuiz ? `<div class="prix entree" style="background:linear-gradient(150deg,var(--orange),var(--corail))" onclick="voirEquipe(${c.prixQuiz})">${phPrix(c.prixQuiz,'🎓')}<div><div class="t">Prix spécial culture d'entreprise</div><div class="n">${titreEq(c.prixQuiz)}</div><div>${c.eq[c.prixQuiz].quiz} bonnes réponses sur 10</div></div></div>` : `<div class="banner">Prix spécial culture d'entreprise : en attente des premiers résultats.</div>`;
-      if(c.ambiance) h += `<div class="prix entree" style="background:linear-gradient(150deg,#FF5C7A,#D6336C)" onclick="voirEquipe(${c.ambiance})">${phPrix(c.ambiance,'❤️')}<div><div class="t">Coup de cœur des animateurs</div><div class="n">${titreEq(c.ambiance)}</div><div>${pl(c.eq[c.ambiance].coeurs,'coup')} de cœur · ${pl(c.eq[c.ambiance].bonus,'point')} de bonus</div></div></div>`;
+      h += c.prixQuiz ? `<div class="prix entree" style="background:linear-gradient(150deg,var(--orange),var(--corail))" onclick="voirEquipe(${c.prixQuiz})">${phPrix(c.prixQuiz,'🎓')}<div><div class="t">Médaille culture d'entreprise</div><div class="n">${titreEq(c.prixQuiz)}</div><div>${c.eq[c.prixQuiz].quiz} bonnes réponses sur 10</div></div></div>` : `<div class="banner">Médaille culture d'entreprise : en attente des premiers résultats.</div>`;
+      if(c.ambiance) h += `<div class="prix entree" style="background:linear-gradient(150deg,#FF5C7A,#D6336C)" onclick="voirEquipe(${c.ambiance})">${phPrix(c.ambiance,'❤️')}<div><div class="t">Trophée coups de cœur et fair-play</div><div class="n">${titreEq(c.ambiance)}</div><div>❤️ ${pl(c.eq[c.ambiance].coeurs,'coup')} de cœur · 👏 ${c.eq[c.ambiance].fairplay} fair-play</div></div></div>`;
     }
     h += `<h3>Classement</h3><div class="card" style="padding:8px 8px 4px"><table><thead><tr><th>#</th><th style="text-align:left">Équipe et détail des points</th><th>Total</th></tr></thead><tbody>`;
     c.ordre.forEach((t,i)=>{ const e=c.eq[t]; const med = e.total>0 ? (['🥇','🥈','🥉'][i]||i+1) : i+1;
       h += `<tr class="${e.total>0&&i<3?'top'+(i+1):''}" onclick="voirEquipe(${t})"><td>${med}</td><td class="l"><b>${t}</b> ${esc(nomEq(t))||'<span class="muted">non inscrite</span>'}${e.total>0?`<div class="detail">${pourquoi(e)}</div>`:''}</td><td><b style="font-size:17px">${e.total}</b></td></tr>`; });
     h += `</tbody></table><p class="muted" style="padding:8px 6px 4px;margin:0">Le détail sous chaque équipe dit d'où viennent ses points. Touchez une équipe pour voir son carnet et corriger. Égalité : nombre d'épreuves, puis culture d'entreprise. Le prix culture ne va jamais à l'équipe du grand prix.</p></div>`;
     h += `<h3>Derniers résultats</h3><div class="card journal" style="padding:6px 14px">${journal(c)}</div>`;
-    h += `<button class="btn clair" onclick="partagerClassement()">📤 Partager le classement</button>`;
+    h += `<div class="row"><button class="btn clair" onclick="partagerClassement()">📤 Partager</button><button class="btn clair" onclick="exporterTableau()">⬇️ Tableau Excel</button></div>`;
     h += `<details class="regl" id="dAide"><summary>Mode d'emploi de l'organisation</summary><div><ul class="regles">
       <li><span class="num" style="background:var(--bleu)">1</span><div><b>En direct</b> se met à jour tout seul toutes les 8 secondes. Le point vert indique que tout va bien, un point rouge qu'il n'y a pas de réseau.</div></li>
       <li><span class="num" style="background:var(--orange)">2</span><div><b>Corriger un résultat :</b> touchez une ligne des derniers résultats, une équipe du classement, ou une épreuve dans l'onglet Épreuves. Pas de code à taper ici.</div></li>
       <li><span class="num" style="background:var(--rouge)">3</span><div><b>Téléphone perdu ou batterie vide :</b> onglet Épreuves, touchez le numéro de l'équipe sous « Pas encore passées » et saisissez à sa place.</div></li>
       <li><span class="num" style="background:var(--vert)">4</span><div><b>Annonces :</b> onglet Messages, un geste suffit. Le message s'affiche chez toutes les équipes et leur téléphone vibre.</div></li>
-      <li><span class="num" style="background:var(--jaune);color:var(--nuit)">🏆</span><div><b>Au podium :</b> « Lancer le podium », puis « Révéler » pour chaque prix, du coup de cœur jusqu'au grand prix.</div></li></ul></div></details>`;
+      <li><span class="num" style="background:var(--marine)">📸</span><div><b>Photos et vidéos :</b> onglet Photos, notez de 0 à 3 en regardant WhatsApp. Sans note, chaque envoi vaut 2 points.</div></li>
+      <li><span class="num" style="background:var(--jaune);color:var(--nuit)">🏆</span><div><b>Au podium :</b> « Lancer le podium », puis « Révéler » pour chaque distinction : médaille culture d'entreprise, trophée coups de cœur et fair-play, puis 3e, 2e et grand prix.</div></li></ul></div></details>`;
   } else if(state.orgTab==='epreuves'){
     const all=c.rows;
     h += `<p class="muted" style="margin:0 2px 10px">Touchez une épreuve pour voir les résultats. Touchez une équipe pour corriger ou saisir à sa place (téléphone perdu, batterie vide).</p>`;
@@ -1000,8 +1061,8 @@ function vCarnetOrg(){
 // ---------- Podium : on dévoile les gagnants un par un ----------
 function etapesPodium(){
   const c=calcul(); const st=[]; const top=c.ordre.filter(t=>c.eq[t].total>0);
-  if(c.ambiance) st.push({t:c.ambiance, titre:'Coup de cœur des animateurs', ico:'❤️', sous:e=>`${pl(e.coeurs,'coup')} de cœur · ${pl(e.bonus,'point')} de bonus`});
-  if(c.prixQuiz) st.push({t:c.prixQuiz, titre:'Prix spécial Proxim\'Services · culture d\'entreprise', ico:'🎓', sous:e=>`${e.quiz} bonnes réponses sur 10`});
+  if(c.prixQuiz) st.push({t:c.prixQuiz, titre:'Médaille culture d\'entreprise', ico:'🎓', sous:e=>`${e.quiz} bonnes réponses sur 10`});
+  if(c.ambiance) st.push({t:c.ambiance, titre:'Trophée coups de cœur et fair-play', ico:'❤️', sous:e=>`${pl(e.coeurs,'coup')} de cœur · ${e.fairplay} fair-play`});
   if(top[2]) st.push({t:top[2], titre:'3e place', ico:'🥉', sous:e=>`${e.total} points · ${pl(e.faits,'épreuve')}`});
   if(top[1]) st.push({t:top[1], titre:'2e place', ico:'🥈', sous:e=>`${e.total} points · ${pl(e.faits,'épreuve')}`});
   if(top[0]) st.push({t:top[0], titre:'Grand prix de la cohésion', ico:'🏆', sous:e=>`${e.total} points · ${pl(e.faits,'épreuve')}`, final:true});
@@ -1106,14 +1167,21 @@ window.modifierEquipe = ()=>{
   if(!state.org){ const c=prompt('Code de l\'animateur ou de l\'organisation :'); if(c===null) return; if(!codeStandOk(0,c)){ dire('Code incorrect.','err'); return; } }
   const e=equipe(state.team)||{}; lsSet('brouillon_nom',e.nom||''); lsSet('brouillon_cap',e.capitaine||''); state.edition=true; state.view='brief'; render(); window.scrollTo(0,0);
 };
+window.passerTelephone = ()=>{ state.view='passage'; render(); window.scrollTo(0,0); vibre(25); };
 window.ouvrir = n=>{ state.ep=n; state.view='ep'; render(); window.scrollTo(0,0); };
-window.demarrerSaisie = ()=>{ const r=passages()[kp(state.ep,state.team)]; const ok=state.org&&valide(r); const e=EPN[state.ep];
+window.demarrerSaisie = ()=>{ chT0=0; chAcc=0; clearInterval(chTimer); const r=passages()[kp(state.ep,state.team)]; const ok=state.org&&valide(r); const e=EPN[state.ep];
   state.saisie={ res: ok&&e.type==='duel'?r.resultat:'', adv: ok&&e.type==='duel'&&r.mesure>0?+r.mesure:null, contreAnim: !!(ok&&e.type==='duel'&&r.mesure!=null&&+r.mesure===0),
     note: ok&&(e.type==='jury'||e.type==='quiz')&&r.mesure!=null?+r.mesure:null, mm: ok&&e.type==='chrono'&&r.mesure!=null?Math.floor(r.mesure/60):null, ss: ok&&e.type==='chrono'&&r.mesure!=null?Math.round(r.mesure%60):null,
     mv: ok&&(e.type==='points'||e.type==='hauteur')&&r.mesure!=null?+r.mesure:null, bonus:{} };
   BONUS.forEach(b=>state.saisie.bonus[b.k]=!!(ok&&r[b.col]));
   state.view='saisie'; render(); window.scrollTo(0,0); majRecap(); };
 window.annulerSaisie = ()=>{ state.saisie=null; const p=vuePrecedente(); if(p==='org') aller('org'); else { state.view=p||'ep'; render(); window.scrollTo(0,0); } };
+// Chronomètre intégré (épreuves au temps)
+let chT0=0, chAcc=0, chTimer=0;
+function chronoAff(){ const ms=chAcc+(chT0?Date.now()-chT0:0), s=ms/1000; const el=$('#chAff'); if(el) el.textContent=Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0')+'.'+Math.floor((ms%1000)/100); }
+window.chronoBouton = ()=>{ const b=$('#chBtn'); if(!chT0){ chT0=Date.now(); clearInterval(chTimer); chTimer=setInterval(chronoAff,100); if(b){ b.textContent='■ Stop'; b.classList.add('run'); } vibre(20); }
+  else { chAcc+=Date.now()-chT0; chT0=0; clearInterval(chTimer); chronoAff(); const s=Math.round(chAcc/1000); const mm=$('#mm'), ss=$('#ss'); if(mm) mm.value=Math.floor(s/60); if(ss) ss.value=s%60; if(b){ b.textContent='▶ Reprendre'; b.classList.remove('run'); } vibre([30,30,30]); majRecap(); } };
+window.chronoZero = ()=>{ chT0=0; chAcc=0; clearInterval(chTimer); chronoAff(); const b=$('#chBtn'); if(b){ b.textContent='▶ Chrono'; b.classList.remove('run'); } };
 window.choisirRes = (r,btn)=>{ state.saisie.res=r; document.querySelectorAll('#grpRes button').forEach(b=>b.classList.toggle('sel',b===btn)); vibre(15); majRecap(); };
 window.choisirNote = (n,btn)=>{ state.saisie.note=n; document.querySelectorAll('#grpNote button').forEach(b=>b.classList.toggle('sel',b===btn)); vibre(15); majRecap(); };
 window.basculerBonus = (k,btn)=>{ state.saisie.bonus[k]=!state.saisie.bonus[k]; btn.classList.toggle('sel',state.saisie.bonus[k]); vibre(15); majRecap(); };
@@ -1143,7 +1211,8 @@ window.validerSaisie = ()=>{
   state.saisie=null; vibre([30,40,30]); cacherToast();
   if(state.org && state.orgRetour){ dire('Résultat enregistré ✓'+(noteAdv?' '+noteAdv:''),'ok'); const a=state.apresSaisie; state.apresSaisie=''; if(a==='org') aller('org'); else { state.view='home'; render(); window.scrollTo(0,0); } return; }
   state.bravo={ ep:e.n }; state.vientDeFaire=e.n; setTimeout(()=>{ state.vientDeFaire=0; }, 4000);
-  state.view='bravo'; render(); window.scrollTo(0,0); confettis(false); if(noteAdv) setTimeout(()=>dire(noteAdv),1200); if(etaitFait) setTimeout(()=>dire('Résultat corrigé ✓','ok'),400);
+  const nbF=EP.filter(x=>x.n!==DEFI_EP && fait(x.n,t)).length, palier=[5,10,NB_EP].includes(nbF) && !etaitFait;
+  state.view='bravo'; render(); window.scrollTo(0,0); confettis(palier); son(palier); if(noteAdv) setTimeout(()=>dire(noteAdv),1200); if(etaitFait) setTimeout(()=>dire('Résultat corrigé ✓','ok'),400);
 };
 window.supprimerPassage = ()=>{
   if(!confirm('Effacer le résultat de cette épreuve pour cette équipe ?')) return; if(!codeSaisieOk()) return;
@@ -1184,7 +1253,7 @@ window.envoyerDefi = async ()=>{
 window.marquerDefi = d=>{
   const t=state.team; const row={ event:EVENT, team:t, defi:d, envoye:true, code:CLE, updated_at:new Date().toISOString() };
   local.d[kd(t,d)]=row; pousser('tb_defis','event,team,defi','d-'+kd(t,d),row);
-  const D=DEFIS.find(x=>x.d===d); state.defi=null; vibre([30,40,30]); confettis(false);
+  const D=DEFIS.find(x=>x.d===d); state.defi=null; vibre([30,40,30]); const tous=nbDefis(t)>=DEFIS.length; confettis(tous); son(tous);
   dire(`✓ ${D.nom} : envoyé !`,'ok'); apresDefi();
 };
 window.dejaEnvoye = d=>{ const D=DEFIS.find(x=>x.d===d); if(confirm(`Vous avez bien envoyé « ${D.nom} » sur le WhatsApp de l'organisation ?`)) marquerDefi(d); };
@@ -1197,12 +1266,20 @@ window.ouvrirPodium = ()=>{ state.podium={i:0, montre:false}; state.view='podium
 window.fermerPodium = ()=>{ aller('org'); };
 window.podiumReveler = ()=>{ const {st}=etapesPodium(); state.podium.montre=true; render(); confettis(!!(st[state.podium.i]||{}).final); vibre(80); };
 window.podiumBouger = d=>{ state.podium.i=Math.max(0,state.podium.i+d); state.podium.montre = d<0; render(); };
+window.allerEquipe = ()=>{ const n=parseInt(($('#allerEq')||{}).value,10); if(n>=1 && n<=N_EQUIPES) voirEquipe(n); else dire('Numéro d\'équipe de 1 à '+N_EQUIPES,'err'); };
+window.exporterTableau = ()=>{
+  const c=calcul(); const L=[]; const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  L.push(['Rang','Équipe','Nom','Capitaine','Total','Points épreuves','Bonus','Photos-vidéos','Épreuves faites','Défis envoyés','Coups de cœur','Fair-play','Culture (sur 10)'].concat(EP.filter(e=>e.n!==DEFI_EP).map(e=>e.n+'. '+e.nom)).map(q).join(';'));
+  c.ordre.forEach((t,i)=>{ const e=c.eq[t], eqp=equipe(t)||{}; L.push([i+1,t,eqp.nom||'',eqp.capitaine||'',e.total,e.base,e.bonus,e.photos,e.faits,e.nbDefis,e.coeurs,e.fairplay,e.quiz==null?'':e.quiz]
+    .concat(EP.filter(x=>x.n!==DEFI_EP).map(x=>{ const r=passages()[kp(x.n,t)]; return valide(r)&&c.pts[kp(x.n,t)]!=null ? c.pts[kp(x.n,t)]+ptsBonus(r) : ''; })).map(q).join(';')); });
+  const blob=new Blob(['﻿'+L.join('\r\n')],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`classement-cohesion-proxim-${new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')}.csv`; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500); dire('Tableau téléchargé : il s\'ouvre dans Excel','ok'); };
 window.partagerClassement = async ()=>{
   const c=calcul(); const top=c.ordre.filter(t=>c.eq[t].total>0);
   let txt = `Journée de cohésion Proxim'Services · classement à ${heure(Date.now())}\n\n`;
   top.slice(0,10).forEach((t,i)=>{ txt += `${['🥇','🥈','🥉'][i]||(i+1)+'.'} Équipe ${t} ${nomEq(t)} : ${c.eq[t].total} pts (${c.eq[t].faits} épreuves)\n`; });
-  if(c.prixQuiz) txt += `\n🎓 Prix culture d'entreprise : équipe ${c.prixQuiz} ${nomEq(c.prixQuiz)}`;
-  if(c.ambiance) txt += `\n❤️ Coup de cœur : équipe ${c.ambiance} ${nomEq(c.ambiance)}`;
+  if(c.prixQuiz) txt += `\n🎓 Médaille culture d'entreprise : équipe ${c.prixQuiz} ${nomEq(c.prixQuiz)}`;
+  if(c.ambiance) txt += `\n❤️ Trophée coups de cœur et fair-play : équipe ${c.ambiance} ${nomEq(c.ambiance)}`;
   try{ if(navigator.share){ await navigator.share({text:txt}); return; } }catch(e){ return; }
   try{ await navigator.clipboard.writeText(txt); dire('Classement copié : collez-le dans WhatsApp','ok'); }catch(e){ prompt('Copiez le classement :', txt); }
 };
@@ -1217,6 +1294,9 @@ setInterval(()=>{ if(modeDuMoment()!==MODE) location.reload(); }, 15000);   // s
 setInterval(()=>{ if(state.view==='home') renderDoux(); }, 60000);          // pour faire clignoter la culture d'entreprise le moment venu
 if(Q.has('org')){ if(!tQ) state.team=0; state.view = state.org ? 'org' : 'landing'; }
 else if(!confirmee() && !(tQ>=1)) state.team=0;
+(()=>{ const k=Q.get('k'); if(!k) return;                 // QR code de Romain : un jeton secret ouvre l'organisation sans taper le code
+  if(EMPREINTES.lien && empreinte('lien',k)===EMPREINTES.lien){ state.org=true; try{ localStorage.setItem('pxc_org','1'); }catch(e){} if(!confirmee()) state.team=0; state.view='org'; }
+  try{ const u=new URL(location.href); u.searchParams.delete('k'); history.replaceState(null,'',u.pathname+u.search); }catch(e){} })();
 function majHaut(){ const t=$('header.top'); if(t) document.documentElement.style.setProperty('--haut', (t.offsetHeight+8)+'px'); }
 window.addEventListener('resize', majHaut); window.addEventListener('load', majHaut); document.fonts && document.fonts.ready && document.fonts.ready.then(majHaut);
 poserRepere(); render(); majHaut(); refresh(); flush();
