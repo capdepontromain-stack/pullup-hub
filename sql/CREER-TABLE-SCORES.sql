@@ -23,7 +23,7 @@
 create table if not exists tb_equipes (
   id uuid default gen_random_uuid() primary key,
   event text not null,                          -- proxim-2026-11-14 (ou essai-2026-11-14 pour les répétitions)
-  team int not null check (team between 1 and 28),
+  team int not null check (team between 1 and 40),
   nom text,
   capitaine text,
   photo text,                                   -- photo d'équipe réduite (image JPEG encodée)
@@ -37,7 +37,7 @@ create table if not exists tb_passages (
   id uuid default gen_random_uuid() primary key,
   event text not null,
   stand int not null check (stand between 1 and 14),
-  team int not null check (team between 1 and 28),
+  team int not null check (team between 1 and 40),
   resultat text check (resultat in ('V','N','D','F','X')),  -- V victoire, N égalité, D défaite (duels), F fait (autres épreuves), X effacé
   mesure numeric,                               -- temps en secondes, points, note sur 10, bonnes réponses ou hauteur en cm
   b_ambiance boolean default false,             -- bonus donnés par l'animateur
@@ -58,7 +58,7 @@ create table if not exists tb_messages (
   id uuid default gen_random_uuid() primary key,
   event text not null,
   cid text not null unique,                     -- identifiant donné par le téléphone (évite les doublons en cas de renvoi)
-  team int not null check (team between 0 and 28),
+  team int not null check (team between 0 and 40),
   texte text not null check (char_length(texte) <= 300),
   masque boolean default false,                 -- message masqué par l'organisation
   code text,
@@ -115,7 +115,7 @@ create policy tb_passages_equipe on tb_passages for all to authenticated using (
 create table if not exists tb_defis (
   id uuid default gen_random_uuid() primary key,
   event text not null,
-  team int not null check (team between 1 and 28),
+  team int not null check (team between 1 and 40),
   defi int not null check (defi between 0 and 20),
   envoye boolean default false,
   note int check (note between 0 and 3),
