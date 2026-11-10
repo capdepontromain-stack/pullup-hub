@@ -154,7 +154,7 @@ const EP = [
  {n:14, nom:'La tour de Babel', type:'hauteur', places:2, min:8, desc:"Chacun tient une ficelle : empilez les pièces sans les toucher. La tour la plus haute gagne."}
 ];
 const EPN = Object.fromEntries(EP.map(e=>[e.n,e]));
-const img = n => `proxim/ep${String(n).padStart(2,'0')}.jpg`;
+const img = n => `proxim/ep${String(n).padStart(2,'0')}.jpg?v=2`;        // v=2 : force les téléphones à recharger les photos
 const MAXPTS = e => e.type==='quiz' ? 20 : 10;
 const BAREME = { duel:'Victoire 10 points · Égalité 6 · Défaite 3', jury:'La note du jury sur 10 donne vos points', quiz:'2 points par bonne réponse : jusqu\'à 20 points',
   chrono:'Classement entre toutes les équipes : de 10 points pour les plus rapides à 2 points', points:'Classement entre toutes les équipes : de 10 points pour les meilleurs scores à 2 points', hauteur:'Classement entre toutes les équipes : de 10 points pour les plus hautes tours à 2 points' };
