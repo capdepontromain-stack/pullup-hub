@@ -2,131 +2,280 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Journée de cohésion Proxim'Services</title>
 <meta name="description" content="Journée de cohésion Proxim'Services, samedi 14 novembre 2026 : le carnet de route des équipes, les épreuves et les points.">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#0085B2">
+<meta name="theme-color" content="#0B4F86">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="icon" href="proxim/logo-proxim.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
 <style>
-  :root { --bleu:#0085B2; --marine:#0B4F86; --orange:#F7941D; --jaune:#FDCC1A; --rouge:#E3222B; --vert:#2E9E4F; --fond:#F3F8FC; --texte:#16324A; --gris:#5F7184; --trait:#DCE7F0; }
+  :root { --bleu:#0085B2; --marine:#0B4F86; --nuit:#072B4C; --orange:#F7941D; --corail:#EF5A24; --jaune:#FDCC1A; --rouge:#E3222B; --vert:#22A45D; --vertf:#178048; --fond:#EFF5FA; --texte:#14304A; --gris:#5C6F82; --trait:#DCE7F0; --ombre:0 6px 18px rgba(11,79,134,.10);
+    --titre:'Baloo 2', 'Nunito', -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; --corps:'Nunito', -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  body { margin:0; font-family:-apple-system, "Segoe UI", Roboto, Arial, sans-serif; background:var(--fond); color:var(--texte); font-size:16px; line-height:1.35; }
-  header.top { background:#fff; padding:10px 14px 8px; text-align:center; border-bottom:4px solid var(--jaune); position:sticky; top:0; z-index:6; }
-  header.top img { height:42px; max-width:86%; object-fit:contain; display:block; margin:0 auto; }
-  header.top .titre { display:inline-block; margin-top:6px; background:var(--orange); color:#fff; font-weight:800; font-size:13px; letter-spacing:.4px; padding:3px 14px; border-radius:20px; }
-  main { padding:14px; max-width:640px; margin:0 auto; }
-  .card { background:#fff; border-radius:16px; padding:16px; margin-bottom:14px; box-shadow:0 2px 8px rgba(11,79,134,.08); }
-  h2 { font-size:20px; margin:0 0 8px; color:var(--marine); }
-  h3 { font-size:16px; margin:14px 0 8px; color:var(--marine); }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; font-family:var(--corps); background:var(--fond); color:var(--texte); font-size:16.5px; line-height:1.4; font-weight:500; min-height:100vh; }
+  button { font-family:inherit; cursor:pointer; }
+  button:active { transform:scale(.97); }
+  /* ---------- En-tête ---------- */
+  header.top { background:#fff; padding:8px 12px 9px; text-align:center; position:sticky; top:0; z-index:8; box-shadow:0 2px 10px rgba(11,79,134,.08); padding-top:max(8px, env(safe-area-inset-top)); }
+  header.top::after { content:''; position:absolute; left:0; right:0; bottom:-4px; height:4px; background:linear-gradient(90deg,var(--orange),var(--rouge) 30%,var(--bleu) 65%,var(--jaune)); }
+  header.top .logo { height:34px; max-width:78%; object-fit:contain; display:block; margin:0 auto; }
+  header.top .ligne { display:flex; gap:6px; justify-content:center; align-items:center; margin-top:6px; flex-wrap:wrap; }
+  header.top .titre { background:var(--orange); color:#fff; font-family:var(--titre); font-weight:800; font-size:13px; letter-spacing:.5px; padding:2px 11px 1px; border-radius:20px; text-transform:uppercase; }
+  .rebours { font-weight:900; font-size:13.5px; color:var(--marine); background:#E6F1F8; padding:2px 10px; border-radius:20px; font-variant-numeric:tabular-nums; }
+  .rebours.urgent { color:#fff; background:var(--rouge); animation:pouls 1.2s ease-in-out infinite; }
+  .rebours.fini { color:#fff; background:var(--vert); }
+  @keyframes pouls { 50% { transform:scale(1.06); } }
+  main { padding:16px 14px; max-width:620px; margin:0 auto; }
+  /* ---------- Éléments communs ---------- */
+  .card { background:#fff; border-radius:20px; padding:18px; margin-bottom:14px; box-shadow:var(--ombre); }
+  h1, h2, h3, .t-titre { font-family:var(--titre); font-weight:800; letter-spacing:-.2px; }
+  h1 { font-size:30px; line-height:1.05; margin:0 0 6px; color:var(--marine); }
+  h2 { font-size:23px; line-height:1.1; margin:0 0 8px; color:var(--marine); }
+  h3 { font-size:19px; margin:20px 2px 10px; color:var(--marine); display:flex; align-items:center; gap:8px; }
+  h3 .cpt { font-family:var(--corps); font-size:13px; background:var(--marine); color:#fff; border-radius:20px; padding:1px 9px; font-weight:900; }
   p { margin:0 0 8px; }
-  .muted { color:var(--gris); font-size:13.5px; }
-  label { display:block; font-size:13.5px; font-weight:700; color:var(--marine); margin:12px 0 5px; }
-  input[type=text], input[type=number], input[type=password], select { width:100%; font-size:18px; padding:12px; border:2px solid var(--trait); border-radius:12px; background:#fff; color:var(--texte); }
-  input:focus, select:focus { outline:none; border-color:var(--bleu); }
-  .btn { display:block; width:100%; border:0; border-radius:14px; padding:15px 12px; font-size:17px; font-weight:800; color:#fff; background:var(--bleu); margin-top:12px; }
-  .btn.orange { background:var(--orange); } .btn.vert { background:var(--vert); } .btn.marine { background:var(--marine); }
-  .btn.clair { background:#fff; color:var(--marine); border:2px solid var(--trait); }
-  .btn:disabled { opacity:.5; }
-  .lnk { background:none; border:0; color:var(--gris); text-decoration:underline; font-size:14px; padding:10px 6px; }
-  .regles { list-style:none; padding:0; margin:0; }
-  .regles li { display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:1px solid var(--trait); }
-  .regles li:last-child { border-bottom:0; }
-  .num { flex:0 0 28px; height:28px; border-radius:50%; color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:14px; }
-  .equipe { display:flex; gap:12px; align-items:center; }
-  .equipe .ph { flex:0 0 76px; height:76px; border-radius:14px; background:var(--trait) center/cover; }
-  .equipe .nom { font-size:19px; font-weight:800; color:var(--marine); line-height:1.15; }
-  .scores { display:flex; gap:8px; margin-top:12px; }
-  .scores > div { flex:1; background:var(--fond); border-radius:12px; padding:9px 4px; text-align:center; }
-  .scores b { display:block; font-size:24px; color:var(--bleu); line-height:1.1; }
-  .scores span { font-size:11.5px; color:var(--gris); }
-  .prog { height:10px; background:var(--trait); border-radius:6px; overflow:hidden; margin-top:12px; }
-  .prog > div { height:100%; background:linear-gradient(90deg,var(--jaune),var(--orange)); }
-  .ep { display:flex; background:#fff; border-radius:16px; overflow:hidden; margin-bottom:10px; box-shadow:0 2px 8px rgba(11,79,134,.08); border:0; width:100%; text-align:left; padding:0; color:inherit; font:inherit; }
-  .ep .img { flex:0 0 104px; background:var(--trait) center/cover; min-height:92px; position:relative; }
-  .ep.culture { box-shadow:0 0 0 2px var(--orange), 0 2px 8px rgba(11,79,134,.08); }
-  .ep.culture .img { background-color:#fff; background-size:contain; background-repeat:no-repeat; }
-  .ep .img i { position:absolute; left:6px; top:6px; background:var(--marine); color:#fff; font-style:normal; font-weight:800; font-size:13px; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
-  .ep .txt { flex:1; padding:10px 12px; min-width:0; }
-  .ep .t { font-weight:800; font-size:15.5px; color:var(--marine); }
-  .ep .etat { flex:0 0 66px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; font-size:12px; color:var(--gris); background:var(--fond); text-align:center; padding:4px; }
-  .ep.fait .etat { background:var(--vert); color:#fff; } .ep.fait .etat b { font-size:22px; line-height:1; }
-  .ep.fait .img { filter:grayscale(.6); }
-  .tag { display:inline-block; font-size:10.5px; font-weight:800; padding:2px 7px; border-radius:8px; margin:3px 4px 0 0; color:#fff; background:var(--bleu); letter-spacing:.3px; }
-  .tag.duel { background:var(--rouge); } .tag.double { background:var(--orange); } .tag.gris { background:#E9EFF5; color:var(--gris); }
-  .hero { height:190px; border-radius:16px; background:var(--trait) center/cover; margin-bottom:12px; position:relative; }
-  .hero span { position:absolute; left:10px; bottom:10px; background:rgba(11,79,134,.92); color:#fff; font-weight:800; padding:5px 12px; border-radius:10px; font-size:15px; }
-  .anim { background:var(--marine); color:#fff; border-radius:16px; padding:16px; margin-bottom:14px; }
-  .anim h2 { color:var(--jaune); } .anim label { color:#fff; } .anim .muted { color:#C9DCEC; }
-  .choix { display:flex; gap:8px; }
-  .choix button { flex:1; padding:14px 4px; border-radius:12px; border:2px solid #fff; background:transparent; color:#fff; font-weight:800; font-size:15px; }
-  .choix button.sel { background:var(--jaune); border-color:var(--jaune); color:var(--marine); }
-  .row { display:flex; gap:10px; } .row > * { flex:1; }
-  .banner { background:#FFF4D1; border:1px solid #F1D675; color:#6A5200; padding:10px 12px; border-radius:12px; font-size:14px; margin-bottom:12px; }
+  .muted { color:var(--gris); font-size:14px; }
+  label { display:block; font-size:14px; font-weight:800; color:var(--marine); margin:14px 0 6px; }
+  input[type=text], input[type=number], input[type=password], input[type=tel] { width:100%; font-size:19px; font-family:inherit; font-weight:700; padding:13px 14px; border:2px solid var(--trait); border-radius:14px; background:#fff; color:var(--texte); -webkit-appearance:none; appearance:none; }
+  input::placeholder { color:#9AAABB; font-weight:600; }
+  input:focus { outline:none; border-color:var(--bleu); box-shadow:0 0 0 4px rgba(0,133,178,.15); }
+  .btn { display:block; width:100%; border:0; border-radius:16px; padding:16px 14px; font-size:18px; font-weight:900; color:#fff; background:var(--bleu); margin-top:12px; font-family:var(--corps); box-shadow:0 4px 0 rgba(0,0,0,.12); transition:transform .08s; }
+  .btn.orange { background:linear-gradient(180deg,#FBA43A,var(--orange)); } .btn.vert { background:linear-gradient(180deg,#2DBB6C,var(--vert)); } .btn.marine { background:var(--marine); }
+  .btn.or { background:linear-gradient(180deg,#FFE066,var(--jaune)); color:var(--nuit); }
+  .btn.clair { background:#fff; color:var(--marine); border:2px solid var(--trait); box-shadow:none; }
+  .btn.gros { font-size:21px; padding:19px 14px; }
+  .lnk { background:none; border:0; color:var(--gris); text-decoration:underline; font-size:14.5px; padding:10px 6px; font-weight:700; }
+  .tag { display:inline-block; font-size:11.5px; font-weight:900; padding:3px 8px; border-radius:8px; margin:4px 4px 0 0; color:#fff; background:var(--bleu); letter-spacing:.2px; }
+  .tag.pts { background:var(--vert); } .tag.duel { background:var(--rouge); } .tag.double { background:var(--orange); } .tag.gris { background:#E9EFF5; color:var(--gris); }
+  .banner { background:#FFF4D1; border:1px solid #F1D675; color:#6A5200; padding:11px 13px; border-radius:14px; font-size:14.5px; margin-bottom:12px; }
   .banner.err { background:#FDE7E7; border-color:#EDB1B1; color:#8A1C1C; }
   .banner.bleu { background:#E2F3FA; border-color:#A9D8EA; color:var(--marine); }
-  .bravo { text-align:center; padding:26px 16px; background:linear-gradient(160deg,var(--bleu),var(--marine)); color:#fff; border-radius:18px; margin-bottom:14px; }
-  .bravo .p { font-size:54px; font-weight:900; color:var(--jaune); line-height:1; }
-  table { width:100%; border-collapse:collapse; font-size:13.5px; }
-  th, td { padding:7px 4px; border-bottom:1px solid var(--trait); text-align:center; }
-  th { background:var(--marine); color:#fff; font-size:11.5px; }
-  td.l { text-align:left; }
-  tr.top1 td { background:#FFF4D1; font-weight:800; } tr.top2 td, tr.top3 td { background:#F6FAFD; }
-  nav.tabs { display:flex; background:#fff; border-radius:14px; overflow:hidden; margin-bottom:14px; box-shadow:0 2px 8px rgba(11,79,134,.08); }
-  nav.tabs button { flex:1; border:0; background:#fff; padding:12px 2px; font-weight:800; color:var(--gris); font-size:13.5px; }
-  nav.tabs button.on { background:var(--marine); color:#fff; }
-  .prix { border-radius:16px; padding:14px; margin-bottom:12px; color:#fff; display:flex; gap:12px; align-items:center; }
-  .prix .ph { flex:0 0 84px; height:84px; border-radius:12px; background:rgba(255,255,255,.25) center/cover; }
-  .prix .t { font-size:11.5px; letter-spacing:1px; text-transform:uppercase; font-weight:800; opacity:.95; }
-  .prix .n { font-size:22px; font-weight:900; line-height:1.1; }
-  .gal { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .gal div { background:#fff; border-radius:12px; overflow:hidden; font-size:12.5px; text-align:center; padding-bottom:6px; }
-  .gal img { width:100%; aspect-ratio:4/3; object-fit:cover; display:block; margin-bottom:4px; background:var(--trait); }
-  header.top .rebours { margin-top:6px; font-weight:800; font-size:15px; color:var(--marine); font-variant-numeric:tabular-nums; }
-  header.top .rebours.urgent { color:var(--rouge); }
-  header.top .rebours.fini { color:var(--vert); }
-  .ep.afaire { border-left:7px solid var(--vert); }
-  .ep.afaire .etat { background:var(--vert); color:#fff; font-size:12.5px; }
-  .faite { display:flex; align-items:center; gap:8px; width:100%; text-align:left; border:0; background:#FBEAEA; color:var(--rouge); border-radius:10px; padding:7px 10px; margin-bottom:6px; font:inherit; font-size:13px; font-weight:700; }
-  .faite i { font-style:normal; background:var(--rouge); color:#fff; border-radius:50%; width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; font-size:11px; flex:0 0 20px; }
-  .faite span { margin-left:auto; font-size:11px; letter-spacing:.5px; }
-  .vedette { display:block; width:100%; text-align:left; border:0; padding:0; border-radius:18px; overflow:hidden; margin-bottom:14px; color:#fff; font:inherit; background:linear-gradient(135deg,var(--orange),#E8590C); box-shadow:0 4px 14px rgba(247,148,29,.45); }
-  .vedette .img { height:120px; background:center/cover; }
-  .vedette .txt { padding:12px 14px 14px; }
-  .vedette .t { font-size:20px; font-weight:900; line-height:1.15; }
-  .vedette .d { display:inline-block; background:var(--jaune); color:var(--marine); font-weight:900; font-size:13px; padding:4px 10px; border-radius:10px; margin-top:8px; }
-  @keyframes clignote { 0%,100% { transform:scale(1); box-shadow:0 4px 14px rgba(247,148,29,.45); filter:none; } 50% { transform:scale(1.025); box-shadow:0 0 0 6px rgba(253,204,26,.85), 0 6px 22px rgba(227,34,43,.55); filter:brightness(1.12); } }
+  .banner.vert { background:#E3F6EA; border-color:#A6DDB9; color:var(--vertf); }
+  .banner .lnk { padding:2px 0; font-size:13.5px; }
+  /* ---------- Accueil ---------- */
+  .heroAcc { height:230px; border-radius:24px; background:center/cover; position:relative; overflow:hidden; box-shadow:var(--ombre); }
+  .heroAcc::after { content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(7,43,76,0) 40%,rgba(7,43,76,.75)); }
+  .heroAcc .surt { position:absolute; left:18px; bottom:40px; z-index:1; color:#fff; font-family:var(--titre); font-weight:800; font-size:15px; letter-spacing:1.5px; text-transform:uppercase; }
+  .accCarte { text-align:center; margin-top:-26px; position:relative; z-index:2; }
+  .accCarte h1 { font-size:34px; }
+  .accCarte .sous { font-size:19px; margin:6px 0 2px; }
+  .respire { animation:respire 2.2s ease-in-out infinite; }
+  @keyframes respire { 50% { transform:scale(1.03); box-shadow:0 8px 24px rgba(247,148,29,.45); } }
+  /* ---------- Formulaire équipe ---------- */
+  .gnum { font-family:var(--titre); font-size:34px !important; text-align:center; letter-spacing:2px; padding:8px !important; }
+  .photoEq { height:200px; border-radius:16px; background:var(--trait) center/cover; margin-top:6px; position:relative; }
+  .photoEq span { position:absolute; left:10px; bottom:10px; background:rgba(34,164,93,.95); color:#fff; font-weight:900; padding:4px 11px; border-radius:10px; font-size:13.5px; }
+  .deja { border-radius:18px; padding:16px; margin-top:16px; background:linear-gradient(160deg,#E2F3FA,#fff); border:2px solid #A9D8EA; }
+  .deja .n { font-family:var(--titre); font-size:26px; font-weight:800; color:var(--marine); line-height:1.1; }
+  /* ---------- Règles ---------- */
+  .regles { list-style:none; padding:0; margin:0; }
+  .regles li { display:flex; gap:12px; align-items:flex-start; padding:11px 0; border-bottom:1px solid var(--trait); }
+  .regles li:last-child { border-bottom:0; }
+  .num { flex:0 0 32px; height:32px; border-radius:50%; color:#fff; font-weight:900; display:flex; align-items:center; justify-content:center; font-size:15px; font-family:var(--titre); }
+  details.regl { background:#fff; border-radius:20px; box-shadow:var(--ombre); margin:16px 0 14px; overflow:hidden; }
+  details.regl summary { list-style:none; padding:16px 18px; font-family:var(--titre); font-weight:800; font-size:18px; color:var(--marine); display:flex; justify-content:space-between; align-items:center; }
+  details.regl summary::-webkit-details-marker { display:none; }
+  details.regl summary::after { content:'+'; font-size:26px; line-height:1; color:var(--bleu); }
+  details.regl[open] summary::after { content:'–'; }
+  details.regl > div { padding:0 18px 16px; }
+  /* ---------- Carnet de l'équipe ---------- */
+  .eqCarte { display:flex; gap:14px; align-items:center; }
+  .avatar { flex:0 0 78px; height:78px; border-radius:50%; background:var(--trait) center/cover; border:4px solid #fff; box-shadow:0 0 0 3px var(--orange); display:flex; align-items:center; justify-content:center; font-family:var(--titre); font-weight:800; font-size:28px; color:#fff; }
+  .eqCarte .nom { font-family:var(--titre); font-size:25px; font-weight:800; color:var(--marine); line-height:1.02; }
+  .eqCarte .det { color:var(--gris); font-size:14px; font-weight:700; margin-top:3px; }
+  .avance { display:flex; align-items:center; gap:14px; margin-top:16px; background:var(--fond); border-radius:16px; padding:12px 14px; }
+  .anneau { flex:0 0 84px; height:84px; position:relative; }
+  .anneau svg { width:84px; height:84px; transform:rotate(-90deg); }
+  .anneau circle { fill:none; stroke-width:9; }
+  .anneau .bg { stroke:#DCE7F0; } .anneau .fg { stroke:url(#degrade); stroke-linecap:round; transition:stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1); }
+  .anneau b { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--titre); font-size:24px; font-weight:800; color:var(--marine); }
+  .anneau b small { font-size:14px; color:var(--gris); margin-left:1px; }
+  .avance .txt { font-weight:800; font-size:16px; line-height:1.25; }
+  .avance .txt .muted { font-weight:600; display:block; margin-top:3px; }
+  .ep { display:flex; align-items:stretch; background:#fff; border-radius:18px; overflow:hidden; margin-bottom:11px; box-shadow:var(--ombre); border:0; width:100%; text-align:left; padding:0; color:inherit; font:inherit; position:relative; }
+  .ep .img { flex:0 0 100px; background:var(--trait) center/cover; min-height:96px; position:relative; }
+  .ep .img i { position:absolute; left:7px; top:7px; background:var(--marine); color:#fff; font-style:normal; font-weight:900; font-size:13px; width:27px; height:27px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid #fff; }
+  .ep .txt { flex:1; padding:11px 12px; min-width:0; }
+  .ep .t { font-family:var(--titre); font-weight:800; font-size:18.5px; color:var(--marine); line-height:1.1; }
+  .ep .go { flex:0 0 58px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:linear-gradient(180deg,#2DBB6C,var(--vert)); color:#fff; font-weight:900; font-size:11px; letter-spacing:.4px; text-align:center; gap:2px; }
+  .ep .go b { font-size:24px; line-height:1; }
+  .ep.culture { box-shadow:0 0 0 3px var(--orange), var(--ombre); }
+  .ep.culture .img { background-color:#fff; background-size:contain; background-repeat:no-repeat; }
+  .vedette { display:block; width:100%; text-align:left; border:0; padding:0; border-radius:22px; overflow:hidden; margin-bottom:6px; color:#fff; font:inherit; background:linear-gradient(135deg,var(--orange),var(--corail)); box-shadow:0 8px 22px rgba(239,90,36,.35); }
+  .vedette .img { height:112px; background:#fff center/contain no-repeat; }
+  .vedette .txt { padding:13px 16px 16px; }
+  .vedette .t { font-family:var(--titre); font-size:23px; font-weight:800; line-height:1.08; }
+  .vedette .d { display:inline-block; background:var(--jaune); color:var(--nuit); font-weight:900; font-size:13px; padding:4px 11px; border-radius:10px; margin-top:9px; }
+  @keyframes clignote { 0%,100% { transform:scale(1); box-shadow:0 8px 22px rgba(239,90,36,.35); filter:none; } 50% { transform:scale(1.025); box-shadow:0 0 0 7px rgba(253,204,26,.9), 0 10px 26px rgba(227,34,43,.5); filter:brightness(1.1); } }
   .vedette.clignote { animation:clignote 1.1s ease-in-out infinite; }
-  @media (prefers-reduced-motion: reduce) { .vedette.clignote { animation:none; outline:5px solid var(--jaune); } }
-  nav.bas { position:fixed; left:0; right:0; bottom:0; display:flex; background:#fff; border-top:2px solid var(--trait); z-index:7; padding-bottom:env(safe-area-inset-bottom); }
-  nav.bas button { flex:1; border:0; background:#fff; padding:12px 4px 13px; font:inherit; font-weight:800; font-size:14px; color:var(--gris); position:relative; }
+  .faites { display:flex; flex-wrap:wrap; gap:7px; }
+  .faite { display:inline-flex; align-items:center; gap:6px; border:0; background:#FCE9E9; color:var(--rouge); border-radius:20px; padding:6px 11px 6px 6px; font:inherit; font-size:13.5px; font-weight:800; text-decoration:line-through; text-decoration-thickness:1.5px; }
+  .faite i { font-style:normal; background:var(--rouge); color:#fff; border-radius:50%; width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; text-decoration:none; }
+  .faite.tampon { animation:tampon .9s cubic-bezier(.2,1.6,.4,1) both; }
+  @keyframes tampon { 0% { transform:scale(2.2) rotate(-12deg); opacity:0; } 60% { transform:scale(.92) rotate(3deg); opacity:1; } 100% { transform:none; } }
+  .finCarte { text-align:center; padding:26px 18px; background:linear-gradient(160deg,var(--vert),var(--vertf)); color:#fff; border-radius:22px; margin-bottom:14px; box-shadow:var(--ombre); }
+  .finCarte .p { font-family:var(--titre); font-size:46px; font-weight:800; line-height:1; color:var(--jaune); }
+  .annonce { display:flex; gap:12px; align-items:flex-start; background:linear-gradient(135deg,var(--marine),var(--bleu)); color:#fff; border-radius:18px; padding:14px 16px; margin-bottom:14px; box-shadow:var(--ombre); }
+  .annonce .ico { font-size:28px; line-height:1; }
+  .annonce b { color:var(--jaune); font-size:12.5px; letter-spacing:1px; text-transform:uppercase; display:block; margin-bottom:2px; }
+  .annonce .lnk { color:#CFE4F3; padding:6px 0 0; }
+  /* ---------- Épreuve ---------- */
+  .heroEp { height:220px; border-radius:22px; background:var(--trait) center/cover; margin-bottom:14px; position:relative; overflow:hidden; box-shadow:var(--ombre); }
+  .heroEp.logo { background-size:80%; background-repeat:no-repeat; background-color:#fff; }
+  .heroEp::after { content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(7,43,76,0) 45%,rgba(7,43,76,.85)); }
+  .heroEp .tt { position:absolute; left:16px; right:16px; bottom:12px; z-index:1; color:#fff; }
+  .heroEp .tt small { font-weight:900; font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--jaune); }
+  .heroEp .tt div { font-family:var(--titre); font-size:30px; font-weight:800; line-height:1.05; }
+  .fait { text-align:center; border-radius:20px; padding:20px 16px; background:#FCE9E9; color:var(--rouge); margin-bottom:6px; }
+  .fait .gros { font-family:var(--titre); font-size:28px; font-weight:800; }
+  /* ---------- Saisie animateur ---------- */
+  .anim { background:linear-gradient(170deg,var(--marine),var(--nuit)); color:#fff; border-radius:22px; padding:18px; margin-bottom:14px; box-shadow:0 10px 26px rgba(7,43,76,.35); }
+  .anim h2 { color:var(--jaune); margin:0; }
+  .anim .qui { display:flex; gap:12px; align-items:center; margin:10px 0 4px; background:rgba(255,255,255,.08); border-radius:14px; padding:10px; }
+  .anim .qui .avatar { flex:0 0 52px; height:52px; font-size:20px; border-width:2px; box-shadow:0 0 0 2px var(--jaune); }
+  .anim label { color:#fff; font-size:15px; margin-top:18px; }
+  .anim .muted { color:#C9DCEC; }
+  .anim input { background:#fff; }
+  .choix { display:flex; gap:8px; }
+  .choix button, .notes button, .bonus button { flex:1; padding:14px 4px; border-radius:14px; border:2px solid rgba(255,255,255,.55); background:transparent; color:#fff; font-weight:900; font-size:16px; }
+  .choix button.sel, .notes button.sel { background:var(--jaune); border-color:var(--jaune); color:var(--nuit); box-shadow:0 0 0 3px rgba(253,204,26,.35); }
+  .choix button.v.sel { background:#2DBB6C; border-color:#2DBB6C; color:#fff; } .choix button.d.sel { background:#F05A5A; border-color:#F05A5A; color:#fff; }
+  .notes { display:grid; grid-template-columns:repeat(6,1fr); gap:7px; }
+  .notes button { padding:13px 0; font-size:19px; font-family:var(--titre); }
+  .bonus { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .bonus button { display:flex; align-items:center; gap:8px; padding:12px 10px; text-align:left; font-size:15px; }
+  .bonus button .e { font-size:22px; } .bonus button small { display:block; font-size:12px; opacity:.85; font-weight:800; }
+  .bonus button.sel { background:#fff; border-color:#fff; color:var(--nuit); }
+  .bonus button.h.sel { background:#FF4D6D; border-color:#FF4D6D; color:#fff; }
+  .row { display:flex; gap:10px; } .row > * { flex:1; }
+  .advNom { margin-top:7px; font-weight:800; color:var(--jaune); min-height:20px; font-size:15px; }
+  .recap { margin-top:18px; background:rgba(253,204,26,.14); border:1px dashed rgba(253,204,26,.7); border-radius:14px; padding:11px 13px; font-weight:800; font-size:15px; color:#FFF3C4; }
+  .chipAnim { display:inline-block; margin-top:8px; padding:7px 12px; border-radius:20px; border:2px solid rgba(255,255,255,.55); background:transparent; color:#fff; font-weight:800; font-size:14px; }
+  .chipAnim.sel { background:var(--jaune); color:var(--nuit); border-color:var(--jaune); }
+  /* ---------- Bravo ---------- */
+  .bravo { text-align:center; padding:30px 18px 26px; background:linear-gradient(160deg,var(--bleu),var(--marine)); color:#fff; border-radius:24px; margin-bottom:12px; box-shadow:var(--ombre); overflow:hidden; position:relative; }
+  .bravo h2 { color:#fff; font-size:30px; margin:12px 0 6px; }
+  .bravo .ep2 { color:var(--jaune); font-weight:900; font-size:17px; }
+  .coche { width:110px; height:110px; display:block; margin:0 auto; }
+  .coche circle { fill:none; stroke:var(--jaune); stroke-width:4; stroke-dasharray:160; stroke-dashoffset:160; animation:trace .6s ease-out forwards; }
+  .coche path { fill:none; stroke:#fff; stroke-width:5; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:50; stroke-dashoffset:50; animation:trace .4s .5s ease-out forwards; }
+  @keyframes trace { to { stroke-dashoffset:0; } }
+  .etatEnvoi { font-size:13.5px; font-weight:800; margin-top:12px; opacity:.95; }
+  canvas.confettis { position:fixed; inset:0; width:100vw; height:100vh; pointer-events:none; z-index:60; }
+  /* ---------- Barre du bas ---------- */
+  nav.bas { position:fixed; left:0; right:0; bottom:0; display:flex; background:rgba(255,255,255,.97); border-top:1px solid var(--trait); z-index:9; padding-bottom:env(safe-area-inset-bottom); box-shadow:0 -4px 16px rgba(11,79,134,.08); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); }
+  nav.bas button { flex:1; border:0; background:transparent; padding:13px 4px 14px; font:inherit; font-weight:900; font-size:14.5px; color:var(--gris); position:relative; }
   nav.bas button.on { color:var(--bleu); box-shadow:inset 0 3px 0 var(--bleu); }
-  nav.bas button.fl { flex:0 0 auto; padding-left:14px; padding-right:14px; color:var(--marine); background:var(--fond); white-space:nowrap; }
+  nav.bas button.fl { flex:0 0 auto; padding-left:15px; padding-right:15px; color:var(--marine); background:var(--fond); white-space:nowrap; }
   .pastille { display:inline-block; min-width:20px; padding:1px 6px; border-radius:10px; background:var(--rouge); color:#fff; font-size:12px; margin-left:5px; }
-  body.avecBas main { padding-bottom:86px; } body.avecBas footer { padding-bottom:84px; }
+  body.avecBas main { padding-bottom:92px; } body.avecBas footer { padding-bottom:88px; }
+  /* ---------- Messagerie ---------- */
   .fil { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
-  .msg { max-width:86%; background:#fff; border-radius:14px; padding:8px 11px; box-shadow:0 1px 4px rgba(11,79,134,.08); align-self:flex-start; }
-  .msg .q { font-size:11.5px; font-weight:800; color:var(--bleu); } .msg .h { font-size:10.5px; color:var(--gris); margin-left:6px; font-weight:400; }
-  .msg.moi { align-self:flex-end; background:#DFF1F9; }
-  .msg.org { align-self:stretch; max-width:100%; background:var(--marine); color:#fff; } .msg.org .q { color:var(--jaune); } .msg.org .h { color:#C9DCEC; }
+  .msg { max-width:86%; background:#fff; border-radius:16px 16px 16px 4px; padding:9px 12px; box-shadow:0 1px 4px rgba(11,79,134,.08); align-self:flex-start; }
+  .msg .q { font-size:12px; font-weight:900; color:var(--bleu); } .msg .h { font-size:11px; color:var(--gris); margin-left:6px; font-weight:600; }
+  .msg.moi { align-self:flex-end; background:#D9F0FA; border-radius:16px 16px 4px 16px; }
+  .msg.org { align-self:stretch; max-width:100%; background:linear-gradient(135deg,var(--marine),var(--bleu)); color:#fff; border-radius:16px; } .msg.org .q { color:var(--jaune); } .msg.org .h { color:#C9DCEC; }
   .msg.masque { opacity:.45; text-decoration:line-through; }
-  .msg .lnk { padding:2px 0 0; font-size:12px; }
-  .ecrire { display:flex; gap:8px; position:sticky; bottom:70px; background:var(--fond); padding:8px 0; }
+  .msg .lnk { padding:2px 0 0; font-size:12.5px; }
+  .ecrire { display:flex; gap:8px; position:sticky; bottom:76px; background:var(--fond); padding:8px 0; }
   .ecrire input { flex:1; } .ecrire button { flex:0 0 auto; width:auto; margin:0; padding:12px 16px; }
-  footer { text-align:center; color:var(--gris); font-size:11.5px; padding:6px 16px 26px; }
+  /* ---------- Organisation ---------- */
+  .orgTete { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .orgTete .surt { font-family:var(--titre); font-size:24px; font-weight:800; color:var(--marine); line-height:1; }
+  .direct { font-size:13px; font-weight:800; color:var(--gris); display:flex; align-items:center; gap:6px; margin-top:4px; }
+  .direct i { width:9px; height:9px; border-radius:50%; background:var(--vert); display:inline-block; animation:pouls 1.6s infinite; } .direct.ko i { background:var(--rouge); animation:none; }
+  .rond { width:46px; height:46px; border-radius:50%; border:0; background:#fff; color:var(--marine); font-size:22px; font-weight:900; box-shadow:var(--ombre); }
+  nav.tabs { display:flex; background:#fff; border-radius:16px; overflow:hidden; margin-bottom:14px; box-shadow:var(--ombre); position:sticky; top:var(--haut,108px); z-index:5; }
+  nav.tabs button { flex:1; border:0; background:#fff; padding:12px 2px; font-weight:900; color:var(--gris); font-size:13.5px; white-space:nowrap; }
+  nav.tabs .pastille { margin-left:3px; padding:0 5px; min-width:17px; font-size:11px; }
+  nav.tabs button.on { background:var(--marine); color:#fff; }
+  .kpis { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .kpis > div { background:#fff; border-radius:16px; padding:12px 6px; text-align:center; box-shadow:var(--ombre); }
+  .kpis b { display:block; font-family:var(--titre); font-size:27px; color:var(--bleu); line-height:1.05; font-weight:800; }
+  .kpis span { font-size:12px; color:var(--gris); font-weight:800; }
+  .prix { border-radius:20px; padding:14px; margin-bottom:12px; color:#fff; display:flex; gap:12px; align-items:center; box-shadow:var(--ombre); }
+  .prix .ph { flex:0 0 76px; height:76px; border-radius:50%; background:rgba(255,255,255,.25) center/cover; border:3px solid rgba(255,255,255,.8); display:flex; align-items:center; justify-content:center; font-size:30px; }
+  .prix .t { font-size:11.5px; letter-spacing:1px; text-transform:uppercase; font-weight:900; opacity:.95; }
+  .prix .n { font-family:var(--titre); font-size:22px; font-weight:800; line-height:1.05; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { padding:9px 4px; border-bottom:1px solid var(--trait); text-align:center; }
+  th { background:var(--marine); color:#fff; font-size:11.5px; font-weight:900; }
+  th:first-child { border-radius:10px 0 0 0; } th:last-child { border-radius:0 10px 0 0; }
+  td.l { text-align:left; } td b { font-weight:900; }
+  tr.top1 td { background:#FFF4D1; } tr.top2 td, tr.top3 td { background:#F4F9FD; }
+  tbody tr { cursor:pointer; }
+  .journal .li { display:flex; gap:10px; align-items:center; padding:10px 2px; border-bottom:1px solid var(--trait); width:100%; background:none; border-left:0; border-right:0; border-top:0; text-align:left; font:inherit; color:inherit; }
+  .journal .li:last-child { border-bottom:0; }
+  .journal .h { flex:0 0 44px; font-weight:900; color:var(--gris); font-size:12.5px; font-variant-numeric:tabular-nums; }
+  .journal .q { flex:1; min-width:0; font-size:14px; line-height:1.25; }
+  .journal .q b { color:var(--marine); }
+  .journal .p { flex:0 0 auto; font-family:var(--titre); font-weight:800; color:var(--vert); font-size:17px; }
+  .journal .nouveau { animation:surbrille 2s ease-out; }
+  @keyframes surbrille { from { background:#FFF4D1; } to { background:transparent; } }
+  details.stand { background:#fff; border-radius:18px; box-shadow:var(--ombre); margin-bottom:10px; overflow:hidden; }
+  details.stand summary { list-style:none; padding:13px 15px; display:flex; gap:10px; align-items:center; }
+  details.stand summary::-webkit-details-marker { display:none; }
+  details.stand summary .nm { flex:1; font-weight:900; color:var(--marine); }
+  details.stand summary .nb { font-family:var(--titre); font-weight:800; color:var(--bleu); font-size:18px; }
+  details.stand .barre { height:6px; background:var(--trait); border-radius:4px; overflow:hidden; margin-top:5px; }
+  details.stand .barre div { height:100%; background:linear-gradient(90deg,var(--jaune),var(--orange)); }
+  details.stand > div { padding:0 15px 14px; }
+  .puce { display:inline-block; margin:4px 4px 0 0; padding:6px 10px; border-radius:12px; border:2px dashed #B8CBDB; background:#fff; font-weight:900; color:var(--marine); font-size:14px; }
+  .ligneRes { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--trait); width:100%; background:none; border-left:0; border-right:0; border-top:0; font:inherit; color:inherit; text-align:left; }
+  .ligneRes .p { font-family:var(--titre); font-weight:800; color:var(--vert); white-space:nowrap; }
+  .gal { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .gal button { background:#fff; border-radius:16px; overflow:hidden; font:inherit; font-size:13px; text-align:center; padding:0 0 10px; border:0; box-shadow:var(--ombre); color:inherit; }
+  .gal .ph { aspect-ratio:4/3; background:var(--trait) center/cover; display:flex; align-items:center; justify-content:center; font-family:var(--titre); font-size:34px; font-weight:800; color:#fff; margin-bottom:6px; }
+  .gal b { font-family:var(--titre); font-size:16px; color:var(--marine); }
+  .gal.vide .ph { opacity:.5; }
+  .annRap { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+  .annRap button { border:2px solid var(--trait); background:#fff; border-radius:14px; padding:10px; font:inherit; font-weight:800; font-size:13.5px; color:var(--marine); text-align:left; }
+  .orgBan { background:var(--nuit); color:#fff; border-radius:16px; padding:12px 14px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; gap:10px; font-weight:800; }
+  .orgBan button { background:var(--jaune); color:var(--nuit); border:0; border-radius:12px; padding:9px 12px; font-weight:900; }
+  .carnet .ligneRes .st { font-size:12px; font-weight:900; padding:2px 8px; border-radius:8px; background:#E9EFF5; color:var(--gris); }
+  .carnet .ligneRes .st.ok { background:#E3F6EA; color:var(--vertf); }
+  /* ---------- Podium ---------- */
+  body.podiumOn { background:radial-gradient(circle at 50% 10%, #1A5E9A, var(--nuit) 70%); }
+  body.podiumOn footer { color:#9CB7CF; }
+  .podium { text-align:center; color:#fff; padding-top:8px; }
+  .podium .etape { font-weight:900; letter-spacing:2px; text-transform:uppercase; color:var(--jaune); font-size:14px; }
+  .podium h1 { color:#fff; font-size:36px; margin:8px 0 18px; }
+  .podium .gagnant { animation:revele .8s cubic-bezier(.2,1.4,.4,1) both; }
+  @keyframes revele { from { transform:scale(.4); opacity:0; } to { transform:none; opacity:1; } }
+  .podium .ph { width:190px; height:190px; border-radius:50%; margin:0 auto 14px; background:rgba(255,255,255,.15) center/cover; border:6px solid var(--jaune); box-shadow:0 0 40px rgba(253,204,26,.5); display:flex; align-items:center; justify-content:center; font-family:var(--titre); font-size:60px; font-weight:800; }
+  .podium .nom { font-family:var(--titre); font-size:38px; font-weight:800; line-height:1.05; }
+  .podium .sous { font-size:18px; color:#CFE4F3; margin-top:6px; font-weight:700; }
+  .podium .mystere { font-size:96px; margin:20px 0; animation:pouls 1.4s infinite; }
+  .podium .nav2 { display:flex; gap:10px; margin-top:22px; }
+  .podium .nav2 .btn { margin:0; } .podium .nav2 .btn.clair { flex:0 0 70px; background:rgba(255,255,255,.12); color:#fff; border-color:rgba(255,255,255,.3); }
+  /* ---------- Divers ---------- */
+  footer { text-align:center; color:var(--gris); font-size:12px; padding:8px 16px 28px; font-weight:700; }
+  #toast { position:fixed; left:50%; bottom:96px; transform:translate(-50%,30px); background:var(--nuit); color:#fff; padding:13px 18px; border-radius:16px; font-weight:800; font-size:15px; box-shadow:0 10px 30px rgba(0,0,0,.25); opacity:0; pointer-events:none; transition:all .25s; z-index:70; max-width:92vw; text-align:center; }
+  #toast.on { opacity:1; transform:translate(-50%,0); }
+  #toast.err { background:var(--rouge); } #toast.ok { background:var(--vertf); }
+  main.arrivee .entree { animation:entree .45s cubic-bezier(.2,.8,.2,1) both; }
+  main.arrivee .entree:nth-child(2) { animation-delay:.04s; } main.arrivee .entree:nth-child(3) { animation-delay:.08s; } main.arrivee .entree:nth-child(4) { animation-delay:.12s; } main.arrivee .entree:nth-child(5) { animation-delay:.16s; } main.arrivee .entree:nth-child(n+6) { animation-delay:.2s; }
+  @keyframes entree { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } .vedette.clignote { outline:5px solid var(--jaune); } }
 </style>
 </head>
 <body>
-<header class="top"><img src="proxim/logo-proxim.png" alt="Proxim'Services Réunion"><div class="titre">JOURNÉE DE COHÉSION · 14.11.2026</div><div class="rebours" id="rebours"></div></header>
+<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="degrade" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FDCC1A"/><stop offset="1" stop-color="#EF5A24"/></linearGradient></defs></svg>
+<header class="top"><img class="logo" src="proxim/logo-proxim.png" alt="Proxim'Services Réunion"><div class="ligne"><span class="titre">Journée de cohésion · 14.11</span><span class="rebours" id="rebours"></span></div></header>
 <main id="main"></main>
 <nav class="bas" id="bas" style="display:none"></nav>
+<div id="toast" role="status" aria-live="polite"></div>
 <footer>Une journée animée par Pull Up Événements</footer>
-
 <script>
 // =============== Réglages ===============
 const Q = new URLSearchParams(location.search);
-const ESSAI = Q.has('essai');                       // lien avec « essai » : répétition, rien ne compte
-const EVENT = ESSAI ? 'essai-2026-11-14' : 'proxim-2026-11-14';
+const MODE = Q.has('demo') ? 'demo' : (Q.has('essai') ? 'essai' : 'reel');   // demo : journée simulée à 28 équipes · essai : répétition · reel : le 14 novembre
+const ESSAI = MODE!=='reel';
+const EVENT = {demo:'demo-2026-11-14', essai:'essai-2026-11-14', reel:'proxim-2026-11-14'}[MODE];
 const LOCAL = ['localhost','127.0.0.1'].includes(location.hostname);
 const SUPABASE_URL = (LOCAL && Q.get('api')) ? Q.get('api') : 'https://vincxrmtfjbenlzhjwby.supabase.co';
 const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpbmN4cm10ZmpiZW5semhqd2J5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyOTI1MTksImV4cCI6MjA5Nzg2ODUxOX0.M9_ChGDlOIUKKZtbBHs1xn4cdy4FwUAQKN0aYyXefQY';
@@ -137,32 +286,39 @@ const FIN_EPREUVES = ESSAI ? new Date(Date.now()+90*60000) : new Date(2026,10,14
 const CULTURE = 12;                                 // l'épreuve mise en avant (points doublés)
 const COULEURS = ['Rouge','Bleu roi','Vert','Jaune','Orange','Violet','Rose','Blanc','Noir','Turquoise','Bordeaux','Bleu ciel','Vert anis','Gris'];
 const couleur = t => COULEURS[(t-1)%14];
+const TEINTES = ['#E3222B','#0085B2','#22A45D','#F2B705','#F7941D','#7B4FC4','#E2558C','#3E8FB0','#2C3E50','#14A3A3','#8C1C3A','#4FA8E0','#8DBB2A','#7A8A99'];
 // Code des animateurs : trois mots au choix, valables sur toutes les épreuves. Seules les empreintes sont ici.
 const EMPREINTES = /*EMPREINTES*/{org:'a6ca8ea66d7c7a26b79fab5298620f3efb5d4f7f66244fbe6c6affab93bb8cf4',mots:['96f99aa2ff66d5d72f426153fbc18bffef24b9021a1205ea2628104ea0c772bd','ff29bece9439c435bd6344efba9fef08d27452a98ec9bd8478cb75f42a487ad5','7bcb70b7feaeb1b11fa4dcbac9138b9f04a81f39a16f5efa1f25c9cde82a0871']};
 // type : duel / chrono (secondes) / points / jury (note sur 10) / quiz (bonnes réponses sur 10) / hauteur (cm)
 const EP = [
- {n:1, nom:'La catapulte', type:'duel', places:2, min:10, desc:"Volley géant : avec vos catapultes, envoyez la balle dans le camp adverse après un maximum de passes en équipe."},
- {n:2, nom:'Les roues', type:'chrono', places:5, min:5, desc:"Toute l'équipe entre dans la roue géante et fait l'aller-retour le plus vite possible."},
- {n:3, nom:'Le Kapla', type:'jury', places:5, min:7, desc:"Construisez ensemble une sculpture qui représente la cohésion. Le jury note votre œuvre."},
- {n:4, nom:"L'Archery Tag", type:'duel', places:2, min:10, desc:"Arcs et flèches à embout mousse : deux équipes face à face, touché égale éliminé."},
- {n:5, nom:"Le parcours d'obstacles", type:'chrono', places:3, min:5, desc:"Toute l'équipe franchit le parcours gonflable. Le chrono s'arrête quand le dernier arrive."},
- {n:6, nom:'Le tir à la corde', type:'duel', places:2, min:5, desc:"Le grand classique : deux équipes, une corde, au meilleur des trois manches."},
- {n:7, nom:'Les lettres', type:'chrono', places:4, min:7, desc:"Une devinette, une lettre par personne : reconstituez le mot le plus vite possible."},
- {n:8, nom:'Les cibles foot', type:'points', places:2, min:10, desc:"Chacun tire au but sur la cible géante. Les points de toute l'équipe s'additionnent."},
- {n:9, nom:'Les haches', type:'points', places:2, min:10, desc:"Lancer de haches sur cible : adresse et sang-froid. Les points de l'équipe s'additionnent."},
- {n:10, nom:'Les clous', type:'chrono', places:4, min:8, desc:"En relais, un seul coup de marteau chacun : enfoncez le clou le plus vite possible."},
- {n:11, nom:'Le théâtre', type:'jury', places:3, min:10, desc:"Un thème imposé, 5 minutes pour préparer, 2 minutes pour jouer. Le jury note votre scène."},
- {n:12, nom:"La culture d'entreprise", type:'quiz', places:3, min:8, desc:"10 questions sur Proxim'Services et votre métier. Chaque bonne réponse vaut 2 points : c'est l'épreuve qui rapporte le plus."},
- {n:13, nom:'Photos et vidéos', type:'jury', places:4, min:10, desc:"Relevez les défis photo et vidéo en équipe. Le jury note la réussite et la créativité."},
- {n:14, nom:'La tour de Babel', type:'hauteur', places:2, min:8, desc:"Chacun tient une ficelle : empilez les pièces sans les toucher. La tour la plus haute gagne."}
+ {n:1, nom:'La catapulte', ico:'🏐', type:'duel', places:2, min:10, desc:"Volley géant : avec vos catapultes, envoyez la balle dans le camp adverse après un maximum de passes en équipe."},
+ {n:2, nom:'Les roues', ico:'🎡', type:'chrono', places:5, min:5, desc:"Toute l'équipe entre dans la roue géante et fait l'aller-retour le plus vite possible."},
+ {n:3, nom:'Le Kapla', ico:'🧱', type:'jury', places:5, min:7, desc:"Construisez ensemble une sculpture qui représente la cohésion. Le jury note votre œuvre."},
+ {n:4, nom:"L'Archery Tag", ico:'🏹', type:'duel', places:2, min:10, desc:"Arcs et flèches à embout mousse : deux équipes face à face, touché égale éliminé."},
+ {n:5, nom:"Le parcours d'obstacles", ico:'🏃', type:'chrono', places:3, min:5, desc:"Toute l'équipe franchit le parcours gonflable. Le chrono s'arrête quand le dernier arrive."},
+ {n:6, nom:'Le tir à la corde', ico:'💪', type:'duel', places:2, min:5, desc:"Le grand classique : deux équipes, une corde, au meilleur des trois manches."},
+ {n:7, nom:'Les lettres', ico:'🔤', type:'chrono', places:4, min:7, desc:"Une devinette, une lettre par personne : reconstituez le mot le plus vite possible."},
+ {n:8, nom:'Les cibles foot', ico:'⚽', type:'points', places:2, min:10, desc:"Chacun tire au but sur la cible géante. Les points de toute l'équipe s'additionnent."},
+ {n:9, nom:'Les haches', ico:'🪓', type:'points', places:2, min:10, desc:"Lancer de haches sur cible : adresse et sang-froid. Les points de l'équipe s'additionnent."},
+ {n:10, nom:'Les clous', ico:'🔨', type:'chrono', places:4, min:8, desc:"En relais, un seul coup de marteau chacun : enfoncez le clou le plus vite possible."},
+ {n:11, nom:'Le théâtre', ico:'🎭', type:'jury', places:3, min:10, desc:"Un thème imposé, 5 minutes pour préparer, 2 minutes pour jouer. Le jury note votre scène."},
+ {n:12, nom:"La culture d'entreprise", ico:'🎓', type:'quiz', places:3, min:8, desc:"10 questions sur Proxim'Services et votre métier. Chaque bonne réponse vaut 2 points : c'est l'épreuve qui rapporte le plus."},
+ {n:13, nom:'Photos et vidéos', ico:'📸', type:'jury', places:4, min:10, desc:"Relevez les défis photo et vidéo en équipe. Le jury note la réussite et la créativité."},
+ {n:14, nom:'La tour de Babel', ico:'🗼', type:'hauteur', places:2, min:8, desc:"Chacun tient une ficelle : empilez les pièces sans les toucher. La tour la plus haute gagne."}
 ];
 const EPN = Object.fromEntries(EP.map(e=>[e.n,e]));
-const img = n => `proxim/ep${String(n).padStart(2,'0')}.jpg?v=3`;        // v=3 : force les téléphones à recharger les photos (culture d'entreprise = logo Proxim'Services)
+const img = n => `proxim/ep${String(n).padStart(2,'0')}.jpg?v=3`;
+const vignette = n => n===CULTURE ? 'proxim/ep12-carre.jpg?v=3' : img(n);
 const MAXPTS = e => e.type==='quiz' ? 20 : 10;
 const BAREME = { duel:'Victoire 10 points · Égalité 6 · Défaite 3', jury:'La note du jury sur 10 donne vos points', quiz:'2 points par bonne réponse : jusqu\'à 20 points',
   chrono:'Classement entre toutes les équipes : de 10 points pour les plus rapides à 2 points', points:'Classement entre toutes les équipes : de 10 points pour les meilleurs scores à 2 points', hauteur:'Classement entre toutes les équipes : de 10 points pour les plus hautes tours à 2 points' };
+// Bonus donnés par l'animateur (jamais automatiques). « Coup de cœur » vaut 2 points.
+const BONUS = [ {k:'a', col:'b_ambiance', nom:'Ambiance', ico:'🎉', pts:1}, {k:'c', col:'b_cohesion', nom:'Cohésion', ico:'🤝', pts:1}, {k:'f', col:'b_fairplay', nom:'Fair-play', ico:'👏', pts:1}, {k:'h', col:'b_coeur', nom:'Coup de cœur', ico:'❤️', pts:2} ];
+const ptsBonus = r => BONUS.reduce((s,b)=>s+(r&&r[b.col]?b.pts:0),0);
+const icoBonus = r => BONUS.filter(b=>r&&r[b.col]).map(b=>b.ico).join('');
 const DEPART_PLAN = [[1,2],[2,3],[3,2],[4,2],[5,2],[6,2],[7,2],[8,1],[9,1],[10,2],[11,2],[12,3],[13,2],[14,2]];
 const DEPART = {}; (()=>{ let t=1; DEPART_PLAN.forEach(([s,n])=>{ for(let i=0;i<n;i++) DEPART[t++]=s; }); })();
+const ANNONCES = [ ['⏰','Plus que 30 minutes d\'épreuves : foncez !'], ['⏰','Plus que 10 minutes : dernière épreuve !'], ['🎓','N\'oubliez pas la culture d\'entreprise : points doublés !'], ['🏆','Les épreuves sont terminées : tout le monde au podium !'] ];
 
 // =============== Petits outils ===============
 const $ = s => document.querySelector(s);
@@ -170,9 +326,12 @@ const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'
 const LS = k => 'pxc_'+EVENT+'_'+k;
 const lsGet = (k,d)=>{ try{ const v=localStorage.getItem(LS(k)); return v===null?d:JSON.parse(v);}catch(e){return d;} };
 const lsSet = (k,v)=>{ try{ localStorage.setItem(LS(k),JSON.stringify(v)); return true; }catch(e){ return false; } };
-const fmtT = s => { s=Math.round(+s); return Math.floor(s/60)+' min '+String(s%60).padStart(2,'0')+' s'; };
+const tms = s => { const v=Date.parse(s||''); return isNaN(v)?0:v; };      // compare des dates écrites différemment (« Z » ou « +00:00 »)
+const fmtT = s => { s=Math.round(+s); const m=Math.floor(s/60); return (m?m+' min ':'')+String(s%60).padStart(m?2:1,'0')+' s'; };
 const pl = (n,mot) => n+' '+mot+(n>1?'s':'');
+const heure = d => new Date(d).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
 const okPhoto = p => (typeof p==='string' && /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(p)) ? p : '';
+const vibre = ms => { try{ navigator.vibrate && navigator.vibrate(ms); }catch(e){} };
 function sha256(ascii){
   function rr(v,a){ return (v>>>a)|(v<<(32-a)); }
   var mp=Math.pow, maxWord=mp(2,32), result='', words=[], bitLen=ascii.length*8, i, j;
@@ -194,59 +353,105 @@ function sha256(ascii){
   for(i=0;i<8;i++){ for(j=3;j+1;j--){ var b=(hash[i]>>(j*8))&255; result+=((b<16)?0:'')+b.toString(16); } }
   return result;
 }
-const sansAccent = c => String(c==null?'':c).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'').toUpperCase();
+const sansAccent = c => String(c==null?'':c).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,'').toUpperCase();
 const empreinte = (quoi, code) => sha256('proxim14|'+quoi+'|'+sansAccent(code));
 const codeOrgOk = code => !!code && empreinte('org',code) === EMPREINTES.org;
 const codeStandOk = (stand, code) => !!code && ((EMPREINTES.mots||[]).includes(empreinte('mot',code)) || codeOrgOk(code));
+
+// Petit message en bas de l'écran (remplace les fenêtres d'alerte)
+let toastT=0;
+function cacherToast(){ const el=$('#toast'); if(el) el.className=''; }
+function dire(msg, genre){ const el=$('#toast'); if(!el) return; el.textContent=msg; el.className='on '+(genre||''); clearTimeout(toastT); toastT=setTimeout(()=>{ el.className=''; }, genre==='err'?4200:2800); if(genre==='err') vibre([60,40,60]); }
+// Confettis (sans bibliothèque)
+function confettis(fort){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cv=document.createElement('canvas'); cv.className='confettis'; document.body.appendChild(cv);
+  const dpr=Math.min(2,window.devicePixelRatio||1), W=cv.width=innerWidth*dpr, H=cv.height=innerHeight*dpr, ctx=cv.getContext('2d');
+  const cols=['#F7941D','#E3222B','#0085B2','#FDCC1A','#22A45D','#ffffff','#EF5A24'];
+  const ps=Array.from({length:fort?240:130},(_,i)=>({ x:W*(fort?Math.random():.5+(Math.random()-.5)*.4), y:fort?-20*dpr-Math.random()*H*.5:H*.38, vx:(Math.random()-.5)*(fort?4:16)*dpr, vy:fort?(2+Math.random()*3)*dpr:-(6+Math.random()*10)*dpr,
+    r:(5+Math.random()*6)*dpr, c:cols[i%cols.length], a:Math.random()*6, va:(Math.random()-.5)*.35, f:Math.random()<.5 }));
+  const t0=performance.now(), duree=fort?4500:2800;
+  (function anim(t){ ctx.clearRect(0,0,W,H);
+    ps.forEach(p=>{ p.vy+=.28*dpr; p.vx*=.99; p.x+=p.vx; p.y+=p.vy; p.a+=p.va; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.a); ctx.fillStyle=p.c; if(p.f){ ctx.fillRect(-p.r/2,-p.r/4,p.r,p.r/2); } else { ctx.beginPath(); ctx.arc(0,0,p.r/3,0,6.3); ctx.fill(); } ctx.restore(); });
+    if(t-t0<duree) requestAnimationFrame(anim); else cv.remove(); })(t0);
+}
 
 // =============== État ===============
 const tQ = +Q.get('e');
 let state = {
   team: (tQ>=1 && tQ<=N_EQUIPES) ? tQ : lsGet('team',0),
-  org: lsGet('org',false), view:'', ep:0, orgTab:'classement', orgRetour:false,
-  passages:{}, equipes:{}, photos:{}, dbOk:null, err:'', messages:[], chatOk:null, chatOuvert:true,
-  saisie:{ res:'', bonus:{a:false,c:false,f:false} }, bravo:null, galerie:false, edition:false
+  org: lsGet('org',false), view:'', ep:0, orgTab:'direct', orgRetour:false, apresSaisie:'',
+  passages:{}, equipes:{}, photos:{}, dbOk:null, err:'', messages:[], chatOk:null, chatOuvert:true, majA:0, vus:{},
+  saisie:null, bravo:null, galerie:false, edition:false, podium:{i:0, montre:false}, vientDeFaire:0
 };
 if(tQ>=1 && tQ<=N_EQUIPES) lsSet('team', tQ);          // ancien lien direct par équipe : toujours accepté
 const confirmee = () => !!state.team && lsGet('team',0)===state.team;
 let local = lsGet('local', { p:{}, e:{}, m:{} });      // copies locales : passages, équipes, messages en cours d'envoi
-if(!local.m) local.m={};
-let queue = lsGet('queue', {});                   // envois en attente
+if(!local.m) local.m={}; if(!local.p) local.p={}; if(!local.e) local.e={};
+let queue = lsGet('queue', {});                       // envois en attente (gardés même si l'application est fermée)
 const kp = (s,t)=>`${s}-${t}`;
 const save = ()=>{ lsSet('local',local); lsSet('queue',queue); };
 
 // =============== Base de données (REST Supabase) ===============
 const H = { 'apikey':ANON, 'Authorization':'Bearer '+ANON, 'Content-Type':'application/json' };
+let SANS_COEUR = false;                               // si la colonne « coup de cœur » manquait, l'application continue sans elle
+async function appel(url, opts, delai){            // requête avec délai maximum : un réseau faible ne bloque jamais l'écran
+  const ctl = ('AbortController' in window) ? new AbortController() : null; const tm = setTimeout(()=>{ try{ ctl && ctl.abort(); }catch(e){} }, delai||12000);
+  try{ return await fetch(url, {...opts, signal: ctl?ctl.signal:undefined}); }
+  catch(e){ const err=new Error('Pas de réseau'); err.statut=0; throw err; }
+  finally{ clearTimeout(tm); }
+}
 async function dbGet(table, filtre){
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?event=eq.${EVENT}&${filtre}`, {headers:H});
-  if(!r.ok) throw new Error(await r.text());
+  const r = await appel(`${SUPABASE_URL}/rest/v1/${table}?event=eq.${EVENT}&${filtre}`, {headers:H});
+  if(!r.ok){ const err=new Error(await r.text()); err.statut=r.status; throw err; }
   return r.json();
 }
 async function dbUpsert(table, conflict, row){
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?on_conflict=${conflict}`, {method:'POST', headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'}, body:JSON.stringify(row)});
-  if(!r.ok) throw new Error(await r.text());
-}
-let enFlush=false;
-async function flush(){
-  if(enFlush) return; enFlush=true;
-  for(const k of Object.keys(queue)){
-    const q=queue[k];
-    try{ await dbUpsert(q.table, q.conflict, q.row); if(queue[k]===q) delete queue[k]; state.dbOk=true; }
-    catch(e){ state.err=String(e.message||e); state.dbOk=false; break; }
+  let corps={...row}; if(SANS_COEUR) delete corps.b_coeur;
+  for(let i=0;i<3;i++){
+    const r = await appel(`${SUPABASE_URL}/rest/v1/${table}?on_conflict=${conflict}`, {method:'POST', headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'}, body:JSON.stringify(corps)}, corps.photo?25000:12000);
+    if(r.ok) return;
+    const txt = await r.text();
+    if('b_coeur' in corps && /b_coeur/.test(txt)){ SANS_COEUR=true; delete corps.b_coeur; continue; }
+    if(r.status===413 && corps.photo){ delete corps.photo; continue; }     // photo trop lourde : on garde l'inscription sans la photo
+    const err=new Error(txt); err.statut=r.status; throw err;
   }
-  enFlush=false; save(); renderDoux();
 }
-async function refresh(){
+let enFlush=false, reFlush=false;
+async function flush(){
+  if(enFlush){ reFlush=true; return; } enFlush=true; reFlush=false; let ok=0; const tentes=new Set();
+  for(const k of Object.keys(queue)){ tentes.add(k);
+    const q=queue[k];
+    try{ await dbUpsert(q.table, q.conflict, q.row); if(queue[k]===q) delete queue[k]; state.dbOk=true; ok++; }
+    catch(e){
+      if(e.statut>=400 && e.statut<500 && e.statut!==408 && e.statut!==429){ q.ko=(q.ko||0)+1; q.msg=String(e.message||'').slice(0,160); continue; }   // refus de la base : on n'empêche pas les autres envois
+      state.dbOk=false; state.err=String(e.message||e); break;
+    }
+  }
+  enFlush=false; save(); majEnvoi(); renderDoux();
+  if(state.dbOk!==false && (reFlush || Object.keys(queue).some(k=>!tentes.has(k)))) setTimeout(flush, 50);   // un envoi arrivé pendant le précédent part tout de suite
+}
+async function refresh(force){
   try{
     // Les téléphones des équipes ne reçoivent que « fait ou pas fait » pour leur équipe : ni temps, ni notes, ni bonus.
-    const reqP = state.org ? 'select=stand,team,resultat,mesure,b_ambiance,b_cohesion,b_fairplay,updated_at' : `select=stand,team,resultat,updated_at&team=eq.${state.team||0}`;
-    const [p,e] = await Promise.all([ dbGet('tb_passages',reqP), dbGet('tb_equipes','select=team,nom,capitaine,updated_at') ]);
-    state.passages={}; p.forEach(x=>state.passages[kp(x.stand,x.team)]=x);
+    const cols = 'stand,team,resultat,mesure,b_ambiance,b_cohesion,b_fairplay'+(SANS_COEUR?'':',b_coeur')+',updated_at';
+    const reqP = state.org ? 'select='+cols : `select=stand,team,resultat,updated_at&team=eq.${state.team||0}`;
+    let p;
+    try{ p = await dbGet('tb_passages', reqP); }
+    catch(e){ if(state.org && /b_coeur/.test(e.message||'')){ SANS_COEUR=true; return refresh(force); } throw e; }
+    const e = await dbGet('tb_equipes','select=team,nom,capitaine,updated_at');
+    const anc = state.passages;
+    state.passages={}; p.forEach(x=>{ const k=kp(x.stand,x.team); state.passages[k]=x; if(state.org && state.majA && (!anc[k] || tms(anc[k].updated_at)!==tms(x.updated_at))) state.vus[k]=Date.now(); });
     state.equipes={}; e.forEach(x=>state.equipes[x.team]=x);
-    state.dbOk=true; state.err='';
+    // nettoyage des copies locales déjà bien arrivées
+    Object.keys(local.p).forEach(k=>{ if(queue['p-'+k]) return; const l=local.p[k]; if(state.passages[k] || (!state.org && l.team!==state.team)) delete local.p[k]; });   // envoyé : la base fait foi
+    Object.keys(local.e).forEach(t=>{ if(!queue['e-'+t] && state.equipes[t]) delete local.e[t]; });
+    save();
+    state.dbOk=true; state.err=''; state.majA=Date.now();
     chargerPhoto(state.team);
   }catch(e){ state.dbOk=false; state.err=String(e.message||e); }
   await lireMessages(true);
+  if(force) dire(state.dbOk?'À jour ✓':'Pas de réseau pour l\'instant', state.dbOk?'ok':'err');
   renderDoux();
 }
 async function lireMessages(silencieux){
@@ -257,6 +462,7 @@ async function lireMessages(silencieux){
     if(avant!==state.chatOuvert && state.view==='chat'){ const el=document.getElementById('msgTxt'); const brouillon=el?el.value:''; render(); const el2=document.getElementById('msgTxt'); if(el2) el2.value=brouillon; }
     const vus = new Set(r.map(x=>x.cid)); Object.keys(local.m).forEach(c=>{ if(vus.has(c)) delete local.m[c]; });
     state.messages = r.filter(x=>!/^__CHAT_/.test(x.texte)).reverse();
+    const ann = annonce(); if(ann && !state.org && lsGet('annonce_vibree','')!==ann.cid){ lsSet('annonce_vibree',ann.cid); vibre([120,60,120]); if(state.view!=='home') dire('📣 Nouveau message de l\'organisation'); }
   }catch(e){ state.chatOk=false; }
   if(!silencieux){ if(state.view==='chat' || (state.view==='org' && state.orgTab==='messages')) majFil(); majBas(); }
 }
@@ -266,20 +472,24 @@ async function chargerPhoto(t){
   try{ const r = await dbGet('tb_equipes',`team=eq.${t}&select=photo`); if(r[0] && okPhoto(r[0].photo)){ state.photos[t]=r[0].photo; renderDoux(); } }catch(e){}
 }
 function pousser(table, conflict, key, row){ queue[key]={table,conflict,row}; save(); flush(); }
+function enAttente(){ return Object.keys(queue).length; }
+function refuses(){ return Object.values(queue).filter(q=>q.ko>=2).length; }
 
 // =============== Données fusionnées et calcul des points ===============
 function passages(){
   const all={...state.passages};
-  Object.entries(local.p).forEach(([k,r])=>{ if(!all[k] || (all[k].updated_at||'') <= r.updated_at) all[k]=r; });
+  Object.entries(local.p).forEach(([k,r])=>{ if(!all[k] || tms(all[k].updated_at) <= tms(r.updated_at)) all[k]=r; });
   return all;
 }
 function equipe(t){
   const a=state.equipes[t], b=local.e[t];
-  if(a && b) return (a.updated_at||'') <= b.updated_at ? b : a;
+  if(a && b) return tms(a.updated_at) <= tms(b.updated_at) ? b : a;
   return b || a || null;
 }
+const valide = r => !!(r && r.resultat && r.resultat!=='X');
+const fait = (n,t) => valide(passages()[kp(n,t)]);
 function calcul(){
-  const rows = Object.values(passages()).filter(r=>r.resultat && r.resultat!=='X');
+  const rows = Object.values(passages()).filter(valide);
   const pts={}, rang={};
   EP.forEach(e=>{
     const list = rows.filter(r=>r.stand===e.n);
@@ -290,29 +500,44 @@ function calcul(){
       v.forEach(r=>{ const mieux=v.filter(x=> asc ? +x.mesure<+r.mesure : +x.mesure>+r.mesure).length; pts[kp(e.n,r.team)] = 10-2*Math.floor(5*mieux/n); rang[kp(e.n,r.team)]={r:mieux+1,n}; }); }
   });
   const eq={};
-  for(let t=1;t<=N_EQUIPES;t++) eq[t]={t,faits:0,base:0,bonus:0,total:0,quiz:null};
+  for(let t=1;t<=N_EQUIPES;t++) eq[t]={t,faits:0,base:0,bonus:0,coeurs:0,total:0,quiz:null};
   rows.forEach(r=>{ const e=eq[r.team]; if(!e) return; const p=pts[kp(r.stand,r.team)]; if(p==null) return;
-    const b=(r.b_ambiance?1:0)+(r.b_cohesion?1:0)+(r.b_fairplay?1:0);
-    e.faits++; e.base+=p; e.bonus+=b; e.total+=p+b; if(r.stand===12) e.quiz=Math.max(0,Math.min(10,Math.round(+r.mesure||0))); });
+    const b=ptsBonus(r);
+    e.faits++; e.base+=p; e.bonus+=b; e.coeurs+=r.b_coeur?1:0; e.total+=p+b; if(r.stand===CULTURE) e.quiz=Math.max(0,Math.min(10,Math.round(+r.mesure||0))); });
   const ordre = Object.values(eq).sort((a,b)=> b.total-a.total || b.faits-a.faits || (b.quiz||0)-(a.quiz||0) || a.t-b.t).map(e=>e.t);
   const general = eq[ordre[0]].total>0 ? ordre[0] : null;
   const qz = Object.values(eq).filter(e=>e.quiz!=null && e.t!==general).sort((a,b)=> b.quiz-a.quiz || b.total-a.total || a.t-b.t);
-  const amb = Object.values(eq).filter(e=>e.bonus>0).sort((a,b)=> b.bonus-a.bonus || b.total-a.total || a.t-b.t);
-  return { pts, rang, eq, ordre, general, prixQuiz: qz.length?qz[0].t:null, ambiance: amb.length?amb[0].t:null, saisies: rows.length };
+  const amb = Object.values(eq).filter(e=>e.bonus>0).sort((a,b)=> b.coeurs-a.coeurs || b.bonus-a.bonus || b.total-a.total || a.t-b.t);
+  return { pts, rang, eq, ordre, rows, general, prixQuiz: qz.length?qz[0].t:null, ambiance: amb.length?amb[0].t:null, saisies: rows.length };
+}
+function texteResultat(r, e){
+  if(!valide(r)) return '';
+  if(e.type==='duel'){ const v={V:'Victoire',N:'Égalité',D:'Défaite'}[r.resultat]||'?'; const a=r.mesure; return v + (a==null?'':(+a===0?' contre les animateurs':' contre l\'équipe '+(+a))); }
+  if(e.type==='chrono') return r.mesure!=null ? fmtT(r.mesure) : 'fait';
+  if(e.type==='jury') return (r.mesure!=null?+r.mesure:'?')+'/10';
+  if(e.type==='quiz') return (r.mesure!=null?+r.mesure:'?')+' bonnes réponses sur 10';
+  if(e.type==='points') return (r.mesure!=null?+r.mesure:'?')+' points';
+  if(e.type==='hauteur') return (r.mesure!=null?+r.mesure:'?')+' cm';
+  return 'fait';
 }
 function temps(){
   const d=new Date(); const jourJ = ESSAI || (d.getFullYear()===2026 && d.getMonth()===10 && d.getDate()===14);
-  if(!jourJ) return { etat:'avant', txt:'Samedi 14 novembre · épreuves de 10h15 à 12h30', court:'à 12h30', ecoule:0 };
-  if(d < DEBUT_EPREUVES){ const m=Math.ceil((DEBUT_EPREUVES-d)/60000); return { etat:'avant', txt: m>90 ? 'Épreuves de 10h15 à 12h30' : `Début des épreuves dans ${m} min`, court:'à 12h30', ecoule:0 }; }
-  if(d >= FIN_EPREUVES) return { etat:'fini', txt:'C\'est terminé : rendez-vous au podium !', court:'terminé', ecoule:999 };
+  if(!jourJ) return { etat:'avant', txt:'Samedi 14 nov. · 10h15-12h30', court:'à 12h30', ecoule:0 };
+  if(d < DEBUT_EPREUVES){ const m=Math.ceil((DEBUT_EPREUVES-d)/60000); return { etat:'avant', txt: m>90 ? 'Épreuves de 10h15 à 12h30' : `Début dans ${m} min`, court:'à 12h30', ecoule:0 }; }
+  if(d >= FIN_EPREUVES) return { etat:'fini', txt:'Terminé : au podium !', court:'terminé', ecoule:999 };
   const s=Math.floor((FIN_EPREUVES-d)/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), ss=s%60;
   const hms = (h?h+' h ':'')+String(m).padStart(h?2:1,'0')+' min '+String(ss).padStart(2,'0')+' s';
-  return { etat: s<600?'urgent':'encours', txt:'Il reste '+hms, court: (h?h+' h ':'')+String(m).padStart(2,'0')+' min', ecoule: Math.floor((d-DEBUT_EPREUVES)/60000) };
+  return { etat: s<600?'urgent':'encours', txt:'⏱ Il reste '+hms, court: (h?h+' h ':'')+String(m).padStart(2,'0')+' min', ecoule: Math.floor((d-DEBUT_EPREUVES)/60000) };
 }
-function resteTxt(){ const t=temps(); return t.etat==='encours'||t.etat==='urgent' ? 'Fin des épreuves dans '+t.court : (t.etat==='fini' ? 'Épreuves terminées' : 'Fin des épreuves à 12h30'); }
-function majRebours(){ const el=document.getElementById('rebours'); if(!el) return; const t=temps(); el.textContent=t.txt; el.className='rebours'+(t.etat==='urgent'?' urgent':'')+(t.etat==='fini'?' fini':''); }
+function majRebours(){
+  const el=document.getElementById('rebours'); if(el){ const t=temps(); el.textContent=t.txt; el.className='rebours'+(t.etat==='urgent'?' urgent':'')+(t.etat==='fini'?' fini':''); }
+  const m=document.getElementById('majHeure'); if(m) m.textContent=depuis();
+}
+function depuis(){ if(!state.majA) return 'connexion…'; const s=Math.round((Date.now()-state.majA)/1000); return s<5 ? 'à jour à l\'instant' : (s<60 ? 'à jour il y a '+s+' s' : 'à jour à '+heure(state.majA)); }
 const nomEq = t => { const e=equipe(t); return e && e.nom ? e.nom : ''; };
 const titreEq = t => `Équipe ${t}` + (nomEq(t) ? ' · '+esc(nomEq(t)) : '');
+const initiales = t => { const n=nomEq(t).replace(/^(les?|la|l')\s*/i,''); return n ? esc(n.trim()[0].toUpperCase()) : t; };
+function avatar(t, cls){ const p=state.photos[t]||(t===state.team?okPhoto(lsGet('photo_'+t,'')):''); return `<div class="${cls||'avatar'}" style="${p?`background-image:url('${p}')`:`background:${TEINTES[(t-1)%14]}`}">${p?'':initiales(t)}</div>`; }
 
 // =============== Rendu ===============
 function vueParDefaut(){
@@ -325,59 +550,68 @@ function vueParDefaut(){
 function renderDoux(){
   majChoix();                                                            // sans toucher au champ en cours de saisie
   const a=document.activeElement;
-  if(a && (a.tagName==='INPUT'||a.tagName==='SELECT')) return;          // on ne touche pas à un écran en cours de saisie
-  if(['saisie','bravo','landing','regles'].includes(state.view)) return;
+  if(a && (a.tagName==='INPUT'||a.tagName==='SELECT'||a.tagName==='TEXTAREA')) { majBas(); return; }
+  if(['saisie','bravo','landing','regles','podium'].includes(state.view)) return;
   if(state.view==='accueil'){ if(confirmee() && equipe(state.team) && equipe(state.team).nom){ state.view=''; render(); } return; }
   if(state.view==='chat' || (state.view==='org' && state.orgTab==='messages')){ majFil(); majBas(); return; }
   if(state.view==='brief'){                                              // un autre téléphone de l'équipe a déjà inscrit l'équipe
     if(!state.edition && (confirmee()||state.orgRetour) && equipe(state.team) && equipe(state.team).nom){ state.view=''; render(); }
-    else majChoix();          // si le numéro tapé vient d'être inscrit par un autre téléphone, on propose de rejoindre l'équipe
+    else majChoix();
     return;
   }
-  render();
+  render(true);
 }
-function render(){
+let dernierHTML='', animT=0;
+function render(doux){
   if(!state.view) state.view = vueParDefaut();
   if(state.view==='home' && !(state.team && equipe(state.team) && equipe(state.team).nom)) state.view='brief';
   let h='';
-  if(ESSAI) h += `<div class="banner"><b>MODE ESSAI.</b> Rien de ce qui est saisi ici ne compte pour la journée. <button class="lnk" style="padding:0" onclick="recommencerEssai()">Recommencer l'essai à zéro sur ce téléphone</button></div>`;
-  if(state.dbOk===false) h += `<div class="banner err"><b>Pas de connexion pour l'instant.</b> Vos résultats sont gardés sur ce téléphone et seront envoyés dès que possible. Continuez à jouer.</div>`;
-  const nq=Object.keys(queue).length; if(nq && state.dbOk!==false) h += `<div class="banner">Envoi en cours (${nq})…</div>`;
-  h += ({accueil:vAccueil, regles:vRegles, landing:vLanding, brief:vBrief, home:vHome, ep:vEpreuve, saisie:vSaisie, bravo:vBravo, org:vOrg, chat:vChat}[state.view]||vLanding)();
-  $('#main').innerHTML = h;
+  if(ESSAI && state.view!=='podium') h += MODE==='demo'
+    ? `<div class="banner bleu"><b>DÉMONSTRATION :</b> une journée simulée avec 28 équipes, pour découvrir l'application. Rien ne compte.</div>`
+    : `<div class="banner"><b>MODE ESSAI.</b> Rien de ce qui est saisi ici ne compte pour la journée. <button class="lnk" onclick="recommencerEssai()">Recommencer l'essai à zéro sur ce téléphone</button></div>`;
+  const nq=enAttente(), nr=refuses();
+  if(state.dbOk===false && state.view!=='podium') h += `<div class="banner err"><b>📶 Pas de réseau pour l'instant.</b> ${nq?pl(nq,'envoi')+' en attente : ils partiront tout seuls dès que le réseau revient.':'Tout est gardé sur ce téléphone.'} Continuez à jouer.</div>`;
+  else if(nq && nr<nq && !['podium','bravo'].includes(state.view)) h += `<div class="banner">Envoi en cours (${nq})…</div>`;
+  if(nr) h += `<div class="banner err"><b>${pl(nr,'résultat')} refusé${nr>1?'s':''} par la base.</b> Montrez ce téléphone à l'organisation.</div>`;
+  h += ({accueil:vAccueil, regles:vRegles, landing:vLanding, brief:vBrief, home:vHome, ep:vEpreuve, saisie:vSaisie, bravo:vBravo, org:vOrg, chat:vChat, podium:vPodium}[state.view]||vLanding)();
+  const main=$('#main');
+  if(doux && h===dernierHTML){ majBas(); majRebours(); return; }
+  const ouverts=[...document.querySelectorAll('details[id][open]')].map(d=>d.id);
+  dernierHTML=h; main.innerHTML=h;
+  ouverts.forEach(id=>{ const d=document.getElementById(id); if(d) d.open=true; });
+  if(!doux){ main.classList.add('arrivee'); clearTimeout(animT); animT=setTimeout(()=>main.classList.remove('arrivee'), 900); }
+  document.body.classList.toggle('podiumOn', state.view==='podium');
   majBas(); majRebours();
   if(state.view==='chat' || (state.view==='org' && state.orgTab==='messages')) majFil(true);
 }
 function vLanding(){
-  return `<div class="card"><h2>Espace organisation</h2><p class="muted">Réservé à l'équipe Pull Up.</p></div>${blocOrg()}<button class="lnk" onclick="state.view='';render()">← Retour</button>`;
-}
-function blocOrg(){
-  return state.org ? `<button class="btn marine" onclick="aller('org')">Espace organisation</button>`
-   : `<div class="card"><p class="muted">Organisation Pull Up</p><input type="password" id="codeOrg" autocomplete="off" autocapitalize="none" placeholder="Code organisation"><button class="btn clair" onclick="entrerOrg()">Entrer</button></div>`;
+  return `<div class="card entree" style="text-align:center"><div style="font-size:44px">🔐</div><h2>Espace organisation</h2><p class="muted">Réservé à l'équipe Pull Up : classement en direct, corrections, messages et podium.</p>
+    ${state.org ? `<button class="btn marine" onclick="aller('org')">Ouvrir l'espace organisation</button>`
+      : `<input type="password" id="codeOrg" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Code organisation" onkeydown="if(event.key==='Enter')entrerOrg()"><button class="btn marine" onclick="entrerOrg()">Entrer</button>`}</div>`;
 }
 function majChoix(){ const t=state.team; if(state.view!=='brief' || !t || state.edition || !nomEq(t)) return;
-  if(!document.getElementById('dejaInscrite') || (state.photos[t] && !document.querySelector('#zoneEquipe .hero'))) majZone(); }   // la boîte « déjà inscrite » apparaît, puis sa photo dès qu'elle est chargée
+  if(!document.getElementById('dejaInscrite') || (state.photos[t] && !document.querySelector('#zoneEquipe .photoEq'))) majZone(); }
 function photoForm(){ const t=state.team; return (figee()||state.edition) && t ? (state.photos[t]||okPhoto(lsGet('photo_'+t,''))) : okPhoto(lsGet('photo_brouillon','')); }
-function figee(){ const t=state.team, e=t?equipe(t):null; return !!(state.orgRetour || (t && tQ===t) || (confirmee() && e && e.nom)); }   // numéro figé : lien direct d'une équipe, ou équipe déjà inscrite sur ce téléphone
+function figee(){ const t=state.team, e=t?equipe(t):null; return !!(state.orgRetour || (t && tQ===t) || (confirmee() && e && e.nom)); }
 function htmlZone(){
   const t=state.team, e=t?equipe(t):null;
   if(t && e && e.nom && !state.edition){
     chargerPhoto(t); const pe=state.photos[t]||'';
-    return `<div id="dejaInscrite" class="banner bleu" style="margin-top:14px"><b>L'équipe ${t} est déjà inscrite :</b><br><span style="font-size:19px;font-weight:800">${esc(e.nom)}</span><br>Capitaine : ${esc(e.capitaine||'')}</div>
-      ${pe?`<div class="hero" style="background-image:url('${pe}')"></div>`:''}
-      <button class="btn orange" onclick="rejoindre()">Oui, c'est mon équipe</button>
-      <p class="muted" style="margin-top:12px">Ce n'est pas vous ? Vérifiez votre numéro d'équipe et corrigez-le ci-dessus. Si une autre équipe a pris votre numéro par erreur, demandez à un animateur.</p>
+    return `<div id="dejaInscrite" class="deja"><div class="muted" style="font-weight:800">L'équipe ${t} est déjà inscrite</div><div class="n">${esc(e.nom)}</div><div class="muted">Capitaine : ${esc(e.capitaine||'')}</div>
+        ${pe?`<div class="photoEq" style="background-image:url('${pe}');margin-top:12px"></div>`:''}</div>
+      <button class="btn orange gros" onclick="rejoindre()">Oui, c'est mon équipe</button>
+      <p class="muted" style="margin-top:12px">Ce n'est pas vous ? Vérifiez votre numéro d'équipe ci-dessus. Si une autre équipe a pris votre numéro par erreur, demandez à un animateur.</p>
       <button class="lnk" onclick="modifierEquipe()">Corriger cette inscription (animateur)</button>`;
   }
   const p=photoForm();
-  return `<label>Nom de l'équipe</label><input type="text" id="fNom" maxlength="28" placeholder="Exemple : Les Pirates" value="${esc(lsGet('brouillon_nom',''))}" oninput="garderBrouillon()">
-      <label>Pseudo du capitaine</label><input type="text" id="fCap" maxlength="24" placeholder="Exemple : Barbe Noire" value="${esc(lsGet('brouillon_cap',''))}" oninput="garderBrouillon()">
+  return `<label>Nom de l'équipe</label><input type="text" id="fNom" maxlength="28" placeholder="Exemple : Les Pirates" value="${esc(lsGet('brouillon_nom',''))}" oninput="garderBrouillon()" autocomplete="off">
+      <label>Pseudo du capitaine</label><input type="text" id="fCap" maxlength="24" placeholder="Exemple : Barbe Noire" value="${esc(lsGet('brouillon_cap',''))}" oninput="garderBrouillon()" autocomplete="off">
       <label>Photo de toute l'équipe</label>
-      ${p?`<div class="hero" style="background-image:url('${p}')"><span>Photo enregistrée</span></div>`:''}
+      ${p?`<div class="photoEq" style="background-image:url('${p}')"><span>✓ Photo enregistrée</span></div>`:''}
       <input type="file" id="fPhoto" accept="image/*" capture="environment" style="display:none" onchange="photoChoisie(this)">
-      <button class="btn clair" onclick="garderBrouillon();document.getElementById('fPhoto').click()">${p?'Reprendre la photo':'Prendre la photo de l\'équipe'}</button>
-      <button class="btn orange" onclick="inscrire()">OK</button>
-      ${p?'':'<button class="lnk" onclick="inscrire(true)">Continuer sans photo</button>'}`;
+      <button class="btn clair" onclick="garderBrouillon();document.getElementById('fPhoto').click()">📷 ${p?'Reprendre la photo':'Prendre la photo de l\'équipe'}</button>
+      <button class="btn orange gros" onclick="inscrire()">OK, on y va !</button>
+      ${p?'':'<p style="text-align:center;margin:4px 0 0"><button class="lnk" onclick="inscrire(true)">Continuer sans photo</button></p>'}`;
 }
 function majZone(){ const z=document.getElementById('zoneEquipe'); if(z) z.innerHTML=htmlZone(); }
 const REGLES = `<ul class="regles">
@@ -385,122 +619,156 @@ const REGLES = `<ul class="regles">
       <li><span class="num" style="background:var(--orange)">2</span><div><b>N'oubliez pas la culture d'entreprise :</b> elle rapporte le double de points.</div></li>
       <li><span class="num" style="background:var(--rouge)">3</span><div><b>Épreuve en duel ?</b> À vous de trouver une équipe adverse pour l'affronter.</div></li>
       <li><span class="num" style="background:var(--vert)">4</span><div><b>À la fin de chaque épreuve,</b> tendez ce téléphone à l'animateur : c'est lui qui entre votre résultat.</div></li>
-      <li><span class="num" style="background:var(--jaune);color:var(--marine)">+</span><div><b>Bonus :</b> les animateurs récompensent l'ambiance, la cohésion et le fair-play. Les points restent secrets jusqu'au podium.</div></li>
+      <li><span class="num" style="background:var(--jaune);color:var(--nuit)">+</span><div><b>Bonus :</b> les animateurs récompensent l'ambiance, la cohésion, le fair-play, et donnent des coups de cœur. Les points restent secrets jusqu'au podium.</div></li>
     </ul>`;
 function vAccueil(){
-  return `<div class="hero" style="height:210px;background-image:url('proxim/accueil.jpg')"></div>
-    <div class="card" style="text-align:center"><h2 style="font-size:26px">Journée de cohésion</h2>
-      <p style="font-size:18px;margin:10px 0 4px"><b>Regroupez toute votre équipe</b><br>autour de ce téléphone.</p>
-      <button class="btn orange" style="font-size:21px;padding:18px" onclick="debuter()">C'est parti !</button></div>
+  return `<div class="heroAcc entree" style="background-image:url('proxim/accueil.jpg')"><div class="surt">Samedi 14 novembre</div></div>
+    <div class="card accCarte entree"><h1>Journée de cohésion</h1>
+      <p class="sous"><b>Regroupez toute votre équipe</b><br>autour de ce téléphone.</p>
+      <button class="btn orange gros respire" onclick="debuter()">C'est parti !</button></div>
     <p style="text-align:center"><button class="lnk" onclick="aller('landing')">Organisation</button></p>`;
 }
 function vRegles(){
   const e=equipe(state.team)||{};
-  return `<div class="card"><h2 style="font-size:24px">C'est parti${e.nom?', '+esc(e.nom):''} !</h2>${REGLES}
-      <button class="btn orange" style="font-size:20px;padding:17px" onclick="reglesVues()">OK, voir les épreuves</button></div>`;
+  return `<div class="card entree"><div style="font-size:40px;line-height:1">🚀</div><h1>C'est parti${e.nom?',<br>'+esc(e.nom):''} !</h1>${REGLES}
+      <button class="btn orange gros" onclick="reglesVues()">OK, voir les épreuves</button></div>`;
 }
 function vBrief(){
   const t=state.team;
-  let h = `<div class="card"><h2>Votre équipe</h2>`;
-  if(figee()) h += `<p style="font-weight:800;color:var(--marine);font-size:18px;margin:0">Équipe ${t}</p>`;
-  else h += `<label>Numéro d'équipe</label><input type="number" id="fNum" inputmode="numeric" min="1" max="${N_EQUIPES}" placeholder="Exemple : 12" value="${t||''}" oninput="saisirNumero(this.value)">`;
+  let h = `<div class="card entree"><h2>${state.edition?'Modifier l\'équipe':'Votre équipe'}</h2>`;
+  if(figee()) h += `<p style="font-family:var(--titre);font-weight:800;color:var(--marine);font-size:24px;margin:0">Équipe ${t}</p>`;
+  else h += `<label>Numéro d'équipe</label><input type="number" class="gnum" id="fNum" inputmode="numeric" pattern="[0-9]*" min="1" max="${N_EQUIPES}" placeholder="?" value="${t||''}" oninput="saisirNumero(this.value)">`;
   h += `<div id="zoneEquipe">${htmlZone()}</div></div>`;
   if(state.orgRetour) h += `<button class="btn marine" onclick="aller('org')">Retour à l'organisation</button>`;
   return h;
 }
-const fait = (n,t) => { const r=passages()[kp(n,t)]; return !!(r && r.resultat && r.resultat!=='X'); };
 function carteEp(e){
   const cu = e.n===CULTURE;
-  return `<button class="ep afaire${cu?' culture':''}" onclick="ouvrir(${e.n})">
-    <div class="img" style="background-image:url('${cu?'proxim/ep12-carre.jpg?v=3':img(e.n)}')"><i>${e.n}</i></div>
+  return `<button class="ep entree${cu?' culture':''}" onclick="ouvrir(${e.n})">
+    <div class="img" style="background-image:url('${vignette(e.n)}')"><i>${e.n}</i></div>
     <div class="txt"><div class="t">${e.nom}</div>
-      <span class="tag" style="background:var(--vert)">${MAXPTS(e)} points à gagner</span>${e.type==='duel'?'<span class="tag duel">DUEL</span>':''}${cu?'<span class="tag double">POINTS DOUBLÉS</span>':''}<span class="tag gris">${e.min} min</span></div>
-    <div class="etat">À<br>FAIRE</div></button>`;
+      <span class="tag pts">${MAXPTS(e)} points à gagner</span>${e.type==='duel'?'<span class="tag duel">DUEL</span>':''}${cu?'<span class="tag double">×2</span>':''}<span class="tag gris">${e.min} min</span></div>
+    <div class="go"><b>›</b>À FAIRE</div></button>`;
 }
+function anneau(nb){ const C=2*Math.PI*36, off=C*(1-nb/14);
+  return `<div class="anneau"><svg viewBox="0 0 84 84"><circle class="bg" cx="42" cy="42" r="36"/><circle class="fg" cx="42" cy="42" r="36" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/></svg><b>${nb}<small>/14</small></b></div>`; }
 function vHome(){
-  const t=state.team, eqp=equipe(t)||{}; const photo=state.photos[t]||okPhoto(lsGet('photo_'+t,''));
-  const aFaire = EP.filter(x=>!fait(x.n,t)), faites = EP.filter(x=>fait(x.n,t)); const nb=faites.length; const tp=temps();
-  let h = state.orgRetour?`<button class="btn marine" style="margin:0 0 12px" onclick="aller('org')">Retour à l'organisation</button>`:'';
-  const ann = annonce(); if(ann) h += `<div class="banner bleu"><b>Message de l'organisation :</b> ${esc(ann.texte)}<br><button class="lnk" style="padding:4px 0 0" onclick="annonceVue('${ann.cid}')">J'ai lu</button></div>`;
-  h += `<div class="card"><div class="equipe"><div class="ph" style="${photo?`background-image:url('${photo}')`:''}"></div>
-      <div><div class="nom">${esc(eqp.nom||'')}</div><div class="muted">Équipe ${t}<br>Capitaine : ${esc(eqp.capitaine||'')}</div></div></div>
-    <div class="scores"><div><b>${nb}/14</b><span>épreuves faites</span></div><div><b>${14-nb}</b><span>encore à faire</span></div></div>
-    <div class="prog"><div style="width:${100*nb/14}%"></div></div>
-    <p class="muted" style="margin:10px 0 0">Chaque épreuve affiche les points à gagner. Vos points sont notés par les animateurs et restent secrets jusqu'au podium.</p>
-    ${state.orgRetour?'':'<button class="lnk" style="padding:8px 0 0" onclick="revenirDebut()">↺ Revenir au début</button>'}</div>`;
-  if(nb===0) h += `<div class="banner bleu"><b>Pour bien démarrer :</b> commencez par l'épreuve ${DEPART[t]}, ${EPN[DEPART[t]].nom}. Ensuite, allez où vous voulez.</div>`;
+  const t=state.team; if(state.org && state.orgRetour) return vCarnetOrg();
+  const eqp=equipe(t)||{}; const aFaire = EP.filter(x=>!fait(x.n,t)), faites = EP.filter(x=>fait(x.n,t)); const nb=faites.length; const tp=temps();
+  let h='';
+  const ann = annonce(); if(ann) h += `<div class="annonce entree"><div class="ico">📣</div><div><b>Message de l'organisation</b>${esc(ann.texte)}<br><button class="lnk" onclick="annonceVue('${ann.cid}')">J'ai lu</button></div></div>`;
+  const encour = nb===0 ? 'Première épreuve : allez-y !' : nb>=14 ? 'Tout est fait, bravo !' : nb>=10 ? 'Superbe, encore un effort !' : nb>=5 ? 'Belle lancée, continuez !' : 'C\'est parti, enchaînez !';
+  h += `<div class="card entree"><div class="eqCarte">${avatar(t)}<div><div class="nom">${esc(eqp.nom||'')}</div><div class="det">Équipe ${t} · Capitaine ${esc(eqp.capitaine||'')}</div></div></div>
+    <div class="avance">${anneau(nb)}<div class="txt">${encour}<span class="muted">${14-nb===0?'14 épreuves sur 14':pl(14-nb,'épreuve')+' encore à faire'} · vos points restent secrets jusqu'au podium</span></div></div></div>`;
+  if(tp.etat==='fini') h += `<div class="finCarte entree"><div style="font-size:44px">🏆</div><div class="p">C'est terminé !</div><p style="margin:8px 0 0;font-size:17px"><b>Rendez-vous au podium</b> pour les résultats.</p></div>`;
+  if(nb===0 && tp.etat!=='fini') h += `<div class="banner bleu entree"><b>Pour bien démarrer :</b> commencez par l'épreuve ${DEPART[t]}, ${EPN[DEPART[t]].nom}. Ensuite, allez où vous voulez.</div>`;
   if(!fait(CULTURE,t)){ const cl = nb>=3 || tp.ecoule>=60;
-    h += `<button class="vedette ${cl?'clignote':''}" onclick="ouvrir(${CULTURE})"><div class="img" style="background-image:url('${img(CULTURE)}')"></div><div class="txt">
+    h += `<button class="vedette entree ${cl?'clignote':''}" onclick="ouvrir(${CULTURE})"><div class="img" style="background-image:url('${img(CULTURE)}')"></div><div class="txt">
       <div class="t">${cl?'Vous n\'avez pas encore fait la culture d\'entreprise !':'À ne pas manquer : la culture d\'entreprise'}</div>
-      <div>10 questions sur Proxim'Services et votre métier. C'est l'épreuve qui rapporte le plus.</div><div class="d">20 POINTS À GAGNER · POINTS DOUBLÉS</div></div></button>`; }
-  if(aFaire.length) h += `<h3>À faire (${aFaire.length})</h3>` + aFaire.map(x=>carteEp(x)).join('');   // les 14 épreuves, culture d'entreprise comprise (n° 12)
-  else h += `<div class="bravo"><div class="p">14/14</div><p style="margin-top:8px"><b>Toutes les épreuves sont faites. Bravo !</b></p></div>`;
-  if(faites.length) h += `<h3 style="color:var(--rouge)">Déjà faites (${faites.length})</h3>` + faites.map(x=>`<button class="faite" onclick="ouvrir(${x.n})"><i>✓</i>${x.n}. ${x.nom}<span>FAIT</span></button>`).join('');
-  h += `<div class="card" style="margin-top:14px"><h3 style="margin-top:0">Rappel des règles</h3>${REGLES}<p class="muted" style="margin-top:8px">Chaque épreuve une seule fois. Plusieurs téléphones de l'équipe peuvent scanner le QR code et entrer le même numéro d'équipe.</p>
-    <button class="lnk" onclick="modifierEquipe()">Modifier le nom ou la photo (animateur)</button></div>`;
-  if(!state.orgRetour) h += `<div class="card" style="text-align:center"><button class="btn clair" style="margin-top:0" onclick="revenirDebut()">↺ Revenir au début</button>
+      <div style="margin-top:4px">10 questions sur Proxim'Services et votre métier. C'est l'épreuve qui rapporte le plus.</div><div class="d">20 POINTS À GAGNER · POINTS DOUBLÉS</div></div></button>`; }
+  if(aFaire.length) h += `<h3>À faire <span class="cpt">${aFaire.length}</span></h3>` + aFaire.map(x=>carteEp(x)).join('');
+  else h += `<div class="finCarte entree"><div class="p">14/14</div><p style="margin-top:8px;font-size:17px"><b>Toutes les épreuves sont faites. Bravo !</b></p></div>`;
+  if(faites.length) h += `<h3 style="color:var(--rouge)">Déjà faites <span class="cpt" style="background:var(--rouge)">${faites.length}</span></h3><div class="faites">` + faites.map(x=>`<button class="faite ${state.vientDeFaire===x.n?'tampon':''}" onclick="ouvrir(${x.n})"><i>✓</i>${x.n}. ${x.nom}</button>`).join('') + `</div>`;
+  h += `<details class="regl" id="dRegles"><summary>Rappel des règles</summary><div>${REGLES}<p class="muted" style="margin-top:8px">Chaque épreuve une seule fois. Plusieurs téléphones de l'équipe peuvent scanner le QR code et entrer le même numéro d'équipe.</p>
+    <button class="lnk" onclick="modifierEquipe()">Modifier le nom ou la photo (animateur)</button></div></details>`;
+  h += `<div class="card" style="text-align:center"><button class="btn clair" style="margin-top:0" onclick="revenirDebut()">↺ Revenir au début</button>
     <p class="muted" style="margin:10px 0 0">Rien n'est effacé. Pour retrouver votre équipe, retapez simplement son numéro.</p></div>`;
   return h;
 }
 function vEpreuve(){
-  const e=EPN[state.ep], t=state.team;
-  let h = `<button class="lnk" onclick="aller('home')">← Toutes les épreuves</button>
-    <div class="hero" style="background-image:url('${img(e.n)}')"><span>${e.n}. ${e.nom}</span></div>
-    <div class="card"><p>${e.desc}</p>
-      <p><span class="tag" style="background:var(--vert)">${MAXPTS(e)} points à gagner</span>${e.type==='duel'?'<span class="tag duel">DUEL : trouvez une équipe adverse</span>':''}${e.n===CULTURE?'<span class="tag double">POINTS DOUBLÉS</span>':''}<span class="tag gris">${e.min} minutes</span><span class="tag gris">${pl(e.places,'équipe')} à la fois</span></p>
-      <p class="muted" style="margin-top:10px">${e.n===CULTURE?'Cette épreuve rapporte le double de points.':'Donnez tout : chaque épreuve rapporte des points.'} L'animateur note votre résultat, et peut ajouter des bonus pour l'ambiance, la cohésion et le fair-play. Les points restent secrets jusqu'au podium.</p></div>`;
-  if(fait(e.n,t)) h += `<div class="card" style="background:#FBEAEA;color:var(--rouge);text-align:center"><b style="font-size:19px">✓ Épreuve faite</b><p style="margin:6px 0 0">Résultat enregistré par l'animateur. Passez à une autre épreuve.</p></div>
-      <button class="btn" onclick="aller('home')">Voir les épreuves à faire</button><button class="lnk" onclick="demarrerSaisie()">Corriger ce résultat (animateur)</button>`;
-  else h += `<button class="btn vert" onclick="demarrerSaisie()">Épreuve terminée :<br>je tends le téléphone à l'animateur</button>`;
+  const e=EPN[state.ep], t=state.team, deja=fait(e.n,t);
+  let h = `<div class="heroEp entree ${e.n===CULTURE?'logo':''}" style="background-image:url('${img(e.n)}')"><div class="tt"><small>Épreuve ${e.n} sur 14</small><div>${e.nom}</div></div></div>
+    <div class="card entree"><p style="font-size:17px">${e.desc}</p>
+      <p style="margin:0"><span class="tag pts">${MAXPTS(e)} points à gagner</span>${e.type==='duel'?'<span class="tag duel">DUEL : trouvez une équipe adverse</span>':''}${e.n===CULTURE?'<span class="tag double">POINTS DOUBLÉS</span>':''}<span class="tag gris">⏱ ${e.min} min</span><span class="tag gris">${pl(e.places,'équipe')} à la fois</span></p>
+      <p class="muted" style="margin:12px 0 0"><b>Comment on gagne :</b> ${BAREME[e.type]}. L'animateur peut ajouter des bonus : ambiance, cohésion, fair-play et coup de cœur.</p></div>`;
+  if(deja) h += `<div class="fait entree"><div class="gros">✓ Épreuve faite</div><p style="margin:6px 0 0">Résultat enregistré par l'animateur. Passez à une autre épreuve !</p></div>
+      ${epSuivante()?`<button class="btn orange" onclick="suivante()">Épreuve suivante →</button>`:''}<button class="btn clair" onclick="aller('home')">Voir toutes les épreuves</button><p style="text-align:center"><button class="lnk" onclick="demarrerSaisie()">Corriger ce résultat (animateur)</button></p>`;
+  else h += `<button class="btn vert gros entree" onclick="demarrerSaisie()">Épreuve terminée :<br>je tends le téléphone à l'animateur</button>`;
   return h;
 }
+// ---------- Saisie de l'animateur ----------
 function vSaisie(){
   const e=EPN[state.ep], s=state.saisie, t=state.team;
   let champ='';
-  if(e.type==='duel') champ = `<label>Résultat de l'équipe ${t}</label><div class="choix"><button class="${s.res==='V'?'sel':''}" onclick="setRes('V')">Victoire</button><button class="${s.res==='N'?'sel':''}" onclick="setRes('N')">Égalité</button><button class="${s.res==='D'?'sel':''}" onclick="setRes('D')">Défaite</button></div>`;
-  else if(e.type==='chrono') champ = `<div class="row"><div><label>Minutes</label><input type="number" id="mm" inputmode="numeric" min="0" max="59" placeholder="min"></div><div><label>Secondes</label><input type="number" id="ss" inputmode="numeric" min="0" max="59" placeholder="s"></div></div>`;
-  else champ = `<label>${{points:'Total de points de l\'équipe', jury:'Note du jury (de 0 à 10)', quiz:'Bonnes réponses (de 0 à 10)', hauteur:'Hauteur de la tour (en cm)'}[e.type]}</label><input type="number" id="mv" inputmode="numeric" min="0" ${(e.type==='jury'||e.type==='quiz')?'max="10"':''}>`;
-  const bb = (k,l)=>`<button class="${s.bonus[k]?'sel':''}" onclick="setBonus('${k}')">${l}<br><small>+1</small></button>`;
-  return `<div class="anim"><h2>Espace animateur</h2><p class="muted">Épreuve ${e.n} · ${e.nom}<br>${titreEq(t)}</p>
+  if(e.type==='duel'){
+    champ = `<label>Contre quelle équipe ?</label>
+      <div class="row" style="align-items:center"><input type="number" id="adv" inputmode="numeric" pattern="[0-9]*" min="1" max="${N_EQUIPES}" placeholder="N° de l'équipe adverse" value="${s.adv||''}" oninput="saisirAdv(this.value)" ${s.contreAnim?'disabled':''}></div>
+      <button class="chipAnim ${s.contreAnim?'sel':''}" onclick="contreAnimateurs(this)">Contre les animateurs</button>
+      <div class="advNom" id="advNom"></div>
+      <label>Résultat de l'équipe ${t}</label><div class="choix" id="grpRes"><button class="v ${s.res==='V'?'sel':''}" onclick="choisirRes('V',this)">Gagné</button><button class="${s.res==='N'?'sel':''}" onclick="choisirRes('N',this)">Égalité</button><button class="d ${s.res==='D'?'sel':''}" onclick="choisirRes('D',this)">Perdu</button></div>`;
+  } else if(e.type==='chrono') champ = `<label>Temps de l'équipe</label><div class="row"><div><input type="number" id="mm" inputmode="numeric" pattern="[0-9]*" min="0" max="59" placeholder="min" oninput="majRecap()" value="${s.mm??''}"></div><div><input type="number" id="ss" inputmode="numeric" pattern="[0-9]*" min="0" max="59" placeholder="secondes" oninput="majRecap()" value="${s.ss??''}"></div></div>`;
+  else if(e.type==='jury' || e.type==='quiz') champ = `<label>${e.type==='jury'?'Note du jury (sur 10)':'Nombre de bonnes réponses (sur 10)'}</label><div class="notes" id="grpNote">${Array.from({length:11},(_,i)=>`<button class="${s.note===i?'sel':''}" onclick="choisirNote(${i},this)">${i}</button>`).join('')}</div>`;
+  else champ = `<label>${e.type==='points'?'Total des points de l\'équipe':'Hauteur de la tour (en cm)'}</label><input type="number" id="mv" inputmode="decimal" min="0" placeholder="${e.type==='points'?'Exemple : 45':'Exemple : 120'}" oninput="majRecap()" value="${s.mv??''}">`;
+  const bb = b=>`<button class="${b.k} ${s.bonus[b.k]?'sel':''}" onclick="basculerBonus('${b.k}',this)"><span class="e">${b.ico}</span><span>${b.nom}<small>+${b.pts} point${b.pts>1?'s':''}</small></span></button>`;
+  const existe = valide(passages()[kp(e.n,t)]);
+  return `<div class="anim entree"><h2>Espace animateur</h2>
+    <div class="qui">${avatar(t)}<div><div style="font-weight:900;font-size:17px">${titreEq(t)}</div><div class="muted">${e.ico} Épreuve ${e.n} · ${e.nom}</div></div></div>
     ${champ}
-    <label>Bonus (facultatif)</label><div class="choix">${bb('a','Ambiance')}${bb('c','Cohésion')}${bb('f','Fair-play')}</div>
-    ${state.org?'<p class="muted" style="margin-top:12px">Mode organisation : pas de code à saisir.</p>':`<label>Code de l'animateur</label><input type="password" id="codeA" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Code animateur">`}
-    <button class="btn orange" onclick="validerSaisie()">Valider le résultat</button>
-    <button class="btn clair" style="background:transparent;color:#fff" onclick="aller('ep')">Annuler</button>
-    ${passages()[kp(e.n,t)] && passages()[kp(e.n,t)].resultat!=='X' ? '<button class="lnk" style="color:#C9DCEC" onclick="supprimerPassage()">Effacer ce passage</button>':''}
+    <label>Bonus (facultatif)</label><div class="bonus">${BONUS.map(bb).join('')}</div>
+    <div class="recap" id="recap"></div>
+    ${state.org?'<p class="muted" style="margin-top:12px">Mode organisation : pas de code à saisir.</p>':`<label>Code de l'animateur</label><input type="password" id="codeA" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Code animateur" onkeydown="if(event.key==='Enter')validerSaisie()">`}
+    <button class="btn orange gros" onclick="validerSaisie()">✓ Valider le résultat</button>
+    <button class="btn clair" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.4)" onclick="annulerSaisie()">Annuler</button>
+    ${existe ? '<p style="text-align:center;margin:6px 0 0"><button class="lnk" style="color:#C9DCEC" onclick="supprimerPassage()">Effacer ce résultat</button></p>':''}
   </div>`;
 }
-function vBravo(){
-  const b=state.bravo||{};
-  return `<div class="bravo"><div class="p" style="font-size:46px">✓</div><p style="margin:10px 0 0;font-size:19px"><b>${esc(b.titre||'C\'est validé !')}</b></p><p style="margin:8px 0 0">${b.sous||''}</p></div>
-    <button class="btn" onclick="aller('home')">Épreuve suivante</button>`;
+function lireSaisie(){            // lit l'écran de saisie ; renvoie {res, mes, erreur, texte}
+  const e=EPN[state.ep], t=state.team, s=state.saisie; let res='F', mes=null;
+  if(e.type==='duel'){
+    if(!s.contreAnim){ const a=parseInt(($('#adv')||{}).value,10); if(!(a>=1 && a<=N_EQUIPES)) return {erreur:'Indiquez le numéro de l\'équipe adverse (ou « Contre les animateurs »).'}; if(a===t) return {erreur:'L\'équipe adverse doit avoir un autre numéro.'}; mes=a; } else mes=0;
+    if(!s.res) return {erreur:'Choisissez Gagné, Égalité ou Perdu.', mes}; res=s.res;
+    const adv = mes===0 ? 'les animateurs' : 'l\'équipe '+mes+(nomEq(mes)?' ('+nomEq(mes)+')':'');
+    return {res, mes, texte: `Équipe ${t} : ${{V:'gagne',N:'fait égalité',D:'perd'}[res]} contre ${adv}.` + (mes>0?` Le résultat de l'équipe ${mes} sera enregistré en même temps.`:'')};
+  }
+  if(e.type==='chrono'){ const mm=+(($('#mm')||{}).value||0), ss=+(($('#ss')||{}).value||0); if(mm<0||ss<0||ss>59||(mm===0&&ss===0)) return {erreur:'Saisissez le temps en minutes et secondes (secondes de 0 à 59).'}; mes=mm*60+ss; return {res, mes, texte:`Temps : ${fmtT(mes)}`}; }
+  if(e.type==='jury'||e.type==='quiz'){ if(s.note==null) return {erreur: e.type==='jury'?'Touchez la note du jury.':'Touchez le nombre de bonnes réponses.'}; mes=s.note; return {res, mes, texte: e.type==='jury'?`Note du jury : ${mes}/10`:`${mes} bonnes réponses sur 10 (soit ${2*mes} points)`}; }
+  const v=(($('#mv')||{}).value||'').replace(',','.'); if(v===''||isNaN(+v)||+v<0) return {erreur:'Saisissez le résultat.'}; mes=+v; return {res, mes, texte: e.type==='points'?`Total : ${mes} points`:`Hauteur : ${mes} cm`};
 }
+function majRecap(){
+  const el=$('#recap'); if(!el) return; const r=lireSaisie(); const s=state.saisie;
+  const bon = BONUS.filter(b=>s.bonus[b.k]).map(b=>b.ico+' '+b.nom).join(', ');
+  el.style.display = (r.erreur && !bon) ? 'none' : 'block';
+  el.innerHTML = (r.erreur?'<span style="opacity:.8">Résultat à compléter</span>':'✓ '+esc(r.texte)) + (bon?'<br>Bonus : '+bon:'');
+  const an=$('#advNom'); if(an && state.ep && EPN[state.ep].type==='duel'){ const a=parseInt(($('#adv')||{}).value,10); an.textContent = s.contreAnim ? '' : (a>=1&&a<=N_EQUIPES ? (a===state.team?'⚠ C\'est la même équipe':'Équipe '+a+(nomEq(a)?' · '+nomEq(a):' (pas encore inscrite)')) : ''); }
+}
+function vBravo(){
+  const b=state.bravo||{}; const e=EPN[b.ep]||{}; const nb=EP.filter(x=>fait(x.n,state.team)).length;
+  return `<div class="bravo"><svg class="coche" viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27 l7.5 7.5 L37.5 19"/></svg>
+      <h2>Bravo ${esc(nomEq(state.team)||'l\'équipe '+state.team)} !</h2><div class="ep2">${e.ico||''} ${esc(e.nom||'')} : c'est dans la boîte</div>
+      <p style="margin:10px 0 0;font-size:16px">${nb} épreuve${nb>1?'s':''} sur 14. Les points restent secrets jusqu'au podium.</p>
+      <div class="etatEnvoi" id="etatEnvoi">${texteEnvoi()}</div></div>
+    ${epSuivante()&&nb<14?`<button class="btn orange gros" onclick="suivante()">Épreuve suivante →</button>`:''}
+    <button class="btn clair" onclick="aller('home')">Voir toutes les épreuves</button>`;
+}
+function texteEnvoi(){ const n=enAttente(); return n ? (state.dbOk===false ? '📶 Pas de réseau : le résultat partira tout seul dès que possible.' : '⏳ Envoi en cours…') : '✓ Résultat bien envoyé'; }
+function majEnvoi(){ const el=document.getElementById('etatEnvoi'); if(el) el.textContent=texteEnvoi(); }
 // ---------- Messagerie ----------
-function annonce(){ const vue=lsGet('annonce_vue',''); const l=state.messages.filter(m=>m.team===0 && !m.masque); const d=l[l.length-1]; return d && d.cid!==vue ? d : null; }
+function annonce(){ const vue=lsGet('annonce_vue',''); const l=state.messages.filter(m=>m.team===0 && !m.masque); const d=l[l.length-1]; return d && d.cid!==vue && (Date.now()-tms(d.created_at) < 3*3600e3) ? d : null; }
 function tousMessages(){ const enCours=Object.values(local.m); return state.messages.concat(enCours.filter(x=>!state.messages.some(m=>m.cid===x.cid))); }
-function nonLus(){ const lu=lsGet('lu',''); const moi = state.org&&!state.orgRetour ? 0 : state.team; return state.messages.filter(m=>!m.masque && m.team!==moi && (m.created_at||'')>lu).length; }
+function nonLus(){ const lu=lsGet('lu',''); const moi = state.org&&!state.orgRetour ? 0 : state.team; return state.messages.filter(m=>!m.masque && m.team!==moi && tms(m.created_at)>tms(lu)).length; }
 function htmlFil(){
   const moi = state.org ? 0 : state.team; const l=tousMessages().filter(m=>state.org || !m.masque);
   if(!l.length) return '<p class="muted" style="text-align:center;padding:20px 0">Aucun message pour l\'instant. Lancez la conversation !</p>';
-  return l.map(m=>{ const h=m.created_at?new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
-    const qui = m.team===0 ? 'Organisation' : `Équipe ${m.team}`+(nomEq(m.team)?' · '+esc(nomEq(m.team)):'');
+  return l.map(m=>{ const h=m.created_at?heure(m.created_at):'';
+    const qui = m.team===0 ? '📣 Organisation' : `Équipe ${m.team}`+(nomEq(m.team)?' · '+esc(nomEq(m.team)):'');
     return `<div class="msg ${m.team===0?'org':''} ${m.team===moi&&m.team!==0?'moi':''} ${m.masque?'masque':''}"><div class="q">${qui}<span class="h">${h}${local.m[m.cid]?' · envoi…':''}</span></div>${esc(m.texte)}${state.org&&!m.masque&&!local.m[m.cid]?`<br><button class="lnk" style="color:${m.team===0?'#C9DCEC':'var(--gris)'}" onclick="masquer('${m.cid}')">Masquer ce message</button>`:''}</div>`; }).join('');
 }
-function majFil(bas){ const el=document.getElementById('fil'); if(!el) return; const pres = (window.innerHeight+window.scrollY) >= document.body.scrollHeight-140; el.innerHTML=htmlFil();
+function majFil(bas){ const el=document.getElementById('fil'); if(!el) return; const pres = (window.innerHeight+window.scrollY) >= document.body.scrollHeight-160; el.innerHTML=htmlFil();
   const d=state.messages[state.messages.length-1]; if(d) lsSet('lu', d.created_at||''); if(bas||pres) window.scrollTo(0,document.body.scrollHeight); }
 function zoneEcrire(){
-  if(state.chatOk===false) return '<div class="banner">La messagerie n\'est pas encore disponible.</div>';
+  if(state.chatOk===false) return '<div class="banner">La messagerie n\'est pas disponible pour l\'instant (réseau).</div>';
   if(!state.chatOuvert && !state.org) return '<div class="banner">La messagerie est fermée pour le moment. Vous pouvez toujours lire les messages de l\'organisation.</div>';
   return `<div class="ecrire"><input type="text" id="msgTxt" maxlength="200" placeholder="${state.org?'Message à toutes les équipes':'Votre message'}" onkeydown="if(event.key==='Enter')envoyerMessage()"><button class="btn" onclick="envoyerMessage()">Envoyer</button></div>`;
 }
 function vChat(){
-  return `<div class="card" style="padding:12px 14px"><b>Messagerie de la journée</b><p class="muted" style="margin:4px 0 0">Toutes les équipes et l'organisation voient ces messages. Une question ? Écrivez-la ici, l'organisation vous répond. Restez bon enfant.</p></div>
+  return `<div class="card" style="padding:13px 15px"><b style="font-family:var(--titre);font-size:19px;color:var(--marine)">💬 Messagerie de la journée</b><p class="muted" style="margin:4px 0 0">Toutes les équipes et l'organisation voient ces messages. Une question ? Écrivez-la ici, l'organisation vous répond. Restez bon enfant.</p></div>
     <div class="fil" id="fil"></div>${zoneEcrire()}`;
 }
-function vuePrecedente(){                 // l'écran d'avant, pour la flèche « Retour » (et le bouton retour du téléphone)
+// ---------- Barre du bas ----------
+function vuePrecedente(){
   const v=state.view;
-  if(v==='ep') return 'home';
-  if(v==='saisie') return 'ep';
+  if(v==='ep') return state.orgRetour ? 'home' : 'home';
+  if(v==='saisie') return state.apresSaisie==='org' ? 'org' : (state.org && state.orgRetour ? 'home' : 'ep');
   if(v==='bravo') return 'home';
   if(v==='chat') return state.org && !state.team ? 'org' : (state.avantChat||'home');
   if(v==='landing') return 'debut';
@@ -508,95 +776,161 @@ function vuePrecedente(){                 // l'écran d'avant, pour la flèche �
   if(v==='home') return state.orgRetour ? 'org' : null;
   return null;
 }
-function epSuivante(){ const l=EP.map(x=>x.n), i=l.indexOf(state.ep); for(let k=1;k<l.length;k++){ const n=l[(i+k)%l.length]; if(!fait(n,state.team)) return n; } return 0; }   // prochaine épreuve pas encore faite
+function epSuivante(){ const l=EP.map(x=>x.n), i=Math.max(0,l.indexOf(state.ep)); for(let k=1;k<=l.length;k++){ const n=l[(i+k)%l.length]; if(!fait(n,state.team) && n!==state.ep) return n; } return 0; }
 function majBas(){
   const bas=document.getElementById('bas'); if(!bas) return; const v=state.view;
+  if(v==='podium' || v==='org'){ bas.style.display='none'; document.body.classList.remove('avecBas'); return; }
   const equipeInscrite = state.team && equipe(state.team) && equipe(state.team).nom && !state.orgRetour;
   const onglets = equipeInscrite && ['home','ep','chat'].includes(v);
   const prec = vuePrecedente(); const montrer = onglets || !!prec;
   bas.style.display = montrer ? 'flex' : 'none'; document.body.classList.toggle('avecBas', !!montrer);
   if(!montrer) return; const n = v==='chat' ? 0 : nonLus();
   let h = prec ? `<button class="fl" onclick="retour()">← Retour</button>` : '';
-  if(onglets) h += `<button class="${v!=='chat'?'on':''}" onclick="aller('home')">Épreuves</button><button class="${v==='chat'?'on':''}" onclick="aller('chat')">Messages${n?`<span class="pastille">${n}</span>`:''}</button>`;
+  if(onglets) h += `<button class="${v!=='chat'?'on':''}" onclick="aller('home')">🏁 Épreuves</button><button class="${v==='chat'?'on':''}" onclick="aller('chat')">💬 Messages${n?`<span class="pastille">${n}</span>`:''}</button>`;
   else h += `<span style="flex:1"></span>`;
   if(onglets && v==='ep' && epSuivante()) h += `<button class="fl" onclick="suivante()">Suivante →</button>`;
-  bas.innerHTML = h;
+  if(bas.innerHTML!==h) bas.innerHTML = h;
 }
-function phStyle(t){ const p=state.photos[t]; return p?`background-image:url('${p}')`:''; }
+// =============== Espace organisation ===============
 function vOrg(){
-  const c=calcul(); const inscrites=Array.from({length:N_EQUIPES},(_,i)=>i+1).filter(t=>nomEq(t)).length;
-  let h = `<nav class="tabs">${[['classement','Classement'],['epreuves','Épreuves'],['equipes','Équipes'],['messages','Messages'+(state.orgTab!=='messages'&&nonLus()?' ('+nonLus()+')':'')]].map(([k,l])=>`<button class="${state.orgTab===k?'on':''}" onclick="orgTab('${k}')">${l}</button>`).join('')}</nav>`;
-  if(state.orgTab==='classement'){
-    h += `<div class="card"><div class="scores" style="margin-top:0"><div><b>${c.saisies}</b><span>résultats saisis</span></div><div><b>${inscrites}/${N_EQUIPES}</b><span>équipes inscrites</span></div><div><b style="font-size:15px;padding-top:6px">${temps().court}</b><span>fin des épreuves</span></div></div><button class="btn clair" onclick="refresh()">Actualiser</button></div>`;
+  const c=calcul(); const inscrites=Array.from({length:N_EQUIPES},(_,i)=>i+1).filter(t=>nomEq(t)).length; const nl=nonLus();
+  let h = `<div class="orgTete"><div><div class="surt">Organisation</div><div class="direct ${state.dbOk===false?'ko':''}"><i></i><span id="majHeure">${depuis()}</span></div></div><button class="rond" onclick="refresh(true)" aria-label="Actualiser">↻</button></div>
+    <nav class="tabs">${[['direct','En direct'],['epreuves','Épreuves'],['equipes','Équipes'],['messages','Messages']].map(([k,l])=>`<button class="${state.orgTab===k?'on':''}" onclick="orgTab('${k}')">${l}${k==='messages'&&state.orgTab!=='messages'&&nl?`<span class="pastille">${nl}</span>`:''}</button>`).join('')}</nav>`;
+  if(state.orgTab==='direct'){
+    h += `<div class="kpis entree"><div><b>${inscrites}<small style="font-size:15px;color:var(--gris)">/${N_EQUIPES}</small></b><span>équipes inscrites</span></div><div><b>${c.saisies}</b><span>résultats saisis</span></div><div><b style="font-size:19px;padding-top:5px">${temps().court}</b><span>fin des épreuves</span></div></div>`;
+    h += `<button class="btn or gros entree" onclick="ouvrirPodium()">🏆 Lancer le podium</button>`;
     if(c.general){ [c.general,c.prixQuiz,c.ambiance].forEach(t=>t&&chargerPhoto(t));
-      h += `<div class="prix" style="background:linear-gradient(160deg,var(--bleu),var(--marine))"><div class="ph" style="${phStyle(c.general)}"></div><div><div class="t">Grand prix de la cohésion</div><div class="n">${titreEq(c.general)}</div><div>${c.eq[c.general].total} points · ${pl(c.eq[c.general].faits,'épreuve')}</div></div></div>`;
-      h += c.prixQuiz ? `<div class="prix" style="background:var(--orange)"><div class="ph" style="${phStyle(c.prixQuiz)}"></div><div><div class="t">Prix spécial Proxim'Services (culture d'entreprise)</div><div class="n">${titreEq(c.prixQuiz)}</div><div>${c.eq[c.prixQuiz].quiz} bonnes réponses sur 10</div></div></div>` : `<div class="banner">Prix spécial : en attente des résultats de la culture d'entreprise.</div>`;
-      if(c.ambiance) h += `<div class="prix" style="background:var(--vert)"><div class="ph" style="${phStyle(c.ambiance)}"></div><div><div class="t">Coup de cœur des animateurs (bonus)</div><div class="n">${titreEq(c.ambiance)}</div><div>${pl(c.eq[c.ambiance].bonus,'point')} d'ambiance, de cohésion et de fair-play</div></div></div>`;
+      h += `<h3>Les prix en ce moment</h3>`;
+      h += `<div class="prix entree" style="background:linear-gradient(150deg,var(--bleu),var(--marine))" onclick="voirEquipe(${c.general})">${phPrix(c.general,'🏆')}<div><div class="t">Grand prix de la cohésion</div><div class="n">${titreEq(c.general)}</div><div>${c.eq[c.general].total} points · ${pl(c.eq[c.general].faits,'épreuve')}</div></div></div>`;
+      h += c.prixQuiz ? `<div class="prix entree" style="background:linear-gradient(150deg,var(--orange),var(--corail))" onclick="voirEquipe(${c.prixQuiz})">${phPrix(c.prixQuiz,'🎓')}<div><div class="t">Prix spécial culture d'entreprise</div><div class="n">${titreEq(c.prixQuiz)}</div><div>${c.eq[c.prixQuiz].quiz} bonnes réponses sur 10</div></div></div>` : `<div class="banner">Prix spécial culture d'entreprise : en attente des premiers résultats.</div>`;
+      if(c.ambiance) h += `<div class="prix entree" style="background:linear-gradient(150deg,#FF5C7A,#D6336C)" onclick="voirEquipe(${c.ambiance})">${phPrix(c.ambiance,'❤️')}<div><div class="t">Coup de cœur des animateurs</div><div class="n">${titreEq(c.ambiance)}</div><div>${pl(c.eq[c.ambiance].coeurs,'coup')} de cœur · ${pl(c.eq[c.ambiance].bonus,'point')} de bonus</div></div></div>`;
     }
-    h += `<div class="card" style="padding:8px"><table><tr><th>#</th><th style="text-align:left">Équipe</th><th>Pts</th><th>Épr.</th><th>Culture</th><th>Bonus</th></tr>`;
-    c.ordre.forEach((t,i)=>{ const e=c.eq[t]; h += `<tr class="${e.total>0&&i<3?'top'+(i+1):''}" onclick="voirEquipe(${t})"><td>${i+1}</td><td class="l"><b>${t}</b> ${esc(nomEq(t))||'<span class="muted">non inscrite</span>'}</td><td><b>${e.total}</b></td><td>${e.faits}</td><td>${e.quiz==null?'·':e.quiz}</td><td>${e.bonus}</td></tr>`; });
-    h += `</table><p class="muted" style="padding:8px 6px 0">Touchez une équipe pour ouvrir son carnet (saisie de secours ou correction). Égalité : nombre d'épreuves, puis culture d'entreprise. Le prix spécial ne va jamais à l'équipe du grand prix.</p></div>`;
+    h += `<h3>Classement</h3><div class="card" style="padding:8px 8px 4px"><table><thead><tr><th>#</th><th style="text-align:left">Équipe</th><th>Pts</th><th>Épr.</th><th>🎓</th><th>Bonus</th></tr></thead><tbody>`;
+    c.ordre.forEach((t,i)=>{ const e=c.eq[t]; const med = e.total>0 ? (['🥇','🥈','🥉'][i]||i+1) : i+1;
+      h += `<tr class="${e.total>0&&i<3?'top'+(i+1):''}" onclick="voirEquipe(${t})"><td>${med}</td><td class="l"><b>${t}</b> ${esc(nomEq(t))||'<span class="muted">non inscrite</span>'}</td><td><b>${e.total}</b></td><td>${e.faits}</td><td>${e.quiz==null?'·':e.quiz}</td><td>${e.bonus}${e.coeurs?' ❤️':''}</td></tr>`; });
+    h += `</tbody></table><p class="muted" style="padding:8px 6px 4px;margin:0">Touchez une équipe pour voir son carnet et corriger. Égalité : nombre d'épreuves, puis culture d'entreprise. Le prix culture ne va jamais à l'équipe du grand prix.</p></div>`;
+    h += `<h3>Derniers résultats</h3><div class="card journal" style="padding:6px 14px">${journal(c)}</div>`;
+    h += `<button class="btn clair" onclick="partagerClassement()">📤 Partager le classement</button>`;
+    h += `<details class="regl" id="dAide"><summary>Mode d'emploi de l'organisation</summary><div><ul class="regles">
+      <li><span class="num" style="background:var(--bleu)">1</span><div><b>En direct</b> se met à jour tout seul toutes les 8 secondes. Le point vert indique que tout va bien, un point rouge qu'il n'y a pas de réseau.</div></li>
+      <li><span class="num" style="background:var(--orange)">2</span><div><b>Corriger un résultat :</b> touchez une ligne des derniers résultats, une équipe du classement, ou une épreuve dans l'onglet Épreuves. Pas de code à taper ici.</div></li>
+      <li><span class="num" style="background:var(--rouge)">3</span><div><b>Téléphone perdu ou batterie vide :</b> onglet Épreuves, touchez le numéro de l'équipe sous « Pas encore passées » et saisissez à sa place.</div></li>
+      <li><span class="num" style="background:var(--vert)">4</span><div><b>Annonces :</b> onglet Messages, un geste suffit. Le message s'affiche chez toutes les équipes et leur téléphone vibre.</div></li>
+      <li><span class="num" style="background:var(--jaune);color:var(--nuit)">🏆</span><div><b>Au podium :</b> « Lancer le podium », puis « Révéler » pour chaque prix, du coup de cœur jusqu'au grand prix.</div></li></ul></div></details>`;
   } else if(state.orgTab==='epreuves'){
-    const all=Object.values(passages()).filter(r=>r.resultat&&r.resultat!=='X');
-    h += EP.map(e=>{ const l=all.filter(r=>r.stand===e.n); const reste=Array.from({length:N_EQUIPES},(_,i)=>i+1).filter(t=>!l.some(r=>r.team===t));
-      return `<div class="card"><b>${e.n}. ${e.nom}</b> <span class="muted">· ${pl(l.length,'équipe')} passée${l.length>1?'s':''} sur ${N_EQUIPES}</span><div class="prog"><div style="width:${100*l.length/N_EQUIPES}%"></div></div><p class="muted" style="margin:8px 0 0">Pas encore passées : ${reste.length?reste.join(', '):'aucune'}</p></div>`; }).join('');
+    const all=c.rows;
+    h += `<p class="muted" style="margin:0 2px 10px">Touchez une épreuve pour voir les résultats. Touchez une équipe pour corriger ou saisir à sa place (téléphone perdu, batterie vide).</p>`;
+    h += EP.map(e=>{ const l=all.filter(r=>r.stand===e.n).sort((a,b)=>(c.pts[kp(e.n,b.team)]+ptsBonus(b))-(c.pts[kp(e.n,a.team)]+ptsBonus(a)));
+      const reste=Array.from({length:N_EQUIPES},(_,i)=>i+1).filter(t=>!l.some(r=>r.team===t));
+      return `<details class="stand" id="dSt${e.n}"><summary><span style="font-size:22px">${e.ico}</span><div style="flex:1;min-width:0"><div class="nm">${e.n}. ${e.nom}</div><div class="barre"><div style="width:${100*l.length/N_EQUIPES}%"></div></div></div><span class="nb">${l.length}/${N_EQUIPES}</span></summary><div>
+        ${l.map(r=>`<button class="ligneRes" onclick="saisieDirecte(${e.n},${r.team})"><span><b>${r.team}</b> ${esc(nomEq(r.team))} <span class="muted">· ${esc(texteResultat(r,e))}</span> ${icoBonus(r)}</span><span class="p">${c.pts[kp(e.n,r.team)]+ptsBonus(r)} pts</span></button>`).join('')||'<p class="muted">Aucune équipe passée pour l\'instant.</p>'}
+        ${reste.length?`<p class="muted" style="margin:10px 0 2px"><b>Pas encore passées</b> (touchez pour saisir à leur place) :</p>${reste.map(t=>`<button class="puce" onclick="saisieDirecte(${e.n},${t})">${t}</button>`).join('')}`:'<p class="muted" style="margin-top:8px">✓ Toutes les équipes sont passées.</p>'}
+      </div></details>`; }).join('');
   } else if(state.orgTab==='messages'){
-    h += `<div class="card" style="padding:12px 14px"><b>Messagerie</b><p class="muted" style="margin:4px 0 8px">Vos messages partent à toutes les équipes et s'affichent en haut de leur écran. Vous pouvez masquer un message déplacé.</p>
-      <button class="btn clair" style="margin-top:0" onclick="basculerChat()">${state.chatOuvert?'Fermer la messagerie aux équipes':'Rouvrir la messagerie aux équipes'}</button></div><div class="fil" id="fil"></div>${zoneEcrire()}`;
+    h += `<div class="card" style="padding:14px"><b style="font-family:var(--titre);font-size:19px;color:var(--marine)">📣 Annonces rapides</b><p class="muted" style="margin:4px 0 0">Un geste : le message s'affiche en haut de l'écran de toutes les équipes, et leur téléphone vibre.</p>
+      <div class="annRap">${ANNONCES.map((a,i)=>`<button onclick="annonceRapide(${i})">${a[0]} ${esc(a[1])}</button>`).join('')}</div>
+      <button class="btn clair" onclick="basculerChat()">${state.chatOuvert?'🔒 Fermer la messagerie aux équipes':'🔓 Rouvrir la messagerie aux équipes'}</button></div><div class="fil" id="fil"></div>${zoneEcrire()}`;
   } else {
-    h += `<div class="card"><p class="muted">Les ${N_EQUIPES} équipes. Touchez une équipe pour ouvrir son carnet.</p>${state.galerie?'':'<button class="btn clair" onclick="chargerGalerie()">Afficher les photos des équipes</button>'}</div><div class="gal">`;
-    for(let t=1;t<=N_EQUIPES;t++){ const e=equipe(t); h += `<div onclick="voirEquipe(${t})">${state.galerie&&state.photos[t]?`<img src="${state.photos[t]}" alt="">`:''}<b>Équipe ${t}</b> · ${couleur(t)}<br>${e&&e.nom?esc(e.nom)+'<br><span class="muted">'+esc(e.capitaine||'')+'</span>':'<span class="muted">non inscrite</span>'}</div>`; }
+    h += `<div class="card" style="padding:14px"><p class="muted" style="margin:0">Les ${N_EQUIPES} équipes. Touchez une équipe pour ouvrir son carnet (points de chaque épreuve, corrections).</p>${state.galerie?'':'<button class="btn clair" onclick="chargerGalerie()">📷 Afficher les photos des équipes</button>'}</div><div class="gal">`;
+    for(let t=1;t<=N_EQUIPES;t++){ const e=equipe(t), q=c.eq[t]; const p=state.galerie?state.photos[t]:'';
+      h += `<button onclick="voirEquipe(${t})" class="${e&&e.nom?'':'vide'}"><div class="ph" style="${p?`background-image:url('${p}')`:`background:${TEINTES[(t-1)%14]}`}">${p?'':t}</div><b>Équipe ${t}</b><br>${e&&e.nom?esc(e.nom)+'<br><span class="muted">'+q.faits+'/14 · '+q.total+' pts</span>':'<span class="muted">non inscrite · '+couleur(t)+'</span>'}</button>`; }
     h += `</div>`;
   }
-  return h + `<button class="lnk" onclick="quitterOrg()">Quitter l'espace organisation</button>`;
+  return h + `<p style="text-align:center;margin-top:16px"><button class="lnk" onclick="quitterOrg()">Quitter l'espace organisation</button></p>`;
+}
+function phPrix(t, ico){ const p=state.photos[t]; return `<div class="ph" style="${p?`background-image:url('${p}')`:''}">${p?'':ico}</div>`; }
+function journal(c){
+  const l = c.rows.slice().sort((a,b)=>tms(b.updated_at)-tms(a.updated_at)).slice(0,15);
+  if(!l.length) return '<p class="muted" style="padding:10px 0">Les résultats apparaîtront ici dès que les animateurs les saisiront.</p>';
+  return l.map(r=>{ const e=EPN[r.stand]; const k=kp(r.stand,r.team); const nv = state.vus[k] && Date.now()-state.vus[k]<15000;
+    return `<button class="li ${nv?'nouveau':''}" onclick="saisieDirecte(${r.stand},${r.team})"><span class="h">${r.updated_at?heure(r.updated_at):''}</span><span class="q"><b>${r.team} ${esc(nomEq(r.team))}</b><br>${e.ico} ${e.nom} · ${esc(texteResultat(r,e))} ${icoBonus(r)}</span><span class="p">+${c.pts[k]+ptsBonus(r)}</span></button>`; }).join('');
+}
+// Carnet d'une équipe vu par l'organisation : chaque épreuve, son résultat et ses points
+function vCarnetOrg(){
+  const t=state.team, eqp=equipe(t)||{}, c=calcul(), q=c.eq[t], rang=c.ordre.indexOf(t)+1;
+  let h = `<div class="orgBan entree"><span>👁 Vue organisation</span><button onclick="aller('org')">← Organisation</button></div>
+    <div class="card entree"><div class="eqCarte">${avatar(t)}<div><div class="nom">${esc(eqp.nom||'Équipe '+t)}</div><div class="det">Équipe ${t} · Capitaine ${esc(eqp.capitaine||'')}</div></div></div>
+    <div class="kpis" style="margin-top:14px"><div><b>${q.total}</b><span>points</span></div><div><b>${q.total>0?rang+'<small style="font-size:14px">e</small>':'·'}</b><span>au classement</span></div><div><b>${q.faits}<small style="font-size:14px;color:var(--gris)">/14</small></b><span>épreuves</span></div></div></div>
+    <div class="card carnet entree" style="padding:6px 14px">`;
+  EP.forEach(e=>{ const r=passages()[kp(e.n,t)]; const ok=valide(r);
+    h += `<button class="ligneRes" onclick="saisieDirecte(${e.n},${t},'home')"><span>${e.ico} <b>${e.n}. ${e.nom}</b><br><span class="muted">${ok?esc(texteResultat(r,e))+' '+icoBonus(r):'pas encore faite · toucher pour saisir'}</span></span>${ok?`<span class="p">${c.pts[kp(e.n,t)]+ptsBonus(r)} pts</span>`:'<span class="st">à faire</span>'}</button>`; });
+  h += `</div><button class="btn clair" onclick="modifierEquipe()">✏️ Modifier le nom, le capitaine ou la photo</button>`;
+  return h;
+}
+// ---------- Podium : on dévoile les gagnants un par un ----------
+function etapesPodium(){
+  const c=calcul(); const st=[]; const top=c.ordre.filter(t=>c.eq[t].total>0);
+  if(c.ambiance) st.push({t:c.ambiance, titre:'Coup de cœur des animateurs', ico:'❤️', sous:e=>`${pl(e.coeurs,'coup')} de cœur · ${pl(e.bonus,'point')} de bonus`});
+  if(c.prixQuiz) st.push({t:c.prixQuiz, titre:'Prix spécial Proxim\'Services · culture d\'entreprise', ico:'🎓', sous:e=>`${e.quiz} bonnes réponses sur 10`});
+  if(top[2]) st.push({t:top[2], titre:'3e place', ico:'🥉', sous:e=>`${e.total} points · ${pl(e.faits,'épreuve')}`});
+  if(top[1]) st.push({t:top[1], titre:'2e place', ico:'🥈', sous:e=>`${e.total} points · ${pl(e.faits,'épreuve')}`});
+  if(top[0]) st.push({t:top[0], titre:'Grand prix de la cohésion', ico:'🏆', sous:e=>`${e.total} points · ${pl(e.faits,'épreuve')}`, final:true});
+  return {st, c};
+}
+function vPodium(){
+  const {st, c} = etapesPodium(); const P=state.podium;
+  if(!st.length) return `<div class="podium"><h1>Pas encore de résultats</h1><button class="btn clair" onclick="fermerPodium()">← Retour</button></div>`;
+  if(P.i>=st.length) P.i=st.length-1;
+  const s=st[P.i], e=c.eq[s.t]; st.forEach(x=>chargerPhoto(x.t)); const p=state.photos[s.t];
+  let h = `<div class="podium"><div class="etape">${P.i+1} / ${st.length}</div><h1>${s.ico} ${s.titre}</h1>`;
+  if(!P.montre) h += `<div class="mystere">${s.ico}</div><button class="btn or gros" onclick="podiumReveler()">Révéler</button>`;
+  else h += `<div class="gagnant"><div class="ph" style="${p?`background-image:url('${p}')`:`background:${TEINTES[(s.t-1)%14]}`}">${p?'':initiales(s.t)}</div><div class="nom">${esc(nomEq(s.t)||'Équipe '+s.t)}</div><div class="sous">Équipe ${s.t} · Capitaine ${esc((equipe(s.t)||{}).capitaine||'')}</div><div class="sous" style="color:var(--jaune)">${s.sous(e)}</div></div>`;
+  h += `<div class="nav2">${P.i>0?`<button class="btn clair" onclick="podiumBouger(-1)">←</button>`:''}${P.montre && P.i<st.length-1?`<button class="btn or" onclick="podiumBouger(1)">Prix suivant →</button>`:''}</div>
+    <p style="margin-top:22px"><button class="lnk" style="color:#9CB7CF" onclick="fermerPodium()">Quitter le podium</button></p></div>`;
+  return h;
 }
 
 // =============== Actions ===============
-function aller(v){ if(v==='chat' && state.view!=='chat') state.avantChat = state.view==='ep' ? 'ep' : 'home'; state.view=v; if(v==='org'){ state.orgRetour=false; } render(); if(v!=='chat') window.scrollTo(0,0); if(v==='org'||v==='home') refresh(); if(v==='chat') lireMessages(); }
+function aller(v){ if(v==='chat' && state.view!=='chat') state.avantChat = state.view==='ep' ? 'ep' : 'home';
+  if(v==='org'){ state.orgRetour=false; state.apresSaisie=''; if(!confirmee()) state.team=0; }
+  state.view=v; render(); if(v!=='chat') window.scrollTo(0,0); if(v==='org'||v==='home') refresh(); if(v==='chat') lireMessages(); }
 window.aller=aller;
 window.retour = ()=>{ const p=vuePrecedente(); if(!p) return false;
   if(state.view==='brief'){ garderBrouillon(); state.edition=false; }
+  if(state.view==='saisie'){ state.saisie=null; }
   if(p==='debut' || p==='accueil'){ state.view = p==='accueil' ? 'accueil' : ''; render(); window.scrollTo(0,0); }
   else aller(p);
   return true; };
 window.suivante = ()=>{ const n=epSuivante(); if(n) ouvrir(n); else aller('home'); };
 window.revenirDebut = ()=>{ if(!confirm('Revenir au début ?\n\nRien n\'est effacé. Pour retrouver votre équipe, retapez simplement son numéro.')) return;
   lsSet('team',0); lsSet('regles_vues',false); lsSet('accueil_vu',false); state.team=0; state.edition=false; state.orgRetour=false; state.view='accueil'; render(); window.scrollTo(0,0); };
-// Le bouton « retour » du téléphone ne fait plus sortir de l'application : il revient à l'écran d'avant.
+// Le bouton « retour » du téléphone ne fait pas sortir de l'application : il revient à l'écran d'avant.
 function poserRepere(){ try{ history.pushState({pxc:1},''); }catch(e){} }
-window.addEventListener('popstate', ()=>{ retour(); poserRepere(); });
+window.addEventListener('popstate', ()=>{ if(state.view==='podium') fermerPodium(); else retour(); poserRepere(); });
 window.saisirNumero = v=>{ const n=parseInt(v,10); const t=(n>=1&&n<=N_EQUIPES)?n:0; if(t===state.team) return;
   const avant=!!document.getElementById('dejaInscrite'); state.team=t; const apres=!!(t && nomEq(t) && !state.edition);
-  if(avant||apres) majZone();                    // on ne redessine que le bas du formulaire : le champ du numéro garde le curseur
+  if(avant||apres) majZone();
   if(t) refresh(); };
-window.recommencerEssai = ()=>{ if(!ESSAI || !confirm('Effacer l\'essai en cours sur ce téléphone ?')) return; Object.keys(localStorage).filter(k=>k.indexOf('pxc_'+EVENT+'_')===0).forEach(k=>localStorage.removeItem(k)); location.href = location.pathname + '?essai'; };
-window.debuter = ()=>{ lsSet('accueil_vu',true); state.view='brief'; render(); window.scrollTo(0,0); };
+window.recommencerEssai = ()=>{ if(!ESSAI || !confirm('Effacer l\'essai en cours sur ce téléphone ?')) return; Object.keys(localStorage).filter(k=>k.indexOf('pxc_'+EVENT+'_')===0).forEach(k=>localStorage.removeItem(k)); location.href = location.pathname + '?' + MODE; };
+window.debuter = ()=>{ lsSet('accueil_vu',true); state.view='brief'; render(); window.scrollTo(0,0); setTimeout(()=>{ const n=$('#fNum'); if(n && !n.value) n.focus(); }, 350); };
 window.reglesVues = ()=>{ lsSet('regles_vues',true); state.view='home'; render(); window.scrollTo(0,0); refresh(); };
-window.rejoindre = ()=>{ if(!state.team) return; const eq=equipe(state.team); if(eq){ local.e[state.team]={team:state.team,nom:eq.nom,capitaine:eq.capitaine,updated_at:eq.updated_at||''}; save(); } lsSet('team',state.team); lsSet('brouillon_nom',''); lsSet('brouillon_cap',''); lsSet('regles_vues',true); state.view='home'; render(); window.scrollTo(0,0); refresh(); };   // on revient directement où l'équipe en était (les règles restent rappelées en bas de l'écran)
-window.changerEquipe = ()=>{ if(!confirm('Changer d\'équipe sur ce téléphone ?')) return; lsSet('team',0); lsSet('regles_vues',false); state.team=0; state.edition=false; state.view='brief'; render(); window.scrollTo(0,0); };
-window.entrerOrg = ()=>{ if(codeOrgOk($('#codeOrg').value)){ state.org=true; lsSet('org',true); aller('org'); } else alert('Code incorrect.'); };
-window.quitterOrg = ()=>{ state.org=false; lsSet('org',false); state.orgRetour=false; state.view=''; render(); };
-window.orgTab = k=>{ state.orgTab=k; render(); if(k==='messages') lireMessages(); };
+window.rejoindre = ()=>{ if(!state.team) return; const eq=equipe(state.team); if(eq){ local.e[state.team]={team:state.team,nom:eq.nom,capitaine:eq.capitaine,updated_at:eq.updated_at||''}; save(); }
+  lsSet('team',state.team); lsSet('brouillon_nom',''); lsSet('brouillon_cap',''); lsSet('regles_vues',true); state.view='home'; render(); window.scrollTo(0,0); refresh(); dire('Bon retour parmi vous ! 👋','ok'); };
+window.entrerOrg = ()=>{ const el=$('#codeOrg'); if(el && codeOrgOk(el.value)){ state.org=true; lsSet('org',true); state.team=confirmee()?state.team:0; aller('org'); } else { dire('Code incorrect.','err'); if(el){ el.value=''; el.focus(); } } };
+window.quitterOrg = ()=>{ state.org=false; lsSet('org',false); state.orgRetour=false; state.team=lsGet('team',0); state.view=''; render(); };
+window.orgTab = k=>{ state.orgTab=k; render(); window.scrollTo(0,0); if(k==='messages') lireMessages(); };
 let dernierEnvoi=0;
 function posterMessage(texte){
-  const team = state.org ? 0 : state.team; const cid = (Date.now().toString(36)+Math.random().toString(36).slice(2,10));
-  const row = { event:EVENT, cid, team, texte, code:CLE };
+  const team = state.org && !state.orgRetour ? 0 : state.team; const cid = (Date.now().toString(36)+Math.random().toString(36).slice(2,10));
+  const row = { event:EVENT, cid, team: state.org?0:team, texte, code:CLE };
   if(!/^__CHAT_/.test(texte)) local.m[cid] = { ...row, masque:false, created_at:new Date().toISOString() };
   pousser('tb_messages','cid','m-'+cid,row);
 }
 window.envoyerMessage = ()=>{
   const el=document.getElementById('msgTxt'); if(!el) return; const txt=(el.value||'').trim().slice(0,200); if(!txt) return;
-  if(!state.org && !state.chatOuvert){ alert('La messagerie est fermée pour le moment.'); render(); return; }
-  if(!state.org && Date.now()-dernierEnvoi < 4000){ alert('Un instant : un message toutes les 4 secondes.'); return; }
+  if(!state.org && !state.chatOuvert){ dire('La messagerie est fermée pour le moment.','err'); render(); return; }
+  if(!state.org && Date.now()-dernierEnvoi < 4000){ dire('Un instant : un message toutes les 4 secondes.','err'); return; }
   dernierEnvoi=Date.now(); posterMessage(txt); el.value=''; majFil(true); setTimeout(()=>lireMessages(), 1500);
 };
+window.annonceRapide = i=>{ const a=ANNONCES[i]; if(!a || !confirm('Envoyer à toutes les équipes ?\n\n'+a[0]+' '+a[1])) return; posterMessage(a[0]+' '+a[1]); dire('Annonce envoyée à toutes les équipes 📣','ok'); majFil(true); setTimeout(()=>lireMessages(), 1500); };
 window.masquer = cid=>{ const m=state.messages.find(x=>x.cid===cid); if(!m || !confirm('Masquer ce message pour toutes les équipes ?')) return;
   m.masque=true; pousser('tb_messages','cid','m-'+cid,{ event:EVENT, cid, team:m.team, texte:m.texte, masque:true, code:CLE }); majFil(); };
 window.basculerChat = ()=>{ if(!confirm(state.chatOuvert?'Fermer la messagerie ? Les équipes ne pourront plus écrire.':'Rouvrir la messagerie aux équipes ?')) return;
   posterMessage(state.chatOuvert?'__CHAT_OFF__':'__CHAT_ON__'); state.chatOuvert=!state.chatOuvert; render(); };
 window.annonceVue = cid=>{ lsSet('annonce_vue',cid); render(); };
-window.voirEquipe = t=>{ state.team=t; state.orgRetour=true; state.view=''; render(); window.scrollTo(0,0); chargerPhoto(t); };
-window.chargerGalerie = async ()=>{ try{ const r=await dbGet('tb_equipes','select=team,photo'); r.forEach(x=>{ if(okPhoto(x.photo)) state.photos[x.team]=x.photo; }); }catch(e){} state.galerie=true; render(); };
+window.voirEquipe = t=>{ state.team=t; state.orgRetour=true; state.view='home'; render(); window.scrollTo(0,0); chargerPhoto(t); };
+window.saisieDirecte = (n,t,apres)=>{ state.team=t; state.orgRetour=true; state.ep=n; state.apresSaisie=apres||'org'; chargerPhoto(t); demarrerSaisie(); };
+window.chargerGalerie = async ()=>{ dire('Chargement des photos…'); try{ const r=await dbGet('tb_equipes','select=team,photo'); r.forEach(x=>{ if(okPhoto(x.photo)) state.photos[x.team]=x.photo; }); }catch(e){ dire('Photos indisponibles (réseau).','err'); } state.galerie=true; render(); };
 window.garderBrouillon = ()=>{ if($('#fNom')) lsSet('brouillon_nom',$('#fNom').value); if($('#fCap')) lsSet('brouillon_cap',$('#fCap').value); };
 window.photoChoisie = inp=>{
   const f=inp.files && inp.files[0]; if(!f) return;
@@ -604,63 +938,107 @@ window.photoChoisie = inp=>{
   im.onload=()=>{ const max=800, k=Math.min(1,max/Math.max(im.width,im.height)); const cv=document.createElement('canvas'); cv.width=Math.round(im.width*k); cv.height=Math.round(im.height*k);
     cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height); const data=cv.toDataURL('image/jpeg',0.7); URL.revokeObjectURL(url);
     if((figee()||state.edition) && state.team){ state.photos[state.team]=data; lsSet('photo_'+state.team,data); } else lsSet('photo_brouillon',data);
-    garderBrouillon(); majZone(); };
-  im.onerror=()=>alert('Photo illisible, réessayez.'); im.src=url;
+    garderBrouillon(); majZone(); dire('Photo enregistrée 📸','ok'); };
+  im.onerror=()=>dire('Photo illisible, réessayez.','err'); im.src=url;
 };
 window.inscrire = async sansPhoto=>{
-  const t=state.team; if(!t){ alert('Indiquez votre numéro d\'équipe (de 1 à '+N_EQUIPES+').'); const el=document.getElementById('fNum'); if(el) el.focus(); return; }
+  const t=state.team; if(!t){ dire('Indiquez votre numéro d\'équipe (de 1 à '+N_EQUIPES+').','err'); const el=document.getElementById('fNum'); if(el) el.focus(); return; }
   const nom=($('#fNom').value||'').trim(), cap=($('#fCap').value||'').trim(); const photo=photoForm();
-  if(!nom){ alert('Donnez un nom à votre équipe.'); return; }
-  if(!cap){ alert('Indiquez le pseudo du capitaine.'); return; }
-  if(!photo && !sansPhoto){ alert('Prenez la photo de toute l\'équipe (ou touchez « Continuer sans photo »).'); return; }
+  if(!nom){ dire('Donnez un nom à votre équipe.','err'); $('#fNom').focus(); return; }
+  if(!cap){ dire('Indiquez le pseudo du capitaine.','err'); $('#fCap').focus(); return; }
+  if(!photo && !sansPhoto){ dire('Prenez la photo de toute l\'équipe (ou touchez « Continuer sans photo »).','err'); return; }
   if(!state.edition){            // un autre téléphone vient peut-être d'inscrire ce numéro : on vérifie avant d'écraser
     garderBrouillon();
-    try{ const r=await dbGet('tb_equipes',`team=eq.${t}&select=team,nom,capitaine,updated_at`); if(r[0] && r[0].nom){ state.equipes[t]=r[0]; majZone(); alert(`L'équipe ${t} vient d'être inscrite sous le nom « ${r[0].nom} ». Si c'est bien votre équipe, touchez « Oui, c'est mon équipe ».`); return; } }catch(e){}
+    try{ const r=await dbGet('tb_equipes',`team=eq.${t}&select=team,nom,capitaine,updated_at`); if(r[0] && r[0].nom){ state.equipes[t]=r[0]; majZone(); dire(`L'équipe ${t} vient d'être inscrite : « ${r[0].nom} ». Si c'est vous, touchez « Oui, c'est mon équipe ».`,'err'); return; } }catch(e){}
   }
   const row={ event:EVENT, team:t, nom, capitaine:cap, code:CLE, updated_at:new Date().toISOString() };
   local.e[t]={team:t,nom,capitaine:cap,updated_at:row.updated_at};
   if(photo){ state.photos[t]=photo; lsSet('photo_'+t,photo); }
   pousser('tb_equipes','event,team','e-'+t, photo ? {...row, photo} : row);
-  lsSet('team',t); lsSet('brouillon_nom',''); lsSet('brouillon_cap',''); lsSet('photo_brouillon','');
-  const modif=state.edition; state.edition=false; state.view = (modif || state.orgRetour) ? 'home' : 'regles'; render(); window.scrollTo(0,0);
+  const modif=state.edition; state.edition=false;
+  if(!state.orgRetour){ lsSet('team',t); }
+  lsSet('brouillon_nom',''); lsSet('brouillon_cap',''); lsSet('photo_brouillon','');
+  state.view = (modif || state.orgRetour) ? 'home' : 'regles'; render(); window.scrollTo(0,0);
+  if(modif) dire('Équipe mise à jour ✓','ok');
 };
 window.modifierEquipe = ()=>{
-  if(!state.org){ const c=prompt('Code de l\'animateur ou de l\'organisation :'); if(c===null) return; if(!codeStandOk(0,c)){ alert('Code incorrect.'); return; } }
+  if(!state.org){ const c=prompt('Code de l\'animateur ou de l\'organisation :'); if(c===null) return; if(!codeStandOk(0,c)){ dire('Code incorrect.','err'); return; } }
   const e=equipe(state.team)||{}; lsSet('brouillon_nom',e.nom||''); lsSet('brouillon_cap',e.capitaine||''); state.edition=true; state.view='brief'; render(); window.scrollTo(0,0);
 };
 window.ouvrir = n=>{ state.ep=n; state.view='ep'; render(); window.scrollTo(0,0); };
-window.demarrerSaisie = ()=>{ const r=passages()[kp(state.ep,state.team)]; const ok=state.org&&r&&r.resultat&&r.resultat!=='X';
-  state.saisie={ res: ok&&EPN[state.ep].type==='duel'?r.resultat:'', bonus:{a:!!(ok&&r.b_ambiance), c:!!(ok&&r.b_cohesion), f:!!(ok&&r.b_fairplay)} }; state.view='saisie'; render(); window.scrollTo(0,0); };
-function garderChamps(){ const v={}; ['mm','ss','mv','codeA'].forEach(id=>{ const el=document.getElementById(id); if(el) v[id]=el.value; }); return v; }
-function remettreChamps(v){ Object.entries(v).forEach(([id,val])=>{ const el=document.getElementById(id); if(el) el.value=val; }); }
-window.setRes = r=>{ const v=garderChamps(); state.saisie.res=r; render(); remettreChamps(v); };
-window.setBonus = k=>{ const v=garderChamps(); state.saisie.bonus[k]=!state.saisie.bonus[k]; render(); remettreChamps(v); };
-function codeSaisieOk(){ if(state.org) return true; const c=$('#codeA')?$('#codeA').value:''; if(!codeStandOk(state.ep,c)){ alert('Code de l\'animateur incorrect.'); return false; } return true; }
+window.demarrerSaisie = ()=>{ const r=passages()[kp(state.ep,state.team)]; const ok=state.org&&valide(r); const e=EPN[state.ep];
+  state.saisie={ res: ok&&e.type==='duel'?r.resultat:'', adv: ok&&e.type==='duel'&&r.mesure>0?+r.mesure:null, contreAnim: !!(ok&&e.type==='duel'&&r.mesure!=null&&+r.mesure===0),
+    note: ok&&(e.type==='jury'||e.type==='quiz')&&r.mesure!=null?+r.mesure:null, mm: ok&&e.type==='chrono'&&r.mesure!=null?Math.floor(r.mesure/60):null, ss: ok&&e.type==='chrono'&&r.mesure!=null?Math.round(r.mesure%60):null,
+    mv: ok&&(e.type==='points'||e.type==='hauteur')&&r.mesure!=null?+r.mesure:null, bonus:{} };
+  BONUS.forEach(b=>state.saisie.bonus[b.k]=!!(ok&&r[b.col]));
+  state.view='saisie'; render(); window.scrollTo(0,0); majRecap(); };
+window.annulerSaisie = ()=>{ state.saisie=null; const p=vuePrecedente(); if(p==='org') aller('org'); else { state.view=p||'ep'; render(); window.scrollTo(0,0); } };
+window.choisirRes = (r,btn)=>{ state.saisie.res=r; document.querySelectorAll('#grpRes button').forEach(b=>b.classList.toggle('sel',b===btn)); vibre(15); majRecap(); };
+window.choisirNote = (n,btn)=>{ state.saisie.note=n; document.querySelectorAll('#grpNote button').forEach(b=>b.classList.toggle('sel',b===btn)); vibre(15); majRecap(); };
+window.basculerBonus = (k,btn)=>{ state.saisie.bonus[k]=!state.saisie.bonus[k]; btn.classList.toggle('sel',state.saisie.bonus[k]); vibre(15); majRecap(); };
+window.saisirAdv = v=>{ state.saisie.adv=parseInt(v,10)||null; majRecap(); };
+window.contreAnimateurs = btn=>{ const s=state.saisie; s.contreAnim=!s.contreAnim; btn.classList.toggle('sel',s.contreAnim); const a=$('#adv'); if(a){ a.disabled=s.contreAnim; if(s.contreAnim) a.value=''; } majRecap(); };
+function codeSaisieOk(){ if(state.org) return true; const el=$('#codeA'); const c=el?el.value:''; if(!c){ dire('Code de l\'animateur : à saisir par l\'animateur.','err'); if(el) el.focus(); return false; }
+  if(!codeStandOk(state.ep,c)){ dire('Code de l\'animateur incorrect.','err'); el.value=''; el.focus(); return false; } return true; }
+const inverse = r => ({V:'D',D:'V',N:'N'})[r]||r;
 window.validerSaisie = ()=>{
-  const e=EPN[state.ep], t=state.team, s=state.saisie; let res='F', mes=null;
-  if(e.type==='duel'){ if(!s.res){ alert('Choisissez Victoire, Égalité ou Défaite.'); return; } res=s.res; }
-  else if(e.type==='chrono'){ const mm=+($('#mm').value||0), ss=+($('#ss').value||0); if(mm<0||ss<0||ss>59||(mm===0&&ss===0)){ alert('Saisissez le temps en minutes et secondes.'); return; } mes=mm*60+ss; }
-  else { const v=$('#mv').value; if(v===''||isNaN(+v)||+v<0){ alert('Saisissez le résultat.'); return; } if((e.type==='jury'||e.type==='quiz') && +v>10){ alert('La valeur doit être comprise entre 0 et 10.'); return; } mes=+v; }
+  const e=EPN[state.ep], t=state.team, s=state.saisie; const lu=lireSaisie();
+  if(lu.erreur){ dire(lu.erreur,'err'); return; }
+  const mes=lu.mes, res=lu.res;
+  // valeurs étonnantes : on fait confirmer
+  const bizarre = (e.type==='chrono' && (mes<10 || mes>20*60)) ? 'Temps de '+fmtT(mes)+' : c\'est bien ça ?' : (e.type==='points' && mes>300) ? mes+' points : c\'est bien ça ?' : (e.type==='hauteur' && mes>400) ? mes+' cm : c\'est bien ça ?' : '';
+  if(bizarre && !confirm(bizarre)) return;
   if(!codeSaisieOk()) return;
-  const row={ event:EVENT, stand:e.n, team:t, resultat:res, mesure:mes, b_ambiance:s.bonus.a, b_cohesion:s.bonus.c, b_fairplay:s.bonus.f, code:CLE, updated_at:new Date().toISOString() };
+  const maintenant=new Date().toISOString(); const etaitFait=fait(e.n,t);
+  const row={ event:EVENT, stand:e.n, team:t, resultat:res, mesure:mes, code:CLE, updated_at:maintenant }; BONUS.forEach(b=>row[b.col]=!!s.bonus[b.k]);
   local.p[kp(e.n,t)]=row; pousser('tb_passages','event,stand,team','p-'+kp(e.n,t),row);
-  state.bravo={ titre:`${e.nom} : c'est validé !`, sous:`Résultat enregistré pour l'équipe ${t}. Les points restent secrets jusqu'au podium.` };
-  state.view='bravo'; render(); window.scrollTo(0,0);
+  // Duel : on enregistre aussi le résultat de l'équipe adverse (sauf si elle a déjà un résultat contre une autre équipe)
+  let noteAdv='';
+  if(e.type==='duel' && mes>0){ const r2=passages()[kp(e.n,mes)];
+    if(valide(r2) && r2.mesure!=null && +r2.mesure!==t) noteAdv=`L'équipe ${mes} avait déjà un résultat contre une autre équipe : il n'a pas été modifié.`;
+    else { const row2={ event:EVENT, stand:e.n, team:mes, resultat:inverse(res), mesure:t, code:CLE, updated_at:maintenant };
+      if(state.org && valide(r2)) BONUS.forEach(b=>row2[b.col]=!!r2[b.col]);          // sinon on n'envoie pas les bonus : la base garde ceux déjà donnés à l'équipe adverse
+      local.p[kp(e.n,mes)]={...(r2||{}), ...row2}; pousser('tb_passages','event,stand,team','p-'+kp(e.n,mes),row2); } }
+  state.saisie=null; vibre([30,40,30]); cacherToast();
+  if(state.org && state.orgRetour){ dire('Résultat enregistré ✓'+(noteAdv?' '+noteAdv:''),'ok'); const a=state.apresSaisie; state.apresSaisie=''; if(a==='org') aller('org'); else { state.view='home'; render(); window.scrollTo(0,0); } return; }
+  state.bravo={ ep:e.n }; state.vientDeFaire=e.n; setTimeout(()=>{ state.vientDeFaire=0; }, 4000);
+  state.view='bravo'; render(); window.scrollTo(0,0); confettis(false); if(noteAdv) setTimeout(()=>dire(noteAdv),1200); if(etaitFait) setTimeout(()=>dire('Résultat corrigé ✓','ok'),400);
 };
 window.supprimerPassage = ()=>{
   if(!confirm('Effacer le résultat de cette épreuve pour cette équipe ?')) return; if(!codeSaisieOk()) return;
-  const e=EPN[state.ep], t=state.team; const row={ event:EVENT, stand:e.n, team:t, resultat:'X', mesure:null, b_ambiance:false, b_cohesion:false, b_fairplay:false, code:CLE, updated_at:new Date().toISOString() };
-  local.p[kp(e.n,t)]=row; pousser('tb_passages','event,stand,team','p-'+kp(e.n,t),row); aller('ep');
+  const e=EPN[state.ep], t=state.team, anc=passages()[kp(e.n,t)]; const maintenant=new Date().toISOString();
+  const vide=(tm)=>{ const r={ event:EVENT, stand:e.n, team:tm, resultat:'X', mesure:null, code:CLE, updated_at:maintenant }; BONUS.forEach(b=>r[b.col]=false); return r; };
+  local.p[kp(e.n,t)]=vide(t); pousser('tb_passages','event,stand,team','p-'+kp(e.n,t),vide(t));
+  if(e.type==='duel' && anc && +anc.mesure>0){ const r2=passages()[kp(e.n,+anc.mesure)]; if(valide(r2) && +r2.mesure===t && confirm('Effacer aussi le résultat de l\'équipe '+(+anc.mesure)+' (même duel) ?')){ local.p[kp(e.n,+anc.mesure)]=vide(+anc.mesure); pousser('tb_passages','event,stand,team','p-'+kp(e.n,+anc.mesure),vide(+anc.mesure)); } }
+  state.saisie=null; dire('Résultat effacé','ok'); const a=state.apresSaisie; state.apresSaisie='';
+  if(state.org && a==='org') aller('org'); else { state.view = state.org&&state.orgRetour ? 'home' : 'ep'; render(); }
+};
+window.ouvrirPodium = ()=>{ state.podium={i:0, montre:false}; state.view='podium'; render(); window.scrollTo(0,0); };
+window.fermerPodium = ()=>{ aller('org'); };
+window.podiumReveler = ()=>{ const {st}=etapesPodium(); state.podium.montre=true; render(); confettis(!!(st[state.podium.i]||{}).final); vibre(80); };
+window.podiumBouger = d=>{ state.podium.i=Math.max(0,state.podium.i+d); state.podium.montre = d<0; render(); };
+window.partagerClassement = async ()=>{
+  const c=calcul(); const top=c.ordre.filter(t=>c.eq[t].total>0);
+  let txt = `Journée de cohésion Proxim'Services · classement à ${heure(Date.now())}\n\n`;
+  top.slice(0,10).forEach((t,i)=>{ txt += `${['🥇','🥈','🥉'][i]||(i+1)+'.'} Équipe ${t} ${nomEq(t)} : ${c.eq[t].total} pts (${c.eq[t].faits} épreuves)\n`; });
+  if(c.prixQuiz) txt += `\n🎓 Prix culture d'entreprise : équipe ${c.prixQuiz} ${nomEq(c.prixQuiz)}`;
+  if(c.ambiance) txt += `\n❤️ Coup de cœur : équipe ${c.ambiance} ${nomEq(c.ambiance)}`;
+  try{ if(navigator.share){ await navigator.share({text:txt}); return; } }catch(e){ return; }
+  try{ await navigator.clipboard.writeText(txt); dire('Classement copié : collez-le dans WhatsApp','ok'); }catch(e){ prompt('Copiez le classement :', txt); }
 };
 window.refresh=refresh;
-window.addEventListener('online', flush);
-setInterval(()=>{ flush(); refresh(); }, 20000);
+window.addEventListener('online', ()=>{ flush(); refresh(); });
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ flush(); refresh(); } });   // on revient dans l'application : tout se remet à jour
+setInterval(()=>{ flush(); if(!(state.org && state.view==='org')) refresh(); }, 20000);
+setInterval(()=>{ if(state.org && state.view==='org' && !document.hidden) refresh(); }, 8000);          // l'organisation voit tout en direct
 setInterval(()=>{ if(state.view==='chat' || (state.view==='org' && state.orgTab==='messages')) lireMessages(); }, 6000);
 setInterval(majRebours, 1000);
 setInterval(()=>{ if(state.view==='home') renderDoux(); }, 60000);          // pour faire clignoter la culture d'entreprise le moment venu
 if(Q.has('org')){ if(!tQ) state.team=0; state.view = state.org ? 'org' : 'landing'; }
 else if(!confirmee() && !(tQ>=1)) state.team=0;
-poserRepere(); render(); refresh();
+function majHaut(){ const t=$('header.top'); if(t) document.documentElement.style.setProperty('--haut', (t.offsetHeight+8)+'px'); }
+window.addEventListener('resize', majHaut); window.addEventListener('load', majHaut); document.fonts && document.fonts.ready && document.fonts.ready.then(majHaut);
+poserRepere(); render(); majHaut(); refresh(); flush();
 </script>
 </body>
 </html>

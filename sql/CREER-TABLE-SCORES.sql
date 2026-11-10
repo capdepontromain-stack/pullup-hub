@@ -51,6 +51,7 @@ create table if not exists tb_passages (
 alter table tb_passages add column if not exists b_ambiance boolean default false;
 alter table tb_passages add column if not exists b_cohesion boolean default false;
 alter table tb_passages add column if not exists b_fairplay boolean default false;
+alter table tb_passages add column if not exists b_coeur boolean default false;     -- bonus « Coup de cœur » (+2), ajouté le 10/11/2026
 
 -- La messagerie de la journée : messages des équipes (team 1 à 28) et de l'organisation (team 0)
 create table if not exists tb_messages (
