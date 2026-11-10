@@ -406,6 +406,10 @@
   .anim .btn.orange:not(.pret) { opacity:.55; }
   .anim .btn.orange.pret { opacity:1; }
   .anim .codeL { display:flex; align-items:center; gap:8px; }
+  details.debrief { margin:18px auto 0; max-width:520px; text-align:left; background:rgba(255,255,255,.1); border:1px solid rgba(249,203,25,.5); border-radius:16px; }
+  details.debrief summary { list-style:none; padding:12px 14px; font-weight:900; color:var(--jaune); } details.debrief summary::-webkit-details-marker { display:none; }
+  details.debrief p, .debriefTxt p { margin:0 14px 10px; font-size:17px; line-height:1.45; } details.debrief p { color:#fff; } .debriefTxt p { margin:0 0 10px; color:var(--texte); }
+  ul.pointsD { margin:0 14px 10px 30px; padding:0; font-size:17px; line-height:1.4; } ul.pointsD li { margin:4px 0; } details.debrief ul.pointsD { color:#fff; } .debriefTxt ul.pointsD { margin-left:18px; margin-right:0; }
   .rangE { display:inline-block; min-width:30px; font-family:var(--titre); color:var(--marine); }
   .champU { position:relative; } .champU input { padding-right:58px; font-family:var(--titre); font-size:30px; text-align:center; letter-spacing:1px; padding-top:9px; padding-bottom:9px; }
   .champU span { position:absolute; right:14px; top:50%; transform:translateY(-50%); font-weight:900; font-size:16px; color:var(--gris); pointer-events:none; }
@@ -1275,18 +1279,51 @@ function vCarnetOrg(){
   EP.forEach(e=>{ if(e.n===DEFI_EP){ h += `<div class="ligneRes" style="border-bottom:0"><span>${e.ico} <b>+ ${e.nom}</b><br><span class="muted">${q.nbDefis}/${DEFIS.length} envoyés · notez ci-dessous</span></span><span class="p">${q.photos} pts</span></div>` + DEFIS.map(D=>ligneDefiOrg(defis()[kd(t,D.d)]||{team:t,defi:D.d,envoye:false,note:null})).join('') + '<div style="border-bottom:1px solid var(--trait);margin-bottom:4px"></div>'; return; }
     const r=passages()[kp(e.n,t)]; const ok=valide(r);
     h += `<button class="ligneRes" onclick="saisieDirecte(${e.n},${t},'home')"><span>${e.ico} <b>${e.n}. ${e.nom}</b><br><span class="muted">${ok?esc(texteResultat(r,e))+' '+icoBonus(r):'pas encore faite · toucher pour saisir'}</span></span>${ok?`<span class="p">${nb(c.pts[kp(e.n,t)])} pts</span>`:'<span class="st">à faire</span>'}</button>`; });
+  if(q.total>0) h += `</div><details class="regl" id="dDebriefEq"><summary>📝 Débrief de l'équipe (à lire au micro)</summary><div class="debriefTxt">${debriefHTML(t, 'place', rang)}</div></details><div>`;
   h += `</div><button class="btn clair" onclick="modifierEquipe()">✏️ Modifier le nom, le capitaine ou la photo</button>`;
   if(eqp.nom || q.faits) h += `<p style="text-align:center;margin-top:10px"><button class="lnk" style="color:var(--rouge)" onclick="remettreAZero()">Remettre cette équipe à zéro (numéro pris par erreur)</button></p>`;
   return h;
 }
+// ---------- Le débrief : ce que Romain peut dire au micro sur une équipe ----------
+const au = nom => nom.replace(/^Les /,'aux ').replace(/^Le /,'au ').replace(/^La /,'à la ').replace(/^L'/,"à l'");
+const enListe = l => l.length<2 ? (l[0]||'') : l.slice(0,-1).join(', ')+' et '+l[l.length-1];
+function debrief(t, focus, place){
+  const c=calcul(), q=c.eq[t], eqp=equipe(t)||{}, P=passages(), nom='« '+(eqp.nom||'Équipe '+t)+' »', hl=[];
+  EP.forEach(e=>{ if(e.n===DEFI_EP || e.type==='duel' || e.type==='quiz') return; const r=P[kp(e.n,t)]; if(!valide(r) || r.mesure==null) return;
+    const tous=c.rows.filter(x=>x.stand===e.n && x.mesure!=null), n=tous.length, asc=e.type==='chrono';
+    const rang=1+tous.filter(x=> asc ? +x.mesure<+r.mesure : +x.mesure>+r.mesure).length;
+    const val = e.type==='chrono' ? fmtT(r.mesure) : e.type==='jury' ? (+r.mesure)+' sur 10' : (+r.mesure)+' '+(e.court||'points');
+    if(rang===1 && n>=2) hl.push({p:3, txt: e.type==='chrono' ? `le meilleur temps de toute la journée ${au(e.nom)} : ${val}, le record` : e.type==='jury' ? `la meilleure note ${au(e.nom)} : ${val}` : `le meilleur score ${au(e.nom)} : ${val}, le record`});
+    else if(rang<=3 && n>=4) hl.push({p:2, txt:`${rang}e ${au(e.nom)} sur ${n} équipes (${val})`});
+    else if(e.type==='jury' && +r.mesure>=8) hl.push({p:1.5, txt:`une très belle note ${au(e.nom)} : ${val}`}); });
+  const duels=EP.filter(e=>e.type==='duel').map(e=>({e, r:P[kp(e.n,t)]})).filter(x=>valide(x.r)), gagnes=duels.filter(x=>x.r.resultat==='V');
+  if(gagnes.length) hl.push({p: gagnes.length>=2 ? 2.5 : 1.5, txt: gagnes.length===duels.length && duels.length>1 ? `${duels.length} duels sur ${duels.length} gagnés, ${enListe(gagnes.map(x=>au(x.e.nom)))}` : `${gagnes.length===1?'un duel gagné':gagnes.length+' duels gagnés'} ${enListe(gagnes.map(x=>au(x.e.nom)))}`});
+  if(focus!=='culture' && q.quiz!=null && q.quiz>=7) hl.push({p: q.quiz>=9 ? 2.5 : 1.5, txt:`${q.quiz} bonnes réponses sur 10 en culture d'entreprise`});
+  if(q.nbDefis>=DEFIS.length) hl.push({p:2, txt:`les ${DEFIS.length} défis photo et vidéo envoyés`}); else if(q.nbDefis>=4) hl.push({p:1, txt:`${q.nbDefis} défis photo et vidéo envoyés`});
+  if(focus!=='coeur'){ if(q.coeurs>=2) hl.push({p:2, txt:`${q.coeurs} coups de cœur des animateurs`}); else if(q.coeurs===1) hl.push({p:1, txt:`un coup de cœur des animateurs`});
+    if(q.fairplay>=2) hl.push({p:1.5, txt:`saluée ${q.fairplay} fois pour son fair-play`}); }
+  hl.sort((a,b)=>b.p-a.p);
+  let intro;
+  if(focus==='culture') intro = `🎓 La médaille de la culture d'entreprise revient à l'équipe ${nom} : ${q.quiz} bonnes réponses sur 10${c.departage && c.prixQuiz===t ? ', et la réponse la plus proche à la question subsidiaire' : ''}. Ils connaissent Proxim'Services sur le bout des doigts !`;
+  else if(focus==='coeur') intro = `❤️ Le trophée des coups de cœur et du fair-play revient à l'équipe ${nom} : ${q.coeurs ? pl(q.coeurs,'coup')+' de cœur' : ''}${q.coeurs && q.fairplay ? ' et ' : ''}${q.fairplay ? q.fairplay+' fois saluée pour son fair-play' : ''}. Une équipe que les animateurs ont adorée !`;
+  else if(place===1) intro = `🏆 Elle remporte le Grand prix de la cohésion : l'équipe ${nom}, avec ${nb(q.total)} points et ${q.faits} épreuves sur ${NB_EP} !`;
+  else if(place===2 || place===3) intro = `${place===2?'🥈':'🥉'} ${place}e place pour l'équipe ${nom}, avec ${nb(q.total)} points et ${q.faits} épreuves sur ${NB_EP} !`;
+  else intro = `👏 Bravo à l'équipe ${nom} : ${q.faits} épreuves sur ${NB_EP} et ${nb(q.total)} points.`;   // hors podium : on ne lit jamais le rang au micro
+  const points = hl.slice(0, place===1 ? 6 : 4).map(x=>{ const t2=x.txt.charAt(0).toUpperCase()+x.txt.slice(1); return t2 + (x.p>=3 ? ' !' : '.'); });
+  const cap = eqp.capitaine ? (/^cap/i.test(eqp.capitaine) ? ', emmenée par '+eqp.capitaine : ', emmenée par son capitaine '+eqp.capitaine) : '';
+  const fin = `Sous vos applaudissements : l'équipe numéro ${t}, ${nom}${cap} !`;
+  return {intro, points, fin};
+}
+const debriefHTML = (t, focus, place) => { const d=debrief(t, focus, place);
+  return `<p>${esc(d.intro)}</p>${d.points.length?`<p><b>Ce qui a fait la différence :</b></p><ul class="pointsD">${d.points.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}<p><b>${esc(d.fin)}</b></p>`; };
 // ---------- Podium : on dévoile les gagnants un par un ----------
 function etapesPodium(){
   const c=calcul(); const st=[]; const top=c.ordre.filter(t=>c.eq[t].total>0);
-  if(c.prixQuiz) st.push({t:c.prixQuiz, titre:'Médaille culture d\'entreprise', ico:'🎓', sous:e=>`${e.quiz} bonnes réponses sur 10${c.departage?' · départagée à la question subsidiaire':''}`});
-  if(c.ambiance) st.push({t:c.ambiance, titre:'Trophée coups de cœur et fair-play', ico:'❤️', sous:e=>`${pl(e.coeurs,'coup')} de cœur · ${e.fairplay} fair-play`});
-  if(top[2]) st.push({t:top[2], titre:'3e place', ico:'🥉', sous:e=>`${nb(e.total)} points · ${pl(e.faits,'épreuve')}`});
-  if(top[1]) st.push({t:top[1], titre:'2e place', ico:'🥈', sous:e=>`${nb(e.total)} points · ${pl(e.faits,'épreuve')}`});
-  if(top[0]) st.push({t:top[0], titre:'Grand prix de la cohésion', ico:'🏆', sous:e=>`${nb(e.total)} points · ${pl(e.faits,'épreuve')}`, final:true});
+  if(c.prixQuiz) st.push({t:c.prixQuiz, focus:'culture', titre:'Médaille culture d\'entreprise', ico:'🎓', sous:e=>`${e.quiz} bonnes réponses sur 10${c.departage?' · départagée à la question subsidiaire':''}`});
+  if(c.ambiance) st.push({t:c.ambiance, focus:'coeur', titre:'Trophée coups de cœur et fair-play', ico:'❤️', sous:e=>`${pl(e.coeurs,'coup')} de cœur · ${e.fairplay} fair-play`});
+  if(top[2]) st.push({t:top[2], focus:'place', place:3, titre:'3e place', ico:'🥉', sous:e=>`${nb(e.total)} points · ${pl(e.faits,'épreuve')}`});
+  if(top[1]) st.push({t:top[1], focus:'place', place:2, titre:'2e place', ico:'🥈', sous:e=>`${nb(e.total)} points · ${pl(e.faits,'épreuve')}`});
+  if(top[0]) st.push({t:top[0], focus:'place', place:1, titre:'Grand prix de la cohésion', ico:'🏆', sous:e=>`${nb(e.total)} points · ${pl(e.faits,'épreuve')}`, final:true});
   return {st, c};
 }
 function vPodium(){
@@ -1297,7 +1334,8 @@ function vPodium(){
   let h = `<div class="podium"><div class="etape">${P.i+1} / ${st.length}</div><h1>${s.ico} ${s.titre}</h1>`;
   if(!P.montre && P.compte) h += `<div class="decompte" id="decompte">${P.compte}</div><p style="color:#CFE4F3;font-weight:800">Roulement de tambour…</p>`;
   else if(!P.montre) h += `<div class="mystere">${s.ico}</div><button class="btn or gros" onclick="podiumReveler()">Révéler</button>`;
-  else h += `<div class="gagnant"><div class="scene"><div class="rayons"></div><div class="ph" style="${p?`background-image:url('${p}')`:`background:${TEINTES[(s.t-1)%14]}`}">${p?'':initiales(s.t)}</div></div><div class="nom">${esc(nomEq(s.t)||'Équipe '+s.t)}</div><div class="sous">Équipe ${s.t} · Capitaine ${esc((equipe(s.t)||{}).capitaine||'')}</div><div class="sous" style="color:var(--jaune)">${s.sous(e)}</div></div>`;
+  else h += `<div class="gagnant"><div class="scene"><div class="rayons"></div><div class="ph" style="${p?`background-image:url('${p}')`:`background:${TEINTES[(s.t-1)%14]}`}">${p?'':initiales(s.t)}</div></div><div class="nom">${esc(nomEq(s.t)||'Équipe '+s.t)}</div><div class="sous">Équipe ${s.t} · Capitaine ${esc((equipe(s.t)||{}).capitaine||'')}</div><div class="sous" style="color:var(--jaune)">${s.sous(e)}</div></div>
+      <details class="debrief" id="dDebrief${P.i}"><summary>📝 Le débrief à lire au micro</summary>${debriefHTML(s.t, s.focus, s.place)}</details>`;
   h += `<div class="nav2">${P.i>0?`<button class="btn clair" onclick="podiumBouger(-1)">←</button>`:''}${P.montre && P.i<st.length-1?`<button class="btn or" onclick="podiumBouger(1)">Prix suivant →</button>`:''}</div>
     <p style="margin-top:22px"><button class="lnk" style="color:#9CB7CF" onclick="fermerPodium()">Quitter le podium</button></p></div>`;
   return h;
