@@ -100,8 +100,8 @@ const N_EQUIPES = 28;
 const FIN = { h:12, m:30 };
 const COULEURS = ['Rouge','Bleu roi','Vert','Jaune','Orange','Violet','Rose','Blanc','Noir','Turquoise','Bordeaux','Bleu ciel','Vert anis','Gris'];
 const couleur = t => COULEURS[(t-1)%14];
-// Codes des animateurs : seules les empreintes sont ici, les codes sont sur les fiches de stand.
-const EMPREINTES = /*EMPREINTES*/{org:'0ddbd35979dd4e5d58fefed283f9bf31d7e0350ff8854ec882c4153e6a9a2da5',stands:{1:'7f361d572d73b52e260d9ca28a88613afe1b3a1796f83da46472c9d83702baa6',2:'34f43c80ac9cc325977c4c369add92d43a992aaf79654411171729dc3f179ec5',3:'20e34eeb3de6e08600967e68009d3b5526cdb4b7af855d7227d9e76c2966d6b3',4:'fe23da6610764d061954dd135aba91dbdaad427e75b8841a7cec663ecfd4be32',5:'9c03cf49addff639cd5efad94318681eb9fc571780d8eb45494d04d6657f9928',6:'99fef52cb8f88d366d4a67d3fd48af0968084ef447d79ce402e1f7cdb9117270',7:'75e913a2b157bb154081a5eb67261933adfd99c11e03e03504cb264ea699b16e',8:'c871d48e5bd655f636aa2b1b9fa58d462860b18d448984cc10fb6594201b7513',9:'1975d3c9e28221088efd6da5dfe219d19a2b4dbbbb8f86b27bd974ab84cc518f',10:'e26569602ca8c8f407edcabffb7fc83c8cef7c8402b296cdfc2fe638fe9b2788',11:'799aee50d57c82df129d2549c78f04cc0b1a83b8ed4e287ab6026f05b9bbd3a3',12:'b43757417bcf0061fa53785caacb975daf63e8d218a66927c9be658538d89ab1',13:'0dc670a4d3b13210421ae0aab768c0cd26f3a1ffd74e9f8307a4b6b8e60bb672',14:'7f928a14cd22055445bdc5620b05ef19d6bf9824c64e5619da520a1d9b774f39'}};
+// Code des animateurs : trois mots au choix, valables sur toutes les épreuves. Seules les empreintes sont ici.
+const EMPREINTES = /*EMPREINTES*/{org:'0ddbd35979dd4e5d58fefed283f9bf31d7e0350ff8854ec882c4153e6a9a2da5',mots:['96f99aa2ff66d5d72f426153fbc18bffef24b9021a1205ea2628104ea0c772bd','ff29bece9439c435bd6344efba9fef08d27452a98ec9bd8478cb75f42a487ad5','7bcb70b7feaeb1b11fa4dcbac9138b9f04a81f39a16f5efa1f25c9cde82a0871']};
 // type : duel / chrono (secondes) / points / jury (note sur 10) / quiz (bonnes réponses sur 10) / hauteur (cm)
 const EP = [
  {n:1, nom:'La catapulte', type:'duel', places:2, min:10, desc:"Volley géant : avec vos catapultes, envoyez la balle dans le camp adverse après un maximum de passes en équipe."},
@@ -157,9 +157,10 @@ function sha256(ascii){
   for(i=0;i<8;i++){ for(j=3;j+1;j--){ var b=(hash[i]>>(j*8))&255; result+=((b<16)?0:'')+b.toString(16); } }
   return result;
 }
-const empreinte = (quoi, code) => sha256('proxim14|'+quoi+'|'+String(code).trim().toUpperCase());
+const sansAccent = c => String(c==null?'':c).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'').toUpperCase();
+const empreinte = (quoi, code) => sha256('proxim14|'+quoi+'|'+sansAccent(code));
 const codeOrgOk = code => !!code && empreinte('org',code) === EMPREINTES.org;
-const codeStandOk = (stand, code) => !!code && (empreinte(stand,code) === (EMPREINTES.stands||{})[stand] || codeOrgOk(code));
+const codeStandOk = (stand, code) => !!code && ((EMPREINTES.mots||[]).includes(empreinte('mot',code)) || codeOrgOk(code));
 
 // =============== État ===============
 const tQ = +Q.get('e');
@@ -290,7 +291,7 @@ function vLanding(){
 }
 function blocOrg(){
   return state.org ? `<button class="btn marine" onclick="aller('org')">Espace organisation</button>`
-   : `<div class="card"><p class="muted">Organisation Pull Up</p><input type="password" id="codeOrg" inputmode="numeric" autocomplete="off" placeholder="Code organisation"><button class="btn clair" onclick="entrerOrg()">Entrer</button></div>`;
+   : `<div class="card"><p class="muted">Organisation Pull Up</p><input type="password" id="codeOrg" autocomplete="off" autocapitalize="none" placeholder="Code organisation"><button class="btn clair" onclick="entrerOrg()">Entrer</button></div>`;
 }
 function vBrief(){
   const t=state.team; const p=state.photos[t]||okPhoto(lsGet('photo_'+t,''));
@@ -369,7 +370,7 @@ function vSaisie(){
   return `<div class="anim"><h2>Espace animateur</h2><p class="muted">Épreuve ${e.n} · ${e.nom}<br>${titreEq(t)} (bandeau ${couleur(t).toLowerCase()})</p>
     ${champ}
     <label>Bonus (facultatif)</label><div class="choix">${bb('a','Ambiance')}${bb('c','Cohésion')}${bb('f','Fair-play')}</div>
-    ${state.org?'<p class="muted" style="margin-top:12px">Mode organisation : pas de code à saisir.</p>':`<label>Code de l'animateur</label><input type="password" id="codeA" inputmode="numeric" autocomplete="off" placeholder="Code du stand">`}
+    ${state.org?'<p class="muted" style="margin-top:12px">Mode organisation : pas de code à saisir.</p>':`<label>Code de l'animateur</label><input type="password" id="codeA" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Code animateur">`}
     <button class="btn orange" onclick="validerSaisie()">Valider le résultat</button>
     <button class="btn clair" style="background:transparent;color:#fff" onclick="aller('ep')">Annuler</button>
     ${passages()[kp(e.n,t)] && passages()[kp(e.n,t)].resultat!=='X' ? '<button class="lnk" style="color:#C9DCEC" onclick="supprimerPassage()">Effacer ce passage</button>':''}
@@ -435,7 +436,7 @@ window.inscrire = sansPhoto=>{
   state.edition=false; state.view='home'; render(); window.scrollTo(0,0);
 };
 window.modifierEquipe = ()=>{
-  if(!state.org){ const c=prompt('Code de l\'animateur ou de l\'organisation :'); if(c===null) return; if(!Object.keys(EMPREINTES.stands||{}).some(s=>codeStandOk(+s,c)) ){ alert('Code incorrect.'); return; } }
+  if(!state.org){ const c=prompt('Code de l\'animateur ou de l\'organisation :'); if(c===null) return; if(!codeStandOk(0,c)){ alert('Code incorrect.'); return; } }
   const e=equipe(state.team)||{}; lsSet('brouillon_nom',e.nom||''); lsSet('brouillon_cap',e.capitaine||''); state.edition=true; state.view='brief'; render(); window.scrollTo(0,0);
 };
 window.ouvrir = n=>{ state.ep=n; state.view='ep'; render(); window.scrollTo(0,0); };
