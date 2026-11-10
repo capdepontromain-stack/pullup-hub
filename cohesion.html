@@ -101,6 +101,7 @@
   nav.bas { position:fixed; left:0; right:0; bottom:0; display:flex; background:#fff; border-top:2px solid var(--trait); z-index:7; padding-bottom:env(safe-area-inset-bottom); }
   nav.bas button { flex:1; border:0; background:#fff; padding:12px 4px 13px; font:inherit; font-weight:800; font-size:14px; color:var(--gris); position:relative; }
   nav.bas button.on { color:var(--bleu); box-shadow:inset 0 3px 0 var(--bleu); }
+  nav.bas button.fl { flex:0 0 auto; padding-left:14px; padding-right:14px; color:var(--marine); background:var(--fond); white-space:nowrap; }
   .pastille { display:inline-block; min-width:20px; padding:1px 6px; border-radius:10px; background:var(--rouge); color:#fff; font-size:12px; margin-left:5px; }
   body.avecBas main { padding-bottom:86px; } body.avecBas footer { padding-bottom:84px; }
   .fil { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
@@ -425,7 +426,8 @@ function vHome(){
       <div><div class="nom">${esc(eqp.nom||'')}</div><div class="muted">Équipe ${t}<br>Capitaine : ${esc(eqp.capitaine||'')}</div></div></div>
     <div class="scores"><div><b>${nb}/14</b><span>épreuves faites</span></div><div><b>${14-nb}</b><span>encore à faire</span></div></div>
     <div class="prog"><div style="width:${100*nb/14}%"></div></div>
-    <p class="muted" style="margin:10px 0 0">Chaque épreuve affiche les points à gagner. Vos points sont notés par les animateurs et restent secrets jusqu'au podium.</p></div>`;
+    <p class="muted" style="margin:10px 0 0">Chaque épreuve affiche les points à gagner. Vos points sont notés par les animateurs et restent secrets jusqu'au podium.</p>
+    ${state.orgRetour?'':'<button class="lnk" style="padding:8px 0 0" onclick="revenirDebut()">↺ Revenir au début</button>'}</div>`;
   if(nb===0) h += `<div class="banner bleu"><b>Pour bien démarrer :</b> commencez par l'épreuve ${DEPART[t]}, ${EPN[DEPART[t]].nom}. Ensuite, allez où vous voulez.</div>`;
   if(!fait(CULTURE,t)){ const cl = nb>=3 || tp.ecoule>=60;
     h += `<button class="vedette ${cl?'clignote':''}" onclick="ouvrir(${CULTURE})"><div class="img" style="background-image:url('${img(CULTURE)}')"></div><div class="txt">
@@ -435,7 +437,9 @@ function vHome(){
   else h += `<div class="bravo"><div class="p">14/14</div><p style="margin-top:8px"><b>Toutes les épreuves sont faites. Bravo !</b></p></div>`;
   if(faites.length) h += `<h3 style="color:var(--rouge)">Déjà faites (${faites.length})</h3>` + faites.map(x=>`<button class="faite" onclick="ouvrir(${x.n})"><i>✓</i>${x.n}. ${x.nom}<span>FAIT</span></button>`).join('');
   h += `<div class="card" style="margin-top:14px"><h3 style="margin-top:0">Rappel des règles</h3>${REGLES}<p class="muted" style="margin-top:8px">Chaque épreuve une seule fois. Plusieurs téléphones de l'équipe peuvent scanner le QR code et entrer le même numéro d'équipe.</p>
-    <button class="lnk" onclick="modifierEquipe()">Modifier le nom ou la photo (animateur)</button><br><button class="lnk" onclick="changerEquipe()">Ce n'est pas mon équipe : changer de numéro</button></div>`;
+    <button class="lnk" onclick="modifierEquipe()">Modifier le nom ou la photo (animateur)</button></div>`;
+  if(!state.orgRetour) h += `<div class="card" style="text-align:center"><button class="btn clair" style="margin-top:0" onclick="revenirDebut()">↺ Revenir au début</button>
+    <p class="muted" style="margin:10px 0 0">Rien n'est effacé. Pour retrouver votre équipe, retapez simplement son numéro.</p></div>`;
   return h;
 }
 function vEpreuve(){
@@ -493,13 +497,30 @@ function vChat(){
   return `<div class="card" style="padding:12px 14px"><b>Messagerie de la journée</b><p class="muted" style="margin:4px 0 0">Toutes les équipes et l'organisation voient ces messages. Une question ? Écrivez-la ici, l'organisation vous répond. Restez bon enfant.</p></div>
     <div class="fil" id="fil"></div>${zoneEcrire()}`;
 }
+function vuePrecedente(){                 // l'écran d'avant, pour la flèche « Retour » (et le bouton retour du téléphone)
+  const v=state.view;
+  if(v==='ep') return 'home';
+  if(v==='saisie') return 'ep';
+  if(v==='bravo') return 'home';
+  if(v==='chat') return state.org && !state.team ? 'org' : (state.avantChat||'home');
+  if(v==='landing') return 'debut';
+  if(v==='brief') return state.edition ? 'home' : (state.orgRetour ? 'org' : 'accueil');
+  if(v==='home') return state.orgRetour ? 'org' : null;
+  return null;
+}
+function epSuivante(){ const l=EP.map(x=>x.n), i=l.indexOf(state.ep); for(let k=1;k<l.length;k++){ const n=l[(i+k)%l.length]; if(!fait(n,state.team)) return n; } return 0; }   // prochaine épreuve pas encore faite
 function majBas(){
-  const bas=document.getElementById('bas'); if(!bas) return;
+  const bas=document.getElementById('bas'); if(!bas) return; const v=state.view;
   const equipeInscrite = state.team && equipe(state.team) && equipe(state.team).nom && !state.orgRetour;
-  const montrer = equipeInscrite && ['home','ep','chat'].includes(state.view);
+  const onglets = equipeInscrite && ['home','ep','chat'].includes(v);
+  const prec = vuePrecedente(); const montrer = onglets || !!prec;
   bas.style.display = montrer ? 'flex' : 'none'; document.body.classList.toggle('avecBas', !!montrer);
-  if(!montrer) return; const n = state.view==='chat' ? 0 : nonLus();
-  bas.innerHTML = `<button class="${state.view!=='chat'?'on':''}" onclick="aller('home')">Épreuves</button><button class="${state.view==='chat'?'on':''}" onclick="aller('chat')">Messages${n?`<span class="pastille">${n}</span>`:''}</button>`;
+  if(!montrer) return; const n = v==='chat' ? 0 : nonLus();
+  let h = prec ? `<button class="fl" onclick="retour()">← Retour</button>` : '';
+  if(onglets) h += `<button class="${v!=='chat'?'on':''}" onclick="aller('home')">Épreuves</button><button class="${v==='chat'?'on':''}" onclick="aller('chat')">Messages${n?`<span class="pastille">${n}</span>`:''}</button>`;
+  else h += `<span style="flex:1"></span>`;
+  if(onglets && v==='ep' && epSuivante()) h += `<button class="fl" onclick="suivante()">Suivante →</button>`;
+  bas.innerHTML = h;
 }
 function phStyle(t){ const p=state.photos[t]; return p?`background-image:url('${p}')`:''; }
 function vOrg(){
@@ -531,8 +552,19 @@ function vOrg(){
 }
 
 // =============== Actions ===============
-function aller(v){ state.view=v; if(v==='org'){ state.orgRetour=false; } render(); if(v!=='chat') window.scrollTo(0,0); if(v==='org'||v==='home') refresh(); if(v==='chat') lireMessages(); }
+function aller(v){ if(v==='chat' && state.view!=='chat') state.avantChat = state.view==='ep' ? 'ep' : 'home'; state.view=v; if(v==='org'){ state.orgRetour=false; } render(); if(v!=='chat') window.scrollTo(0,0); if(v==='org'||v==='home') refresh(); if(v==='chat') lireMessages(); }
 window.aller=aller;
+window.retour = ()=>{ const p=vuePrecedente(); if(!p) return false;
+  if(state.view==='brief'){ garderBrouillon(); state.edition=false; }
+  if(p==='debut' || p==='accueil'){ state.view = p==='accueil' ? 'accueil' : ''; render(); window.scrollTo(0,0); }
+  else aller(p);
+  return true; };
+window.suivante = ()=>{ const n=epSuivante(); if(n) ouvrir(n); else aller('home'); };
+window.revenirDebut = ()=>{ if(!confirm('Revenir au début ?\n\nRien n\'est effacé. Pour retrouver votre équipe, retapez simplement son numéro.')) return;
+  lsSet('team',0); lsSet('regles_vues',false); lsSet('accueil_vu',false); state.team=0; state.edition=false; state.orgRetour=false; state.view='accueil'; render(); window.scrollTo(0,0); };
+// Le bouton « retour » du téléphone ne fait plus sortir de l'application : il revient à l'écran d'avant.
+function poserRepere(){ try{ history.pushState({pxc:1},''); }catch(e){} }
+window.addEventListener('popstate', ()=>{ retour(); poserRepere(); });
 window.saisirNumero = v=>{ const n=parseInt(v,10); const t=(n>=1&&n<=N_EQUIPES)?n:0; if(t===state.team) return;
   const avant=!!document.getElementById('dejaInscrite'); state.team=t; const apres=!!(t && nomEq(t) && !state.edition);
   if(avant||apres) majZone();                    // on ne redessine que le bas du formulaire : le champ du numéro garde le curseur
@@ -540,7 +572,7 @@ window.saisirNumero = v=>{ const n=parseInt(v,10); const t=(n>=1&&n<=N_EQUIPES)?
 window.recommencerEssai = ()=>{ if(!ESSAI || !confirm('Effacer l\'essai en cours sur ce téléphone ?')) return; Object.keys(localStorage).filter(k=>k.indexOf('pxc_'+EVENT+'_')===0).forEach(k=>localStorage.removeItem(k)); location.href = location.pathname + '?essai'; };
 window.debuter = ()=>{ lsSet('accueil_vu',true); state.view='brief'; render(); window.scrollTo(0,0); };
 window.reglesVues = ()=>{ lsSet('regles_vues',true); state.view='home'; render(); window.scrollTo(0,0); refresh(); };
-window.rejoindre = ()=>{ if(!state.team) return; const eq=equipe(state.team); if(eq){ local.e[state.team]={team:state.team,nom:eq.nom,capitaine:eq.capitaine,updated_at:eq.updated_at||''}; save(); } lsSet('team',state.team); lsSet('brouillon_nom',''); lsSet('brouillon_cap',''); state.view = state.orgRetour ? 'home' : 'regles'; render(); window.scrollTo(0,0); refresh(); };
+window.rejoindre = ()=>{ if(!state.team) return; const eq=equipe(state.team); if(eq){ local.e[state.team]={team:state.team,nom:eq.nom,capitaine:eq.capitaine,updated_at:eq.updated_at||''}; save(); } lsSet('team',state.team); lsSet('brouillon_nom',''); lsSet('brouillon_cap',''); lsSet('regles_vues',true); state.view='home'; render(); window.scrollTo(0,0); refresh(); };   // on revient directement où l'équipe en était (les règles restent rappelées en bas de l'écran)
 window.changerEquipe = ()=>{ if(!confirm('Changer d\'équipe sur ce téléphone ?')) return; lsSet('team',0); lsSet('regles_vues',false); state.team=0; state.edition=false; state.view='brief'; render(); window.scrollTo(0,0); };
 window.entrerOrg = ()=>{ if(codeOrgOk($('#codeOrg').value)){ state.org=true; lsSet('org',true); aller('org'); } else alert('Code incorrect.'); };
 window.quitterOrg = ()=>{ state.org=false; lsSet('org',false); state.orgRetour=false; state.view=''; render(); };
@@ -628,7 +660,7 @@ setInterval(majRebours, 1000);
 setInterval(()=>{ if(state.view==='home') renderDoux(); }, 60000);          // pour faire clignoter la culture d'entreprise le moment venu
 if(Q.has('org')){ if(!tQ) state.team=0; state.view = state.org ? 'org' : 'landing'; }
 else if(!confirmee() && !(tQ>=1)) state.team=0;
-render(); refresh();
+poserRepere(); render(); refresh();
 </script>
 </body>
 </html>
