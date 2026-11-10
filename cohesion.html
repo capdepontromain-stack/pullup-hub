@@ -170,6 +170,7 @@
   nav.bas { position:fixed; left:0; right:0; bottom:0; display:flex; background:rgba(255,255,255,.97); border-top:1px solid var(--trait); z-index:9; padding-bottom:env(safe-area-inset-bottom); box-shadow:0 -4px 16px rgba(11,79,134,.08); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); }
   nav.bas button { flex:1; border:0; background:transparent; padding:13px 4px 14px; font:inherit; font-weight:900; font-size:14.5px; color:var(--gris); position:relative; }
   nav.bas button.on { color:var(--bleu); box-shadow:inset 0 3px 0 var(--bleu); }
+  nav.bas button { white-space:nowrap; } nav.bas.serre button { font-size:13.5px; padding-left:2px; padding-right:2px; } nav.bas.serre .em { display:none; }
   nav.bas button.fl { flex:0 0 auto; padding-left:15px; padding-right:15px; color:var(--marine); background:var(--fond); white-space:nowrap; }
   .pastille { display:inline-block; min-width:20px; padding:1px 6px; border-radius:10px; background:var(--rouge); color:#fff; font-size:12px; margin-left:5px; }
   body.avecBas main { padding-bottom:92px; } body.avecBas footer { padding-bottom:88px; }
@@ -797,9 +798,10 @@ function majBas(){
   bas.style.display = montrer ? 'flex' : 'none'; document.body.classList.toggle('avecBas', !!montrer);
   if(!montrer) return; const n = v==='chat' ? 0 : nonLus();
   let h = prec ? `<button class="fl" onclick="retour()">← Retour</button>` : '';
-  if(onglets) h += `<button class="${v!=='chat'?'on':''}" onclick="aller('home')">🏁 Épreuves</button><button class="${v==='chat'?'on':''}" onclick="aller('chat')">💬 Messages${n?`<span class="pastille">${n}</span>`:''}</button>`;
+  if(onglets) h += `<button class="${v!=='chat'?'on':''}" onclick="aller('home')"><span class="em">🏁 </span>Épreuves</button><button class="${v==='chat'?'on':''}" onclick="aller('chat')"><span class="em">💬 </span>Messages${n?`<span class="pastille">${n}</span>`:''}</button>`;
   else h += `<span style="flex:1"></span>`;
-  if(onglets && v==='ep' && epSuivante()) h += `<button class="fl" onclick="suivante()">Suivante →</button>`;
+  const sv = onglets && v==='ep' && epSuivante(); if(sv) h += `<button class="fl" onclick="suivante()">Suivante →</button>`;
+  bas.classList.toggle('serre', !!(prec && onglets));
   if(bas.innerHTML!==h) bas.innerHTML = h;
 }
 // =============== Espace organisation ===============
