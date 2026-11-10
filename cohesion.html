@@ -1184,7 +1184,7 @@ function vOrg(){
     h += `<div class="kpis entree"><div><b>${inscrites}<small style="font-size:15px;color:var(--gris)">/${N_EQUIPES}</small></b><span>équipes inscrites</span></div><div><b>${c.saisies}</b><span>résultats saisis</span></div><div><b style="font-size:19px;padding-top:5px">${temps().court}</b><span>fin des épreuves</span></div></div>`;
     h += `<div class="aller entree"><input type="number" id="allerEq" inputmode="numeric" pattern="[0-9]*" min="1" max="${N_EQUIPES}" placeholder="N° d'équipe" onkeydown="if(event.key==='Enter')allerEquipe()"><button onclick="allerEquipe()">Voir l'équipe</button></div>`;
     h += `<button class="btn or gros entree" onclick="ouvrirPodium()">🏆 Lancer le podium</button>`;
-    if(c.general){ [c.general,c.prixQuiz,c.ambiance].forEach(t=>t&&chargerPhoto(t));
+    if(c.general){ [c.general,c.prixQuiz].forEach(t=>t&&chargerPhoto(t));
       h += `<h3>Les prix en ce moment</h3>`;
       h += `<div class="prix entree" style="background:linear-gradient(150deg,var(--bleu),var(--marine))" onclick="voirEquipe(${c.general})">${phPrix(c.general,'🏆')}<div><div class="t">Grand prix de la cohésion</div><div class="n">${titreEq(c.general)}</div><div>${nb(c.eq[c.general].total)} points · ${pl(c.eq[c.general].faits,'épreuve')}</div><div style="font-size:13px;opacity:.9">${pourquoi(c.eq[c.general])}</div></div></div>`;
       h += c.prixQuiz ? `<div class="prix entree" style="background:linear-gradient(150deg,var(--orange),var(--corail))" onclick="voirEquipe(${c.prixQuiz})">${phPrix(c.prixQuiz,'🎓')}<div><div class="t">Médaille culture d'entreprise</div><div class="n">${titreEq(c.prixQuiz)}</div><div>${c.eq[c.prixQuiz].quiz} bonnes réponses sur 10${c.departage?' · départagée par la question subsidiaire':''}</div></div></div>` : `<div class="banner">Médaille culture d'entreprise : en attente des premiers résultats.</div>`;
@@ -1192,7 +1192,6 @@ function vOrg(){
         <div style="margin-top:6px">${c.exaequo.map(e=>`<div class="ligneRes"><span><b>${e.t}</b> ${esc(nomEq(e.t))}</span><span class="muted">${e.subsid!=null?'subsidiaire : <b>'+nb(e.subsid)+'</b>'+(state.reponseSubsid!=null?' (écart '+nb(Math.abs(e.subsid-state.reponseSubsid))+')':''):'pas de réponse subsidiaire'}</span></div>`).join('')}</div>
         <label>Bonne réponse à la question subsidiaire</label><div class="row"><input type="number" id="repSubsid" inputmode="decimal" placeholder="Un nombre" value="${state.reponseSubsid??''}"><button class="btn marine" style="margin-top:0;flex:0 0 auto;width:auto;padding:0 18px" onclick="enregistrerReponse()">OK</button></div>
         <p class="muted" style="margin:8px 0 0">La réponse la plus proche gagne. Sans réponse, c'est le total de la matinée qui départage.</p></div>`;
-      if(c.ambiance) h += `<div class="prix entree" style="background:linear-gradient(150deg,#FF5C7A,#D6336C)" onclick="voirEquipe(${c.ambiance})">${phPrix(c.ambiance,'❤️')}<div><div class="t">Trophée coups de cœur et fair-play</div><div class="n">${titreEq(c.ambiance)}</div><div>❤️ ${pl(c.eq[c.ambiance].coeurs,'coup')} de cœur · 👏 ${c.eq[c.ambiance].fairplay} fair-play</div></div></div>`;
     }
     h += `<h3>Classement</h3><div class="card" style="padding:8px 8px 4px"><table><thead><tr><th>#</th><th style="text-align:left">Équipe et détail des points</th><th>Total</th></tr></thead><tbody>`;
     c.ordre.forEach((t,i)=>{ const e=c.eq[t]; const med = e.total>0 ? (['🥇','🥈','🥉'][i]||i+1) : i+1;
@@ -1206,7 +1205,7 @@ function vOrg(){
       <li><span class="num" style="background:var(--rouge)">3</span><div><b>Téléphone perdu ou batterie vide :</b> onglet Épreuves, touchez le numéro de l'équipe sous « Pas encore passées » et saisissez à sa place.</div></li>
       <li><span class="num" style="background:var(--vert)">4</span><div><b>Annonces :</b> onglet Messages, un geste suffit. Le message s'affiche chez toutes les équipes et leur téléphone vibre.</div></li>
       <li><span class="num" style="background:var(--marine)">📸</span><div><b>Photos et vidéos :</b> onglet Photos, notez de 0 à 3 en regardant WhatsApp. Sans note, chaque envoi vaut 2 points.</div></li>
-      <li><span class="num" style="background:var(--jaune);color:var(--nuit)">🏆</span><div><b>Au podium :</b> « Lancer le podium », puis « Révéler » pour chaque distinction (un compte à rebours 3, 2, 1 fait monter le suspense) : médaille culture d'entreprise, trophée coups de cœur et fair-play, puis 3e, 2e et grand prix.</div></li></ul></div></details>
+      <li><span class="num" style="background:var(--jaune);color:var(--nuit)">🏆</span><div><b>Au podium :</b> « Lancer le podium », puis « Révéler » pour chacune des deux distinctions (un compte à rebours 3, 2, 1 fait monter le suspense) : d'abord la médaille culture d'entreprise, puis le grand prix de la cohésion. Sous chaque équipe, le débrief à lire au micro.</div></li></ul></div></details>
     <details class="regl" id="dBareme"><summary>Le barème des points</summary><div><ul class="regles">
       <li><span class="num" style="background:var(--rouge)">⚔</span><div><b>Duels</b> (catapulte, Archery Tag, tir à la corde) : victoire 10, égalité 6, défaite 3. Les deux équipes sont notées d'un coup.</div></li>
       <li><span class="num" style="background:var(--bleu)">⏱</span><div><b>Au temps et aux points</b> (roues, parcours, clou, lettres, cibles, haches) : l'animateur tape le temps ou le total, l'appli classe toutes les équipes passées : 10 points pour la 1re place, puis un peu moins à chaque place, jusqu'à 1 point pour la dernière (ex æquo : mêmes points). Le classement se recalcule à chaque nouveau résultat.</div></li>
@@ -1320,9 +1319,6 @@ const debriefHTML = (t, focus, place) => { const d=debrief(t, focus, place);
 function etapesPodium(){
   const c=calcul(); const st=[]; const top=c.ordre.filter(t=>c.eq[t].total>0);
   if(c.prixQuiz) st.push({t:c.prixQuiz, focus:'culture', titre:'Médaille culture d\'entreprise', ico:'🎓', sous:e=>`${e.quiz} bonnes réponses sur 10${c.departage?' · départagée à la question subsidiaire':''}`});
-  if(c.ambiance) st.push({t:c.ambiance, focus:'coeur', titre:'Trophée coups de cœur et fair-play', ico:'❤️', sous:e=>`${pl(e.coeurs,'coup')} de cœur · ${e.fairplay} fair-play`});
-  if(top[2]) st.push({t:top[2], focus:'place', place:3, titre:'3e place', ico:'🥉', sous:e=>`${nb(e.total)} points · ${pl(e.faits,'épreuve')}`});
-  if(top[1]) st.push({t:top[1], focus:'place', place:2, titre:'2e place', ico:'🥈', sous:e=>`${nb(e.total)} points · ${pl(e.faits,'épreuve')}`});
   if(top[0]) st.push({t:top[0], focus:'place', place:1, titre:'Grand prix de la cohésion', ico:'🏆', sous:e=>`${nb(e.total)} points · ${pl(e.faits,'épreuve')}`, final:true});
   return {st, c};
 }
@@ -1557,7 +1553,6 @@ window.partagerClassement = async ()=>{
   let txt = `Journée de cohésion Proxim'Services · classement à ${heure(Date.now())}\n\n`;
   top.slice(0,10).forEach((t,i)=>{ txt += `${['🥇','🥈','🥉'][i]||(i+1)+'.'} Équipe ${t} ${nomEq(t)} : ${nb(c.eq[t].total)} pts (${c.eq[t].faits} épreuves)\n`; });
   if(c.prixQuiz) txt += `\n🎓 Médaille culture d'entreprise : équipe ${c.prixQuiz} ${nomEq(c.prixQuiz)}`;
-  if(c.ambiance) txt += `\n❤️ Trophée coups de cœur et fair-play : équipe ${c.ambiance} ${nomEq(c.ambiance)}`;
   try{ if(navigator.share){ await navigator.share({text:txt}); return; } }catch(e){ return; }
   try{ await navigator.clipboard.writeText(txt); dire('Classement copié : collez-le dans WhatsApp','ok'); }catch(e){ prompt('Copiez le classement :', txt); }
 };
