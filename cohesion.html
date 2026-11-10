@@ -204,7 +204,8 @@ let state = {
   passages:{}, equipes:{}, photos:{}, dbOk:null, err:'', messages:[], chatOk:null, chatOuvert:true,
   saisie:{ res:'', bonus:{a:false,c:false,f:false} }, bravo:null, galerie:false, edition:false
 };
-if(state.team) lsSet('team', state.team);
+if(tQ>=1 && tQ<=N_EQUIPES) lsSet('team', tQ);          // ancien lien direct par équipe : toujours accepté
+const confirmee = () => !!state.team && lsGet('team',0)===state.team;
 let local = lsGet('local', { p:{}, e:{}, m:{} });      // copies locales : passages, équipes, messages en cours d'envoi
 if(!local.m) local.m={};
 let queue = lsGet('queue', {});                   // envois en attente
@@ -312,8 +313,8 @@ const titreEq = t => `Équipe ${t}` + (nomEq(t) ? ' · '+esc(nomEq(t)) : '');
 
 // =============== Rendu ===============
 function vueParDefaut(){
-  if(!state.team) return state.org ? 'org' : 'landing';
-  return equipe(state.team) && equipe(state.team).nom ? 'home' : 'brief';
+  if(state.org && !state.team) return 'org';
+  return (confirmee() || state.orgRetour) && equipe(state.team) && equipe(state.team).nom ? 'home' : 'brief';
 }
 function renderDoux(){
   const a=document.activeElement;
@@ -321,14 +322,15 @@ function renderDoux(){
   if(['saisie','bravo','landing'].includes(state.view)) return;
   if(state.view==='chat' || (state.view==='org' && state.orgTab==='messages')){ majFil(); majBas(); return; }
   if(state.view==='brief'){                                              // un autre téléphone de l'équipe a déjà inscrit l'équipe
-    if(!state.edition && equipe(state.team) && equipe(state.team).nom){ state.view='home'; render(); }
+    if(!state.edition && (confirmee()||state.orgRetour) && equipe(state.team) && equipe(state.team).nom){ state.view='home'; render(); }
+    else if(!state.team || (!state.edition && !confirmee())) majChoix();          // la liste des équipes déjà inscrites se met à jour
     return;
   }
   render();
 }
 function render(){
   if(!state.view) state.view = vueParDefaut();
-  if(state.view==='home' && !(equipe(state.team) && equipe(state.team).nom)) state.view='brief';
+  if(state.view==='home' && !(state.team && equipe(state.team) && equipe(state.team).nom)) state.view='brief';
   let h='';
   if(ESSAI) h += `<div class="banner"><b>MODE ESSAI.</b> Rien de ce qui est saisi ici ne compte pour la journée.</div>`;
   if(state.dbOk===false) h += `<div class="banner err"><b>Pas de connexion pour l'instant.</b> Vos résultats sont gardés sur ce téléphone et seront envoyés dès que possible. Continuez à jouer.</div>`;
@@ -339,17 +341,21 @@ function render(){
   if(state.view==='chat' || (state.view==='org' && state.orgTab==='messages')) majFil(true);
 }
 function vLanding(){
-  return `<div class="card"><h2>Bienvenue !</h2><p>Scannez le QR code de votre équipe, ou choisissez votre numéro d'équipe (celui de votre bandeau).</p>
-    <label>Mon équipe</label><select id="selT"><option value="0">Choisir…</option>${Array.from({length:N_EQUIPES},(_,i)=>`<option value="${i+1}">Équipe ${i+1} · bandeau ${couleur(i+1).toLowerCase()}</option>`).join('')}</select>
-    <button class="btn" onclick="choisirEquipe()">Continuer</button></div>${blocOrg()}`;
+  return `<div class="card"><h2>Espace organisation</h2><p class="muted">Réservé à l'équipe Pull Up.</p></div>${blocOrg()}<button class="lnk" onclick="state.view='';render()">← Retour</button>`;
 }
 function blocOrg(){
   return state.org ? `<button class="btn marine" onclick="aller('org')">Espace organisation</button>`
    : `<div class="card"><p class="muted">Organisation Pull Up</p><input type="password" id="codeOrg" autocomplete="off" autocapitalize="none" placeholder="Code organisation"><button class="btn clair" onclick="entrerOrg()">Entrer</button></div>`;
 }
+function optionsNumeros(){
+  return `<option value="0">Choisir…</option>` + Array.from({length:N_EQUIPES},(_,i)=>{ const t=i+1; return `<option value="${t}" ${state.team===t?'selected':''}>Équipe ${t} · bandeau ${couleur(t).toLowerCase()}${nomEq(t)?' · déjà inscrite':''}</option>`; }).join('');
+}
+function majChoix(){ const el=document.getElementById('selNum'); if(el && document.activeElement!==el){ const v=el.value; el.innerHTML=optionsNumeros(); el.value=v; }
+  const t=state.team; if(t && !state.edition && nomEq(t) && !document.getElementById('dejaInscrite')){ garderBrouillon(); render(); } }
 function vBrief(){
-  const t=state.team; const p=state.photos[t]||okPhoto(lsGet('photo_'+t,''));
-  return `<div class="card"><h2>Équipe ${t}, c'est parti !</h2><p class="muted">Bandeau ${couleur(t).toLowerCase()}</p>
+  const t=state.team; const p = t ? (state.photos[t]||okPhoto(lsGet('photo_'+t,''))) : ''; const e = t ? equipe(t) : null;
+  const verrou = confirmee() || state.orgRetour;            // le numéro ne se change plus ici une fois l'équipe confirmée
+  let h = `<div class="card"><h2>${t&&verrou?`Équipe ${t}, c'est parti !`:'Bienvenue à la journée de cohésion !'}</h2>
     <ul class="regles">
       <li><span class="num" style="background:var(--bleu)">1</span><div><b>Faites un maximum d'épreuves</b> pour gagner un maximum de points. Il y en a 14, dans l'ordre que vous voulez.</div></li>
       <li><span class="num" style="background:var(--orange)">2</span><div><b>N'oubliez pas la culture d'entreprise :</b> elle rapporte le double de points.</div></li>
@@ -357,7 +363,18 @@ function vBrief(){
       <li><span class="num" style="background:var(--vert)">4</span><div><b>À la fin de chaque épreuve,</b> tendez ce téléphone à l'animateur : c'est lui qui entre votre résultat.</div></li>
       <li><span class="num" style="background:var(--jaune);color:var(--marine)">+</span><div><b>Bonus :</b> les animateurs récompensent l'ambiance, la cohésion et le fair-play. Les points restent secrets jusqu'au podium.</div></li>
     </ul></div>
-    <div class="card"><h2>Votre équipe</h2>
+    <div class="card"><h2>Votre équipe</h2>`;
+  if(!verrou || state.edition && !t) h += `<label>Numéro de votre équipe (écrit sur votre bandeau)</label><select id="selNum" onchange="choisirNumero(this.value)">${optionsNumeros()}</select>`;
+  else h += `<p class="muted">Équipe ${t} · bandeau ${couleur(t).toLowerCase()}</p>`;
+  if(!t) h += `<p class="muted" style="margin-top:12px">Choisissez d'abord votre numéro d'équipe : vous donnerez ensuite un nom à votre équipe.</p>`;
+  else if(e && e.nom && !state.edition){
+    chargerPhoto(t);
+    h += `<div id="dejaInscrite" class="banner bleu" style="margin-top:14px"><b>L'équipe ${t} est déjà inscrite :</b><br><span style="font-size:19px;font-weight:800">${esc(e.nom)}</span><br>Capitaine : ${esc(e.capitaine||'')}</div>
+      ${p?`<div class="hero" style="background-image:url('${p}')"></div>`:''}
+      <button class="btn orange" onclick="rejoindre()">Oui, c'est mon équipe</button>
+      <p class="muted" style="margin-top:12px">Ce n'est pas vous ? Vérifiez le numéro de votre bandeau et changez-le ci-dessus. Si une autre équipe a pris votre numéro par erreur, demandez à un animateur.</p>
+      <button class="lnk" onclick="modifierEquipe()">Corriger cette inscription (animateur)</button>`;
+  } else h += `
       <label>Nom de l'équipe</label><input type="text" id="fNom" maxlength="28" placeholder="Trouvez un nom qui claque" value="${esc(lsGet('brouillon_nom',''))}">
       <label>Prénom du capitaine</label><input type="text" id="fCap" maxlength="24" placeholder="Capitaine" value="${esc(lsGet('brouillon_cap',''))}">
       <label>Photo de toute l'équipe</label>
@@ -365,8 +382,11 @@ function vBrief(){
       <input type="file" id="fPhoto" accept="image/*" capture="environment" style="display:none" onchange="photoChoisie(this)">
       <button class="btn clair" onclick="garderBrouillon();document.getElementById('fPhoto').click()">${p?'Reprendre la photo':'Prendre la photo d\'équipe'}</button>
       <button class="btn orange" onclick="inscrire()">Valider et voir les épreuves</button>
-      ${p?'':'<button class="lnk" onclick="inscrire(true)">Continuer sans photo</button>'}
-    </div>` + (state.orgRetour?`<button class="btn marine" onclick="aller('org')">Retour à l'organisation</button>`:'');
+      ${p?'':'<button class="lnk" onclick="inscrire(true)">Continuer sans photo</button>'}`;
+  h += `</div>`;
+  if(state.orgRetour) h += `<button class="btn marine" onclick="aller('org')">Retour à l'organisation</button>`;
+  else if(!verrou) h += `<p style="text-align:center"><button class="lnk" onclick="aller('landing')">Organisation</button></p>`;
+  return h;
 }
 const fait = (n,t) => { const r=passages()[kp(n,t)]; return !!(r && r.resultat && r.resultat!=='X'); };
 function carteEp(e){
@@ -396,7 +416,7 @@ function vHome(){
   else h += `<div class="bravo"><div class="p">14/14</div><p style="margin-top:8px"><b>Toutes les épreuves sont faites. Bravo !</b></p></div>`;
   if(faites.length) h += `<h3 style="color:var(--rouge)">Déjà faites (${faites.length})</h3>` + faites.map(x=>`<button class="faite" onclick="ouvrir(${x.n})"><i>✓</i>${x.n}. ${x.nom}<span>FAIT</span></button>`).join('');
   h += `<div class="card" style="margin-top:14px"><h3 style="margin-top:0">Rappel des règles</h3><p class="muted">Un maximum d'épreuves pour un maximum de points. Chaque épreuve une seule fois. En duel, trouvez une équipe adverse. À la fin de l'épreuve, tendez le téléphone à l'animateur. Plusieurs téléphones de l'équipe peuvent scanner le même QR code.</p>
-    <button class="lnk" onclick="modifierEquipe()">Modifier le nom ou la photo (animateur)</button></div>`;
+    <button class="lnk" onclick="modifierEquipe()">Modifier le nom ou la photo (animateur)</button><br><button class="lnk" onclick="changerEquipe()">Ce n'est pas mon équipe : changer de numéro</button></div>`;
   return h;
 }
 function vEpreuve(){
@@ -494,7 +514,11 @@ function vOrg(){
 // =============== Actions ===============
 function aller(v){ state.view=v; if(v==='org'){ state.orgRetour=false; } render(); if(v!=='chat') window.scrollTo(0,0); if(v==='org'||v==='home') refresh(); if(v==='chat') lireMessages(); }
 window.aller=aller;
-window.choisirEquipe = ()=>{ const t=+$('#selT').value; if(!t){ alert('Choisissez votre équipe.'); return; } state.team=t; lsSet('team',t); state.view=''; render(); refresh(); };
+window.choisirNumero = v=>{ garderBrouillon(); const anc=state.team, t=(+v>=1&&+v<=N_EQUIPES)?+v:0;
+  if(anc && t && t!==anc){ const loc=okPhoto(lsGet('photo_'+anc,'')); if(loc){ lsSet('photo_'+t,loc); state.photos[t]=loc; } lsSet('photo_'+anc,''); delete state.photos[anc]; }   // la photo déjà prise suit le nouveau numéro
+  state.team=t; render(); if(t) refresh(); };
+window.rejoindre = ()=>{ if(!state.team) return; lsSet('team',state.team); lsSet('brouillon_nom',''); lsSet('brouillon_cap',''); state.view='home'; render(); window.scrollTo(0,0); refresh(); };
+window.changerEquipe = ()=>{ if(!confirm('Changer d\'équipe sur ce téléphone ?')) return; lsSet('team',0); state.team=0; state.edition=false; state.view='brief'; render(); window.scrollTo(0,0); };
 window.entrerOrg = ()=>{ if(codeOrgOk($('#codeOrg').value)){ state.org=true; lsSet('org',true); aller('org'); } else alert('Code incorrect.'); };
 window.quitterOrg = ()=>{ state.org=false; lsSet('org',false); state.orgRetour=false; state.view=''; render(); };
 window.orgTab = k=>{ state.orgTab=k; render(); if(k==='messages') lireMessages(); };
@@ -527,14 +551,20 @@ window.photoChoisie = inp=>{
     state.photos[state.team]=data; lsSet('photo_'+state.team,data); render(); };
   im.onerror=()=>alert('Photo illisible, réessayez.'); im.src=url;
 };
-window.inscrire = sansPhoto=>{
-  const nom=($('#fNom').value||'').trim(), cap=($('#fCap').value||'').trim(); const t=state.team; const photo=state.photos[t]||okPhoto(lsGet('photo_'+t,''));
+window.inscrire = async sansPhoto=>{
+  const t=state.team; if(!t){ alert('Choisissez le numéro de votre équipe.'); return; }
+  const nom=($('#fNom').value||'').trim(), cap=($('#fCap').value||'').trim(); const photo=state.photos[t]||okPhoto(lsGet('photo_'+t,''));
   if(!nom){ alert('Donnez un nom à votre équipe.'); return; }
   if(!cap){ alert('Indiquez le prénom du capitaine.'); return; }
   if(!photo && !sansPhoto){ alert('Prenez la photo de toute l\'équipe (ou touchez « Continuer sans photo »).'); return; }
+  if(!state.edition){            // un autre téléphone vient peut-être d'inscrire ce numéro : on vérifie avant d'écraser
+    garderBrouillon();
+    try{ const r=await dbGet('tb_equipes',`team=eq.${t}&select=team,nom,capitaine,updated_at`); if(r[0] && r[0].nom){ state.equipes[t]=r[0]; render(); alert(`L'équipe ${t} vient d'être inscrite sous le nom « ${r[0].nom} ». Si c'est bien votre équipe, touchez « Oui, c'est mon équipe ».`); return; } }catch(e){}
+  }
   const row={ event:EVENT, team:t, nom, capitaine:cap, code:CLE, updated_at:new Date().toISOString() };
   local.e[t]={team:t,nom,capitaine:cap,updated_at:row.updated_at};
   pousser('tb_equipes','event,team','e-'+t, photo ? {...row, photo} : row);
+  lsSet('team',t); lsSet('brouillon_nom',''); lsSet('brouillon_cap','');
   state.edition=false; state.view='home'; render(); window.scrollTo(0,0);
 };
 window.modifierEquipe = ()=>{
@@ -572,6 +602,7 @@ setInterval(()=>{ if(state.view==='chat' || (state.view==='org' && state.orgTab=
 setInterval(majRebours, 1000);
 setInterval(()=>{ if(state.view==='home') renderDoux(); }, 60000);          // pour faire clignoter la culture d'entreprise le moment venu
 if(Q.has('org')){ if(!tQ) state.team=0; state.view = state.org ? 'org' : 'landing'; }
+else if(!confirmee() && !(tQ>=1)) state.team=0;
 render(); refresh();
 </script>
 </body>
