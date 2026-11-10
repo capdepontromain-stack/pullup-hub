@@ -355,6 +355,65 @@
   main.arrivee .entree { animation:entree .45s cubic-bezier(.2,.8,.2,1) both; }
   main.arrivee .entree:nth-child(2) { animation-delay:.04s; } main.arrivee .entree:nth-child(3) { animation-delay:.08s; } main.arrivee .entree:nth-child(4) { animation-delay:.12s; } main.arrivee .entree:nth-child(5) { animation-delay:.16s; } main.arrivee .entree:nth-child(n+6) { animation-delay:.2s; }
   @keyframes entree { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+  /* ---------- Finitions v3 (11/11) : relief, reflets, tampons, podium ---------- */
+  html { touch-action:manipulation; }
+  button, .btn, .lnk { -webkit-user-select:none; user-select:none; }
+  .card { border-radius:22px; box-shadow:0 1px 2px rgba(13,104,151,.06), 0 12px 30px rgba(13,104,151,.10); }
+  .btn { position:relative; overflow:hidden; text-decoration:none; text-align:center; transition:transform .12s, box-shadow .12s, filter .2s; }
+  .btn:active { transform:translateY(3px) scale(.985); box-shadow:0 1px 0 rgba(0,0,0,.12); }
+  .btn.orange { box-shadow:0 5px 0 #B9480A, 0 12px 24px rgba(242,107,18,.30); }
+  .btn.vert { box-shadow:0 5px 0 #157A42, 0 12px 24px rgba(34,164,93,.30); }
+  .btn.or { box-shadow:0 5px 0 #B98C00, 0 12px 24px rgba(249,203,25,.35); }
+  .btn.gros::after { content:''; position:absolute; top:0; bottom:0; width:38%; left:-60%; background:linear-gradient(100deg,transparent,rgba(255,255,255,.5),transparent); transform:skewX(-20deg); animation:reflet 3.8s ease-in-out infinite; pointer-events:none; }
+  .btn.clair::after, .btn:disabled::after { display:none; }
+  @keyframes reflet { 0%,58% { left:-60%; } 88%,100% { left:135%; } }
+  .btn.wa { background:linear-gradient(180deg,#34D167,#1FAF53); box-shadow:0 5px 0 #138A3D, 0 12px 24px rgba(31,175,83,.32); }
+  .btn.wa::after { content:''; position:absolute; top:0; bottom:0; width:38%; left:-60%; background:linear-gradient(100deg,transparent,rgba(255,255,255,.5),transparent); transform:skewX(-20deg); animation:reflet 3.8s ease-in-out infinite; pointer-events:none; }
+  main.arrivee .entree { animation:entree .5s cubic-bezier(.16,1,.3,1) both; }
+  @keyframes entree { from { opacity:0; transform:translateY(18px) scale(.985); } to { opacity:1; transform:none; } }
+  /* accueil */
+  .splash h1 { background:linear-gradient(90deg,var(--marine),var(--bleu) 35%,var(--orange) 70%,var(--rouge)); background-size:220% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent; animation:degradeTexte 5s ease-in-out infinite alternate; padding:2px 4px 6px; }
+  @keyframes degradeTexte { to { background-position:100% 0; } }
+  .splash .pt { position:absolute; width:10px; height:10px; border-radius:50%; bottom:-20px; z-index:0; opacity:.55; animation:monte linear infinite; }
+  @keyframes monte { from { transform:translateY(0) scale(1); opacity:0; } 12% { opacity:.6; } to { transform:translateY(-110vh) scale(.6); opacity:0; } }
+  .compteurEq { display:inline-flex; align-items:center; gap:7px; background:#fff; border-radius:20px; padding:6px 13px; font-weight:900; font-size:14px; color:var(--marine); box-shadow:0 4px 14px rgba(13,104,151,.14); margin:2px 0 10px; }
+  .compteurEq i { width:9px; height:9px; border-radius:50%; background:var(--vert); animation:pouls 1.4s ease-in-out infinite; }
+  .splash .btn.respire { animation:respire 2.2s ease-in-out infinite; }
+  /* cartes d'épreuve */
+  .ep { transition:transform .15s; } .ep:active { transform:scale(.975); }
+  .ep .go b { display:inline-block; animation:pousse 1.8s ease-in-out infinite; }
+  @keyframes pousse { 50% { transform:translateX(4px); } }
+  .ep .img::before { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent 60%,rgba(0,0,0,.18)); }
+  /* passeport : 13 tampons + défis */
+  .passeport { display:grid; grid-template-columns:repeat(7,1fr); gap:8px 7px; margin-top:14px; }
+  .passeport button { aspect-ratio:1; border-radius:50%; border:2px dashed #B8CBDB; background:#fff; font-family:var(--titre); font-weight:800; font-size:15px; color:#8DA2B5; padding:0; display:flex; align-items:center; justify-content:center; position:relative; line-height:1; }
+  .passeport button.ok { border:0; background:var(--c); color:var(--t,#fff); box-shadow:0 3px 8px rgba(0,0,0,.18), inset 0 -3px 0 rgba(0,0,0,.12); transform:rotate(-8deg); }
+  .passeport button.ok::after { content:'✓'; position:absolute; right:-4px; bottom:-4px; width:17px; height:17px; border-radius:50%; background:#fff; color:var(--vert); font:900 11px/17px var(--corps); text-align:center; box-shadow:0 1px 3px rgba(0,0,0,.25); transform:rotate(8deg); }
+  .passeport button.prochain { border:2px solid var(--orange); color:var(--orange); animation:pouls 1.6s ease-in-out infinite; }
+  .passeport button.plus { border-style:solid; border-color:var(--nuit); color:var(--nuit); font-size:12px; }
+  .passeport button.plus.ok { background:var(--nuit); color:#fff; font-size:12px; }
+  .passeport button.nouveau { animation:coupTampon 1s cubic-bezier(.2,1.6,.4,1) .35s both; }
+  @keyframes coupTampon { 0% { transform:scale(2.6) rotate(-30deg); opacity:0; } 60% { transform:scale(.9) rotate(-4deg); opacity:1; } 100% { transform:rotate(-8deg); } }
+  .passeport.sombre button { background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.35); color:rgba(255,255,255,.55); }
+  .passeport.sombre button.ok { border:0; background:var(--c); color:var(--t,#fff); }
+  .legendeP { font-size:12.5px; color:var(--gris); font-weight:700; margin-top:8px; text-align:center; }
+  /* compte à rebours : l'avancée de la matinée dans la pastille */
+  .rebours { background:linear-gradient(90deg,#CFE6F3 var(--p,0%),#E6F1F8 var(--p,0%)); }
+  /* WhatsApp */
+  .etapeWA.waOk .n { background:var(--vert); } .etapeWA.waOk b { color:var(--vertf); }
+  .waAide { background:#E9F9EF; border:1px solid #A6DDB9; border-radius:14px; padding:10px 12px; font-size:14px; color:#145C33; margin-top:10px; text-align:left; }
+  /* saisie animateur */
+  .anim .btn.orange:not(.pret) { filter:saturate(.3) brightness(.92); }
+  .anim .btn.orange.pret { filter:none; }
+  .anim .codeL { display:flex; align-items:center; gap:8px; }
+  .anim #codeA { font-size:22px; letter-spacing:2px; text-align:center; }
+  .anim .etapeS { display:inline-flex; width:22px; height:22px; border-radius:50%; background:var(--jaune); color:var(--nuit); font-size:13px; align-items:center; justify-content:center; font-weight:900; margin-right:6px; }
+  /* podium */
+  .podium .decompte { font-family:var(--titre); font-size:150px; font-weight:800; color:var(--jaune); line-height:1; margin:26px 0; text-shadow:0 0 40px rgba(249,203,25,.6); animation:decompte .9s ease-out both; }
+  @keyframes decompte { from { transform:scale(2.4); opacity:0; } 30% { opacity:1; } to { transform:scale(.9); opacity:.9; } }
+  .podium .scene { position:relative; width:230px; height:230px; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; }
+  .podium .rayons { position:absolute; inset:-60px; border-radius:50%; background:repeating-conic-gradient(rgba(249,203,25,.22) 0 10deg, transparent 10deg 20deg); animation:tourne 18s linear infinite; -webkit-mask:radial-gradient(circle, #000 30%, transparent 70%); mask:radial-gradient(circle, #000 30%, transparent 70%); }
+  .podium .scene .ph { position:relative; margin:0; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } .vedette.clignote { outline:5px solid var(--jaune); } }
 </style>
 </head>
@@ -420,9 +479,16 @@ const DEFIS = [
  {d:6, nom:'Jouer avec les perspectives', ico:'🔭', type:'photo', desc:"Une photo d'illusion : un géant, une équipe tenue dans une main…"}
 ];
 const kd = (t,d)=>`${t}-${d}`;
-const CONTACT_WA = (titre)=>`<div class="etapeWA"><span class="n">1</span><div><b>${titre||'Enregistrez l\'organisation dans vos contacts'}</b><br><span class="muted">Romain (Journée de cohésion) · ${TEL_ORGA}</span></div></div>
-  <a class="btn clair" style="text-decoration:none;text-align:center;margin-top:8px" href="proxim/organisation.vcf">📇 Enregistrer le contact</a>
-  <a class="lnk" style="display:block;text-align:center" href="${lienWA('Bonjour Romain ! Ici l\'équipe '+state.team+' « '+nomEq(state.team)+' » 👋')}" target="_blank" rel="noopener">ou ouvrir directement la conversation WhatsApp</a>`;
+// WhatsApp en un geste : on dit bonjour une fois (lien direct, pas besoin d'enregistrer le contact) ;
+// la conversation se place alors en haut de WhatsApp et on la retrouve tout de suite au moment d'envoyer les photos.
+const waFait = () => !!lsGet('wa_ok',false);
+const lienBonjour = () => lienWA('Bonjour ! Ici l\'équipe '+state.team+(nomEq(state.team)?' « '+nomEq(state.team)+' »':'')+' 👋 On est prêts pour les défis photo et vidéo !');
+const CONTACT_WA = (titre)=> waFait()
+  ? `<div class="etapeWA waOk"><span class="n">✓</span><div><b>Conversation WhatsApp ouverte avec l'organisation</b><br><span class="muted">Elle est en haut de votre liste WhatsApp (${TEL_ORGA}).</span> <a class="lnk" style="padding:2px 0;font-size:13px" href="${lienBonjour()}" target="_blank" rel="noopener">La rouvrir</a></div></div>`
+  : `<div class="etapeWA"><span class="n">1</span><div><b>${titre||'Dites bonjour à l\'organisation sur WhatsApp'}</b><br><span class="muted">Une seule fois : touchez le bouton vert, puis « Envoyer » dans WhatsApp, et revenez ici. Pas besoin d'enregistrer le numéro.</span></div></div>
+  <a class="btn wa" href="${lienBonjour()}" target="_blank" rel="noopener" onclick="waBonjour()">💬 Dire bonjour sur WhatsApp</a>
+  <a class="lnk" style="display:block;text-align:center" href="proxim/organisation.vcf" onclick="waBonjour()">ou enregistrer le contact de l'organisation</a>`;
+window.waBonjour = ()=>{ lsSet('wa_ok',true); setTimeout(()=>{ if(['envoiPhoto','ep','defi'].includes(state.view)) render(true); }, 1200); };
 const lienWA = txt => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(txt)}`;
 const img = n => n===DEFI_EP ? 'proxim/defis.jpg?v=4' : `proxim/ep${String(n).padStart(2,'0')}.jpg?v=4`;
 const vignette = n => n===CULTURE ? 'proxim/ep12-carre.jpg?v=3' : img(n);
@@ -518,7 +584,8 @@ const tQ = +Q.get('e');
 function orgMemorise(){ try{ return localStorage.getItem('pxc_org')==='1'; }catch(e){ return false; } }
 let state = {
   team: (tQ>=1 && tQ<=N_EQUIPES) ? tQ : lsGet('team',0),
-  org: Q.has('org') && orgMemorise(),                  // l'organisation ne s'ouvre que par son lien (?org=1) ou par « Organisation » : le QR des équipes ouvre toujours le jeu view:'', ep:0, orgTab:'direct', orgRetour:false, apresSaisie:'',
+  org: Q.has('org') && orgMemorise(),                  // l'organisation ne s'ouvre que par son lien (?org=1) ou par « Organisation » : le QR des équipes ouvre toujours le jeu
+  view:'', ep:0, orgTab:'direct', orgRetour:false, apresSaisie:'',
   passages:{}, equipes:{}, photos:{}, defis:{}, defi:null, filtrePhotos:'anoter', dbOk:null, err:'', messages:[], chatOk:null, chatOuvert:true, majA:0, vus:{},
   saisie:null, bravo:null, galerie:false, edition:false, podium:{i:0, montre:false}, vientDeFaire:0
 };
@@ -680,7 +747,8 @@ function majEnTete(){ const el=document.querySelector('header.top .titre'); if(!
   const montrer = t && n && !(state.org && !state.orgRetour) && !['accueil','landing','org','podium'].includes(state.view);
   const txt = montrer ? `Équipe ${t} · ${n}` : 'Journée de cohésion · 14.11'; if(el.textContent!==txt) el.textContent=txt; el.classList.toggle('eq', !!montrer); }
 function majRebours(){ majEnTete();
-  const el=document.getElementById('rebours'); if(el){ const t=temps(); el.textContent=t.txt; el.className='rebours'+(t.etat==='urgent'?' urgent':'')+(t.etat==='fini'?' fini':''); }
+  const el=document.getElementById('rebours'); if(el){ const t=temps(); el.textContent=t.txt; el.className='rebours'+(t.etat==='urgent'?' urgent':'')+(t.etat==='fini'?' fini':'');
+    const p = t.etat==='encours' ? Math.max(0,Math.min(100,100*(Date.now()-DEBUT_EPREUVES)/(FIN_EPREUVES-DEBUT_EPREUVES))) : 0; el.style.setProperty('--p', p.toFixed(1)+'%'); }
   const m=document.getElementById('majHeure'); if(m) m.textContent=depuis();
 }
 function depuis(){ if(!state.majA) return 'connexion…'; const s=Math.round((Date.now()-state.majA)/1000); return s<5 ? 'à jour à l\'instant' : (s<60 ? 'à jour il y a '+s+' s' : 'à jour à '+heure(state.majA)); }
@@ -703,7 +771,7 @@ function renderDoux(){
   const a=document.activeElement;
   if(a && (a.tagName==='INPUT'||a.tagName==='SELECT'||a.tagName==='TEXTAREA')) { majBas(); return; }
   if(['saisie','bravo','landing','regles','podium','defi','envoiPhoto','passage'].includes(state.view)) return;
-  if(state.view==='accueil'){ if(confirmee() && equipe(state.team) && equipe(state.team).nom){ state.view=''; render(); } return; }
+  if(state.view==='accueil'){ if(confirmee() && equipe(state.team) && equipe(state.team).nom){ state.view=''; render(); return; } const z=document.getElementById('nbInscrites'); if(z){ const h=texteInscrites(); if(z.innerHTML!==h) z.innerHTML=h; } return; }
   if(state.view==='chat' || (state.view==='org' && state.orgTab==='messages')){ majFil(); majBas(); return; }
   if(state.view==='brief'){                                              // un autre téléphone de l'équipe a déjà inscrit l'équipe
     if(!state.edition && (confirmee()||state.orgRetour) && equipe(state.team) && equipe(state.team).nom){ state.view=''; render(); }
@@ -712,6 +780,8 @@ function renderDoux(){
   }
   render(true);
 }
+// Typographie française : jamais de « ! », « ? » ou « : » seul en début de ligne (espace insécable)
+function espacesFines(root){ try{ const w=document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n; while((n=w.nextNode())){ const v=n.nodeValue; if(/ [!?:;»]|« /.test(v)) n.nodeValue=v.replace(/ ([!?:;»])/g,' $1').replace(/« /g,'« '); } }catch(e){} }
 let dernierHTML='', animT=0;
 function render(doux){
   if(!state.view) state.view = vueParDefaut();
@@ -722,14 +792,14 @@ function render(doux){
     : `<div class="banner"><b>Période de test</b> jusqu'à samedi 9h40 : à 9h40, tous les téléphones repartent à zéro pour la vraie journée. <button class="lnk" onclick="recommencerEssai()">Remettre ce téléphone à zéro</button></div>`;
   const nq=enAttente(), nr=refuses();
   if(state.dbOk===false && state.view!=='podium') h += `<div class="banner err"><b>📶 Pas de réseau pour l'instant.</b> ${nq?pl(nq,'envoi')+' en attente : ils partiront tout seuls dès que le réseau revient.':'Tout est gardé sur ce téléphone.'} Continuez à jouer.</div>`;
-  else if(nq && nr<nq && !['podium','bravo'].includes(state.view)) h += `<div class="banner">Envoi en cours (${nq})…</div>`;
+  else if(nq && nr<nq && !['podium','bravo'].includes(state.view)) h += `<div class="banner" id="banEnvoi">Envoi en cours (${nq})…</div>`;
   if(nr) h += `<div class="banner err"><b>${pl(nr,'résultat')} refusé${nr>1?'s':''} par la base.</b> Montrez ce téléphone à l'organisation.</div>`;
   if(AVANT_JOUR_J && !state.org && !['landing','org','podium'].includes(state.view)){ $('#main').innerHTML = vAvant(); majBas(); majRebours(); return; }
   h += ({accueil:vAccueil, regles:vRegles, landing:vLanding, brief:vBrief, home:vHome, ep:vEpreuve, passage:vPassage, defi:vDefi, envoiPhoto:vEnvoiPhoto, saisie:vSaisie, bravo:vBravo, org:vOrg, chat:vChat, podium:vPodium}[state.view]||vLanding)();
   const main=$('#main');
   if(doux && h===dernierHTML){ majBas(); majRebours(); return; }
   const ouverts=[...document.querySelectorAll('details[id][open]')].map(d=>d.id);
-  dernierHTML=h; main.innerHTML=h;
+  dernierHTML=h; main.innerHTML=h; espacesFines(main);
   ouverts.forEach(id=>{ const d=document.getElementById(id); if(d) d.open=true; });
   if(!doux){ main.classList.add('arrivee'); clearTimeout(animT); animT=setTimeout(()=>main.classList.remove('arrivee'), 900); }
   document.body.classList.toggle('podiumOn', state.view==='podium');
@@ -783,12 +853,16 @@ const REGLES = `<ul class="regles">
       <li><span class="num" style="background:var(--marine)">📸</span><div><b>Défis photo et vidéo, en parallèle :</b> 7 défis à faire quand vous voulez, envoyés sur le WhatsApp de l'organisation depuis l'application. Parfait pendant l'attente !</div></li>
       <li><span class="num" style="background:var(--jaune);color:var(--nuit)">+</span><div><b>Bonus :</b> les animateurs récompensent l'ambiance, la cohésion, le fair-play, et donnent des coups de cœur. Les points restent secrets jusqu'au podium.</div></li>
     </ul>`;
+const nbInscrites = () => Array.from({length:N_EQUIPES},(_,i)=>i+1).filter(t=>nomEq(t)).length;
+const texteInscrites = () => { const n=nbInscrites(); return n ? `<span class="compteurEq"><i></i>${n===1?'1 équipe déjà inscrite':n+' équipes déjà inscrites'}</span>` : ''; };
 function vAccueil(){
-  return `<div class="splash entree"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i>
+  const pts = Array.from({length:12},(_,i)=>`<i class="pt" style="left:${(i*37+11)%96}%;background:${PROXIM[i%4]};animation-duration:${7+(i*1.7)%6}s;animation-delay:-${(i*1.3)%7}s;width:${6+(i%3)*4}px;height:${6+(i%3)*4}px"></i>`).join('');
+  return `<div class="splash entree"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i>${pts}
     <img class="logoS" src="proxim/logo-proxim.png" alt="Proxim'Services">
     <div class="rondWrap"><div class="cercle"><div class="ph" style="background-image:url('proxim/accueil.jpg')"></div></div><img class="pic" src="proxim/picto.png" alt=""></div>
     <div class="dateS">Samedi 14 novembre</div>
     <h1>Journée de cohésion</h1><div class="devise">compétents &amp; solidaires</div>
+    <div id="nbInscrites">${texteInscrites()}</div>
     <p class="sousS"><b>Regroupez toute votre équipe</b><br>autour de ce téléphone, puis touchez le bouton.</p>
     <button class="btn orange gros respire" onclick="debuter()">👉 Touchez ici pour commencer</button>
     <button class="lnk" onclick="aller('landing')">Organisation</button></div>`;
@@ -819,6 +893,14 @@ function carteEp(e){
       <span class="tag pts">${MAXPTS(e)} points à gagner</span>${e.type==='duel'?'<span class="tag duel">DUEL</span>':''}${cu?'<span class="tag double">×2</span>':''}<span class="tag gris">${e.min} min</span></div>
     <div class="go"><b>›</b>À FAIRE</div></button>`;
 }
+// Le passeport de l'équipe : un tampon de couleur par épreuve faite, le « + » pour les défis photo et vidéo
+function passeport(t, nouveau, sombre){
+  const prochain = DEPART[t] && !EP.some(x=>x.n!==DEFI_EP && fait(x.n,t)) ? DEPART[t] : 0;
+  return `<div class="passeport ${sombre?'sombre':''}">` + EP.map(e=>{
+    if(e.n===DEFI_EP){ const nd=nbDefis(t), ok=nd>=DEFIS.length; return `<button class="plus ${ok?'ok':''}" onclick="ouvrir(${DEFI_EP})" aria-label="Défis photo et vidéo">${ok||!nd?'📸':nd+'/'+DEFIS.length}</button>`; }
+    const ok=fait(e.n,t), c=teinteEp(e.n), tx=c===PROXIM[1]?'#3B2A00':'#fff';
+    return `<button class="${ok?'ok':''} ${ok&&nouveau===e.n?'nouveau':''} ${!ok&&prochain===e.n?'prochain':''}" style="--c:${c};--t:${tx}" onclick="ouvrir(${e.n})" aria-label="${esc(e.nom)}">${ok?e.ico:e.n}</button>`; }).join('') + `</div>`;
+}
 function anneau(nb, tot){ tot=tot||NB_EP; const C=2*Math.PI*36, off=C*(1-nb/tot);
   return `<div class="anneau"><svg viewBox="0 0 84 84"><circle class="bg" cx="42" cy="42" r="36"/><circle class="fg" cx="42" cy="42" r="36" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/></svg><b>${nb}<small>/${tot}</small></b></div>`; }
 function vHome(){
@@ -826,9 +908,10 @@ function vHome(){
   const eqp=equipe(t)||{}; const aFaire = EP.filter(x=>!fait(x.n,t)), faites = EP.filter(x=>fait(x.n,t)); const nb=faites.filter(x=>x.n!==DEFI_EP).length; const tp=temps();
   let h='';
   const ann = annonce(); if(ann) h += `<div class="annonce entree"><div class="ico">📣</div><div><b>Message de l'organisation</b>${esc(ann.texte)}<br><button class="lnk" onclick="annonceVue('${ann.cid}')">J'ai lu</button></div></div>`;
-  const encour = nb===0 ? 'Première épreuve : allez-y !' : nb>=NB_EP ? 'Tout est fait, bravo !' : nb>=10 ? 'Superbe, encore un effort !' : nb>=5 ? 'Belle lancée, continuez !' : 'C\'est parti, enchaînez !';
+  const encour = nb===0 ? 'Première épreuve : allez-y&nbsp;!' : nb>=NB_EP ? 'Tout est fait, bravo&nbsp;!' : nb>=10 ? 'Superbe, encore un effort&nbsp;!' : nb>=5 ? 'Belle lancée, continuez&nbsp;!' : 'C\'est parti, enchaînez&nbsp;!';
   h += `<div class="card entree"><div class="eqCarte">${avatar(t)}<div><div class="nom">${esc(eqp.nom||'')}</div><div class="det">Équipe ${t} · Capitaine ${esc(eqp.capitaine||'')}</div></div></div>
-    <div class="avance">${anneau(nb)}<div class="txt">${encour}<span class="muted">${NB_EP-nb===0?NB_EP+' épreuves sur '+NB_EP:pl(NB_EP-nb,'épreuve')+' encore à faire'} · vos points restent secrets jusqu'au podium</span></div></div></div>`;
+    <div class="avance">${anneau(nb)}<div class="txt">${encour}<span class="muted">${NB_EP-nb===0?NB_EP+' épreuves sur '+NB_EP:pl(NB_EP-nb,'épreuve')+' encore à faire'} · vos points restent secrets jusqu'au podium</span></div></div>
+    ${passeport(t, state.vientDeFaire)}<div class="legendeP">Votre passeport : un tampon par épreuve réussie. Touchez un numéro pour l'ouvrir.</div></div>`;
   if(tp.etat==='fini') h += `<div class="finCarte entree"><div style="font-size:44px">🏆</div><div class="p">C'est terminé !</div><p style="margin:8px 0 0;font-size:17px"><b>Rendez-vous au podium</b> pour les résultats.</p><p style="margin:10px 0 0">Votre bilan : <b>${pl(nb,'épreuve')}</b> et <b>${pl(nbDefis(t),'défi')}</b> photo-vidéo. Bravo à toute l'équipe !</p></div>`;
   if(tp.etat==='urgent') h += `<div class="banner err entree" style="font-size:16px"><b>⏰ Dernière ligne droite :</b> moins de 10 minutes ! Finissez l'épreuve en cours.</div>`;
   if(tp.etat!=='fini' && !defiEnvoye(t,0)) h += `<button class="rappelPhoto entree" onclick="envoyerPhotoEquipe()"><span>📸</span><div><b>Vous n'avez pas encore envoyé la photo de l'équipe</b><br>Touchez ici pour l'envoyer à l'organisation sur WhatsApp.</div></button>`;
@@ -865,8 +948,8 @@ function vDefis(){
   let h = `<div class="heroEp entree" style="background-image:url('${img(DEFI_EP)}')"><div class="tt"><small>En parallèle des ${NB_EP} épreuves</small><div>${e.nom}</div></div></div>
     <div class="card entree"><p style="font-size:17px">${e.desc}</p>
       <div class="avance">${anneau(nb, DEFIS.length)}<div class="txt">${nb>=DEFIS.length?'Tous les défis sont envoyés, bravo !':pl(DEFIS.length-nb,'défi')+' encore à faire'}<span class="muted">${PTS_DEFI} points par photo ou vidéo envoyée</span></div></div>
-      <div style="margin-top:14px">${CONTACT_WA('Avant tout : enregistrez l\'organisation (une seule fois)')}</div>
-      <p class="muted" style="margin:8px 0 0">Ensuite, pour chaque défi : touchez « Faire », prenez la photo ou la vidéo, puis envoyez-la à « Romain (Journée de cohésion) » sur WhatsApp.</p></div>`;
+      <div style="margin-top:14px">${CONTACT_WA('Avant tout : dites bonjour à l\'organisation sur WhatsApp')}</div>
+      <p class="muted" style="margin:10px 0 0">Ensuite, pour chaque défi : <b>Faire</b>, puis la photo ou la vidéo, puis <b>Envoyer</b> → WhatsApp → la conversation de l'organisation, tout en haut de la liste.</p></div>`;
   const photoDebut = !!(state.photos[t]||okPhoto(lsGet('photo_'+t,'')));
   h += DEFIS.map((d,i)=>{ const ok=defiEnvoye(t,d.d), c=PROXIM[i%4], txt=c===PROXIM[1]?'#3B2A00':'#fff'; const desc = d.d===0&&photoDebut&&!ok ? 'La photo prise au début est prête : il suffit de l\'envoyer.' : d.desc;
     return `<div class="defi entree ${ok?'ok':'couleur'}" style="--c:${c};--t:${txt};--fb:${c===PROXIM[1]?'#8A5A00':c}"><div class="ico">${ok?'✓':d.ico}</div><div class="txt"><div class="t">${d.nom}</div><div class="muted">${desc}</div><span class="tag">${d.type==='video'?'🎥 Vidéo':'📷 Photo'}</span></div>
@@ -895,7 +978,7 @@ function vEnvoiPhoto(){
   return `<div class="card entree envoi"><div style="font-size:46px;line-height:1.1">📸</div><h2>${debut?'Dernière étape : envoyez la photo de l\'équipe':'Envoyez la photo de l\'équipe'}</h2>
     <p style="font-size:16.5px;margin-bottom:4px">La photo prise au début part sur le WhatsApp de l'organisation. C'est aussi votre premier défi photo !</p>
     ${CONTACT_WA()}
-    <div class="etapeWA" style="margin-top:16px"><span class="n" style="background:var(--bleu)">2</span><div><b>Envoyez la photo sur WhatsApp</b><br><span class="muted">Touchez le bouton, choisissez WhatsApp, puis « Romain (Journée de cohésion) ».</span></div></div>
+    <div class="etapeWA" style="margin-top:16px"><span class="n" style="background:var(--bleu)">2</span><div><b>Envoyez la photo sur WhatsApp</b><br><span class="muted">Touchez le bouton ci-dessous, choisissez <b>WhatsApp</b>, puis la conversation de l'organisation (tout en haut de la liste).</span></div></div>
     ${p?`<div class="photoEq" style="background-image:url('${p}');margin-top:10px"></div>`:''}
     <button class="btn vert gros" ${pret?'':'disabled'} onclick="envoyerDefi()">${pret?'📤 Envoyer la photo sur WhatsApp':'Préparation…'}</button>
     <p style="margin:8px 0 0"><button class="lnk" onclick="apresDefi()">Passer sans envoyer (à faire plus tard)</button></p></div>`;
@@ -937,17 +1020,18 @@ function vSaisie(){
     <p class="muted" style="margin:6px 0 0">Chronométrez ici ou avec votre propre chrono : le temps se remplit tout seul à l'arrêt.</p>`;
   else if(e.type==='jury' || e.type==='quiz') champ = `<label>${e.type==='jury'?'Note du jury (sur 10)':'Nombre de bonnes réponses (sur 10)'}</label><div class="notes" id="grpNote">${Array.from({length:11},(_,i)=>`<button class="${s.note===i?'sel':''}" onclick="choisirNote(${i},this)">${i}</button>`).join('')}</div>`;
   else champ = `<label>${e.type==='points'?(e.unite||'Total des points de l\'équipe'):'Hauteur de la tour (en cm)'}</label><input type="number" id="mv" inputmode="decimal" min="0" placeholder="${e.type==='points'?'Exemple : 45':'Exemple : 120'}" oninput="majRecap()" value="${s.mv??''}">`;
+  champ = champ.replace('<label>','<label><span class="etapeS">1</span>');
   const bb = b=>`<button class="${b.k} ${s.bonus[b.k]?'sel':''}" onclick="basculerBonus('${b.k}',this)"><span class="e">${b.ico}</span><span>${b.nom}<small>+${b.pts} point${b.pts>1?'s':''}</small></span></button>`;
   const existe = valide(passages()[kp(e.n,t)]);
   const cons = CONSEILS[e.n]||[];
-  return `<div class="anim entree"><h2>Espace animateur</h2>
+  return `<div class="anim entree"><h2>🎯 Espace animateur</h2>
     <div class="qui">${avatar(t)}<div><div style="font-weight:900;font-size:18px">${titreEq(t)}</div><div class="muted">${e.ico} Épreuve ${e.n} · ${e.nom}</div></div></div>
     ${cons.length?`<details class="conseils"><summary>💡 Rappel pour l'animateur</summary><ul>${cons.map(c=>`<li>${c}</li>`).join('')}<li>Les points restent secrets : ne montrez ni le code ni le barème.</li></ul></details>`:''}
     ${champ}
-    <label>Bonus (facultatif)</label><div class="bonus">${BONUS.map(bb).join('')}</div>
+    <label><span class="etapeS">2</span>Bonus (facultatif, à donner sans le dire)</label><div class="bonus">${BONUS.map(bb).join('')}</div>
     <div class="recap" id="recap"></div>
-    ${state.org?'<p class="muted" style="margin-top:12px">Mode organisation : pas de code à saisir.</p>':`<label>Code de l'animateur</label><input type="password" id="codeA" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Code animateur" onkeydown="if(event.key==='Enter')validerSaisie()">`}
-    <button class="btn orange gros" onclick="validerSaisie()">✓ Valider le résultat</button>
+    ${state.org?'<p class="muted" style="margin-top:12px">Mode organisation : pas de code à saisir.</p>':`<label><span class="etapeS">3</span>🔑 Votre code d'animateur</label><input type="password" id="codeA" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="•••••" oninput="majRecap()" onkeydown="if(event.key==='Enter')validerSaisie()">`}
+    <button class="btn orange gros" id="btnValider" onclick="validerSaisie()">✓ Valider le résultat</button>
     <button class="btn clair" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.4)" onclick="annulerSaisie()">Annuler</button>
     ${existe ? '<p style="text-align:center;margin:6px 0 0"><button class="lnk" style="color:#C9DCEC" onclick="supprimerPassage()">Effacer ce résultat</button></p>':''}
   </div>`;
@@ -969,6 +1053,7 @@ function majRecap(){
   const bon = BONUS.filter(b=>s.bonus[b.k]).map(b=>b.ico+' '+b.nom).join(', ');
   el.style.display = (r.erreur && !bon) ? 'none' : 'block';
   el.innerHTML = (r.erreur?'<span style="opacity:.8">Résultat à compléter</span>':'✓ '+esc(r.texte)) + (bon?'<br>Bonus : '+bon:'');
+  const bv=$('#btnValider'), ca=$('#codeA'); if(bv) bv.classList.toggle('pret', !r.erreur && (state.org || !!(ca && ca.value.trim())));
   const an=$('#advNom'); if(an && state.ep && EPN[state.ep].type==='duel'){ const a=parseInt(($('#adv')||{}).value,10); an.textContent = s.contreAnim ? '' : (a>=1&&a<=N_EQUIPES ? (a===state.team?'⚠ C\'est la même équipe':'Équipe '+a+(nomEq(a)?' · '+nomEq(a):' (pas encore inscrite)')) : ''); }
 }
 function vBravo(){
@@ -976,14 +1061,16 @@ function vBravo(){
   const palier = nb===NB_EP ? '🏆 Les 13 épreuves sont faites !' : (nb===10 ? '🔥 10 épreuves déjà !' : (nb===5 ? '⭐ 5 épreuves, belle lancée !' : ''));
   return `<div class="rendre">📱 Animateur : rendez le téléphone à l'équipe</div><div class="bravo"><img class="pictoTourne" src="proxim/picto.png" alt=""><svg class="coche" viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27 l7.5 7.5 L37.5 19"/></svg>
       ${palier?`<div class="palier">${palier}</div>`:''}<h2>Bravo ${esc(nomEq(state.team)||'l\'équipe '+state.team)} !</h2><div class="ep2">${e.ico||''} ${esc(e.nom||'')} : c'est dans la boîte</div>
-      <p style="margin:10px 0 0;font-size:16px">${nb} épreuve${nb>1?'s':''} sur ${NB_EP}. Les points restent secrets jusqu'au podium.</p>
+      <p style="margin:10px 0 0;font-size:16px">Un tampon de plus : ${nb} épreuve${nb>1?'s':''} sur ${NB_EP}. Les points restent secrets jusqu'au podium.</p>
+      ${passeport(state.team, b.ep, true)}
       <div class="etatEnvoi" id="etatEnvoi">${texteEnvoi()}</div></div>
     ${!defiEnvoye(state.team,0)?`<button class="rappelPhoto" onclick="envoyerPhotoEquipe()"><span>📸</span><div><b>Et la photo de l'équipe ?</b><br>Elle n'est pas encore partie sur WhatsApp : touchez ici.</div></button>`:''}
     ${epSuivante()&&nb<NB_EP?`<button class="btn orange gros" onclick="suivante()">Épreuve suivante →</button>`:''}
     <button class="btn clair" onclick="aller('home')">Voir toutes les épreuves</button>`;
 }
 function texteEnvoi(){ const n=enAttente(); return n ? (state.dbOk===false ? '📶 Pas de réseau : le résultat partira tout seul dès que possible.' : '⏳ Envoi en cours…') : '✓ Résultat bien envoyé'; }
-function majEnvoi(){ const el=document.getElementById('etatEnvoi'); if(el) el.textContent=texteEnvoi(); }
+function majEnvoi(){ const el=document.getElementById('etatEnvoi'); if(el) el.textContent=texteEnvoi();
+  const b=document.getElementById('banEnvoi'); if(b){ const n=enAttente(); if(!n) b.remove(); else b.textContent='Envoi en cours ('+n+')…'; } }
 // ---------- Messagerie ----------
 function annonce(){ const vue=lsGet('annonce_vue',''); const l=state.messages.filter(m=>m.team===0 && !m.masque); const d=l[l.length-1]; return d && d.cid!==vue && (Date.now()-tms(d.created_at) < 3*3600e3) ? d : null; }
 function tousMessages(){ const enCours=Object.values(local.m); return state.messages.concat(enCours.filter(x=>!state.messages.some(m=>m.cid===x.cid))); }
@@ -1065,7 +1152,14 @@ function vOrg(){
       <li><span class="num" style="background:var(--rouge)">3</span><div><b>Téléphone perdu ou batterie vide :</b> onglet Épreuves, touchez le numéro de l'équipe sous « Pas encore passées » et saisissez à sa place.</div></li>
       <li><span class="num" style="background:var(--vert)">4</span><div><b>Annonces :</b> onglet Messages, un geste suffit. Le message s'affiche chez toutes les équipes et leur téléphone vibre.</div></li>
       <li><span class="num" style="background:var(--marine)">📸</span><div><b>Photos et vidéos :</b> onglet Photos, notez de 0 à 3 en regardant WhatsApp. Sans note, chaque envoi vaut 2 points.</div></li>
-      <li><span class="num" style="background:var(--jaune);color:var(--nuit)">🏆</span><div><b>Au podium :</b> « Lancer le podium », puis « Révéler » pour chaque distinction : médaille culture d'entreprise, trophée coups de cœur et fair-play, puis 3e, 2e et grand prix.</div></li></ul></div></details>`;
+      <li><span class="num" style="background:var(--jaune);color:var(--nuit)">🏆</span><div><b>Au podium :</b> « Lancer le podium », puis « Révéler » pour chaque distinction (un compte à rebours 3, 2, 1 fait monter le suspense) : médaille culture d'entreprise, trophée coups de cœur et fair-play, puis 3e, 2e et grand prix.</div></li></ul></div></details>
+    <details class="regl" id="dBareme"><summary>Le barème des points</summary><div><ul class="regles">
+      <li><span class="num" style="background:var(--rouge)">⚔</span><div><b>Duels</b> (catapulte, Archery Tag, tir à la corde) : victoire 10, égalité 6, défaite 3. Les deux équipes sont notées d'un coup.</div></li>
+      <li><span class="num" style="background:var(--bleu)">⏱</span><div><b>Au temps et aux points</b> (roues, parcours, clou, lettres, cibles, haches) : classement entre toutes les équipes passées, de 10 points (le meilleur cinquième) à 2 points. Le classement se recalcule à chaque nouveau résultat.</div></li>
+      <li><span class="num" style="background:var(--orange)">★</span><div><b>Jury</b> (Kapla, théâtre, pyramide) : la note sur 10. <b>Culture d'entreprise</b> : 2 points par bonne réponse, jusqu'à 20.</div></li>
+      <li><span class="num" style="background:#FF4D6D">❤</span><div><b>Bonus des animateurs</b> : ambiance, cohésion, fair-play +1 chacun, coup de cœur +2.</div></li>
+      <li><span class="num" style="background:var(--marine)">📸</span><div><b>Défis photo et vidéo</b> : 2 points par envoi, ou votre note de 0 à 3.</div></li>
+      <li><span class="num" style="background:var(--vert)">=</span><div><b>Égalité</b> : l'équipe qui a fait le plus d'épreuves passe devant, puis la meilleure culture d'entreprise.</div></li></ul></div></details>`;
   } else if(state.orgTab==='epreuves'){
     const all=c.rows;
     h += `<p class="muted" style="margin:0 2px 10px">Touchez une épreuve pour voir les résultats. Touchez une équipe pour corriger ou saisir à sa place (téléphone perdu, batterie vide).</p>`;
@@ -1147,8 +1241,9 @@ function vPodium(){
   if(P.i>=st.length) P.i=st.length-1;
   const s=st[P.i], e=c.eq[s.t]; st.forEach(x=>chargerPhoto(x.t)); const p=state.photos[s.t];
   let h = `<div class="podium"><div class="etape">${P.i+1} / ${st.length}</div><h1>${s.ico} ${s.titre}</h1>`;
-  if(!P.montre) h += `<div class="mystere">${s.ico}</div><button class="btn or gros" onclick="podiumReveler()">Révéler</button>`;
-  else h += `<div class="gagnant"><div class="ph" style="${p?`background-image:url('${p}')`:`background:${TEINTES[(s.t-1)%14]}`}">${p?'':initiales(s.t)}</div><div class="nom">${esc(nomEq(s.t)||'Équipe '+s.t)}</div><div class="sous">Équipe ${s.t} · Capitaine ${esc((equipe(s.t)||{}).capitaine||'')}</div><div class="sous" style="color:var(--jaune)">${s.sous(e)}</div></div>`;
+  if(!P.montre && P.compte) h += `<div class="decompte" id="decompte">${P.compte}</div><p style="color:#CFE4F3;font-weight:800">Roulement de tambour…</p>`;
+  else if(!P.montre) h += `<div class="mystere">${s.ico}</div><button class="btn or gros" onclick="podiumReveler()">Révéler</button>`;
+  else h += `<div class="gagnant"><div class="scene"><div class="rayons"></div><div class="ph" style="${p?`background-image:url('${p}')`:`background:${TEINTES[(s.t-1)%14]}`}">${p?'':initiales(s.t)}</div></div><div class="nom">${esc(nomEq(s.t)||'Équipe '+s.t)}</div><div class="sous">Équipe ${s.t} · Capitaine ${esc((equipe(s.t)||{}).capitaine||'')}</div><div class="sous" style="color:var(--jaune)">${s.sous(e)}</div></div>`;
   h += `<div class="nav2">${P.i>0?`<button class="btn clair" onclick="podiumBouger(-1)">←</button>`:''}${P.montre && P.i<st.length-1?`<button class="btn or" onclick="podiumBouger(1)">Prix suivant →</button>`:''}</div>
     <p style="margin-top:22px"><button class="lnk" style="color:#9CB7CF" onclick="fermerPodium()">Quitter le podium</button></p></div>`;
   return h;
@@ -1330,16 +1425,22 @@ window.marquerDefi = d=>{
   dire(`✓ ${D.nom} : envoyé !`,'ok'); apresDefi();
 };
 window.dejaEnvoye = d=>{ const D=DEFIS.find(x=>x.d===d); if(confirm(`Vous avez bien envoyé « ${D.nom} » sur le WhatsApp de l'organisation ?`)) marquerDefi(d); };
-window.envoyerPhotoEquipe = ()=>{ state.apresDefiVue='home'; state.defi=null; state.view='envoiPhoto'; render(); window.scrollTo(0,0); };
+window.envoyerPhotoEquipe = ()=>{ state.apresDefiVue='home'; const p=state.photos[state.team]||okPhoto(lsGet('photo_'+state.team,''));
+  state.defi = p ? null : {d:0}; state.view = p ? 'envoiPhoto' : 'defi'; render(); window.scrollTo(0,0); };   // équipe inscrite sans photo : on la prend maintenant
 window.apresDefi = ()=>{ const v=state.apresDefiVue||'ep'; state.apresDefiVue=''; state.defi=null; if(v==='ep'){ state.ep=DEFI_EP; } state.view=v; render(); window.scrollTo(0,0); };
 window.noterDefi = (t,d,n)=>{ const row={ event:EVENT, team:t, defi:d, note:n, envoye:true, code:CLE, updated_at:new Date().toISOString() };
   if(n===0){ const r=defis()[kd(t,d)]; row.envoye=!!(r&&r.envoye); }
   local.d[kd(t,d)]={...(defis()[kd(t,d)]||{}), ...row}; pousser('tb_defis','event,team,defi','d-'+kd(t,d),row); vibre(15); render(true); };
 window.filtrePhotos = f=>{ state.filtrePhotos=f; render(); };
 window.ouvrirPodium = ()=>{ state.podium={i:0, montre:false}; state.view='podium'; render(); window.scrollTo(0,0); };
-window.fermerPodium = ()=>{ aller('org'); };
-window.podiumReveler = ()=>{ const {st}=etapesPodium(); state.podium.montre=true; render(); confettis(!!(st[state.podium.i]||{}).final); vibre(80); };
-window.podiumBouger = d=>{ state.podium.i=Math.max(0,state.podium.i+d); state.podium.montre = d<0; render(); };
+window.fermerPodium = ()=>{ clearInterval(podiumT); state.podium.compte=0; aller('org'); };
+// Révélation avec un compte à rebours 3, 2, 1 (le suspense, pour la salle)
+function bip(f){ try{ const A=window.AudioContext||window.webkitAudioContext; if(!A) return; const c=son.c||(son.c=new A()); if(c.state==='suspended') c.resume(); const o=c.createOscillator(), g=c.createGain(), t=c.currentTime; o.type='triangle'; o.frequency.value=f; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.25,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.3); o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+0.35); }catch(e){} }
+let podiumT=0;
+window.podiumReveler = ()=>{ const P=state.podium; if(P.compte) return; clearInterval(podiumT); P.compte=3; render(); bip(440); vibre(30);
+  podiumT=setInterval(()=>{ P.compte--; if(P.compte>0){ render(); bip(440); vibre(30); return; }
+    clearInterval(podiumT); P.compte=0; P.montre=true; render(); const {st}=etapesPodium(); const fin=!!(st[P.i]||{}).final; confettis(true); if(fin) setTimeout(()=>confettis(true), 900); son(true); vibre(120); }, 900); };
+window.podiumBouger = d=>{ clearInterval(podiumT); state.podium.compte=0; state.podium.i=Math.max(0,state.podium.i+d); state.podium.montre = d<0; render(); };
 window.allerEquipe = ()=>{ const n=parseInt(($('#allerEq')||{}).value,10); if(n>=1 && n<=N_EQUIPES) voirEquipe(n); else dire('Numéro d\'équipe de 1 à '+N_EQUIPES,'err'); };
 window.exporterTableau = ()=>{
   const c=calcul(); const L=[]; const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
