@@ -80,12 +80,43 @@
   .gal { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .gal div { background:#fff; border-radius:12px; overflow:hidden; font-size:12.5px; text-align:center; padding-bottom:6px; }
   .gal img { width:100%; aspect-ratio:4/3; object-fit:cover; display:block; margin-bottom:4px; background:var(--trait); }
+  header.top .rebours { margin-top:6px; font-weight:800; font-size:15px; color:var(--marine); font-variant-numeric:tabular-nums; }
+  header.top .rebours.urgent { color:var(--rouge); }
+  header.top .rebours.fini { color:var(--vert); }
+  .ep.afaire { border-left:7px solid var(--vert); }
+  .ep.afaire .etat { background:var(--vert); color:#fff; font-size:12.5px; }
+  .faite { display:flex; align-items:center; gap:8px; width:100%; text-align:left; border:0; background:#FBEAEA; color:var(--rouge); border-radius:10px; padding:7px 10px; margin-bottom:6px; font:inherit; font-size:13px; font-weight:700; }
+  .faite i { font-style:normal; background:var(--rouge); color:#fff; border-radius:50%; width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; font-size:11px; flex:0 0 20px; }
+  .faite span { margin-left:auto; font-size:11px; letter-spacing:.5px; }
+  .vedette { display:block; width:100%; text-align:left; border:0; padding:0; border-radius:18px; overflow:hidden; margin-bottom:14px; color:#fff; font:inherit; background:linear-gradient(135deg,var(--orange),#E8590C); box-shadow:0 4px 14px rgba(247,148,29,.45); }
+  .vedette .img { height:120px; background:center/cover; }
+  .vedette .txt { padding:12px 14px 14px; }
+  .vedette .t { font-size:20px; font-weight:900; line-height:1.15; }
+  .vedette .d { display:inline-block; background:var(--jaune); color:var(--marine); font-weight:900; font-size:13px; padding:4px 10px; border-radius:10px; margin-top:8px; }
+  @keyframes clignote { 0%,100% { transform:scale(1); box-shadow:0 4px 14px rgba(247,148,29,.45); filter:none; } 50% { transform:scale(1.025); box-shadow:0 0 0 6px rgba(253,204,26,.85), 0 6px 22px rgba(227,34,43,.55); filter:brightness(1.12); } }
+  .vedette.clignote { animation:clignote 1.1s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { .vedette.clignote { animation:none; outline:5px solid var(--jaune); } }
+  nav.bas { position:fixed; left:0; right:0; bottom:0; display:flex; background:#fff; border-top:2px solid var(--trait); z-index:7; padding-bottom:env(safe-area-inset-bottom); }
+  nav.bas button { flex:1; border:0; background:#fff; padding:12px 4px 13px; font:inherit; font-weight:800; font-size:14px; color:var(--gris); position:relative; }
+  nav.bas button.on { color:var(--bleu); box-shadow:inset 0 3px 0 var(--bleu); }
+  .pastille { display:inline-block; min-width:20px; padding:1px 6px; border-radius:10px; background:var(--rouge); color:#fff; font-size:12px; margin-left:5px; }
+  body.avecBas main { padding-bottom:86px; } body.avecBas footer { padding-bottom:84px; }
+  .fil { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+  .msg { max-width:86%; background:#fff; border-radius:14px; padding:8px 11px; box-shadow:0 1px 4px rgba(11,79,134,.08); align-self:flex-start; }
+  .msg .q { font-size:11.5px; font-weight:800; color:var(--bleu); } .msg .h { font-size:10.5px; color:var(--gris); margin-left:6px; font-weight:400; }
+  .msg.moi { align-self:flex-end; background:#DFF1F9; }
+  .msg.org { align-self:stretch; max-width:100%; background:var(--marine); color:#fff; } .msg.org .q { color:var(--jaune); } .msg.org .h { color:#C9DCEC; }
+  .msg.masque { opacity:.45; text-decoration:line-through; }
+  .msg .lnk { padding:2px 0 0; font-size:12px; }
+  .ecrire { display:flex; gap:8px; position:sticky; bottom:70px; background:var(--fond); padding:8px 0; }
+  .ecrire input { flex:1; } .ecrire button { flex:0 0 auto; width:auto; margin:0; padding:12px 16px; }
   footer { text-align:center; color:var(--gris); font-size:11.5px; padding:6px 16px 26px; }
 </style>
 </head>
 <body>
-<header class="top"><img src="proxim/logo-proxim.png" alt="Proxim'Services Réunion"><div class="titre">JOURNÉE DE COHÉSION · 14.11.2026</div></header>
+<header class="top"><img src="proxim/logo-proxim.png" alt="Proxim'Services Réunion"><div class="titre">JOURNÉE DE COHÉSION · 14.11.2026</div><div class="rebours" id="rebours"></div></header>
 <main id="main"></main>
+<nav class="bas" id="bas" style="display:none"></nav>
 <footer>Une journée animée par Pull Up Événements</footer>
 
 <script>
@@ -93,11 +124,14 @@
 const Q = new URLSearchParams(location.search);
 const ESSAI = Q.has('essai');                       // lien avec « essai » : répétition, rien ne compte
 const EVENT = ESSAI ? 'essai-2026-11-14' : 'proxim-2026-11-14';
-const SUPABASE_URL = 'https://vincxrmtfjbenlzhjwby.supabase.co';
+const LOCAL = ['localhost','127.0.0.1'].includes(location.hostname);
+const SUPABASE_URL = (LOCAL && Q.get('api')) ? Q.get('api') : 'https://vincxrmtfjbenlzhjwby.supabase.co';
 const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpbmN4cm10ZmpiZW5semhqd2J5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyOTI1MTksImV4cCI6MjA5Nzg2ODUxOX0.M9_ChGDlOIUKKZtbBHs1xn4cdy4FwUAQKN0aYyXefQY';
 const CLE = 'PULLUP14';                             // clé technique exigée par la base (ce n'est pas le code des animateurs)
 const N_EQUIPES = 28;
-const FIN = { h:12, m:30 };
+const DEBUT_EPREUVES = ESSAI ? new Date(Date.now()-45*60000) : new Date(2026,10,14,10,15);   // en essai : comme si on jouait depuis 45 minutes
+const FIN_EPREUVES = ESSAI ? new Date(Date.now()+90*60000) : new Date(2026,10,14,12,30);
+const CULTURE = 12;                                 // l'épreuve mise en avant (points doublés)
 const COULEURS = ['Rouge','Bleu roi','Vert','Jaune','Orange','Violet','Rose','Blanc','Noir','Turquoise','Bordeaux','Bleu ciel','Vert anis','Gris'];
 const couleur = t => COULEURS[(t-1)%14];
 // Code des animateurs : trois mots au choix, valables sur toutes les épreuves. Seules les empreintes sont ici.
@@ -167,11 +201,12 @@ const tQ = +Q.get('e');
 let state = {
   team: (tQ>=1 && tQ<=N_EQUIPES) ? tQ : lsGet('team',0),
   org: lsGet('org',false), view:'', ep:0, orgTab:'classement', orgRetour:false,
-  passages:{}, equipes:{}, photos:{}, dbOk:null, err:'',
+  passages:{}, equipes:{}, photos:{}, dbOk:null, err:'', messages:[], chatOk:null, chatOuvert:true,
   saisie:{ res:'', bonus:{a:false,c:false,f:false} }, bravo:null, galerie:false, edition:false
 };
 if(state.team) lsSet('team', state.team);
-let local = lsGet('local', { p:{}, e:{} });      // copies locales : passages et équipes
+let local = lsGet('local', { p:{}, e:{}, m:{} });      // copies locales : passages, équipes, messages en cours d'envoi
+if(!local.m) local.m={};
 let queue = lsGet('queue', {});                   // envois en attente
 const kp = (s,t)=>`${s}-${t}`;
 const save = ()=>{ lsSet('local',local); lsSet('queue',queue); };
@@ -199,15 +234,27 @@ async function flush(){
 }
 async function refresh(){
   try{
-    const [p,e] = await Promise.all([
-      dbGet('tb_passages','select=stand,team,resultat,mesure,b_ambiance,b_cohesion,b_fairplay,updated_at'),
-      dbGet('tb_equipes','select=team,nom,capitaine,updated_at') ]);
+    // Les téléphones des équipes ne reçoivent que « fait ou pas fait » pour leur équipe : ni temps, ni notes, ni bonus.
+    const reqP = state.org ? 'select=stand,team,resultat,mesure,b_ambiance,b_cohesion,b_fairplay,updated_at' : `select=stand,team,resultat,updated_at&team=eq.${state.team||0}`;
+    const [p,e] = await Promise.all([ dbGet('tb_passages',reqP), dbGet('tb_equipes','select=team,nom,capitaine,updated_at') ]);
     state.passages={}; p.forEach(x=>state.passages[kp(x.stand,x.team)]=x);
     state.equipes={}; e.forEach(x=>state.equipes[x.team]=x);
     state.dbOk=true; state.err='';
     chargerPhoto(state.team);
   }catch(e){ state.dbOk=false; state.err=String(e.message||e); }
+  await lireMessages(true);
   renderDoux();
+}
+async function lireMessages(silencieux){
+  try{
+    const [r,ct] = await Promise.all([ dbGet('tb_messages','select=cid,team,texte,masque,created_at&order=created_at.desc&limit=120'),
+                                       dbGet('tb_messages','select=texte,created_at&team=eq.0&texte=like.__CHAT*&order=created_at.desc&limit=1') ]);
+    const avant=state.chatOuvert; state.chatOk=true; state.chatOuvert = !(ct[0] && ct[0].texte==='__CHAT_OFF__');
+    if(avant!==state.chatOuvert && state.view==='chat'){ const el=document.getElementById('msgTxt'); const brouillon=el?el.value:''; render(); const el2=document.getElementById('msgTxt'); if(el2) el2.value=brouillon; }
+    const vus = new Set(r.map(x=>x.cid)); Object.keys(local.m).forEach(c=>{ if(vus.has(c)) delete local.m[c]; });
+    state.messages = r.filter(x=>!/^__CHAT_/.test(x.texte)).reverse();
+  }catch(e){ state.chatOk=false; }
+  if(!silencieux){ if(state.view==='chat' || (state.view==='org' && state.orgTab==='messages')) majFil(); majBas(); }
 }
 async function chargerPhoto(t){
   if(!t || state.photos[t] || !equipe(t)) return;
@@ -249,13 +296,17 @@ function calcul(){
   const amb = Object.values(eq).filter(e=>e.bonus>0).sort((a,b)=> b.bonus-a.bonus || b.total-a.total || a.t-b.t);
   return { pts, rang, eq, ordre, general, prixQuiz: qz.length?qz[0].t:null, ambiance: amb.length?amb[0].t:null, saisies: rows.length };
 }
-function resteTxt(){
-  const d=new Date(); const fin=new Date(2026,10,14,FIN.h,FIN.m);
-  if(d.getFullYear()===2026 && d.getMonth()===10 && d.getDate()===14 && d<fin){
-    const m=Math.ceil((fin-d)/60000); return m>=60 ? `Fin des épreuves dans ${Math.floor(m/60)} h ${String(m%60).padStart(2,'0')}` : `Fin des épreuves dans ${m} min`;
-  }
-  return 'Fin des épreuves à 12h30';
+function temps(){
+  const d=new Date(); const jourJ = ESSAI || (d.getFullYear()===2026 && d.getMonth()===10 && d.getDate()===14);
+  if(!jourJ) return { etat:'avant', txt:'Samedi 14 novembre · épreuves de 10h15 à 12h30', court:'à 12h30', ecoule:0 };
+  if(d < DEBUT_EPREUVES){ const m=Math.ceil((DEBUT_EPREUVES-d)/60000); return { etat:'avant', txt: m>90 ? 'Épreuves de 10h15 à 12h30' : `Début des épreuves dans ${m} min`, court:'à 12h30', ecoule:0 }; }
+  if(d >= FIN_EPREUVES) return { etat:'fini', txt:'C\'est terminé : rendez-vous au podium !', court:'terminé', ecoule:999 };
+  const s=Math.floor((FIN_EPREUVES-d)/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), ss=s%60;
+  const hms = (h?h+' h ':'')+String(m).padStart(h?2:1,'0')+' min '+String(ss).padStart(2,'0')+' s';
+  return { etat: s<600?'urgent':'encours', txt:'Il reste '+hms, court: (h?h+' h ':'')+String(m).padStart(2,'0')+' min', ecoule: Math.floor((d-DEBUT_EPREUVES)/60000) };
 }
+function resteTxt(){ const t=temps(); return t.etat==='encours'||t.etat==='urgent' ? 'Fin des épreuves dans '+t.court : (t.etat==='fini' ? 'Épreuves terminées' : 'Fin des épreuves à 12h30'); }
+function majRebours(){ const el=document.getElementById('rebours'); if(!el) return; const t=temps(); el.textContent=t.txt; el.className='rebours'+(t.etat==='urgent'?' urgent':'')+(t.etat==='fini'?' fini':''); }
 const nomEq = t => { const e=equipe(t); return e && e.nom ? e.nom : ''; };
 const titreEq = t => `Équipe ${t}` + (nomEq(t) ? ' · '+esc(nomEq(t)) : '');
 
@@ -268,6 +319,7 @@ function renderDoux(){
   const a=document.activeElement;
   if(a && (a.tagName==='INPUT'||a.tagName==='SELECT')) return;          // on ne touche pas à un écran en cours de saisie
   if(['saisie','bravo','landing'].includes(state.view)) return;
+  if(state.view==='chat' || (state.view==='org' && state.orgTab==='messages')){ majFil(); majBas(); return; }
   if(state.view==='brief'){                                              // un autre téléphone de l'équipe a déjà inscrit l'équipe
     if(!state.edition && equipe(state.team) && equipe(state.team).nom){ state.view='home'; render(); }
     return;
@@ -281,8 +333,10 @@ function render(){
   if(ESSAI) h += `<div class="banner"><b>MODE ESSAI.</b> Rien de ce qui est saisi ici ne compte pour la journée.</div>`;
   if(state.dbOk===false) h += `<div class="banner err"><b>Pas de connexion pour l'instant.</b> Vos résultats sont gardés sur ce téléphone et seront envoyés dès que possible. Continuez à jouer.</div>`;
   const nq=Object.keys(queue).length; if(nq && state.dbOk!==false) h += `<div class="banner">Envoi en cours (${nq})…</div>`;
-  h += ({landing:vLanding, brief:vBrief, home:vHome, ep:vEpreuve, saisie:vSaisie, bravo:vBravo, org:vOrg}[state.view]||vLanding)();
+  h += ({landing:vLanding, brief:vBrief, home:vHome, ep:vEpreuve, saisie:vSaisie, bravo:vBravo, org:vOrg, chat:vChat}[state.view]||vLanding)();
   $('#main').innerHTML = h;
+  majBas(); majRebours();
+  if(state.view==='chat' || (state.view==='org' && state.orgTab==='messages')) majFil(true);
 }
 function vLanding(){
   return `<div class="card"><h2>Bienvenue !</h2><p>Scannez le QR code de votre équipe, ou choisissez votre numéro d'équipe (celui de votre bandeau).</p>
@@ -295,13 +349,13 @@ function blocOrg(){
 }
 function vBrief(){
   const t=state.team; const p=state.photos[t]||okPhoto(lsGet('photo_'+t,''));
-  return `<div class="card"><h2>Équipe ${t}, c'est parti !</h2><p class="muted">Bandeau ${couleur(t).toLowerCase()} · ${resteTxt()}</p>
+  return `<div class="card"><h2>Équipe ${t}, c'est parti !</h2><p class="muted">Bandeau ${couleur(t).toLowerCase()}</p>
     <ul class="regles">
       <li><span class="num" style="background:var(--bleu)">1</span><div><b>Faites un maximum d'épreuves</b> pour gagner un maximum de points. Il y en a 14, dans l'ordre que vous voulez.</div></li>
       <li><span class="num" style="background:var(--orange)">2</span><div><b>N'oubliez pas la culture d'entreprise :</b> elle rapporte le double de points.</div></li>
       <li><span class="num" style="background:var(--rouge)">3</span><div><b>Épreuve en duel ?</b> À vous de trouver une équipe adverse pour l'affronter.</div></li>
       <li><span class="num" style="background:var(--vert)">4</span><div><b>À la fin de chaque épreuve,</b> tendez ce téléphone à l'animateur : c'est lui qui entre votre résultat.</div></li>
-      <li><span class="num" style="background:var(--jaune);color:var(--marine)">+</span><div><b>Bonus :</b> les animateurs récompensent l'ambiance, la cohésion et le fair-play.</div></li>
+      <li><span class="num" style="background:var(--jaune);color:var(--marine)">+</span><div><b>Bonus :</b> les animateurs récompensent l'ambiance, la cohésion et le fair-play. Les points restent secrets jusqu'au podium.</div></li>
     </ul></div>
     <div class="card"><h2>Votre équipe</h2>
       <label>Nom de l'équipe</label><input type="text" id="fNom" maxlength="28" placeholder="Trouvez un nom qui claque" value="${esc(lsGet('brouillon_nom',''))}">
@@ -314,50 +368,47 @@ function vBrief(){
       ${p?'':'<button class="lnk" onclick="inscrire(true)">Continuer sans photo</button>'}
     </div>` + (state.orgRetour?`<button class="btn marine" onclick="aller('org')">Retour à l'organisation</button>`:'');
 }
-function carteEp(e, c){
-  const k=kp(e.n,state.team); const p=c.pts[k]; const fait = p!=null; const r=passages()[k];
-  const b = fait ? (r.b_ambiance?1:0)+(r.b_cohesion?1:0)+(r.b_fairplay?1:0) : 0;
-  return `<button class="ep ${fait?'fait':''}" onclick="ouvrir(${e.n})">
+const fait = (n,t) => { const r=passages()[kp(n,t)]; return !!(r && r.resultat && r.resultat!=='X'); };
+function carteEp(e){
+  return `<button class="ep afaire" onclick="ouvrir(${e.n})">
     <div class="img" style="background-image:url('${img(e.n)}')"><i>${e.n}</i></div>
     <div class="txt"><div class="t">${e.nom}</div>
-      ${e.type==='duel'?'<span class="tag duel">DUEL</span>':''}${e.type==='quiz'?'<span class="tag double">POINTS DOUBLÉS</span>':''}<span class="tag gris">${e.min} min</span><span class="tag gris">jusqu'à ${MAXPTS(e)} pts</span></div>
-    <div class="etat">${fait?`<b>${p+b}</b>pts`:'À faire'}</div></button>`;
+      ${e.type==='duel'?'<span class="tag duel">DUEL</span>':''}<span class="tag gris">${e.min} min</span><span class="tag gris">${pl(e.places,'équipe')} à la fois</span></div>
+    <div class="etat">À<br>FAIRE</div></button>`;
 }
 function vHome(){
-  const t=state.team, c=calcul(), e=c.eq[t], eqp=equipe(t)||{}; const photo=state.photos[t]||okPhoto(lsGet('photo_'+t,''));
-  const rg = e.total>0 ? c.ordre.indexOf(t)+1 : null;
-  const aFaire = EP.filter(x=>c.pts[kp(x.n,t)]==null), faites = EP.filter(x=>c.pts[kp(x.n,t)]!=null);
+  const t=state.team, eqp=equipe(t)||{}; const photo=state.photos[t]||okPhoto(lsGet('photo_'+t,''));
+  const aFaire = EP.filter(x=>!fait(x.n,t)), faites = EP.filter(x=>fait(x.n,t)); const nb=faites.length; const tp=temps();
   let h = state.orgRetour?`<button class="btn marine" style="margin:0 0 12px" onclick="aller('org')">Retour à l'organisation</button>`:'';
+  const ann = annonce(); if(ann) h += `<div class="banner bleu"><b>Message de l'organisation :</b> ${esc(ann.texte)}<br><button class="lnk" style="padding:4px 0 0" onclick="annonceVue('${ann.cid}')">J'ai lu</button></div>`;
   h += `<div class="card"><div class="equipe"><div class="ph" style="${photo?`background-image:url('${photo}')`:''}"></div>
       <div><div class="nom">${esc(eqp.nom||'')}</div><div class="muted">Équipe ${t} · bandeau ${couleur(t).toLowerCase()}<br>Capitaine : ${esc(eqp.capitaine||'')}</div></div></div>
-    <div class="scores"><div><b>${e.total}</b><span>points</span></div><div><b>${e.faits}/14</b><span>épreuves</span></div><div><b>${rg?rg+(rg===1?'er':'e'):'·'}</b><span>${rg?'sur '+N_EQUIPES+' (en direct)':'classement'}</span></div></div>
-    <div class="prog"><div style="width:${100*e.faits/14}%"></div></div>
-    <p class="muted" style="margin:10px 0 0">${resteTxt()}. Dont ${pl(e.bonus,'point')} bonus (ambiance, cohésion, fair-play).</p></div>`;
-  if(e.faits===0) h += `<div class="banner bleu"><b>Pour bien démarrer :</b> commencez par l'épreuve ${DEPART[t]}, ${EPN[DEPART[t]].nom}. Ensuite, allez où vous voulez.</div>`;
-  if(c.pts[kp(12,t)]==null) h += `<div class="banner"><b>La culture d'entreprise rapporte le double.</b> Pensez à y passer : jusqu'à 20 points.</div>`;
-  if(aFaire.length) h += `<h3>À faire (${aFaire.length})</h3>` + aFaire.map(x=>carteEp(x,c)).join('');
+    <div class="scores"><div><b>${nb}/14</b><span>épreuves faites</span></div><div><b>${14-nb}</b><span>encore à faire</span></div></div>
+    <div class="prog"><div style="width:${100*nb/14}%"></div></div>
+    <p class="muted" style="margin:10px 0 0">Vos points sont notés par les animateurs et restent secrets jusqu'au podium.</p></div>`;
+  if(nb===0) h += `<div class="banner bleu"><b>Pour bien démarrer :</b> commencez par l'épreuve ${DEPART[t]}, ${EPN[DEPART[t]].nom}. Ensuite, allez où vous voulez.</div>`;
+  if(!fait(CULTURE,t)){ const cl = nb>=3 || tp.ecoule>=60;
+    h += `<button class="vedette ${cl?'clignote':''}" onclick="ouvrir(${CULTURE})"><div class="img" style="background-image:url('${img(CULTURE)}')"></div><div class="txt">
+      <div class="t">${cl?'Vous n\'avez pas encore fait la culture d\'entreprise !':'À ne pas manquer : la culture d\'entreprise'}</div>
+      <div>10 questions sur Proxim'Services et votre métier. C'est l'épreuve qui rapporte le plus.</div><div class="d">POINTS DOUBLÉS</div></div></button>`; }
+  const reste = aFaire.filter(x=>x.n!==CULTURE);
+  if(aFaire.length){ if(reste.length) h += `<h3>À faire (${aFaire.length})</h3>` + reste.map(x=>carteEp(x)).join(''); }
   else h += `<div class="bravo"><div class="p">14/14</div><p style="margin-top:8px"><b>Toutes les épreuves sont faites. Bravo !</b></p></div>`;
-  if(faites.length) h += `<h3>Faites (${faites.length})</h3>` + faites.map(x=>carteEp(x,c)).join('');
+  if(faites.length) h += `<h3 style="color:var(--rouge)">Déjà faites (${faites.length})</h3>` + faites.map(x=>`<button class="faite" onclick="ouvrir(${x.n})"><i>✓</i>${x.n}. ${x.nom}<span>FAIT</span></button>`).join('');
   h += `<div class="card" style="margin-top:14px"><h3 style="margin-top:0">Rappel des règles</h3><p class="muted">Un maximum d'épreuves pour un maximum de points. Chaque épreuve une seule fois. En duel, trouvez une équipe adverse. À la fin de l'épreuve, tendez le téléphone à l'animateur. Plusieurs téléphones de l'équipe peuvent scanner le même QR code.</p>
     <button class="lnk" onclick="modifierEquipe()">Modifier le nom ou la photo (animateur)</button></div>`;
   return h;
 }
 function vEpreuve(){
-  const e=EPN[state.ep], t=state.team, c=calcul(), k=kp(e.n,t), p=c.pts[k], r=passages()[k];
+  const e=EPN[state.ep], t=state.team;
   let h = `<button class="lnk" onclick="aller('home')">← Toutes les épreuves</button>
     <div class="hero" style="background-image:url('${img(e.n)}')"><span>${e.n}. ${e.nom}</span></div>
     <div class="card"><p>${e.desc}</p>
-      <p>${e.type==='duel'?'<span class="tag duel">DUEL : trouvez une équipe adverse</span>':''}${e.type==='quiz'?'<span class="tag double">POINTS DOUBLÉS</span>':''}<span class="tag gris">${e.min} minutes</span><span class="tag gris">${pl(e.places,'équipe')} à la fois</span></p>
-      <p class="muted" style="margin-top:10px"><b>Les points :</b> ${BAREME[e.type]}.<br><b>Bonus de l'animateur :</b> ambiance, cohésion, fair-play, 1 point chacun.</p></div>`;
-  if(p!=null){
-    const b=(r.b_ambiance?1:0)+(r.b_cohesion?1:0)+(r.b_fairplay?1:0); const rg=c.rang[k];
-    const det = e.type==='duel' ? (r.resultat==='V'?'Victoire':r.resultat==='N'?'Égalité':'Défaite') : e.type==='chrono' ? fmtT(r.mesure) : e.type==='jury' ? `Note du jury : ${+r.mesure} sur 10` : e.type==='quiz' ? `${+r.mesure} bonnes réponses sur 10` : e.type==='hauteur' ? `${+r.mesure} cm` : `${+r.mesure} points marqués`;
-    h += `<div class="bravo"><p><b>Épreuve faite</b></p><div class="p">${p+b}</div><p style="margin:6px 0 0">points${b?` dont ${b} bonus`:''}</p>
-      <p style="margin:10px 0 0;opacity:.9">${det}${rg?`<br>${rg.r}${rg.r===1?'er':'e'} sur ${pl(rg.n,'équipe')} pour l'instant : les points peuvent encore bouger jusqu'à 12h30`:''}</p></div>
-      <button class="lnk" onclick="demarrerSaisie()">Corriger ce résultat (animateur)</button>`;
-  } else {
-    h += `<button class="btn vert" onclick="demarrerSaisie()">Épreuve terminée :<br>je tends le téléphone à l'animateur</button>`;
-  }
+      <p>${e.type==='duel'?'<span class="tag duel">DUEL : trouvez une équipe adverse</span>':''}${e.n===CULTURE?'<span class="tag double">POINTS DOUBLÉS</span>':''}<span class="tag gris">${e.min} minutes</span><span class="tag gris">${pl(e.places,'équipe')} à la fois</span></p>
+      <p class="muted" style="margin-top:10px">${e.n===CULTURE?'Cette épreuve rapporte le double de points.':'Donnez tout : chaque épreuve rapporte des points.'} L'animateur note votre résultat, et peut ajouter des bonus pour l'ambiance, la cohésion et le fair-play. Les points restent secrets jusqu'au podium.</p></div>`;
+  if(fait(e.n,t)) h += `<div class="card" style="background:#FBEAEA;color:var(--rouge);text-align:center"><b style="font-size:19px">✓ Épreuve faite</b><p style="margin:6px 0 0">Résultat enregistré par l'animateur. Passez à une autre épreuve.</p></div>
+      <button class="btn" onclick="aller('home')">Voir les épreuves à faire</button><button class="lnk" onclick="demarrerSaisie()">Corriger ce résultat (animateur)</button>`;
+  else h += `<button class="btn vert" onclick="demarrerSaisie()">Épreuve terminée :<br>je tends le téléphone à l'animateur</button>`;
   return h;
 }
 function vSaisie(){
@@ -378,15 +429,45 @@ function vSaisie(){
 }
 function vBravo(){
   const b=state.bravo||{};
-  return `<div class="bravo"><p><b>${esc(b.titre||'Bravo !')}</b></p><div class="p">${b.pts}</div><p style="margin:6px 0 0">${b.sous||''}</p></div>
+  return `<div class="bravo"><div class="p" style="font-size:46px">✓</div><p style="margin:10px 0 0;font-size:19px"><b>${esc(b.titre||'C\'est validé !')}</b></p><p style="margin:8px 0 0">${b.sous||''}</p></div>
     <button class="btn" onclick="aller('home')">Épreuve suivante</button>`;
+}
+// ---------- Messagerie ----------
+function annonce(){ const vue=lsGet('annonce_vue',''); const l=state.messages.filter(m=>m.team===0 && !m.masque); const d=l[l.length-1]; return d && d.cid!==vue ? d : null; }
+function tousMessages(){ const enCours=Object.values(local.m); return state.messages.concat(enCours.filter(x=>!state.messages.some(m=>m.cid===x.cid))); }
+function nonLus(){ const lu=lsGet('lu',''); const moi = state.org&&!state.orgRetour ? 0 : state.team; return state.messages.filter(m=>!m.masque && m.team!==moi && (m.created_at||'')>lu).length; }
+function htmlFil(){
+  const moi = state.org ? 0 : state.team; const l=tousMessages().filter(m=>state.org || !m.masque);
+  if(!l.length) return '<p class="muted" style="text-align:center;padding:20px 0">Aucun message pour l\'instant. Lancez la conversation !</p>';
+  return l.map(m=>{ const h=m.created_at?new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
+    const qui = m.team===0 ? 'Organisation' : `Équipe ${m.team}`+(nomEq(m.team)?' · '+esc(nomEq(m.team)):'');
+    return `<div class="msg ${m.team===0?'org':''} ${m.team===moi&&m.team!==0?'moi':''} ${m.masque?'masque':''}"><div class="q">${qui}<span class="h">${h}${local.m[m.cid]?' · envoi…':''}</span></div>${esc(m.texte)}${state.org&&!m.masque&&!local.m[m.cid]?`<br><button class="lnk" style="color:${m.team===0?'#C9DCEC':'var(--gris)'}" onclick="masquer('${m.cid}')">Masquer ce message</button>`:''}</div>`; }).join('');
+}
+function majFil(bas){ const el=document.getElementById('fil'); if(!el) return; const pres = (window.innerHeight+window.scrollY) >= document.body.scrollHeight-140; el.innerHTML=htmlFil();
+  const d=state.messages[state.messages.length-1]; if(d) lsSet('lu', d.created_at||''); if(bas||pres) window.scrollTo(0,document.body.scrollHeight); }
+function zoneEcrire(){
+  if(state.chatOk===false) return '<div class="banner">La messagerie n\'est pas encore disponible.</div>';
+  if(!state.chatOuvert && !state.org) return '<div class="banner">La messagerie est fermée pour le moment. Vous pouvez toujours lire les messages de l\'organisation.</div>';
+  return `<div class="ecrire"><input type="text" id="msgTxt" maxlength="200" placeholder="${state.org?'Message à toutes les équipes':'Votre message'}" onkeydown="if(event.key==='Enter')envoyerMessage()"><button class="btn" onclick="envoyerMessage()">Envoyer</button></div>`;
+}
+function vChat(){
+  return `<div class="card" style="padding:12px 14px"><b>Messagerie de la journée</b><p class="muted" style="margin:4px 0 0">Toutes les équipes et l'organisation voient ces messages. Une question ? Écrivez-la ici, l'organisation vous répond. Restez bon enfant.</p></div>
+    <div class="fil" id="fil"></div>${zoneEcrire()}`;
+}
+function majBas(){
+  const bas=document.getElementById('bas'); if(!bas) return;
+  const equipeInscrite = state.team && equipe(state.team) && equipe(state.team).nom && !state.orgRetour;
+  const montrer = equipeInscrite && ['home','ep','chat'].includes(state.view);
+  bas.style.display = montrer ? 'flex' : 'none'; document.body.classList.toggle('avecBas', !!montrer);
+  if(!montrer) return; const n = state.view==='chat' ? 0 : nonLus();
+  bas.innerHTML = `<button class="${state.view!=='chat'?'on':''}" onclick="aller('home')">Épreuves</button><button class="${state.view==='chat'?'on':''}" onclick="aller('chat')">Messages${n?`<span class="pastille">${n}</span>`:''}</button>`;
 }
 function phStyle(t){ const p=state.photos[t]; return p?`background-image:url('${p}')`:''; }
 function vOrg(){
   const c=calcul(); const inscrites=Array.from({length:N_EQUIPES},(_,i)=>i+1).filter(t=>nomEq(t)).length;
-  let h = `<nav class="tabs">${[['classement','Classement'],['epreuves','Épreuves'],['equipes','Équipes']].map(([k,l])=>`<button class="${state.orgTab===k?'on':''}" onclick="orgTab('${k}')">${l}</button>`).join('')}</nav>`;
+  let h = `<nav class="tabs">${[['classement','Classement'],['epreuves','Épreuves'],['equipes','Équipes'],['messages','Messages'+(state.orgTab!=='messages'&&nonLus()?' ('+nonLus()+')':'')]].map(([k,l])=>`<button class="${state.orgTab===k?'on':''}" onclick="orgTab('${k}')">${l}</button>`).join('')}</nav>`;
   if(state.orgTab==='classement'){
-    h += `<div class="card"><div class="scores" style="margin-top:0"><div><b>${c.saisies}</b><span>résultats saisis</span></div><div><b>${inscrites}/${N_EQUIPES}</b><span>équipes inscrites</span></div><div><b style="font-size:15px;padding-top:6px">${resteTxt().replace('Fin des épreuves ','')}</b><span>fin des épreuves</span></div></div><button class="btn clair" onclick="refresh()">Actualiser</button></div>`;
+    h += `<div class="card"><div class="scores" style="margin-top:0"><div><b>${c.saisies}</b><span>résultats saisis</span></div><div><b>${inscrites}/${N_EQUIPES}</b><span>équipes inscrites</span></div><div><b style="font-size:15px;padding-top:6px">${temps().court}</b><span>fin des épreuves</span></div></div><button class="btn clair" onclick="refresh()">Actualiser</button></div>`;
     if(c.general){ [c.general,c.prixQuiz,c.ambiance].forEach(t=>t&&chargerPhoto(t));
       h += `<div class="prix" style="background:linear-gradient(160deg,var(--bleu),var(--marine))"><div class="ph" style="${phStyle(c.general)}"></div><div><div class="t">Grand prix de la cohésion</div><div class="n">${titreEq(c.general)}</div><div>${c.eq[c.general].total} points · ${pl(c.eq[c.general].faits,'épreuve')}</div></div></div>`;
       h += c.prixQuiz ? `<div class="prix" style="background:var(--orange)"><div class="ph" style="${phStyle(c.prixQuiz)}"></div><div><div class="t">Prix spécial Proxim'Services (culture d'entreprise)</div><div class="n">${titreEq(c.prixQuiz)}</div><div>${c.eq[c.prixQuiz].quiz} bonnes réponses sur 10</div></div></div>` : `<div class="banner">Prix spécial : en attente des résultats de la culture d'entreprise.</div>`;
@@ -399,6 +480,9 @@ function vOrg(){
     const all=Object.values(passages()).filter(r=>r.resultat&&r.resultat!=='X');
     h += EP.map(e=>{ const l=all.filter(r=>r.stand===e.n); const reste=Array.from({length:N_EQUIPES},(_,i)=>i+1).filter(t=>!l.some(r=>r.team===t));
       return `<div class="card"><b>${e.n}. ${e.nom}</b> <span class="muted">· ${pl(l.length,'équipe')} passée${l.length>1?'s':''} sur ${N_EQUIPES}</span><div class="prog"><div style="width:${100*l.length/N_EQUIPES}%"></div></div><p class="muted" style="margin:8px 0 0">Pas encore passées : ${reste.length?reste.join(', '):'aucune'}</p></div>`; }).join('');
+  } else if(state.orgTab==='messages'){
+    h += `<div class="card" style="padding:12px 14px"><b>Messagerie</b><p class="muted" style="margin:4px 0 8px">Vos messages partent à toutes les équipes et s'affichent en haut de leur écran. Vous pouvez masquer un message déplacé.</p>
+      <button class="btn clair" style="margin-top:0" onclick="basculerChat()">${state.chatOuvert?'Fermer la messagerie aux équipes':'Rouvrir la messagerie aux équipes'}</button></div><div class="fil" id="fil"></div>${zoneEcrire()}`;
   } else {
     h += `<div class="card"><p class="muted">Les ${N_EQUIPES} équipes. Touchez une équipe pour ouvrir son carnet.</p>${state.galerie?'':'<button class="btn clair" onclick="chargerGalerie()">Afficher les photos des équipes</button>'}</div><div class="gal">`;
     for(let t=1;t<=N_EQUIPES;t++){ const e=equipe(t); h += `<div onclick="voirEquipe(${t})">${state.galerie&&state.photos[t]?`<img src="${state.photos[t]}" alt="">`:''}<b>Équipe ${t}</b> · ${couleur(t)}<br>${e&&e.nom?esc(e.nom)+'<br><span class="muted">'+esc(e.capitaine||'')+'</span>':'<span class="muted">non inscrite</span>'}</div>`; }
@@ -408,12 +492,30 @@ function vOrg(){
 }
 
 // =============== Actions ===============
-function aller(v){ state.view=v; if(v==='org'){ state.orgRetour=false; } render(); window.scrollTo(0,0); if(v==='org'||v==='home') refresh(); }
+function aller(v){ state.view=v; if(v==='org'){ state.orgRetour=false; } render(); if(v!=='chat') window.scrollTo(0,0); if(v==='org'||v==='home') refresh(); if(v==='chat') lireMessages(); }
 window.aller=aller;
 window.choisirEquipe = ()=>{ const t=+$('#selT').value; if(!t){ alert('Choisissez votre équipe.'); return; } state.team=t; lsSet('team',t); state.view=''; render(); refresh(); };
 window.entrerOrg = ()=>{ if(codeOrgOk($('#codeOrg').value)){ state.org=true; lsSet('org',true); aller('org'); } else alert('Code incorrect.'); };
 window.quitterOrg = ()=>{ state.org=false; lsSet('org',false); state.orgRetour=false; state.view=''; render(); };
-window.orgTab = k=>{ state.orgTab=k; render(); };
+window.orgTab = k=>{ state.orgTab=k; render(); if(k==='messages') lireMessages(); };
+let dernierEnvoi=0;
+function posterMessage(texte){
+  const team = state.org ? 0 : state.team; const cid = (Date.now().toString(36)+Math.random().toString(36).slice(2,10));
+  const row = { event:EVENT, cid, team, texte, code:CLE };
+  if(!/^__CHAT_/.test(texte)) local.m[cid] = { ...row, masque:false, created_at:new Date().toISOString() };
+  pousser('tb_messages','cid','m-'+cid,row);
+}
+window.envoyerMessage = ()=>{
+  const el=document.getElementById('msgTxt'); if(!el) return; const txt=(el.value||'').trim().slice(0,200); if(!txt) return;
+  if(!state.org && !state.chatOuvert){ alert('La messagerie est fermée pour le moment.'); render(); return; }
+  if(!state.org && Date.now()-dernierEnvoi < 4000){ alert('Un instant : un message toutes les 4 secondes.'); return; }
+  dernierEnvoi=Date.now(); posterMessage(txt); el.value=''; majFil(true); setTimeout(()=>lireMessages(), 1500);
+};
+window.masquer = cid=>{ const m=state.messages.find(x=>x.cid===cid); if(!m || !confirm('Masquer ce message pour toutes les équipes ?')) return;
+  m.masque=true; pousser('tb_messages','cid','m-'+cid,{ event:EVENT, cid, team:m.team, texte:m.texte, masque:true, code:CLE }); majFil(); };
+window.basculerChat = ()=>{ if(!confirm(state.chatOuvert?'Fermer la messagerie ? Les équipes ne pourront plus écrire.':'Rouvrir la messagerie aux équipes ?')) return;
+  posterMessage(state.chatOuvert?'__CHAT_OFF__':'__CHAT_ON__'); state.chatOuvert=!state.chatOuvert; render(); };
+window.annonceVue = cid=>{ lsSet('annonce_vue',cid); render(); };
 window.voirEquipe = t=>{ state.team=t; state.orgRetour=true; state.view=''; render(); window.scrollTo(0,0); chargerPhoto(t); };
 window.chargerGalerie = async ()=>{ try{ const r=await dbGet('tb_equipes','select=team,photo'); r.forEach(x=>{ if(okPhoto(x.photo)) state.photos[x.team]=x.photo; }); }catch(e){} state.galerie=true; render(); };
 window.garderBrouillon = ()=>{ if($('#fNom')) lsSet('brouillon_nom',$('#fNom').value); if($('#fCap')) lsSet('brouillon_cap',$('#fCap').value); };
@@ -440,7 +542,7 @@ window.modifierEquipe = ()=>{
   const e=equipe(state.team)||{}; lsSet('brouillon_nom',e.nom||''); lsSet('brouillon_cap',e.capitaine||''); state.edition=true; state.view='brief'; render(); window.scrollTo(0,0);
 };
 window.ouvrir = n=>{ state.ep=n; state.view='ep'; render(); window.scrollTo(0,0); };
-window.demarrerSaisie = ()=>{ const r=passages()[kp(state.ep,state.team)]; const ok=r&&r.resultat&&r.resultat!=='X';
+window.demarrerSaisie = ()=>{ const r=passages()[kp(state.ep,state.team)]; const ok=state.org&&r&&r.resultat&&r.resultat!=='X';
   state.saisie={ res: ok&&EPN[state.ep].type==='duel'?r.resultat:'', bonus:{a:!!(ok&&r.b_ambiance), c:!!(ok&&r.b_cohesion), f:!!(ok&&r.b_fairplay)} }; state.view='saisie'; render(); window.scrollTo(0,0); };
 function garderChamps(){ const v={}; ['mm','ss','mv','codeA'].forEach(id=>{ const el=document.getElementById(id); if(el) v[id]=el.value; }); return v; }
 function remettreChamps(v){ Object.entries(v).forEach(([id,val])=>{ const el=document.getElementById(id); if(el) el.value=val; }); }
@@ -455,8 +557,7 @@ window.validerSaisie = ()=>{
   if(!codeSaisieOk()) return;
   const row={ event:EVENT, stand:e.n, team:t, resultat:res, mesure:mes, b_ambiance:s.bonus.a, b_cohesion:s.bonus.c, b_fairplay:s.bonus.f, code:CLE, updated_at:new Date().toISOString() };
   local.p[kp(e.n,t)]=row; pousser('tb_passages','event,stand,team','p-'+kp(e.n,t),row);
-  const c=calcul(); const p=c.pts[kp(e.n,t)]||0; const b=(s.bonus.a?1:0)+(s.bonus.c?1:0)+(s.bonus.f?1:0); const rg=c.rang[kp(e.n,t)];
-  state.bravo={ titre:`${e.nom} : c'est validé !`, pts:'+'+(p+b), sous:`points pour l'équipe ${t}`+(b?` dont ${b} bonus`:'')+(rg?`<br>${rg.r}${rg.r===1?'er':'e'} sur ${pl(rg.n,'équipe')} pour l'instant`:'') };
+  state.bravo={ titre:`${e.nom} : c'est validé !`, sous:`Résultat enregistré pour l'équipe ${t}. Les points restent secrets jusqu'au podium.` };
   state.view='bravo'; render(); window.scrollTo(0,0);
 };
 window.supprimerPassage = ()=>{
@@ -467,6 +568,9 @@ window.supprimerPassage = ()=>{
 window.refresh=refresh;
 window.addEventListener('online', flush);
 setInterval(()=>{ flush(); refresh(); }, 20000);
+setInterval(()=>{ if(state.view==='chat' || (state.view==='org' && state.orgTab==='messages')) lireMessages(); }, 6000);
+setInterval(majRebours, 1000);
+setInterval(()=>{ if(state.view==='home') renderDoux(); }, 60000);          // pour faire clignoter la culture d'entreprise le moment venu
 if(Q.has('org')){ if(!tQ) state.team=0; state.view = state.org ? 'org' : 'landing'; }
 render(); refresh();
 </script>
