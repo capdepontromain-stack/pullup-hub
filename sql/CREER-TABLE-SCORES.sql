@@ -1,57 +1,74 @@
 -- ============================================================
--- CRÉER LA TABLE DES SCORES DE TEAM BUILDING (Pull Up Score) : 09/11/2026
+-- TABLES DE LA KERMESSE PROXIM'SERVICES (Pull Up Score) : 10/11/2026
 --
--- POURQUOI : l'application score.html (https://capdepontromain-stack.github.io/pullup-hub/score.html)
--- permet aux animateurs de saisir sur leur téléphone le résultat de chaque manche
--- de leur stand, et à Romain de voir le classement en direct (grand prix + prix
--- spécial quiz). Sans cette table, l'application garde les saisies sur chaque
--- téléphone mais personne ne voit le classement.
+-- POURQUOI : l'application score.html
+-- (https://capdepontromain-stack.github.io/pullup-hub/score.html)
+-- permet aux animateurs de saisir sur leur téléphone le résultat de chaque
+-- passage d'une équipe sur leur stand, aux capitaines de voir leur carnet de
+-- route et les stands libres, et à Romain de voir le classement en direct.
+-- Sans ces tables, l'application garde les saisies sur chaque téléphone mais
+-- rien n'est partagé.
 --
 -- COMMENT L'APPLIQUER : Supabase → SQL Editor → coller tout ce fichier → Run.
--- L'application détecte la table toute seule (recharger la page).
+-- L'application détecte les tables toute seule (recharger la page).
 --
--- SÉCURITÉ : les animateurs n'ont pas de compte Hub. La table est donc ouverte
--- en lecture à tous (des scores de jeux, rien de sensible) et en écriture
--- uniquement si la ligne porte le code PULLUP14 donné au briefing. Après
--- l'événement, on peut retirer les deux règles « anon » (voir tout en bas).
+-- SÉCURITÉ : les animateurs n'ont pas de compte Hub. Les tables sont donc
+-- lisibles par tous (des scores de jeux, rien de sensible) et ne peuvent être
+-- écrites que si la ligne porte le code PULLUP14, donné au briefing.
+-- Après l'événement, on peut retirer l'écriture publique (voir tout en bas).
 -- ============================================================
 
-create table if not exists tb_scores (
+-- Un passage = une équipe sur un stand (une seule ligne par équipe et par stand : la saisie suivante la met à jour)
+create table if not exists tb_passages (
   id uuid default gen_random_uuid() primary key,
-  event text not null,                       -- ex. proxim-2026-11-14 (une ligne de réglage par événement dans score.html)
-  stand int not null,
-  manche int not null,
-  team_a int not null,
-  team_b int not null,
-  result text check (result in ('A','B','N')),  -- A gagne, B gagne, N = égalité
-  score_a int,                               -- score brut facultatif (quiz : bonnes réponses sur 10)
-  score_b int,
+  event text not null,                          -- proxim-2026-11-14
+  stand int not null check (stand between 1 and 14),
+  team int not null check (team between 1 and 28),
+  resultat text check (resultat in ('V','N','D','F','X')),  -- V victoire, N égalité, D défaite (duels), F fait (autres épreuves), X annulé
+  adversaire int,                               -- équipe adverse (duels)
+  mesure numeric,                               -- temps en secondes, points, note sur 10, bonnes réponses ou hauteur en cm
   animateur text,
   code text,
   updated_at timestamptz default now(),
-  unique (event, stand, manche)              -- une seule ligne par stand et par manche : l'application met à jour
+  unique (event, stand, team)
 );
 
-alter table tb_scores enable row level security;
+-- L'état de chaque stand : libre, presque plein, complet
+create table if not exists tb_stands (
+  id uuid default gen_random_uuid() primary key,
+  event text not null,
+  stand int not null check (stand between 1 and 14),
+  statut text not null check (statut in ('libre','presque','complet')),
+  code text,
+  updated_at timestamptz default now(),
+  unique (event, stand)
+);
 
-drop policy if exists tb_scores_anon_select on tb_scores;
-create policy tb_scores_anon_select on tb_scores
-  for select to anon using (true);
+alter table tb_passages enable row level security;
+alter table tb_stands enable row level security;
 
-drop policy if exists tb_scores_anon_insert on tb_scores;
-create policy tb_scores_anon_insert on tb_scores
-  for insert to anon with check (code = 'PULLUP14');
+drop policy if exists tb_passages_anon_select on tb_passages;
+create policy tb_passages_anon_select on tb_passages for select to anon using (true);
+drop policy if exists tb_passages_anon_insert on tb_passages;
+create policy tb_passages_anon_insert on tb_passages for insert to anon with check (code = 'PULLUP14');
+drop policy if exists tb_passages_anon_update on tb_passages;
+create policy tb_passages_anon_update on tb_passages for update to anon using (true) with check (code = 'PULLUP14');
+drop policy if exists tb_passages_equipe on tb_passages;
+create policy tb_passages_equipe on tb_passages for all to authenticated using (true) with check (true);
 
-drop policy if exists tb_scores_anon_update on tb_scores;
-create policy tb_scores_anon_update on tb_scores
-  for update to anon using (true) with check (code = 'PULLUP14');
-
-drop policy if exists tb_scores_equipe on tb_scores;
-create policy tb_scores_equipe on tb_scores
-  for all to authenticated using (true) with check (true);
+drop policy if exists tb_stands_anon_select on tb_stands;
+create policy tb_stands_anon_select on tb_stands for select to anon using (true);
+drop policy if exists tb_stands_anon_insert on tb_stands;
+create policy tb_stands_anon_insert on tb_stands for insert to anon with check (code = 'PULLUP14');
+drop policy if exists tb_stands_anon_update on tb_stands;
+create policy tb_stands_anon_update on tb_stands for update to anon using (true) with check (code = 'PULLUP14');
+drop policy if exists tb_stands_equipe on tb_stands;
+create policy tb_stands_equipe on tb_stands for all to authenticated using (true) with check (true);
 
 -- ============================================================
 -- APRÈS L'ÉVÉNEMENT (facultatif) : refermer l'écriture publique.
--- drop policy if exists tb_scores_anon_insert on tb_scores;
--- drop policy if exists tb_scores_anon_update on tb_scores;
+-- drop policy if exists tb_passages_anon_insert on tb_passages;
+-- drop policy if exists tb_passages_anon_update on tb_passages;
+-- drop policy if exists tb_stands_anon_insert on tb_stands;
+-- drop policy if exists tb_stands_anon_update on tb_stands;
 -- ============================================================

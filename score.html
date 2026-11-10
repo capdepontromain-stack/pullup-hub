@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Pull Up Score</title>
-<meta name="description" content="Saisie des résultats du team building Proxim'Services par les animateurs et classement en direct.">
+<meta name="description" content="Kermesse Proxim'Services : saisie des résultats par les animateurs, carnet de route des équipes et classement en direct.">
 <link rel="icon" href="logo-192.png">
 <style>
-  :root { --noir:#1C1A17; --creme:#F1ECE2; --or:#C9962E; --gris:#5A554B; --blanc:#fff; --vert:#2E7D4F; --rouge:#B23A3A; --a:#FBF4E4; --b:#E8E4DC; }
+  :root { --noir:#1C1A17; --creme:#F1ECE2; --or:#C9962E; --gris:#5A554B; --vert:#2E7D4F; --rouge:#B23A3A; --orange:#D9822B; }
   * { box-sizing:border-box; }
   body { margin:0; font-family:Arial, Helvetica, sans-serif; background:var(--creme); color:var(--noir); font-size:16px; }
   header { background:var(--noir); color:#fff; padding:12px 16px; display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:5; }
@@ -15,199 +15,279 @@
   header h1 { font-size:15px; margin:0; letter-spacing:.5px; }
   header small { color:#cfc7b8; font-size:12px; display:block; }
   nav { display:flex; background:#fff; border-bottom:2px solid var(--or); position:sticky; top:50px; z-index:5; }
-  nav button { flex:1; border:0; background:#fff; padding:12px 4px; font-size:14px; font-weight:bold; color:var(--gris); }
+  nav button { flex:1; border:0; background:#fff; padding:12px 2px; font-size:13px; font-weight:bold; color:var(--gris); }
   nav button.on { color:var(--noir); border-bottom:4px solid var(--noir); }
   main { padding:14px; max-width:720px; margin:0 auto; }
   .card { background:#fff; border-radius:12px; padding:14px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
-  label { font-size:13px; color:var(--gris); display:block; margin-bottom:4px; }
+  label { font-size:13px; color:var(--gris); display:block; margin:8px 0 4px; }
   select, input[type=text], input[type=number] { width:100%; font-size:17px; padding:10px; border:1px solid #cbc5b9; border-radius:8px; background:#fff; }
-  .row { display:flex; gap:10px; }
-  .row > * { flex:1; }
-  .manche { border:1px solid #e3ddd0; border-radius:10px; padding:10px; margin-bottom:10px; background:#fff; }
-  .manche.ok { border-color:var(--vert); background:#f3faf5; }
-  .manche.pending { border-color:var(--or); }
-  .manche h3 { margin:0 0 8px; font-size:15px; }
-  .manche h3 span { color:var(--gris); font-weight:normal; font-size:13px; }
-  .teams { display:flex; align-items:center; gap:6px; margin-bottom:8px; font-weight:bold; }
-  .team { flex:1; padding:8px; border-radius:8px; text-align:center; }
-  .team.a { background:var(--a); } .team.b { background:var(--b); }
-  .team small { display:block; font-weight:normal; color:var(--gris); font-size:12px; }
-  .btns { display:flex; gap:6px; }
-  .btns button { flex:1; padding:12px 4px; font-size:14px; font-weight:bold; border-radius:8px; border:2px solid #cbc5b9; background:#fff; color:var(--noir); }
+  .row { display:flex; gap:10px; } .row > * { flex:1; }
+  .btns { display:flex; gap:6px; margin-top:8px; }
+  .btns button, .btn { flex:1; padding:13px 4px; font-size:14px; font-weight:bold; border-radius:8px; border:2px solid #cbc5b9; background:#fff; color:var(--noir); }
   .btns button.sel { background:var(--noir); color:#fff; border-color:var(--noir); }
-  .scores { display:flex; gap:8px; margin-top:8px; align-items:center; }
-  .scores input { text-align:center; font-size:20px; font-weight:bold; }
-  .status { font-size:12px; margin-top:6px; color:var(--gris); }
-  .status.ok { color:var(--vert); } .status.pending { color:#9a6d10; } .status.err { color:var(--rouge); }
+  .btn { display:block; width:100%; background:var(--or); border-color:var(--or); margin-top:10px; font-size:16px; }
+  .btn.dark { background:var(--noir); color:#fff; border-color:var(--noir); }
+  .st-libre { border-color:var(--vert) !important; } .st-libre.sel { background:var(--vert); border-color:var(--vert); }
+  .st-presque { border-color:var(--orange) !important; } .st-presque.sel { background:var(--orange); border-color:var(--orange); }
+  .st-complet { border-color:var(--rouge) !important; } .st-complet.sel { background:var(--rouge); border-color:var(--rouge); }
   .banner { background:#FFF3CD; border:1px solid #E0C25C; color:#6b4e00; padding:10px 12px; border-radius:10px; font-size:14px; margin-bottom:12px; }
   .banner.err { background:#FBE4E4; border-color:#D9A3A3; color:#7a1f1f; }
   table { width:100%; border-collapse:collapse; font-size:14px; }
-  th, td { padding:7px 6px; border-bottom:1px solid #eee6d8; text-align:center; }
+  th, td { padding:7px 5px; border-bottom:1px solid #eee6d8; text-align:center; }
   th { background:var(--noir); color:#fff; font-size:12px; }
-  td.l { text-align:left; font-weight:bold; }
-  tr.top1 td { background:#FBF0D2; font-weight:bold; }
-  tr.top2 td { background:#F2EEE6; } tr.top3 td { background:#F6F2EC; }
-  .big { font-size:34px; font-weight:bold; line-height:1.1; }
+  td.l { text-align:left; }
+  tr.top1 td { background:#FBF0D2; font-weight:bold; } tr.top2 td { background:#F2EEE6; } tr.top3 td { background:#F6F2EC; }
+  .big { font-size:30px; font-weight:bold; line-height:1.1; }
   .prize { background:var(--noir); color:#fff; border-radius:12px; padding:14px; margin-bottom:12px; }
   .prize .t { color:var(--or); font-size:12px; letter-spacing:1px; text-transform:uppercase; }
-  .grid { display:grid; grid-template-columns:repeat(9, 1fr); gap:3px; font-size:11px; }
-  .grid div { padding:6px 0; text-align:center; border-radius:4px; background:#e9e3d6; }
-  .grid div.h { background:transparent; font-weight:bold; color:var(--gris); }
-  .grid div.ok { background:#cfe9d8; } .grid div.pend { background:#f6e1b0; }
   .muted { color:var(--gris); font-size:13px; }
-  .pin { text-align:center; padding:30px 10px; }
+  .tag { display:inline-block; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:6px; background:#eadfc7; color:#5a4410; margin-left:4px; }
+  .tag.ob { background:#F6D5D5; color:#7a1f1f; }
+  .dotc { display:inline-block; width:12px; height:12px; border-radius:50%; vertical-align:middle; margin-right:6px; background:var(--vert); }
+  .dotc.presque { background:var(--orange); } .dotc.complet { background:var(--rouge); }
+  .stl { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee6d8; }
+  .stl.fait { opacity:.65; } .stl .n { font-weight:bold; }
+  .prog { height:10px; background:#e8e1d2; border-radius:6px; overflow:hidden; margin:8px 0; }
+  .prog > div { height:100%; background:var(--vert); }
+  .ok { color:var(--vert); font-weight:bold; } .ko { color:var(--rouge); font-weight:bold; }
+  .pin { text-align:center; padding:24px 10px; }
   .pin input { font-size:28px; text-align:center; letter-spacing:4px; }
-  .btn { display:inline-block; padding:12px 18px; border-radius:10px; background:var(--or); color:var(--noir); font-weight:bold; border:0; font-size:16px; }
-  .btn.dark { background:var(--noir); color:#fff; }
+  .lnk { background:none; border:0; color:var(--gris); text-decoration:underline; font-size:13px; padding:6px; }
   footer { text-align:center; color:var(--gris); font-size:11px; padding:20px; }
 </style>
 </head>
 <body>
-<header><div class="dot"></div><div><h1>PULL UP SCORE</h1><small>Journée de cohésion Proxim'Services · samedi 14 novembre 2026</small></div></header>
-<nav id="nav" style="display:none">
-  <button data-v="stand" class="on">Mon stand</button>
-  <button data-v="classement">Classement</button>
-  <button data-v="saisies">Saisies</button>
-</nav>
+<header><div class="dot"></div><div><h1>PULL UP SCORE</h1><small>Kermesse Proxim'Services · samedi 14 novembre 2026</small></div></header>
+<nav id="nav"></nav>
 <main id="main"></main>
-<footer>Pull Up Événements · 06 93 81 78 82 · Les feuilles papier restent la sauvegarde : notez toujours sur les feuilles de route.</footer>
+<footer>Pull Up Événements · 06 93 81 78 82 · Le carnet de route papier reste la sauvegarde.</footer>
 
 <script>
 // ---------- Réglages ----------
 const SUPABASE_URL = 'https://vincxrmtfjbenlzhjwby.supabase.co';
 const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpbmN4cm10ZmpiZW5semhqd2J5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyOTI1MTksImV4cCI6MjA5Nzg2ODUxOX0.M9_ChGDlOIUKKZtbBHs1xn4cdy4FwUAQKN0aYyXefQY';
-const TABLE = 'tb_scores';
-const EVENT = 'proxim-2026-11-14';
-const CODE = 'PULLUP14';          // code d'accès donné au briefing
-const QUIZ_STAND = 5;              // le stand qui donne le prix spécial
-const N_STANDS = 15, N_MANCHES = 8;
-const STATIONS = ['Les catapultes','Les roues',"L'épreuve Kapla","L'Archery Tag",'Le quiz Culture G péi','Le parcours gonflable','Le tir à la corde',"L'épreuve des lettres",'Les cibles géantes','La chorégraphie','Photos & vidéos','Le théâtre',"À l'aveugle",'Le clou','Transport en cohésion'];
-const COULEURS = ['Rouge','Bleu roi','Vert','Jaune','Orange','Violet','Rose','Blanc','Noir','Turquoise','Bordeaux','Bleu ciel','Vert anis','Gris','Doré'];
-const couleur = t => COULEURS[(t-1)%15];
-// Même formule que la grille papier : A = (s - r) mod 15 + 1 ; B = (s + r + 2) mod 15 + 16 (s et r à partir de 0)
-function paire(stand, manche){ const s=stand-1, r=manche-1; return [ ((s-r)%15+15)%15+1, (s+r+2)%15+16 ]; }
+const ESSAI = new URLSearchParams(location.search).has('essai');   // lien « ?essai » : mode répétition, n'écrit rien dans le vrai événement
+const EVENT = ESSAI ? 'essai-2026-11-14' : 'proxim-2026-11-14';
+const CODE = 'PULLUP14';                // code des animateurs et de l'organisation
+const N_EQUIPES = 28, MIN_EPREUVES = 8, STAND_CULTURE = 12;
+const COULEURS = ['Rouge','Bleu roi','Vert','Jaune','Orange','Violet','Rose','Blanc','Noir','Turquoise','Bordeaux','Bleu ciel','Vert anis','Gris'];
+const couleur = t => COULEURS[(t-1)%14];
+// type : duel / chrono (secondes, le plus bas gagne) / points / jury (note sur 10) / quiz (bonnes réponses sur 10) / hauteur (cm)
+const STANDS = [
+ {n:1,nom:'La catapulte',type:'duel',places:2,min:10},
+ {n:2,nom:'Les roues',type:'chrono',places:5,min:5},
+ {n:3,nom:'Le Kapla',type:'jury',places:5,min:7},
+ {n:4,nom:"L'Archery Tag",type:'duel',places:2,min:10},
+ {n:5,nom:"Le parcours d'obstacles",type:'chrono',places:3,min:5},
+ {n:6,nom:'Le tir à la corde',type:'duel',places:2,min:5},
+ {n:7,nom:'Les lettres',type:'chrono',places:4,min:7},
+ {n:8,nom:'Les cibles foot',type:'points',places:2,min:10},
+ {n:9,nom:'Les haches',type:'points',places:2,min:10},
+ {n:10,nom:'Les clous',type:'chrono',places:4,min:8},
+ {n:11,nom:'Le théâtre',type:'jury',places:3,min:10},
+ {n:12,nom:"La culture d'entreprise",type:'quiz',places:3,min:8},
+ {n:13,nom:'Photos et vidéos',type:'jury',places:4,min:10},
+ {n:14,nom:'La tour de Babel',type:'hauteur',places:2,min:8}
+];
+const ST = Object.fromEntries(STANDS.map(s=>[s.n,s]));
+const MESURE = { chrono:'Temps', points:'Points de l\'équipe', jury:'Note du jury sur 10', quiz:'Bonnes réponses sur 10', hauteur:'Hauteur de la tour en cm' };
+const DEPART_PLAN = [[1,2],[2,3],[3,2],[4,2],[5,2],[6,2],[7,2],[8,1],[9,1],[10,2],[11,2],[12,3],[13,2],[14,2]];
+const DEPART = {}; (()=>{ let t=1; DEPART_PLAN.forEach(([s,n])=>{ for(let i=0;i<n;i++) DEPART[t++]=s; }); })();
 
 // ---------- État ----------
-const LS = k => 'pus_'+EVENT+'_'+k;
-let state = { view:'stand', stand: +(localStorage.getItem(LS('stand'))||0), nom: localStorage.getItem(LS('nom'))||'', pin: localStorage.getItem(LS('pin'))==='1', rows:{}, dbOk:null, lastErr:'' };
-let queue = JSON.parse(localStorage.getItem(LS('queue'))||'{}');   // clé stand-manche -> ligne à envoyer
-let local = JSON.parse(localStorage.getItem(LS('local'))||'{}');   // copie locale de tout ce qu'on a saisi
-const key = (s,m)=> s+'-'+m;
-const saveLS = ()=>{ localStorage.setItem(LS('queue'),JSON.stringify(queue)); localStorage.setItem(LS('local'),JSON.stringify(local)); };
+const LS = k => 'pus2_'+EVENT+'_'+k;
+const lsGet = (k,d)=>{ try{ const v=localStorage.getItem(LS(k)); return v===null?d:JSON.parse(v);}catch(e){return d;} };
+const lsSet = (k,v)=>{ try{ localStorage.setItem(LS(k),JSON.stringify(v)); }catch(e){} };
+let state = { view: lsGet('view','equipe'), stand: lsGet('stand',0), nom: lsGet('nom',''), team: lsGet('team',0), org: lsGet('org',false),
+              rows: {}, stands: {}, dbOk: null, lastErr:'', pick:{ a:'', b:'' } };
+let local  = lsGet('local',{});   // clé 'p-stand-équipe' → ligne
+let localS = lsGet('localS',{});  // clé stand → ligne
+let queue  = lsGet('queue',{});   // clé → {table,row}
+const kp = (s,t)=>`p-${s}-${t}`;
+const save = ()=>{ lsSet('local',local); lsSet('localS',localS); lsSet('queue',queue); };
 
-// ---------- Supabase (REST, sans bibliothèque) ----------
+// ---------- Supabase (REST) ----------
 const H = { 'apikey':ANON, 'Authorization':'Bearer '+ANON, 'Content-Type':'application/json' };
-async function dbSelect(){
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?event=eq.${EVENT}&select=stand,manche,team_a,team_b,result,score_a,score_b,animateur,updated_at`, {headers:H});
-  if(!r.ok){ throw new Error(await r.text()); }
+async function dbGet(table, cols){
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?event=eq.${EVENT}&select=${cols}`, {headers:H});
+  if(!r.ok) throw new Error(await r.text());
   return r.json();
 }
-async function dbUpsert(row){
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?on_conflict=event,stand,manche`, {method:'POST', headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'}, body:JSON.stringify(row)});
-  if(!r.ok){ throw new Error(await r.text()); }
+async function dbUpsert(table, conflict, row){
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?on_conflict=${conflict}`, {method:'POST', headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'}, body:JSON.stringify(row)});
+  if(!r.ok) throw new Error(await r.text());
 }
 async function flush(){
-  const keys = Object.keys(queue); if(!keys.length) return;
-  for(const k of keys){ try{ await dbUpsert(queue[k]); delete queue[k]; } catch(e){ state.lastErr = String(e.message||e); break; } }
-  saveLS(); render();
+  for(const k of Object.keys(queue)){
+    const q = queue[k];
+    try{ await dbUpsert(q.table, q.conflict, q.row); delete queue[k]; }
+    catch(e){ state.lastErr=String(e.message||e); state.dbOk=false; break; }
+  }
+  save(); renderSafe();
 }
 async function refresh(){
-  try{ const rows = await dbSelect(); state.rows={}; rows.forEach(x=>state.rows[key(x.stand,x.manche)]=x); state.dbOk=true; state.lastErr=''; }
-  catch(e){ state.dbOk=false; state.lastErr=String(e.message||e); }
-  render();
+  try{
+    const [p,s] = await Promise.all([ dbGet('tb_passages','stand,team,resultat,adversaire,mesure,animateur,updated_at'), dbGet('tb_stands','stand,statut,updated_at') ]);
+    state.rows={}; p.forEach(x=>state.rows[kp(x.stand,x.team)]=x);
+    state.stands={}; s.forEach(x=>state.stands[x.stand]=x);
+    state.dbOk=true; state.lastErr='';
+  }catch(e){ state.dbOk=false; state.lastErr=String(e.message||e); }
+  renderSafe();
 }
-function enregistrer(stand, manche, result, sa, sb){
-  const [a,b] = paire(stand, manche);
-  const row = { event:EVENT, stand, manche, team_a:a, team_b:b, result, score_a: sa===''?null:+sa, score_b: sb===''?null:+sb, animateur: state.nom||null, code:CODE, updated_at:new Date().toISOString() };
-  local[key(stand,manche)] = row; queue[key(stand,manche)] = row; saveLS(); render(); flush();
+function pousser(table, conflict, key, row){ queue[key]={table,conflict,row}; save(); flush(); }
+function savePassage(stand, team, resultat, adversaire, mesure){
+  const row = { event:EVENT, stand, team, resultat, adversaire: adversaire||null, mesure: (mesure===''||mesure==null)?null:+mesure, animateur: state.nom||null, code:CODE, updated_at:new Date().toISOString() };
+  local[kp(stand,team)] = row; pousser('tb_passages','event,stand,team', kp(stand,team), row);
+}
+function saveStatut(stand, statut){
+  const row = { event:EVENT, stand, statut, code:CODE, updated_at:new Date().toISOString() };
+  localS[stand]=row; pousser('tb_stands','event,stand','s-'+stand,row); render();
 }
 
 // ---------- Calculs ----------
-function donnees(){ // fusion base + local (le local prime s'il est plus récent)
+function donnees(){
   const all = {...state.rows};
-  Object.values(local).forEach(r=>{ const k=key(r.stand,r.manche); if(!all[k] || (all[k].updated_at||'') < r.updated_at) all[k]=r; });
+  Object.entries(local).forEach(([k,r])=>{ if(!all[k] || (all[k].updated_at||'') <= r.updated_at) all[k]=r; });
   return all;
 }
-function classement(){
-  const pts={}, wins={}, quiz={}, joue={};
-  for(let t=1;t<=30;t++){ pts[t]=0; wins[t]=0; quiz[t]=null; joue[t]=0; }
-  const all = donnees();
-  Object.values(all).forEach(r=>{
-    if(!r.result) return;
-    joue[r.team_a]++; joue[r.team_b]++;
-    if(r.result==='A'){ pts[r.team_a]+=3; pts[r.team_b]+=1; wins[r.team_a]++; }
-    else if(r.result==='B'){ pts[r.team_b]+=3; pts[r.team_a]+=1; wins[r.team_b]++; }
-    else { pts[r.team_a]+=2; pts[r.team_b]+=2; }
-    if(r.stand===QUIZ_STAND){ if(r.score_a!=null) quiz[r.team_a]=r.score_a; if(r.score_b!=null) quiz[r.team_b]=r.score_b; }
+function statuts(){
+  const all = {...state.stands};
+  Object.entries(localS).forEach(([k,r])=>{ if(!all[k] || (all[k].updated_at||'') <= r.updated_at) all[k]=r; });
+  return all;
+}
+// Points par passage : duels 5/3/1, autres épreuves classées entre toutes les équipes passées (5 = premiers 20 %, 1 = derniers 20 %)
+function calcul(){
+  const all = Object.values(donnees()).filter(r=>r.resultat!=='X');
+  const pts = {};  // 'stand-team' -> points
+  STANDS.forEach(s=>{
+    const list = all.filter(r=>r.stand===s.n);
+    if(s.type==='duel'){ list.forEach(r=>{ pts[kp(s.n,r.team)] = r.resultat==='V'?5:(r.resultat==='N'?3:1); }); return; }
+    const valid = list.filter(r=>r.mesure!=null); const n = valid.length; const asc = s.type==='chrono';
+    valid.forEach(r=>{ const mieux = valid.filter(x=> asc ? x.mesure<r.mesure : x.mesure>r.mesure).length; pts[kp(s.n,r.team)] = 5 - Math.floor(5*mieux/n); });
   });
-  const ordre = Object.keys(pts).map(Number).sort((x,y)=> pts[y]-pts[x] || wins[y]-wins[x] || (quiz[y]||0)-(quiz[x]||0) || x-y);
-  const general = ordre[0];
-  const quizOrdre = Object.keys(quiz).map(Number).filter(t=>quiz[t]!=null).sort((x,y)=> quiz[y]-quiz[x] || pts[y]-pts[x] || x-y);
+  const eq = {};
+  for(let t=1;t<=N_EQUIPES;t++) eq[t]={t,list:[],faits:0,culture:false,duels:0,quiz:null,comptes:0,total:0,ok:false};
+  Object.entries(pts).forEach(([k,p])=>{ const [,s,t]=k.split('-').map(Number); const e=eq[t]; e.list.push({s,p}); e.faits++; if(s===STAND_CULTURE) e.culture=true; if(ST[s].type==='duel') e.duels++; });
+  all.filter(r=>r.stand===STAND_CULTURE && r.mesure!=null).forEach(r=>{ eq[r.team].quiz=r.mesure; });
+  Object.values(eq).forEach(e=>{ const sorted=e.list.map(x=>x.p).sort((a,b)=>b-a); e.comptes=sorted.slice(0,MIN_EPREUVES).reduce((a,b)=>a+b,0); e.total=sorted.reduce((a,b)=>a+b,0); e.ok = e.faits>=MIN_EPREUVES && e.culture && e.duels>=1; });
+  const ordre = Object.values(eq).sort((a,b)=> b.comptes-a.comptes || b.total-a.total || a.t-b.t).map(e=>e.t);
+  const qual = ordre.filter(t=>eq[t].ok);
+  const general = (qual[0] ?? ordre[0]);
+  const quizOrdre = Object.values(eq).filter(e=>e.quiz!=null).sort((a,b)=> b.quiz-a.quiz || b.comptes-a.comptes || a.t-b.t).map(e=>e.t);
   const prixQuiz = quizOrdre.find(t=>t!==general) ?? null;
-  const saisies = Object.values(all).filter(r=>r.result).length;
-  return { pts, wins, quiz, joue, ordre, general, prixQuiz, saisies, all };
+  return { pts, eq, ordre, general, prixQuiz, saisies: all.length, all };
 }
 
 // ---------- Rendu ----------
-const $ = sel => document.querySelector(sel);
+const $ = s => document.querySelector(s);
+const fmtT = s => { s=+s; return Math.floor(s/60)+' min '+String(s%60).padStart(2,'0')+' s'; };
+function tabs(){ const t=[['equipe','Mon équipe'],['stands','Stands']]; if(state.org) t.push(['stand','Mon stand'],['classement','Classement']); return t; }
+function renderSafe(){ const a=document.activeElement; if(a && (a.tagName==='INPUT'||a.tagName==='SELECT')) return; render(); }
 function render(){
-  const main=$('#main'), nav=$('#nav');
-  if(!state.pin){ nav.style.display='none'; main.innerHTML = `<div class="card pin"><div class="big" style="font-size:22px;margin-bottom:10px">Code d'accès</div><p class="muted">Donné au briefing du matin.</p><input type="text" id="pin" inputmode="text" autocapitalize="characters" placeholder="CODE"><p></p><button class="btn dark" onclick="verifPin()">Entrer</button></div>`; return; }
-  nav.style.display='flex';
-  nav.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.v===state.view));
-  let html='';
-  if(state.dbOk===false){ html += `<div class="banner err"><b>Base non joignable.</b> Les saisies sont gardées sur ce téléphone et seront envoyées dès que possible. Continuez à noter sur les feuilles papier.<br><small>${(state.lastErr||'').slice(0,160)}</small></div>`; }
-  const nq = Object.keys(queue).length; if(nq) html += `<div class="banner">${nq} saisie(s) en attente d'envoi.</div>`;
-  if(state.view==='stand') html += vueStand(); else if(state.view==='classement') html += vueClassement(); else html += vueSaisies();
-  main.innerHTML = html;
+  const nav=$('#nav'); const t=tabs(); if(!t.find(x=>x[0]===state.view)) state.view='equipe';
+  nav.innerHTML = t.map(([k,l])=>`<button data-v="${k}" class="${state.view===k?'on':''}">${l}</button>`).join('');
+  nav.querySelectorAll('button').forEach(b=>b.onclick=()=>{ state.view=b.dataset.v; lsSet('view',state.view); render(); if(state.view!=='stand') refresh(); });
+  let h='';
+  if(ESSAI) h += `<div class="banner"><b>MODE ESSAI.</b> Rien de ce que vous saisissez ici ne compte pour la journée.</div>`;
+  if(state.dbOk===false) h += `<div class="banner err"><b>Base non joignable.</b> Les saisies sont gardées sur ce téléphone et partiront dès que possible. Continuez sur le carnet papier.<br><small>${(state.lastErr||'').slice(0,150)}</small></div>`;
+  const nq=Object.keys(queue).length; if(nq) h += `<div class="banner">${nq} saisie(s) en attente d'envoi.</div>`;
+  h += state.view==='equipe'?vueEquipe(): state.view==='stands'?vueStands(): state.view==='stand'?vueStand(): vueClassement();
+  $('#main').innerHTML = h;
 }
+function pastille(n){ const st=statuts()[n]; const k=st?st.statut:'libre'; return `<span class="dotc ${k==='libre'?'':k}"></span>`; }
+function libelleStatut(n){ const st=statuts()[n]; const k=st?st.statut:'libre'; return k==='libre'?'Libre':k==='presque'?'Presque plein':'Complet'; }
+function tagsStand(s){ return (s.type==='duel'?'<span class="tag">DUEL</span>':'')+(s.n===STAND_CULTURE?'<span class="tag ob">OBLIGATOIRE</span>':''); }
+
+function vueEquipe(){
+  let h = `<div class="card"><label>Numéro de mon équipe</label><select id="selTeam" onchange="setTeam(this.value)"><option value="0">Choisir…</option>${Array.from({length:N_EQUIPES},(_,i)=>`<option value="${i+1}" ${state.team===i+1?'selected':''}>Équipe ${i+1} · ${couleur(i+1)}</option>`).join('')}</select></div>`;
+  if(!state.team) return h + `<p class="muted">Choisissez le numéro écrit sur votre bandeau : vous voyez votre carnet de route, vos points et les stands libres. Les points sont saisis par les animateurs.</p>` + lienOrg();
+  const c=calcul(); const e=c.eq[state.team]; const faits=new Set(e.list.map(x=>x.s));
+  h += `<div class="card"><div class="big">Équipe ${e.t}</div><div class="muted">${couleur(e.t)} · départ imposé : stand ${DEPART[e.t]} (${ST[DEPART[e.t]].nom})</div>
+    <div class="prog"><div style="width:${Math.min(100,100*e.faits/MIN_EPREUVES)}%"></div></div>
+    <div><b>${e.faits}</b> épreuve(s) faite(s) sur ${MIN_EPREUVES} minimum · <b>${e.comptes}</b> points comptés</div>
+    <div style="margin-top:6px">Culture d'entreprise : ${e.culture?'<span class="ok">faite</span>':'<span class="ko">à faire (obligatoire)</span>'} · Au moins 1 duel : ${e.duels>=1?'<span class="ok">fait</span>':'<span class="ko">à faire</span>'}</div>
+    <p class="muted" style="margin-bottom:0">On compte vos ${MIN_EPREUVES} meilleurs résultats. Chaque stand une seule fois. Fin des épreuves à 12h30.</p></div>`;
+  const libres = STANDS.filter(s=>!faits.has(s.n) && (statuts()[s.n]?.statut||'libre')==='libre');
+  if(libres.length) h += `<div class="card"><b>Stands libres pour vous</b><div class="muted">${libres.map(s=>`${s.n}. ${s.nom}`).join(' · ')}</div></div>`;
+  h += `<div class="card">${STANDS.map(s=>{ const p=c.pts[kp(s.n,e.t)]; const f=faits.has(s.n);
+     return `<div class="stl ${f?'fait':''}"><div><span class="n">${s.n}.</span> ${s.nom} ${tagsStand(s)}<div class="muted">${s.min} min · ${s.places} équipe(s) à la fois</div></div><div style="text-align:right">${f?`<span class="ok">${p} pt${p>1?'s':''}</span>`:`${pastille(s.n)}<span class="muted">${libelleStatut(s.n)}</span>`}</div></div>`; }).join('')}</div>`;
+  return h + lienOrg();
+}
+function lienOrg(){ return state.org ? `<button class="lnk" onclick="verrouiller()">Quitter le mode animateur</button>` : `<div class="card pin"><div class="muted">Animateur ou organisation ? Entrez le code.</div><input type="text" id="pin" autocapitalize="characters" placeholder="CODE"><button class="btn dark" onclick="verifPin()">Entrer</button></div>`; }
+function vueStands(){
+  const c=calcul(); let h='<div class="card"><b>Stands en direct</b><p class="muted">Libre, presque plein ou complet : mis à jour par les animateurs. Allez vers un stand libre.</p>';
+  STANDS.forEach(s=>{ const nb = Object.values(c.eq).filter(e=>e.list.some(x=>x.s===s.n)).length; h += `<div class="stl"><div><span class="n">${s.n}.</span> ${s.nom} ${tagsStand(s)}<div class="muted">${s.min} min · ${s.places} équipe(s) à la fois · ${nb} équipe(s) déjà passée(s)</div></div><div>${pastille(s.n)}<span class="muted">${libelleStatut(s.n)}</span></div></div>`; });
+  return h + '</div>' + lienOrg();
+}
+function optionsEquipes(sel){ return `<option value="">Équipe…</option>`+Array.from({length:N_EQUIPES},(_,i)=>`<option value="${i+1}" ${String(sel)===String(i+1)?'selected':''}>Équipe ${i+1} · ${couleur(i+1)}</option>`).join(''); }
 function vueStand(){
-  let h = `<div class="card"><div class="row"><div><label>Mon stand</label><select id="selStand" onchange="setStand(this.value)"><option value="0">Choisir…</option>${STATIONS.map((n,i)=>`<option value="${i+1}" ${state.stand===i+1?'selected':''}>Stand ${i+1} · ${n}</option>`).join('')}</select></div></div>
-    <div style="margin-top:8px"><label>Mon prénom (animateur)</label><input type="text" id="nom" value="${state.nom}" onchange="setNom(this.value)" placeholder="Prénom"></div></div>`;
-  if(!state.stand) return h + `<p class="muted">Choisis ton stand : les 8 manches s'affichent avec les deux équipes attendues. Au gong de fin, appuie sur l'équipe qui gagne (ou Égalité). C'est tout.</p>`;
-  const all = donnees();
-  h += `<div class="card"><div class="big" style="font-size:20px">Stand ${state.stand} · ${STATIONS[state.stand-1]}</div><p class="muted">Victoire 3 points, égalité 2, défaite 1.${state.stand===QUIZ_STAND?' <b>Ce stand donne le prix spécial Proxim\'Services : saisis aussi le nombre de bonnes réponses de chaque équipe (sur 10).</b>':''}</p></div>`;
-  for(let m=1;m<=N_MANCHES;m++){
-    const [a,b]=paire(state.stand,m); const r=all[key(state.stand,m)]; const pend = queue[key(state.stand,m)];
-    const sel = v => r && r.result===v ? 'sel':'';
-    h += `<div class="manche ${r&&r.result?'ok':''} ${pend?'pending':''}"><h3>Manche ${m} <span>${r&&r.animateur?'· noté par '+r.animateur:''}</span></h3>
-      <div class="teams"><div class="team a">Équipe ${a}<small>${couleur(a)}</small></div><div>vs</div><div class="team b">Équipe ${b}<small>${couleur(b)}</small></div></div>
-      ${state.stand===QUIZ_STAND?`<div class="scores"><input type="number" min="0" max="10" id="sa${m}" placeholder="/10" value="${r&&r.score_a!=null?r.score_a:''}"><span class="muted">bonnes réponses</span><input type="number" min="0" max="10" id="sb${m}" placeholder="/10" value="${r&&r.score_b!=null?r.score_b:''}"></div>`:''}
-      <div class="btns"><button class="${sel('A')}" onclick="choix(${m},'A')">Équipe ${a} gagne</button><button class="${sel('N')}" onclick="choix(${m},'N')">Égalité</button><button class="${sel('B')}" onclick="choix(${m},'B')">Équipe ${b} gagne</button></div>
-      <div class="status ${pend?'pending':(r&&r.result?'ok':'')}">${pend?'En attente d\'envoi…':(r&&r.result?'Enregistré':'À saisir au gong de fin')}</div></div>`;
+  let h = `<div class="card"><label>Mon stand</label><select id="selStand" onchange="setStand(this.value)"><option value="0">Choisir…</option>${STANDS.map(s=>`<option value="${s.n}" ${state.stand===s.n?'selected':''}>${s.n}. ${s.nom}</option>`).join('')}</select>
+    <label>Mon prénom</label><input type="text" id="nom" value="${state.nom}" onchange="setNom(this.value)" placeholder="Prénom"></div>`;
+  if(!state.stand) return h + `<p class="muted">Choisissez votre stand. À la fin de chaque passage, saisissez le résultat de l'équipe, puis notez-le aussi sur son carnet papier.</p>`;
+  const s=ST[state.stand]; const cur=(statuts()[s.n]?.statut)||'libre'; const c=calcul();
+  h += `<div class="card"><b>${s.n}. ${s.nom}</b> ${tagsStand(s)}<div class="muted">${s.min} min par passage · ${s.places} équipe(s) à la fois</div>
+    <label>État du stand (les capitaines le voient)</label>
+    <div class="btns"><button class="st-libre ${cur==='libre'?'sel':''}" onclick="saveStatut(${s.n},'libre')">Libre</button><button class="st-presque ${cur==='presque'?'sel':''}" onclick="saveStatut(${s.n},'presque')">Presque plein</button><button class="st-complet ${cur==='complet'?'sel':''}" onclick="saveStatut(${s.n},'complet')">Complet</button></div></div>`;
+  h += `<div class="card"><b>Nouveau résultat</b>`;
+  if(s.type==='duel'){
+    h += `<div class="row"><div><label>Équipe A</label><select id="tA">${optionsEquipes(state.pick.a)}</select></div><div><label>Équipe B</label><select id="tB">${optionsEquipes(state.pick.b)}</select></div></div>
+      <div class="btns"><button onclick="saisieDuel('A')">A gagne</button><button onclick="saisieDuel('N')">Égalité</button><button onclick="saisieDuel('B')">B gagne</button></div>
+      <p class="muted">Aucun adversaire après 2 minutes d'attente ? Laissez l'équipe B vide : l'équipe A joue contre vous, « B gagne » veut alors dire que vous gagnez.</p>`;
+  } else {
+    h += `<label>Équipe</label><select id="tS">${optionsEquipes(state.pick.a)}</select>`;
+    if(s.type==='chrono') h += `<div class="row"><div><label>Minutes</label><input type="number" id="mm" min="0" max="30" inputmode="numeric" placeholder="min"></div><div><label>Secondes</label><input type="number" id="ss" min="0" max="59" inputmode="numeric" placeholder="s"></div></div>`;
+    else h += `<label>${MESURE[s.type]}</label><input type="number" id="mv" inputmode="numeric" min="0" ${s.type==='quiz'||s.type==='jury'?'max="10"':''}>`;
+    h += `<button class="btn" onclick="saisieSolo()">Enregistrer</button>`;
   }
-  return h;
+  h += `</div>`;
+  const liste = Object.values(c.all).filter(r=>r.stand===s.n && r.resultat!=='X').sort((a,b)=>(b.updated_at||'').localeCompare(a.updated_at||''));
+  h += `<div class="card"><b>Passages saisis (${liste.length})</b>` + (liste.length?liste.map(r=>{ const p=c.pts[kp(s.n,r.team)]; const q=queue[kp(s.n,r.team)];
+     const det = s.type==='duel'?(r.resultat==='V'?'victoire':r.resultat==='N'?'égalité':'défaite')+(r.adversaire?` contre l'équipe ${r.adversaire}`:''): s.type==='chrono'?fmtT(r.mesure): r.mesure;
+     return `<div class="stl"><div><span class="n">Équipe ${r.team}</span> <span class="muted">${couleur(r.team)} · ${det}</span>${q?' <span class="muted">(en attente d\'envoi)</span>':''}</div><div>${p!=null?p+' pt'+(p>1?'s':''):''} <button class="lnk" onclick="annuler(${s.n},${r.team})">Annuler</button></div></div>`; }).join(''):'<div class="muted">Aucun passage pour l\'instant.</div>') + '</div>';
+  return h + lienOrg();
 }
 function vueClassement(){
-  const c = classement();
-  let h = `<div class="card"><div class="row"><div><div class="big">${c.saisies}<span style="font-size:16px;color:var(--gris)"> / ${N_STANDS*N_MANCHES}</span></div><div class="muted">manches saisies</div></div><div style="text-align:right"><button class="btn" onclick="refresh()">Actualiser</button></div></div></div>`;
+  const c=calcul();
+  let h = `<div class="card"><div class="row"><div><div class="big">${c.saisies}</div><div class="muted">passages saisis</div></div><div><button class="btn" style="margin-top:0" onclick="refresh()">Actualiser</button></div></div></div>`;
   if(c.saisies){
-    h += `<div class="prize"><div class="t">Grand prix de la cohésion</div><div class="big">Équipe ${c.general} <span style="font-size:16px;color:#cfc7b8">${couleur(c.general)}</span></div><div>${c.pts[c.general]} points · ${c.wins[c.general]} victoires</div></div>`;
-    if(c.prixQuiz!=null) h += `<div class="prize" style="background:var(--or);color:var(--noir)"><div class="t" style="color:var(--noir)">Prix spécial Proxim'Services (quiz, stand ${QUIZ_STAND})</div><div class="big">Équipe ${c.prixQuiz} <span style="font-size:16px">${couleur(c.prixQuiz)}</span></div><div>${c.quiz[c.prixQuiz]} bonnes réponses sur 10${c.ordre[0]!==c.prixQuiz?'':''}</div></div>`;
-    else h += `<div class="banner">Prix spécial quiz : en attente des saisies du stand ${QUIZ_STAND} (bonnes réponses sur 10).</div>`;
+    h += `<div class="prize"><div class="t">Grand prix de la cohésion</div><div class="big">Équipe ${c.general} <span style="font-size:16px;color:#cfc7b8">${couleur(c.general)}</span></div><div>${c.eq[c.general].comptes} points comptés · ${c.eq[c.general].faits} épreuves</div></div>`;
+    h += c.prixQuiz!=null ? `<div class="prize" style="background:var(--or);color:var(--noir)"><div class="t" style="color:var(--noir)">Prix spécial Proxim'Services (culture d'entreprise)</div><div class="big">Équipe ${c.prixQuiz} <span style="font-size:16px">${couleur(c.prixQuiz)}</span></div><div>${c.eq[c.prixQuiz].quiz} bonnes réponses sur 10</div></div>` : `<div class="banner">Prix spécial : en attente des résultats du stand ${STAND_CULTURE}.</div>`;
   }
-  h += `<div class="card"><table><tr><th>#</th><th style="text-align:left">Équipe</th><th>Pts</th><th>Vict.</th><th>Quiz</th><th>Manches</th></tr>`;
-  c.ordre.forEach((t,i)=>{ h += `<tr class="${i<3?'top'+(i+1):''}"><td>${i+1}</td><td class="l">Équipe ${t} <span class="muted">${couleur(t)}</span></td><td>${c.pts[t]}</td><td>${c.wins[t]}</td><td>${c.quiz[t]==null?'·':c.quiz[t]}</td><td>${c.joue[t]}/8</td></tr>`; });
-  h += `</table><p class="muted">Égalité : nombre de victoires, puis score au quiz, puis tir à la corde devant le podium. Le prix spécial va à la meilleure équipe du quiz qui n'a pas déjà le grand prix.</p></div>`;
-  return h;
+  const arelancer = Object.values(c.eq).filter(e=>!e.ok);
+  if(c.saisies) h += `<div class="card"><b>À relancer (${arelancer.length} équipes)</b><div class="muted">${arelancer.map(e=>{ const m=[]; if(e.faits<MIN_EPREUVES) m.push((MIN_EPREUVES-e.faits)+' épreuve(s)'); if(!e.culture) m.push('culture'); if(e.duels<1) m.push('duel'); return `Éq. ${e.t} : ${m.join(', ')}`; }).join(' · ')||'Aucune, toutes les équipes sont en règle.'}</div></div>`;
+  h += `<div class="card"><table><tr><th>#</th><th style="text-align:left">Équipe</th><th>Pts comptés</th><th>Total</th><th>Épr.</th><th>Quiz</th><th>OK</th></tr>`;
+  c.ordre.forEach((t,i)=>{ const e=c.eq[t]; h += `<tr class="${i<3?'top'+(i+1):''}"><td>${i+1}</td><td class="l">Équipe ${t} <span class="muted">${couleur(t)}</span></td><td>${e.comptes}</td><td>${e.total}</td><td>${e.faits}</td><td>${e.quiz==null?'·':e.quiz}</td><td>${e.ok?'<span class="ok">✓</span>':'<span class="ko">✗</span>'}</td></tr>`; });
+  h += `</table><p class="muted">Points comptés : les ${MIN_EPREUVES} meilleurs résultats. Duels 5, 3, 1. Autres épreuves : classement de toutes les équipes passées sur le stand, de 5 points (premiers 20 %) à 1 point. Égalité : total de tous les points.</p></div>`;
+  return h + lienOrg();
 }
-function vueSaisies(){
-  const all = donnees();
-  let h = `<div class="card"><p class="muted">Vert = saisi, orange = en attente d'envoi, gris = manquant. Touchez un stand pour saisir à sa place (table de marque).</p><div class="grid"><div class="h">Stand</div>${Array.from({length:8},(_,i)=>`<div class="h">M${i+1}</div>`).join('')}`;
-  for(let s=1;s<=N_STANDS;s++){ h += `<div class="h" style="cursor:pointer" onclick="setStand(${s});state.view='stand';render()">${s}</div>`; for(let m=1;m<=N_MANCHES;m++){ const r=all[key(s,m)]; const p=queue[key(s,m)]; h += `<div class="${p?'pend':(r&&r.result?'ok':'')}">${r&&r.result?(r.result==='N'?'=':r.result==='A'?r.team_a:r.team_b):''}</div>`; } }
-  h += `</div></div>`;
-  return h;
-}
+
 // ---------- Actions ----------
-window.verifPin = ()=>{ const v=($('#pin').value||'').trim().toUpperCase(); if(v===CODE){ state.pin=true; localStorage.setItem(LS('pin'),'1'); render(); refresh(); } else alert('Code incorrect'); };
-window.setStand = v=>{ state.stand=+v; localStorage.setItem(LS('stand'),state.stand); render(); };
-window.setNom = v=>{ state.nom=v.trim(); localStorage.setItem(LS('nom'),state.nom); };
-window.choix = (m,v)=>{ const sa = $('#sa'+m)?.value ?? ''; const sb = $('#sb'+m)?.value ?? ''; enregistrer(state.stand,m,v,sa,sb); };
+window.setTeam = v=>{ state.team=+v; lsSet('team',state.team); render(); };
+window.setStand = v=>{ state.stand=+v; lsSet('stand',state.stand); state.pick={a:'',b:''}; render(); };
+window.setNom = v=>{ state.nom=v.trim(); lsSet('nom',state.nom); };
+window.saveStatut = saveStatut;
 window.refresh = refresh;
-document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{ state.view=b.dataset.v; render(); if(state.view!=='stand') refresh(); });
+window.verifPin = ()=>{ const v=(document.getElementById('pin').value||'').trim().toUpperCase(); if(v===CODE){ state.org=true; lsSet('org',true); render(); refresh(); } else alert('Code incorrect'); };
+window.verrouiller = ()=>{ state.org=false; lsSet('org',false); state.view='equipe'; render(); };
+window.saisieDuel = (r)=>{
+  const a=+document.getElementById('tA').value, b=+document.getElementById('tB').value;
+  if(!a){ alert('Choisissez au moins l\'équipe A.'); return; }
+  if(b && a===b){ alert('Choisissez deux équipes différentes.'); return; }
+  const ra = r==='A'?'V':r==='N'?'N':'D', rb = r==='B'?'V':r==='N'?'N':'D';
+  savePassage(state.stand,a,ra,b||null,null); if(b) savePassage(state.stand,b,rb,a,null);
+  state.pick={a:'',b:''}; render();
+};
+window.saisieSolo = ()=>{
+  const s=ST[state.stand]; const t=+document.getElementById('tS').value; if(!t){ alert('Choisissez une équipe.'); return; }
+  let m;
+  if(s.type==='chrono'){ const mm=+(document.getElementById('mm').value||0), ss=+(document.getElementById('ss').value||0); if(mm===0&&ss===0){ alert('Saisissez le temps.'); return; } m=mm*60+ss; }
+  else { m=document.getElementById('mv').value; if(m===''){ alert('Saisissez la valeur.'); return; } }
+  savePassage(s.n,t,'F',null,m); state.pick={a:'',b:''}; render();
+};
+window.annuler = (stand,team)=>{ if(!confirm(`Annuler le passage de l'équipe ${team} sur ce stand ?`)) return; savePassage(stand,team,'X',null,null); render(); };
 window.addEventListener('online', flush);
-setInterval(()=>{ flush(); if(state.view!=='stand') refresh(); }, 20000);
-render(); if(state.pin) refresh();
+setInterval(()=>{ flush(); refresh(); }, 20000);
+render(); refresh();
 </script>
 </body>
 </html>
