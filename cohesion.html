@@ -372,7 +372,7 @@ const BASCULE = new Date(2026,10,14,9,40);           // samedi 14/11 à 9h40 : t
 const modeDuMoment = () => Q.has('demo') ? 'demo' : ((Q.has('essai') || new Date() < BASCULE) ? 'essai' : 'reel');
 const MODE = modeDuMoment();                          // demo : journée simulée · essai : période de test (jusqu'à samedi 9h40) · reel : la journée
 const ESSAI = MODE!=='reel';
-const EVENT = {demo:'demo-2026-11-14', essai:'essai-2026-11-14', reel:'cohesion-2026-11-14'}[MODE];   // zone neuve pour le jour J (l'ancienne proxim-2026-11-14 n'est plus lue)
+const EVENT = {demo:'demo-2026-11-14', essai:'essai2-2026-11-14', reel:'cohesion-2026-11-14'}[MODE];   // zone neuve pour le jour J (l'ancienne proxim-2026-11-14 n'est plus lue)
 const LOCAL = ['localhost','127.0.0.1'].includes(location.hostname);
 const SUPABASE_URL = (LOCAL && Q.get('api')) ? Q.get('api') : 'https://vincxrmtfjbenlzhjwby.supabase.co';
 const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpbmN4cm10ZmpiZW5semhqd2J5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyOTI1MTksImV4cCI6MjA5Nzg2ODUxOX0.M9_ChGDlOIUKKZtbBHs1xn4cdy4FwUAQKN0aYyXefQY';
