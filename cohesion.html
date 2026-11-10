@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Journée de cohésion Proxim'Services</title>
+<meta name="description" content="Journée de cohésion Proxim'Services, samedi 14 novembre 2026 : le carnet de route des équipes, les épreuves et les points.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0085B2">
+<link rel="icon" href="proxim/logo-proxim.png">
+<style>
+  :root { --bleu:#0085B2; --marine:#0B4F86; --orange:#F7941D; --jaune:#FDCC1A; --rouge:#E3222B; --vert:#2E9E4F; --fond:#F3F8FC; --texte:#16324A; --gris:#5F7184; --trait:#DCE7F0; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; font-family:-apple-system, "Segoe UI", Roboto, Arial, sans-serif; background:var(--fond); color:var(--texte); font-size:16px; line-height:1.35; }
+  header.top { background:#fff; padding:10px 14px 8px; text-align:center; border-bottom:4px solid var(--jaune); position:sticky; top:0; z-index:6; }
+  header.top img { height:42px; max-width:86%; object-fit:contain; display:block; margin:0 auto; }
+  header.top .titre { display:inline-block; margin-top:6px; background:var(--orange); color:#fff; font-weight:800; font-size:13px; letter-spacing:.4px; padding:3px 14px; border-radius:20px; }
+  main { padding:14px; max-width:640px; margin:0 auto; }
+  .card { background:#fff; border-radius:16px; padding:16px; margin-bottom:14px; box-shadow:0 2px 8px rgba(11,79,134,.08); }
+  h2 { font-size:20px; margin:0 0 8px; color:var(--marine); }
+  h3 { font-size:16px; margin:14px 0 8px; color:var(--marine); }
+  p { margin:0 0 8px; }
+  .muted { color:var(--gris); font-size:13.5px; }
+  label { display:block; font-size:13.5px; font-weight:700; color:var(--marine); margin:12px 0 5px; }
+  input[type=text], input[type=number], input[type=password], select { width:100%; font-size:18px; padding:12px; border:2px solid var(--trait); border-radius:12px; background:#fff; color:var(--texte); }
+  input:focus, select:focus { outline:none; border-color:var(--bleu); }
+  .btn { display:block; width:100%; border:0; border-radius:14px; padding:15px 12px; font-size:17px; font-weight:800; color:#fff; background:var(--bleu); margin-top:12px; }
+  .btn.orange { background:var(--orange); } .btn.vert { background:var(--vert); } .btn.marine { background:var(--marine); }
+  .btn.clair { background:#fff; color:var(--marine); border:2px solid var(--trait); }
+  .btn:disabled { opacity:.5; }
+  .lnk { background:none; border:0; color:var(--gris); text-decoration:underline; font-size:14px; padding:10px 6px; }
+  .regles { list-style:none; padding:0; margin:0; }
+  .regles li { display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:1px solid var(--trait); }
+  .regles li:last-child { border-bottom:0; }
+  .num { flex:0 0 28px; height:28px; border-radius:50%; color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:14px; }
+  .equipe { display:flex; gap:12px; align-items:center; }
+  .equipe .ph { flex:0 0 76px; height:76px; border-radius:14px; background:var(--trait) center/cover; }
+  .equipe .nom { font-size:19px; font-weight:800; color:var(--marine); line-height:1.15; }
+  .scores { display:flex; gap:8px; margin-top:12px; }
+  .scores > div { flex:1; background:var(--fond); border-radius:12px; padding:9px 4px; text-align:center; }
+  .scores b { display:block; font-size:24px; color:var(--bleu); line-height:1.1; }
+  .scores span { font-size:11.5px; color:var(--gris); }
+  .prog { height:10px; background:var(--trait); border-radius:6px; overflow:hidden; margin-top:12px; }
+  .prog > div { height:100%; background:linear-gradient(90deg,var(--jaune),var(--orange)); }
+  .ep { display:flex; background:#fff; border-radius:16px; overflow:hidden; margin-bottom:10px; box-shadow:0 2px 8px rgba(11,79,134,.08); border:0; width:100%; text-align:left; padding:0; color:inherit; font:inherit; }
+  .ep .img { flex:0 0 104px; background:var(--trait) center/cover; min-height:92px; position:relative; }
+  .ep .img i { position:absolute; left:6px; top:6px; background:var(--marine); color:#fff; font-style:normal; font-weight:800; font-size:13px; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+  .ep .txt { flex:1; padding:10px 12px; min-width:0; }
+  .ep .t { font-weight:800; font-size:15.5px; color:var(--marine); }
+  .ep .etat { flex:0 0 66px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; font-size:12px; color:var(--gris); background:var(--fond); text-align:center; padding:4px; }
+  .ep.fait .etat { background:var(--vert); color:#fff; } .ep.fait .etat b { font-size:22px; line-height:1; }
+  .ep.fait .img { filter:grayscale(.6); }
+  .tag { display:inline-block; font-size:10.5px; font-weight:800; padding:2px 7px; border-radius:8px; margin:3px 4px 0 0; color:#fff; background:var(--bleu); letter-spacing:.3px; }
+  .tag.duel { background:var(--rouge); } .tag.double { background:var(--orange); } .tag.gris { background:#E9EFF5; color:var(--gris); }
+  .hero { height:190px; border-radius:16px; background:var(--trait) center/cover; margin-bottom:12px; position:relative; }
+  .hero span { position:absolute; left:10px; bottom:10px; background:rgba(11,79,134,.92); color:#fff; font-weight:800; padding:5px 12px; border-radius:10px; font-size:15px; }
+  .anim { background:var(--marine); color:#fff; border-radius:16px; padding:16px; margin-bottom:14px; }
+  .anim h2 { color:var(--jaune); } .anim label { color:#fff; } .anim .muted { color:#C9DCEC; }
+  .choix { display:flex; gap:8px; }
+  .choix button { flex:1; padding:14px 4px; border-radius:12px; border:2px solid #fff; background:transparent; color:#fff; font-weight:800; font-size:15px; }
+  .choix button.sel { background:var(--jaune); border-color:var(--jaune); color:var(--marine); }
+  .row { display:flex; gap:10px; } .row > * { flex:1; }
+  .banner { background:#FFF4D1; border:1px solid #F1D675; color:#6A5200; padding:10px 12px; border-radius:12px; font-size:14px; margin-bottom:12px; }
+  .banner.err { background:#FDE7E7; border-color:#EDB1B1; color:#8A1C1C; }
+  .banner.bleu { background:#E2F3FA; border-color:#A9D8EA; color:var(--marine); }
+  .bravo { text-align:center; padding:26px 16px; background:linear-gradient(160deg,var(--bleu),var(--marine)); color:#fff; border-radius:18px; margin-bottom:14px; }
+  .bravo .p { font-size:54px; font-weight:900; color:var(--jaune); line-height:1; }
+  table { width:100%; border-collapse:collapse; font-size:13.5px; }
+  th, td { padding:7px 4px; border-bottom:1px solid var(--trait); text-align:center; }
+  th { background:var(--marine); color:#fff; font-size:11.5px; }
+  td.l { text-align:left; }
+  tr.top1 td { background:#FFF4D1; font-weight:800; } tr.top2 td, tr.top3 td { background:#F6FAFD; }
+  nav.tabs { display:flex; background:#fff; border-radius:14px; overflow:hidden; margin-bottom:14px; box-shadow:0 2px 8px rgba(11,79,134,.08); }
+  nav.tabs button { flex:1; border:0; background:#fff; padding:12px 2px; font-weight:800; color:var(--gris); font-size:13.5px; }
+  nav.tabs button.on { background:var(--marine); color:#fff; }
+  .prix { border-radius:16px; padding:14px; margin-bottom:12px; color:#fff; display:flex; gap:12px; align-items:center; }
+  .prix .ph { flex:0 0 84px; height:84px; border-radius:12px; background:rgba(255,255,255,.25) center/cover; }
+  .prix .t { font-size:11.5px; letter-spacing:1px; text-transform:uppercase; font-weight:800; opacity:.95; }
+  .prix .n { font-size:22px; font-weight:900; line-height:1.1; }
+  .gal { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .gal div { background:#fff; border-radius:12px; overflow:hidden; font-size:12.5px; text-align:center; padding-bottom:6px; }
+  .gal img { width:100%; aspect-ratio:4/3; object-fit:cover; display:block; margin-bottom:4px; background:var(--trait); }
+  footer { text-align:center; color:var(--gris); font-size:11.5px; padding:6px 16px 26px; }
+</style>
+</head>
+<body>
+<header class="top"><img src="proxim/logo-proxim.png" alt="Proxim'Services Réunion"><div class="titre">JOURNÉE DE COHÉSION · 14.11.2026</div></header>
+<main id="main"></main>
+<footer>Une journée animée par Pull Up Événements</footer>
+
+<script>
+// =============== Réglages ===============
+const Q = new URLSearchParams(location.search);
+const ESSAI = Q.has('essai');                       // lien avec « essai » : répétition, rien ne compte
+const EVENT = ESSAI ? 'essai-2026-11-14' : 'proxim-2026-11-14';
+const SUPABASE_URL = 'https://vincxrmtfjbenlzhjwby.supabase.co';
+const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpbmN4cm10ZmpiZW5semhqd2J5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyOTI1MTksImV4cCI6MjA5Nzg2ODUxOX0.M9_ChGDlOIUKKZtbBHs1xn4cdy4FwUAQKN0aYyXefQY';
+const CLE = 'PULLUP14';                             // clé technique exigée par la base (ce n'est pas le code des animateurs)
+const N_EQUIPES = 28;
+const FIN = { h:12, m:30 };
+const COULEURS = ['Rouge','Bleu roi','Vert','Jaune','Orange','Violet','Rose','Blanc','Noir','Turquoise','Bordeaux','Bleu ciel','Vert anis','Gris'];
+const couleur = t => COULEURS[(t-1)%14];
+// Codes des animateurs : seules les empreintes sont ici, les codes sont sur les fiches de stand.
+const EMPREINTES = /*EMPREINTES*/{org:'0ddbd35979dd4e5d58fefed283f9bf31d7e0350ff8854ec882c4153e6a9a2da5',stands:{1:'7f361d572d73b52e260d9ca28a88613afe1b3a1796f83da46472c9d83702baa6',2:'34f43c80ac9cc325977c4c369add92d43a992aaf79654411171729dc3f179ec5',3:'20e34eeb3de6e08600967e68009d3b5526cdb4b7af855d7227d9e76c2966d6b3',4:'fe23da6610764d061954dd135aba91dbdaad427e75b8841a7cec663ecfd4be32',5:'9c03cf49addff639cd5efad94318681eb9fc571780d8eb45494d04d6657f9928',6:'99fef52cb8f88d366d4a67d3fd48af0968084ef447d79ce402e1f7cdb9117270',7:'75e913a2b157bb154081a5eb67261933adfd99c11e03e03504cb264ea699b16e',8:'c871d48e5bd655f636aa2b1b9fa58d462860b18d448984cc10fb6594201b7513',9:'1975d3c9e28221088efd6da5dfe219d19a2b4dbbbb8f86b27bd974ab84cc518f',10:'e26569602ca8c8f407edcabffb7fc83c8cef7c8402b296cdfc2fe638fe9b2788',11:'799aee50d57c82df129d2549c78f04cc0b1a83b8ed4e287ab6026f05b9bbd3a3',12:'b43757417bcf0061fa53785caacb975daf63e8d218a66927c9be658538d89ab1',13:'0dc670a4d3b13210421ae0aab768c0cd26f3a1ffd74e9f8307a4b6b8e60bb672',14:'7f928a14cd22055445bdc5620b05ef19d6bf9824c64e5619da520a1d9b774f39'}};
+// type : duel / chrono (secondes) / points / jury (note sur 10) / quiz (bonnes réponses sur 10) / hauteur (cm)
+const EP = [
+ {n:1, nom:'La catapulte', type:'duel', places:2, min:10, desc:"Volley géant : avec vos catapultes, envoyez la balle dans le camp adverse après un maximum de passes en équipe."},
+ {n:2, nom:'Les roues', type:'chrono', places:5, min:5, desc:"Toute l'équipe entre dans la roue géante et fait l'aller-retour le plus vite possible."},
+ {n:3, nom:'Le Kapla', type:'jury', places:5, min:7, desc:"Construisez ensemble une sculpture qui représente la cohésion. Le jury note votre œuvre."},
+ {n:4, nom:"L'Archery Tag", type:'duel', places:2, min:10, desc:"Arcs et flèches à embout mousse : deux équipes face à face, touché égale éliminé."},
+ {n:5, nom:"Le parcours d'obstacles", type:'chrono', places:3, min:5, desc:"Toute l'équipe franchit le parcours gonflable. Le chrono s'arrête quand le dernier arrive."},
+ {n:6, nom:'Le tir à la corde', type:'duel', places:2, min:5, desc:"Le grand classique : deux équipes, une corde, au meilleur des trois manches."},
+ {n:7, nom:'Les lettres', type:'chrono', places:4, min:7, desc:"Une devinette, une lettre par personne : reconstituez le mot le plus vite possible."},
+ {n:8, nom:'Les cibles foot', type:'points', places:2, min:10, desc:"Chacun tire au but sur la cible géante. Les points de toute l'équipe s'additionnent."},
+ {n:9, nom:'Les haches', type:'points', places:2, min:10, desc:"Lancer de haches sur cible : adresse et sang-froid. Les points de l'équipe s'additionnent."},
+ {n:10, nom:'Les clous', type:'chrono', places:4, min:8, desc:"En relais, un seul coup de marteau chacun : enfoncez le clou le plus vite possible."},
+ {n:11, nom:'Le théâtre', type:'jury', places:3, min:10, desc:"Un thème imposé, 5 minutes pour préparer, 2 minutes pour jouer. Le jury note votre scène."},
+ {n:12, nom:"La culture d'entreprise", type:'quiz', places:3, min:8, desc:"10 questions sur Proxim'Services et votre métier. Chaque bonne réponse vaut 2 points : c'est l'épreuve qui rapporte le plus."},
+ {n:13, nom:'Photos et vidéos', type:'jury', places:4, min:10, desc:"Relevez les défis photo et vidéo en équipe. Le jury note la réussite et la créativité."},
+ {n:14, nom:'La tour de Babel', type:'hauteur', places:2, min:8, desc:"Chacun tient une ficelle : empilez les pièces sans les toucher. La tour la plus haute gagne."}
+];
+const EPN = Object.fromEntries(EP.map(e=>[e.n,e]));
+const img = n => `proxim/ep${String(n).padStart(2,'0')}.jpg`;
+const MAXPTS = e => e.type==='quiz' ? 20 : 10;
+const BAREME = { duel:'Victoire 10 points · Égalité 6 · Défaite 3', jury:'La note du jury sur 10 donne vos points', quiz:'2 points par bonne réponse : jusqu\'à 20 points',
+  chrono:'Classement entre toutes les équipes : de 10 points pour les plus rapides à 2 points', points:'Classement entre toutes les équipes : de 10 points pour les meilleurs scores à 2 points', hauteur:'Classement entre toutes les équipes : de 10 points pour les plus hautes tours à 2 points' };
+const DEPART_PLAN = [[1,2],[2,3],[3,2],[4,2],[5,2],[6,2],[7,2],[8,1],[9,1],[10,2],[11,2],[12,3],[13,2],[14,2]];
+const DEPART = {}; (()=>{ let t=1; DEPART_PLAN.forEach(([s,n])=>{ for(let i=0;i<n;i++) DEPART[t++]=s; }); })();
+
+// =============== Petits outils ===============
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LS = k => 'pxc_'+EVENT+'_'+k;
+const lsGet = (k,d)=>{ try{ const v=localStorage.getItem(LS(k)); return v===null?d:JSON.parse(v);}catch(e){return d;} };
+const lsSet = (k,v)=>{ try{ localStorage.setItem(LS(k),JSON.stringify(v)); return true; }catch(e){ return false; } };
+const fmtT = s => { s=Math.round(+s); return Math.floor(s/60)+' min '+String(s%60).padStart(2,'0')+' s'; };
+const pl = (n,mot) => n+' '+mot+(n>1?'s':'');
+const okPhoto = p => (typeof p==='string' && /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(p)) ? p : '';
+function sha256(ascii){
+  function rr(v,a){ return (v>>>a)|(v<<(32-a)); }
+  var mp=Math.pow, maxWord=mp(2,32), result='', words=[], bitLen=ascii.length*8, i, j;
+  var hash=sha256.h=sha256.h||[], k=sha256.k=sha256.k||[], pc=k.length, comp={};
+  for(var c=2; pc<64; c++){ if(!comp[c]){ for(i=0;i<313;i+=c) comp[i]=c; hash[pc]=(mp(c,.5)*maxWord)|0; k[pc++]=(mp(c,1/3)*maxWord)|0; } }
+  ascii+='\x80'; while(ascii.length%64-56) ascii+='\x00';
+  for(i=0;i<ascii.length;i++){ j=ascii.charCodeAt(i); if(j>>8) return ''; words[i>>2]|=j<<((3-i)%4)*8; }
+  words[words.length]=((bitLen/maxWord)|0); words[words.length]=(bitLen);
+  for(j=0;j<words.length;){
+    var w=words.slice(j,j+=16), old=hash; hash=hash.slice(0,8);
+    for(i=0;i<64;i++){
+      var w15=w[i-15], w2=w[i-2], a=hash[0], e=hash[4];
+      var t1=hash[7]+(rr(e,6)^rr(e,11)^rr(e,25))+((e&hash[5])^((~e)&hash[6]))+k[i]+(w[i]=(i<16)?w[i]:(w[i-16]+(rr(w15,7)^rr(w15,18)^(w15>>>3))+w[i-7]+(rr(w2,17)^rr(w2,19)^(w2>>>10)))|0);
+      var t2=(rr(a,2)^rr(a,13)^rr(a,22))+((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));
+      hash=[(t1+t2)|0].concat(hash); hash[4]=(hash[4]+t1)|0;
+    }
+    for(i=0;i<8;i++) hash[i]=(hash[i]+old[i])|0;
+  }
+  for(i=0;i<8;i++){ for(j=3;j+1;j--){ var b=(hash[i]>>(j*8))&255; result+=((b<16)?0:'')+b.toString(16); } }
+  return result;
+}
+const empreinte = (quoi, code) => sha256('proxim14|'+quoi+'|'+String(code).trim().toUpperCase());
+const codeOrgOk = code => !!code && empreinte('org',code) === EMPREINTES.org;
+const codeStandOk = (stand, code) => !!code && (empreinte(stand,code) === (EMPREINTES.stands||{})[stand] || codeOrgOk(code));
+
+// =============== État ===============
+const tQ = +Q.get('e');
+let state = {
+  team: (tQ>=1 && tQ<=N_EQUIPES) ? tQ : lsGet('team',0),
+  org: lsGet('org',false), view:'', ep:0, orgTab:'classement', orgRetour:false,
+  passages:{}, equipes:{}, photos:{}, dbOk:null, err:'',
+  saisie:{ res:'', bonus:{a:false,c:false,f:false} }, bravo:null, galerie:false, edition:false
+};
+if(state.team) lsSet('team', state.team);
+let local = lsGet('local', { p:{}, e:{} });      // copies locales : passages et équipes
+let queue = lsGet('queue', {});                   // envois en attente
+const kp = (s,t)=>`${s}-${t}`;
+const save = ()=>{ lsSet('local',local); lsSet('queue',queue); };
+
+// =============== Base de données (REST Supabase) ===============
+const H = { 'apikey':ANON, 'Authorization':'Bearer '+ANON, 'Content-Type':'application/json' };
+async function dbGet(table, filtre){
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?event=eq.${EVENT}&${filtre}`, {headers:H});
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function dbUpsert(table, conflict, row){
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?on_conflict=${conflict}`, {method:'POST', headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'}, body:JSON.stringify(row)});
+  if(!r.ok) throw new Error(await r.text());
+}
+let enFlush=false;
+async function flush(){
+  if(enFlush) return; enFlush=true;
+  for(const k of Object.keys(queue)){
+    const q=queue[k];
+    try{ await dbUpsert(q.table, q.conflict, q.row); if(queue[k]===q) delete queue[k]; state.dbOk=true; }
+    catch(e){ state.err=String(e.message||e); state.dbOk=false; break; }
+  }
+  enFlush=false; save(); renderDoux();
+}
+async function refresh(){
+  try{
+    const [p,e] = await Promise.all([
+      dbGet('tb_passages','select=stand,team,resultat,mesure,b_ambiance,b_cohesion,b_fairplay,updated_at'),
+      dbGet('tb_equipes','select=team,nom,capitaine,updated_at') ]);
+    state.passages={}; p.forEach(x=>state.passages[kp(x.stand,x.team)]=x);
+    state.equipes={}; e.forEach(x=>state.equipes[x.team]=x);
+    state.dbOk=true; state.err='';
+    chargerPhoto(state.team);
+  }catch(e){ state.dbOk=false; state.err=String(e.message||e); }
+  renderDoux();
+}
+async function chargerPhoto(t){
+  if(!t || state.photos[t] || !equipe(t)) return;
+  const loc = okPhoto(lsGet('photo_'+t,'')); if(loc){ state.photos[t]=loc; return; }
+  try{ const r = await dbGet('tb_equipes',`team=eq.${t}&select=photo`); if(r[0] && okPhoto(r[0].photo)){ state.photos[t]=r[0].photo; renderDoux(); } }catch(e){}
+}
+function pousser(table, conflict, key, row){ queue[key]={table,conflict,row}; save(); flush(); }
+
+// =============== Données fusionnées et calcul des points ===============
+function passages(){
+  const all={...state.passages};
+  Object.entries(local.p).forEach(([k,r])=>{ if(!all[k] || (all[k].updated_at||'') <= r.updated_at) all[k]=r; });
+  return all;
+}
+function equipe(t){
+  const a=state.equipes[t], b=local.e[t];
+  if(a && b) return (a.updated_at||'') <= b.updated_at ? b : a;
+  return b || a || null;
+}
+function calcul(){
+  const rows = Object.values(passages()).filter(r=>r.resultat && r.resultat!=='X');
+  const pts={}, rang={};
+  EP.forEach(e=>{
+    const list = rows.filter(r=>r.stand===e.n);
+    if(e.type==='duel') list.forEach(r=>{ pts[kp(e.n,r.team)] = r.resultat==='V'?10 : r.resultat==='N'?6 : 3; });
+    else if(e.type==='jury') list.forEach(r=>{ pts[kp(e.n,r.team)] = Math.max(0,Math.min(10,Math.round(+r.mesure||0))); });
+    else if(e.type==='quiz') list.forEach(r=>{ pts[kp(e.n,r.team)] = 2*Math.max(0,Math.min(10,Math.round(+r.mesure||0))); });
+    else { const v=list.filter(r=>r.mesure!=null), n=v.length, asc=e.type==='chrono';
+      v.forEach(r=>{ const mieux=v.filter(x=> asc ? +x.mesure<+r.mesure : +x.mesure>+r.mesure).length; pts[kp(e.n,r.team)] = 10-2*Math.floor(5*mieux/n); rang[kp(e.n,r.team)]={r:mieux+1,n}; }); }
+  });
+  const eq={};
+  for(let t=1;t<=N_EQUIPES;t++) eq[t]={t,faits:0,base:0,bonus:0,total:0,quiz:null};
+  rows.forEach(r=>{ const e=eq[r.team]; if(!e) return; const p=pts[kp(r.stand,r.team)]; if(p==null) return;
+    const b=(r.b_ambiance?1:0)+(r.b_cohesion?1:0)+(r.b_fairplay?1:0);
+    e.faits++; e.base+=p; e.bonus+=b; e.total+=p+b; if(r.stand===12) e.quiz=Math.max(0,Math.min(10,Math.round(+r.mesure||0))); });
+  const ordre = Object.values(eq).sort((a,b)=> b.total-a.total || b.faits-a.faits || (b.quiz||0)-(a.quiz||0) || a.t-b.t).map(e=>e.t);
+  const general = eq[ordre[0]].total>0 ? ordre[0] : null;
+  const qz = Object.values(eq).filter(e=>e.quiz!=null && e.t!==general).sort((a,b)=> b.quiz-a.quiz || b.total-a.total || a.t-b.t);
+  const amb = Object.values(eq).filter(e=>e.bonus>0).sort((a,b)=> b.bonus-a.bonus || b.total-a.total || a.t-b.t);
+  return { pts, rang, eq, ordre, general, prixQuiz: qz.length?qz[0].t:null, ambiance: amb.length?amb[0].t:null, saisies: rows.length };
+}
+function resteTxt(){
+  const d=new Date(); const fin=new Date(2026,10,14,FIN.h,FIN.m);
+  if(d.getFullYear()===2026 && d.getMonth()===10 && d.getDate()===14 && d<fin){
+    const m=Math.ceil((fin-d)/60000); return m>=60 ? `Fin des épreuves dans ${Math.floor(m/60)} h ${String(m%60).padStart(2,'0')}` : `Fin des épreuves dans ${m} min`;
+  }
+  return 'Fin des épreuves à 12h30';
+}
+const nomEq = t => { const e=equipe(t); return e && e.nom ? e.nom : ''; };
+const titreEq = t => `Équipe ${t}` + (nomEq(t) ? ' · '+esc(nomEq(t)) : '');
+
+// =============== Rendu ===============
+function vueParDefaut(){
+  if(!state.team) return state.org ? 'org' : 'landing';
+  return equipe(state.team) && equipe(state.team).nom ? 'home' : 'brief';
+}
+function renderDoux(){
+  const a=document.activeElement;
+  if(a && (a.tagName==='INPUT'||a.tagName==='SELECT')) return;          // on ne touche pas à un écran en cours de saisie
+  if(['saisie','bravo','landing'].includes(state.view)) return;
+  if(state.view==='brief'){                                              // un autre téléphone de l'équipe a déjà inscrit l'équipe
+    if(!state.edition && equipe(state.team) && equipe(state.team).nom){ state.view='home'; render(); }
+    return;
+  }
+  render();
+}
+function render(){
+  if(!state.view) state.view = vueParDefaut();
+  if(state.view==='home' && !(equipe(state.team) && equipe(state.team).nom)) state.view='brief';
+  let h='';
+  if(ESSAI) h += `<div class="banner"><b>MODE ESSAI.</b> Rien de ce qui est saisi ici ne compte pour la journée.</div>`;
+  if(state.dbOk===false) h += `<div class="banner err"><b>Pas de connexion pour l'instant.</b> Vos résultats sont gardés sur ce téléphone et seront envoyés dès que possible. Continuez à jouer.</div>`;
+  const nq=Object.keys(queue).length; if(nq && state.dbOk!==false) h += `<div class="banner">Envoi en cours (${nq})…</div>`;
+  h += ({landing:vLanding, brief:vBrief, home:vHome, ep:vEpreuve, saisie:vSaisie, bravo:vBravo, org:vOrg}[state.view]||vLanding)();
+  $('#main').innerHTML = h;
+}
+function vLanding(){
+  return `<div class="card"><h2>Bienvenue !</h2><p>Scannez le QR code de votre équipe, ou choisissez votre numéro d'équipe (celui de votre bandeau).</p>
+    <label>Mon équipe</label><select id="selT"><option value="0">Choisir…</option>${Array.from({length:N_EQUIPES},(_,i)=>`<option value="${i+1}">Équipe ${i+1} · bandeau ${couleur(i+1).toLowerCase()}</option>`).join('')}</select>
+    <button class="btn" onclick="choisirEquipe()">Continuer</button></div>${blocOrg()}`;
+}
+function blocOrg(){
+  return state.org ? `<button class="btn marine" onclick="aller('org')">Espace organisation</button>`
+   : `<div class="card"><p class="muted">Organisation Pull Up</p><input type="password" id="codeOrg" inputmode="numeric" autocomplete="off" placeholder="Code organisation"><button class="btn clair" onclick="entrerOrg()">Entrer</button></div>`;
+}
+function vBrief(){
+  const t=state.team; const p=state.photos[t]||okPhoto(lsGet('photo_'+t,''));
+  return `<div class="card"><h2>Équipe ${t}, c'est parti !</h2><p class="muted">Bandeau ${couleur(t).toLowerCase()} · ${resteTxt()}</p>
+    <ul class="regles">
+      <li><span class="num" style="background:var(--bleu)">1</span><div><b>Faites un maximum d'épreuves</b> pour gagner un maximum de points. Il y en a 14, dans l'ordre que vous voulez.</div></li>
+      <li><span class="num" style="background:var(--orange)">2</span><div><b>N'oubliez pas la culture d'entreprise :</b> elle rapporte le double de points.</div></li>
+      <li><span class="num" style="background:var(--rouge)">3</span><div><b>Épreuve en duel ?</b> À vous de trouver une équipe adverse pour l'affronter.</div></li>
+      <li><span class="num" style="background:var(--vert)">4</span><div><b>À la fin de chaque épreuve,</b> tendez ce téléphone à l'animateur : c'est lui qui entre votre résultat.</div></li>
+      <li><span class="num" style="background:var(--jaune);color:var(--marine)">+</span><div><b>Bonus :</b> les animateurs récompensent l'ambiance, la cohésion et le fair-play.</div></li>
+    </ul></div>
+    <div class="card"><h2>Votre équipe</h2>
+      <label>Nom de l'équipe</label><input type="text" id="fNom" maxlength="28" placeholder="Trouvez un nom qui claque" value="${esc(lsGet('brouillon_nom',''))}">
+      <label>Prénom du capitaine</label><input type="text" id="fCap" maxlength="24" placeholder="Capitaine" value="${esc(lsGet('brouillon_cap',''))}">
+      <label>Photo de toute l'équipe</label>
+      ${p?`<div class="hero" style="background-image:url('${p}')"><span>Photo enregistrée</span></div>`:''}
+      <input type="file" id="fPhoto" accept="image/*" capture="environment" style="display:none" onchange="photoChoisie(this)">
+      <button class="btn clair" onclick="garderBrouillon();document.getElementById('fPhoto').click()">${p?'Reprendre la photo':'Prendre la photo d\'équipe'}</button>
+      <button class="btn orange" onclick="inscrire()">Valider et voir les épreuves</button>
+      ${p?'':'<button class="lnk" onclick="inscrire(true)">Continuer sans photo</button>'}
+    </div>` + (state.orgRetour?`<button class="btn marine" onclick="aller('org')">Retour à l'organisation</button>`:'');
+}
+function carteEp(e, c){
+  const k=kp(e.n,state.team); const p=c.pts[k]; const fait = p!=null; const r=passages()[k];
+  const b = fait ? (r.b_ambiance?1:0)+(r.b_cohesion?1:0)+(r.b_fairplay?1:0) : 0;
+  return `<button class="ep ${fait?'fait':''}" onclick="ouvrir(${e.n})">
+    <div class="img" style="background-image:url('${img(e.n)}')"><i>${e.n}</i></div>
+    <div class="txt"><div class="t">${e.nom}</div>
+      ${e.type==='duel'?'<span class="tag duel">DUEL</span>':''}${e.type==='quiz'?'<span class="tag double">POINTS DOUBLÉS</span>':''}<span class="tag gris">${e.min} min</span><span class="tag gris">jusqu'à ${MAXPTS(e)} pts</span></div>
+    <div class="etat">${fait?`<b>${p+b}</b>pts`:'À faire'}</div></button>`;
+}
+function vHome(){
+  const t=state.team, c=calcul(), e=c.eq[t], eqp=equipe(t)||{}; const photo=state.photos[t]||okPhoto(lsGet('photo_'+t,''));
+  const rg = e.total>0 ? c.ordre.indexOf(t)+1 : null;
+  const aFaire = EP.filter(x=>c.pts[kp(x.n,t)]==null), faites = EP.filter(x=>c.pts[kp(x.n,t)]!=null);
+  let h = state.orgRetour?`<button class="btn marine" style="margin:0 0 12px" onclick="aller('org')">Retour à l'organisation</button>`:'';
+  h += `<div class="card"><div class="equipe"><div class="ph" style="${photo?`background-image:url('${photo}')`:''}"></div>
+      <div><div class="nom">${esc(eqp.nom||'')}</div><div class="muted">Équipe ${t} · bandeau ${couleur(t).toLowerCase()}<br>Capitaine : ${esc(eqp.capitaine||'')}</div></div></div>
+    <div class="scores"><div><b>${e.total}</b><span>points</span></div><div><b>${e.faits}/14</b><span>épreuves</span></div><div><b>${rg?rg+(rg===1?'er':'e'):'·'}</b><span>${rg?'sur '+N_EQUIPES+' (en direct)':'classement'}</span></div></div>
+    <div class="prog"><div style="width:${100*e.faits/14}%"></div></div>
+    <p class="muted" style="margin:10px 0 0">${resteTxt()}. Dont ${pl(e.bonus,'point')} bonus (ambiance, cohésion, fair-play).</p></div>`;
+  if(e.faits===0) h += `<div class="banner bleu"><b>Pour bien démarrer :</b> commencez par l'épreuve ${DEPART[t]}, ${EPN[DEPART[t]].nom}. Ensuite, allez où vous voulez.</div>`;
+  if(c.pts[kp(12,t)]==null) h += `<div class="banner"><b>La culture d'entreprise rapporte le double.</b> Pensez à y passer : jusqu'à 20 points.</div>`;
+  if(aFaire.length) h += `<h3>À faire (${aFaire.length})</h3>` + aFaire.map(x=>carteEp(x,c)).join('');
+  else h += `<div class="bravo"><div class="p">14/14</div><p style="margin-top:8px"><b>Toutes les épreuves sont faites. Bravo !</b></p></div>`;
+  if(faites.length) h += `<h3>Faites (${faites.length})</h3>` + faites.map(x=>carteEp(x,c)).join('');
+  h += `<div class="card" style="margin-top:14px"><h3 style="margin-top:0">Rappel des règles</h3><p class="muted">Un maximum d'épreuves pour un maximum de points. Chaque épreuve une seule fois. En duel, trouvez une équipe adverse. À la fin de l'épreuve, tendez le téléphone à l'animateur. Plusieurs téléphones de l'équipe peuvent scanner le même QR code.</p>
+    <button class="lnk" onclick="modifierEquipe()">Modifier le nom ou la photo (animateur)</button></div>`;
+  return h;
+}
+function vEpreuve(){
+  const e=EPN[state.ep], t=state.team, c=calcul(), k=kp(e.n,t), p=c.pts[k], r=passages()[k];
+  let h = `<button class="lnk" onclick="aller('home')">← Toutes les épreuves</button>
+    <div class="hero" style="background-image:url('${img(e.n)}')"><span>${e.n}. ${e.nom}</span></div>
+    <div class="card"><p>${e.desc}</p>
+      <p>${e.type==='duel'?'<span class="tag duel">DUEL : trouvez une équipe adverse</span>':''}${e.type==='quiz'?'<span class="tag double">POINTS DOUBLÉS</span>':''}<span class="tag gris">${e.min} minutes</span><span class="tag gris">${pl(e.places,'équipe')} à la fois</span></p>
+      <p class="muted" style="margin-top:10px"><b>Les points :</b> ${BAREME[e.type]}.<br><b>Bonus de l'animateur :</b> ambiance, cohésion, fair-play, 1 point chacun.</p></div>`;
+  if(p!=null){
+    const b=(r.b_ambiance?1:0)+(r.b_cohesion?1:0)+(r.b_fairplay?1:0); const rg=c.rang[k];
+    const det = e.type==='duel' ? (r.resultat==='V'?'Victoire':r.resultat==='N'?'Égalité':'Défaite') : e.type==='chrono' ? fmtT(r.mesure) : e.type==='jury' ? `Note du jury : ${+r.mesure} sur 10` : e.type==='quiz' ? `${+r.mesure} bonnes réponses sur 10` : e.type==='hauteur' ? `${+r.mesure} cm` : `${+r.mesure} points marqués`;
+    h += `<div class="bravo"><p><b>Épreuve faite</b></p><div class="p">${p+b}</div><p style="margin:6px 0 0">points${b?` dont ${b} bonus`:''}</p>
+      <p style="margin:10px 0 0;opacity:.9">${det}${rg?`<br>${rg.r}${rg.r===1?'er':'e'} sur ${pl(rg.n,'équipe')} pour l'instant : les points peuvent encore bouger jusqu'à 12h30`:''}</p></div>
+      <button class="lnk" onclick="demarrerSaisie()">Corriger ce résultat (animateur)</button>`;
+  } else {
+    h += `<button class="btn vert" onclick="demarrerSaisie()">Épreuve terminée :<br>je tends le téléphone à l'animateur</button>`;
+  }
+  return h;
+}
+function vSaisie(){
+  const e=EPN[state.ep], s=state.saisie, t=state.team;
+  let champ='';
+  if(e.type==='duel') champ = `<label>Résultat de l'équipe ${t}</label><div class="choix"><button class="${s.res==='V'?'sel':''}" onclick="setRes('V')">Victoire</button><button class="${s.res==='N'?'sel':''}" onclick="setRes('N')">Égalité</button><button class="${s.res==='D'?'sel':''}" onclick="setRes('D')">Défaite</button></div>`;
+  else if(e.type==='chrono') champ = `<div class="row"><div><label>Minutes</label><input type="number" id="mm" inputmode="numeric" min="0" max="59" placeholder="min"></div><div><label>Secondes</label><input type="number" id="ss" inputmode="numeric" min="0" max="59" placeholder="s"></div></div>`;
+  else champ = `<label>${{points:'Total de points de l\'équipe', jury:'Note du jury (de 0 à 10)', quiz:'Bonnes réponses (de 0 à 10)', hauteur:'Hauteur de la tour (en cm)'}[e.type]}</label><input type="number" id="mv" inputmode="numeric" min="0" ${(e.type==='jury'||e.type==='quiz')?'max="10"':''}>`;
+  const bb = (k,l)=>`<button class="${s.bonus[k]?'sel':''}" onclick="setBonus('${k}')">${l}<br><small>+1</small></button>`;
+  return `<div class="anim"><h2>Espace animateur</h2><p class="muted">Épreuve ${e.n} · ${e.nom}<br>${titreEq(t)} (bandeau ${couleur(t).toLowerCase()})</p>
+    ${champ}
+    <label>Bonus (facultatif)</label><div class="choix">${bb('a','Ambiance')}${bb('c','Cohésion')}${bb('f','Fair-play')}</div>
+    ${state.org?'<p class="muted" style="margin-top:12px">Mode organisation : pas de code à saisir.</p>':`<label>Code de l'animateur</label><input type="password" id="codeA" inputmode="numeric" autocomplete="off" placeholder="Code du stand">`}
+    <button class="btn orange" onclick="validerSaisie()">Valider le résultat</button>
+    <button class="btn clair" style="background:transparent;color:#fff" onclick="aller('ep')">Annuler</button>
+    ${passages()[kp(e.n,t)] && passages()[kp(e.n,t)].resultat!=='X' ? '<button class="lnk" style="color:#C9DCEC" onclick="supprimerPassage()">Effacer ce passage</button>':''}
+  </div>`;
+}
+function vBravo(){
+  const b=state.bravo||{};
+  return `<div class="bravo"><p><b>${esc(b.titre||'Bravo !')}</b></p><div class="p">${b.pts}</div><p style="margin:6px 0 0">${b.sous||''}</p></div>
+    <button class="btn" onclick="aller('home')">Épreuve suivante</button>`;
+}
+function phStyle(t){ const p=state.photos[t]; return p?`background-image:url('${p}')`:''; }
+function vOrg(){
+  const c=calcul(); const inscrites=Array.from({length:N_EQUIPES},(_,i)=>i+1).filter(t=>nomEq(t)).length;
+  let h = `<nav class="tabs">${[['classement','Classement'],['epreuves','Épreuves'],['equipes','Équipes']].map(([k,l])=>`<button class="${state.orgTab===k?'on':''}" onclick="orgTab('${k}')">${l}</button>`).join('')}</nav>`;
+  if(state.orgTab==='classement'){
+    h += `<div class="card"><div class="scores" style="margin-top:0"><div><b>${c.saisies}</b><span>résultats saisis</span></div><div><b>${inscrites}/${N_EQUIPES}</b><span>équipes inscrites</span></div><div><b style="font-size:15px;padding-top:6px">${resteTxt().replace('Fin des épreuves ','')}</b><span>fin des épreuves</span></div></div><button class="btn clair" onclick="refresh()">Actualiser</button></div>`;
+    if(c.general){ [c.general,c.prixQuiz,c.ambiance].forEach(t=>t&&chargerPhoto(t));
+      h += `<div class="prix" style="background:linear-gradient(160deg,var(--bleu),var(--marine))"><div class="ph" style="${phStyle(c.general)}"></div><div><div class="t">Grand prix de la cohésion</div><div class="n">${titreEq(c.general)}</div><div>${c.eq[c.general].total} points · ${pl(c.eq[c.general].faits,'épreuve')}</div></div></div>`;
+      h += c.prixQuiz ? `<div class="prix" style="background:var(--orange)"><div class="ph" style="${phStyle(c.prixQuiz)}"></div><div><div class="t">Prix spécial Proxim'Services (culture d'entreprise)</div><div class="n">${titreEq(c.prixQuiz)}</div><div>${c.eq[c.prixQuiz].quiz} bonnes réponses sur 10</div></div></div>` : `<div class="banner">Prix spécial : en attente des résultats de la culture d'entreprise.</div>`;
+      if(c.ambiance) h += `<div class="prix" style="background:var(--vert)"><div class="ph" style="${phStyle(c.ambiance)}"></div><div><div class="t">Coup de cœur des animateurs (bonus)</div><div class="n">${titreEq(c.ambiance)}</div><div>${pl(c.eq[c.ambiance].bonus,'point')} d'ambiance, de cohésion et de fair-play</div></div></div>`;
+    }
+    h += `<div class="card" style="padding:8px"><table><tr><th>#</th><th style="text-align:left">Équipe</th><th>Pts</th><th>Épr.</th><th>Culture</th><th>Bonus</th></tr>`;
+    c.ordre.forEach((t,i)=>{ const e=c.eq[t]; h += `<tr class="${e.total>0&&i<3?'top'+(i+1):''}" onclick="voirEquipe(${t})"><td>${i+1}</td><td class="l"><b>${t}</b> ${esc(nomEq(t))||'<span class="muted">non inscrite</span>'}</td><td><b>${e.total}</b></td><td>${e.faits}</td><td>${e.quiz==null?'·':e.quiz}</td><td>${e.bonus}</td></tr>`; });
+    h += `</table><p class="muted" style="padding:8px 6px 0">Touchez une équipe pour ouvrir son carnet (saisie de secours ou correction). Égalité : nombre d'épreuves, puis culture d'entreprise. Le prix spécial ne va jamais à l'équipe du grand prix.</p></div>`;
+  } else if(state.orgTab==='epreuves'){
+    const all=Object.values(passages()).filter(r=>r.resultat&&r.resultat!=='X');
+    h += EP.map(e=>{ const l=all.filter(r=>r.stand===e.n); const reste=Array.from({length:N_EQUIPES},(_,i)=>i+1).filter(t=>!l.some(r=>r.team===t));
+      return `<div class="card"><b>${e.n}. ${e.nom}</b> <span class="muted">· ${pl(l.length,'équipe')} passée${l.length>1?'s':''} sur ${N_EQUIPES}</span><div class="prog"><div style="width:${100*l.length/N_EQUIPES}%"></div></div><p class="muted" style="margin:8px 0 0">Pas encore passées : ${reste.length?reste.join(', '):'aucune'}</p></div>`; }).join('');
+  } else {
+    h += `<div class="card"><p class="muted">Les ${N_EQUIPES} équipes. Touchez une équipe pour ouvrir son carnet.</p>${state.galerie?'':'<button class="btn clair" onclick="chargerGalerie()">Afficher les photos des équipes</button>'}</div><div class="gal">`;
+    for(let t=1;t<=N_EQUIPES;t++){ const e=equipe(t); h += `<div onclick="voirEquipe(${t})">${state.galerie&&state.photos[t]?`<img src="${state.photos[t]}" alt="">`:''}<b>Équipe ${t}</b> · ${couleur(t)}<br>${e&&e.nom?esc(e.nom)+'<br><span class="muted">'+esc(e.capitaine||'')+'</span>':'<span class="muted">non inscrite</span>'}</div>`; }
+    h += `</div>`;
+  }
+  return h + `<button class="lnk" onclick="quitterOrg()">Quitter l'espace organisation</button>`;
+}
+
+// =============== Actions ===============
+function aller(v){ state.view=v; if(v==='org'){ state.orgRetour=false; } render(); window.scrollTo(0,0); if(v==='org'||v==='home') refresh(); }
+window.aller=aller;
+window.choisirEquipe = ()=>{ const t=+$('#selT').value; if(!t){ alert('Choisissez votre équipe.'); return; } state.team=t; lsSet('team',t); state.view=''; render(); refresh(); };
+window.entrerOrg = ()=>{ if(codeOrgOk($('#codeOrg').value)){ state.org=true; lsSet('org',true); aller('org'); } else alert('Code incorrect.'); };
+window.quitterOrg = ()=>{ state.org=false; lsSet('org',false); state.orgRetour=false; state.view=''; render(); };
+window.orgTab = k=>{ state.orgTab=k; render(); };
+window.voirEquipe = t=>{ state.team=t; state.orgRetour=true; state.view=''; render(); window.scrollTo(0,0); chargerPhoto(t); };
+window.chargerGalerie = async ()=>{ try{ const r=await dbGet('tb_equipes','select=team,photo'); r.forEach(x=>{ if(okPhoto(x.photo)) state.photos[x.team]=x.photo; }); }catch(e){} state.galerie=true; render(); };
+window.garderBrouillon = ()=>{ if($('#fNom')) lsSet('brouillon_nom',$('#fNom').value); if($('#fCap')) lsSet('brouillon_cap',$('#fCap').value); };
+window.photoChoisie = inp=>{
+  const f=inp.files && inp.files[0]; if(!f) return;
+  const url=URL.createObjectURL(f); const im=new Image();
+  im.onload=()=>{ const max=800, k=Math.min(1,max/Math.max(im.width,im.height)); const cv=document.createElement('canvas'); cv.width=Math.round(im.width*k); cv.height=Math.round(im.height*k);
+    cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height); const data=cv.toDataURL('image/jpeg',0.7); URL.revokeObjectURL(url);
+    state.photos[state.team]=data; lsSet('photo_'+state.team,data); render(); };
+  im.onerror=()=>alert('Photo illisible, réessayez.'); im.src=url;
+};
+window.inscrire = sansPhoto=>{
+  const nom=($('#fNom').value||'').trim(), cap=($('#fCap').value||'').trim(); const t=state.team; const photo=state.photos[t]||okPhoto(lsGet('photo_'+t,''));
+  if(!nom){ alert('Donnez un nom à votre équipe.'); return; }
+  if(!cap){ alert('Indiquez le prénom du capitaine.'); return; }
+  if(!photo && !sansPhoto){ alert('Prenez la photo de toute l\'équipe (ou touchez « Continuer sans photo »).'); return; }
+  const row={ event:EVENT, team:t, nom, capitaine:cap, code:CLE, updated_at:new Date().toISOString() };
+  local.e[t]={team:t,nom,capitaine:cap,updated_at:row.updated_at};
+  pousser('tb_equipes','event,team','e-'+t, photo ? {...row, photo} : row);
+  state.edition=false; state.view='home'; render(); window.scrollTo(0,0);
+};
+window.modifierEquipe = ()=>{
+  if(!state.org){ const c=prompt('Code de l\'animateur ou de l\'organisation :'); if(c===null) return; if(!Object.keys(EMPREINTES.stands||{}).some(s=>codeStandOk(+s,c)) ){ alert('Code incorrect.'); return; } }
+  const e=equipe(state.team)||{}; lsSet('brouillon_nom',e.nom||''); lsSet('brouillon_cap',e.capitaine||''); state.edition=true; state.view='brief'; render(); window.scrollTo(0,0);
+};
+window.ouvrir = n=>{ state.ep=n; state.view='ep'; render(); window.scrollTo(0,0); };
+window.demarrerSaisie = ()=>{ const r=passages()[kp(state.ep,state.team)]; const ok=r&&r.resultat&&r.resultat!=='X';
+  state.saisie={ res: ok&&EPN[state.ep].type==='duel'?r.resultat:'', bonus:{a:!!(ok&&r.b_ambiance), c:!!(ok&&r.b_cohesion), f:!!(ok&&r.b_fairplay)} }; state.view='saisie'; render(); window.scrollTo(0,0); };
+function garderChamps(){ const v={}; ['mm','ss','mv','codeA'].forEach(id=>{ const el=document.getElementById(id); if(el) v[id]=el.value; }); return v; }
+function remettreChamps(v){ Object.entries(v).forEach(([id,val])=>{ const el=document.getElementById(id); if(el) el.value=val; }); }
+window.setRes = r=>{ const v=garderChamps(); state.saisie.res=r; render(); remettreChamps(v); };
+window.setBonus = k=>{ const v=garderChamps(); state.saisie.bonus[k]=!state.saisie.bonus[k]; render(); remettreChamps(v); };
+function codeSaisieOk(){ if(state.org) return true; const c=$('#codeA')?$('#codeA').value:''; if(!codeStandOk(state.ep,c)){ alert('Code de l\'animateur incorrect.'); return false; } return true; }
+window.validerSaisie = ()=>{
+  const e=EPN[state.ep], t=state.team, s=state.saisie; let res='F', mes=null;
+  if(e.type==='duel'){ if(!s.res){ alert('Choisissez Victoire, Égalité ou Défaite.'); return; } res=s.res; }
+  else if(e.type==='chrono'){ const mm=+($('#mm').value||0), ss=+($('#ss').value||0); if(mm<0||ss<0||ss>59||(mm===0&&ss===0)){ alert('Saisissez le temps en minutes et secondes.'); return; } mes=mm*60+ss; }
+  else { const v=$('#mv').value; if(v===''||isNaN(+v)||+v<0){ alert('Saisissez le résultat.'); return; } if((e.type==='jury'||e.type==='quiz') && +v>10){ alert('La valeur doit être comprise entre 0 et 10.'); return; } mes=+v; }
+  if(!codeSaisieOk()) return;
+  const row={ event:EVENT, stand:e.n, team:t, resultat:res, mesure:mes, b_ambiance:s.bonus.a, b_cohesion:s.bonus.c, b_fairplay:s.bonus.f, code:CLE, updated_at:new Date().toISOString() };
+  local.p[kp(e.n,t)]=row; pousser('tb_passages','event,stand,team','p-'+kp(e.n,t),row);
+  const c=calcul(); const p=c.pts[kp(e.n,t)]||0; const b=(s.bonus.a?1:0)+(s.bonus.c?1:0)+(s.bonus.f?1:0); const rg=c.rang[kp(e.n,t)];
+  state.bravo={ titre:`${e.nom} : c'est validé !`, pts:'+'+(p+b), sous:`points pour l'équipe ${t}`+(b?` dont ${b} bonus`:'')+(rg?`<br>${rg.r}${rg.r===1?'er':'e'} sur ${pl(rg.n,'équipe')} pour l'instant`:'') };
+  state.view='bravo'; render(); window.scrollTo(0,0);
+};
+window.supprimerPassage = ()=>{
+  if(!confirm('Effacer le résultat de cette épreuve pour cette équipe ?')) return; if(!codeSaisieOk()) return;
+  const e=EPN[state.ep], t=state.team; const row={ event:EVENT, stand:e.n, team:t, resultat:'X', mesure:null, b_ambiance:false, b_cohesion:false, b_fairplay:false, code:CLE, updated_at:new Date().toISOString() };
+  local.p[kp(e.n,t)]=row; pousser('tb_passages','event,stand,team','p-'+kp(e.n,t),row); aller('ep');
+};
+window.refresh=refresh;
+window.addEventListener('online', flush);
+setInterval(()=>{ flush(); refresh(); }, 20000);
+if(Q.has('org')){ if(!tQ) state.team=0; state.view = state.org ? 'org' : 'landing'; }
+render(); refresh();
+</script>
+</body>
+</html>
