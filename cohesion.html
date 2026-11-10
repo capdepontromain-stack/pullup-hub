@@ -44,6 +44,8 @@
   .prog > div { height:100%; background:linear-gradient(90deg,var(--jaune),var(--orange)); }
   .ep { display:flex; background:#fff; border-radius:16px; overflow:hidden; margin-bottom:10px; box-shadow:0 2px 8px rgba(11,79,134,.08); border:0; width:100%; text-align:left; padding:0; color:inherit; font:inherit; }
   .ep .img { flex:0 0 104px; background:var(--trait) center/cover; min-height:92px; position:relative; }
+  .ep.culture { box-shadow:0 0 0 2px var(--orange), 0 2px 8px rgba(11,79,134,.08); }
+  .ep.culture .img { background-color:#fff; background-size:contain; background-repeat:no-repeat; }
   .ep .img i { position:absolute; left:6px; top:6px; background:var(--marine); color:#fff; font-style:normal; font-weight:800; font-size:13px; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
   .ep .txt { flex:1; padding:10px 12px; min-width:0; }
   .ep .t { font-weight:800; font-size:15.5px; color:var(--marine); }
@@ -154,7 +156,7 @@ const EP = [
  {n:14, nom:'La tour de Babel', type:'hauteur', places:2, min:8, desc:"Chacun tient une ficelle : empilez les pièces sans les toucher. La tour la plus haute gagne."}
 ];
 const EPN = Object.fromEntries(EP.map(e=>[e.n,e]));
-const img = n => `proxim/ep${String(n).padStart(2,'0')}.jpg?v=2`;        // v=2 : force les téléphones à recharger les photos
+const img = n => `proxim/ep${String(n).padStart(2,'0')}.jpg?v=3`;        // v=3 : force les téléphones à recharger les photos (culture d'entreprise = logo Proxim'Services)
 const MAXPTS = e => e.type==='quiz' ? 20 : 10;
 const BAREME = { duel:'Victoire 10 points · Égalité 6 · Défaite 3', jury:'La note du jury sur 10 donne vos points', quiz:'2 points par bonne réponse : jusqu\'à 20 points',
   chrono:'Classement entre toutes les équipes : de 10 points pour les plus rapides à 2 points', points:'Classement entre toutes les équipes : de 10 points pour les meilleurs scores à 2 points', hauteur:'Classement entre toutes les équipes : de 10 points pour les plus hautes tours à 2 points' };
@@ -385,7 +387,7 @@ const REGLES = `<ul class="regles">
       <li><span class="num" style="background:var(--jaune);color:var(--marine)">+</span><div><b>Bonus :</b> les animateurs récompensent l'ambiance, la cohésion et le fair-play. Les points restent secrets jusqu'au podium.</div></li>
     </ul>`;
 function vAccueil(){
-  return `<div class="hero" style="height:210px;background-image:url('${img(CULTURE)}')"></div>
+  return `<div class="hero" style="height:210px;background-image:url('proxim/accueil.jpg')"></div>
     <div class="card" style="text-align:center"><h2 style="font-size:26px">Journée de cohésion</h2>
       <p style="font-size:18px;margin:10px 0 4px"><b>Regroupez toute votre équipe</b><br>autour de ce téléphone.</p>
       <button class="btn orange" style="font-size:21px;padding:18px" onclick="debuter()">C'est parti !</button></div>
@@ -407,10 +409,11 @@ function vBrief(){
 }
 const fait = (n,t) => { const r=passages()[kp(n,t)]; return !!(r && r.resultat && r.resultat!=='X'); };
 function carteEp(e){
-  return `<button class="ep afaire" onclick="ouvrir(${e.n})">
-    <div class="img" style="background-image:url('${img(e.n)}')"><i>${e.n}</i></div>
+  const cu = e.n===CULTURE;
+  return `<button class="ep afaire${cu?' culture':''}" onclick="ouvrir(${e.n})">
+    <div class="img" style="background-image:url('${cu?'proxim/ep12-carre.jpg?v=3':img(e.n)}')"><i>${e.n}</i></div>
     <div class="txt"><div class="t">${e.nom}</div>
-      <span class="tag" style="background:var(--vert)">${MAXPTS(e)} points à gagner</span>${e.type==='duel'?'<span class="tag duel">DUEL</span>':''}<span class="tag gris">${e.min} min</span></div>
+      <span class="tag" style="background:var(--vert)">${MAXPTS(e)} points à gagner</span>${e.type==='duel'?'<span class="tag duel">DUEL</span>':''}${cu?'<span class="tag double">POINTS DOUBLÉS</span>':''}<span class="tag gris">${e.min} min</span></div>
     <div class="etat">À<br>FAIRE</div></button>`;
 }
 function vHome(){
@@ -428,8 +431,7 @@ function vHome(){
     h += `<button class="vedette ${cl?'clignote':''}" onclick="ouvrir(${CULTURE})"><div class="img" style="background-image:url('${img(CULTURE)}')"></div><div class="txt">
       <div class="t">${cl?'Vous n\'avez pas encore fait la culture d\'entreprise !':'À ne pas manquer : la culture d\'entreprise'}</div>
       <div>10 questions sur Proxim'Services et votre métier. C'est l'épreuve qui rapporte le plus.</div><div class="d">20 POINTS À GAGNER · POINTS DOUBLÉS</div></div></button>`; }
-  const reste = aFaire.filter(x=>x.n!==CULTURE);
-  if(aFaire.length){ if(reste.length) h += `<h3>À faire (${aFaire.length})</h3>` + reste.map(x=>carteEp(x)).join(''); }
+  if(aFaire.length) h += `<h3>À faire (${aFaire.length})</h3>` + aFaire.map(x=>carteEp(x)).join('');   // les 14 épreuves, culture d'entreprise comprise (n° 12)
   else h += `<div class="bravo"><div class="p">14/14</div><p style="margin-top:8px"><b>Toutes les épreuves sont faites. Bravo !</b></p></div>`;
   if(faites.length) h += `<h3 style="color:var(--rouge)">Déjà faites (${faites.length})</h3>` + faites.map(x=>`<button class="faite" onclick="ouvrir(${x.n})"><i>✓</i>${x.n}. ${x.nom}<span>FAIT</span></button>`).join('');
   h += `<div class="card" style="margin-top:14px"><h3 style="margin-top:0">Rappel des règles</h3>${REGLES}<p class="muted" style="margin-top:8px">Chaque épreuve une seule fois. Plusieurs téléphones de l'équipe peuvent scanner le QR code et entrer le même numéro d'équipe.</p>
