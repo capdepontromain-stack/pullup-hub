@@ -406,6 +406,10 @@
   .anim .btn.orange:not(.pret) { opacity:.55; }
   .anim .btn.orange.pret { opacity:1; }
   .anim .codeL { display:flex; align-items:center; gap:8px; }
+  .rangE { display:inline-block; min-width:30px; font-family:var(--titre); color:var(--marine); }
+  .champU { position:relative; } .champU input { padding-right:58px; font-family:var(--titre); font-size:30px; text-align:center; letter-spacing:1px; padding-top:9px; padding-bottom:9px; }
+  .champU span { position:absolute; right:14px; top:50%; transform:translateY(-50%); font-weight:900; font-size:16px; color:var(--gris); pointer-events:none; }
+  .anim .exemple { font-size:13.5px; color:#C9DCEC; margin:7px 2px 0; } .anim .exemple b { color:var(--jaune); }
   .anim #codeA { font-size:22px; letter-spacing:2px; text-align:center; }
   .anim .etapeS { display:inline-flex; width:22px; height:22px; border-radius:50%; background:var(--jaune); color:var(--nuit); font-size:13px; align-items:center; justify-content:center; font-weight:900; margin-right:6px; }
   /* podium */
@@ -1045,11 +1049,13 @@ function vSaisie(){
       <button class="chipAnim ${s.contreAnim?'sel':''}" onclick="contreAnimateurs(this)">Contre les animateurs</button>
       <div class="advNom" id="advNom"></div>
       <label>Résultat de l'équipe ${t}</label><div class="choix" id="grpRes"><button class="v ${s.res==='V'?'sel':''}" onclick="choisirRes('V',this)">Gagné</button><button class="${s.res==='N'?'sel':''}" onclick="choisirRes('N',this)">Égalité</button><button class="d ${s.res==='D'?'sel':''}" onclick="choisirRes('D',this)">Perdu</button></div>`;
-  } else if(e.type==='chrono') champ = `<label>Temps de l'équipe</label><div class="row"><div><input type="number" id="mm" inputmode="numeric" pattern="[0-9]*" min="0" max="59" placeholder="min" oninput="majRecap()" value="${s.mm??''}"></div><div><input type="number" id="ss" inputmode="numeric" pattern="[0-9]*" min="0" max="59" placeholder="secondes" oninput="majRecap()" value="${s.ss??''}"></div></div>
+  } else if(e.type==='chrono') champ = `<label>Temps de l'équipe</label><div class="row"><div class="champU"><input type="number" id="mm" inputmode="numeric" pattern="[0-9]*" min="0" max="59" placeholder="0" enterkeyhint="next" oninput="majRecap()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('ss').focus();}" value="${s.mm??''}"><span>min</span></div><div class="champU"><input type="number" id="ss" inputmode="numeric" pattern="[0-9]*" min="0" placeholder="00" enterkeyhint="done" oninput="majRecap()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" value="${s.ss??''}"><span>s</span></div></div>
+    <p class="exemple">Exemple : <b>1 min 20 s</b> → tapez <b>1</b> dans « min » puis <b>20</b> dans « s ».</p>
     <div class="chrono"><div class="aff" id="chAff">0:00.0</div><button id="chBtn" onclick="chronoBouton()">▶ Chrono</button><button class="z" onclick="chronoZero()" aria-label="Remettre à zéro">↺</button></div>
     <p class="muted" style="margin:6px 0 0">Chronométrez ici ou avec votre propre chrono : le temps se remplit tout seul à l'arrêt.</p>`;
   else if(e.type==='jury' || e.type==='quiz') champ = `<label>${e.type==='jury'?'Note du jury (sur 10)':'Nombre de bonnes réponses (sur 10)'}</label><div class="notes" id="grpNote">${Array.from({length:11},(_,i)=>`<button class="${s.note===i?'sel':''}" onclick="choisirNote(${i},this)">${i}</button>`).join('')}</div>`;
-  else champ = `<label>${e.type==='points'?(e.unite||'Total des points de l\'équipe'):'Hauteur de la tour (en cm)'}</label><input type="number" id="mv" inputmode="decimal" min="0" placeholder="${e.type==='points'?'Exemple : 45':'Exemple : 120'}" oninput="majRecap()" value="${s.mv??''}">`;
+  else champ = `<label>${e.type==='points'?(e.unite||'Total des points de l\'équipe'):'Hauteur de la tour (en cm)'}</label><div class="champU"><input type="number" id="mv" inputmode="numeric" pattern="[0-9]*" min="0" placeholder="0" enterkeyhint="done" oninput="majRecap()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" value="${s.mv??''}"><span>${e.type==='points'?(e.court||'pts'):'cm'}</span></div>
+    <p class="exemple">${e.type!=='points' ? 'Un seul nombre, en centimètres.' : e.court ? 'Un seul nombre : le nombre de mots trouvés. Exemple : <b>12</b>.' : 'Additionnez les points de tous les tirs, puis tapez <b>le total</b>. Exemple : <b>45</b>.'}</p>`;
   champ = champ.replace('<label>','<label><span class="etapeS">1</span>');
   const bb = b=>`<button class="${b.k} ${s.bonus[b.k]?'sel':''}" onclick="basculerBonus('${b.k}',this)"><span class="e">${b.ico}</span><span>${b.nom}<small>+${b.pts} point${b.pts>1?'s':''}</small></span></button>`;
   const existe = valide(passages()[kp(e.n,t)]);
@@ -1074,7 +1080,7 @@ function lireSaisie(){            // lit l'écran de saisie ; renvoie {res, mes,
     const adv = mes===0 ? 'les animateurs' : 'l\'équipe '+mes+(nomEq(mes)?' ('+nomEq(mes)+')':'');
     return {res, mes, texte: `Équipe ${t} : ${{V:'gagne',N:'fait égalité',D:'perd'}[res]} contre ${adv}.` + (mes>0?` Le résultat de l'équipe ${mes} sera enregistré en même temps.`:'')};
   }
-  if(e.type==='chrono'){ const mm=+(($('#mm')||{}).value||0), ss=+(($('#ss')||{}).value||0); if(mm<0||ss<0||ss>59||(mm===0&&ss===0)) return {erreur:'Saisissez le temps en minutes et secondes (secondes de 0 à 59).'}; mes=mm*60+ss; return {res, mes, texte:`Temps : ${fmtT(mes)}`}; }
+  if(e.type==='chrono'){ const mm=Math.floor(+(($('#mm')||{}).value||0)), ss=Math.round(+(($('#ss')||{}).value||0)); if(isNaN(mm)||isNaN(ss)||mm<0||ss<0||(mm===0&&ss===0)) return {erreur:'Tapez le temps : les minutes dans « min », les secondes dans « s ».'}; mes=mm*60+ss; return {res, mes, texte:`Temps : ${fmtT(mes)}`}; }
   if(e.type==='jury'||e.type==='quiz'){ if(s.note==null) return {erreur: e.type==='jury'?'Touchez la note du jury.':'Touchez le nombre de bonnes réponses.'}; mes=s.note; return {res, mes, texte: e.type==='jury'?`Note du jury : ${mes}/10`:`${mes} bonnes réponses sur 10 (soit ${2*mes} points)`}; }
   const v=(($('#mv')||{}).value||'').replace(',','.'); if(v===''||isNaN(+v)||+v<0) return {erreur:'Saisissez le résultat.'}; mes=+v; return {res, mes, texte: e.type==='points'?`Total : ${mes} ${e.court||'points'}`:`Hauteur : ${mes} cm`};
 }
@@ -1196,10 +1202,12 @@ function vOrg(){
     h += EP.map(e=>{ if(e.n===DEFI_EP){ const fin=Array.from({length:N_EQUIPES},(_,i)=>i+1).filter(t=>c.eq[t].nbDefis>=DEFIS.length).length;
         return `<details class="stand" id="dSt${e.n}"><summary><span style="font-size:22px">${e.ico}</span><div style="flex:1;min-width:0"><div class="nm">+ ${e.nom}</div><div class="barre"><div style="width:${100*c.dfs.filter(r=>r.envoye).length/(N_EQUIPES*DEFIS.length)}%"></div></div></div><span class="nb">${c.dfs.filter(r=>r.envoye).length}</span></summary><div>
           <p class="muted">${pl(c.dfs.filter(r=>r.envoye).length,'envoi')} au total · ${pl(fin,'équipe')} ont tout envoyé. Notez les photos dans l'onglet Photos.</p><button class="btn clair" style="margin-top:4px" onclick="orgTab('photos')">📸 Ouvrir l'onglet Photos</button></div></details>`; }
-      const l=all.filter(r=>r.stand===e.n).sort((a,b)=>(c.pts[kp(e.n,b.team)]+ptsBonus(b))-(c.pts[kp(e.n,a.team)]+ptsBonus(a)));
+      const perf = r => e.type==='duel' ? ({V:2,N:1,D:0}[r.resultat]||0) : (r.mesure==null ? -1e9 : (e.type==='chrono' ? -r.mesure : +r.mesure));   // la performance brute : temps, points, note
+      const l=all.filter(r=>r.stand===e.n).sort((a,b)=> perf(b)-perf(a) || (c.pts[kp(e.n,b.team)]+ptsBonus(b))-(c.pts[kp(e.n,a.team)]+ptsBonus(a)));
+      const rangE = r => 1 + l.filter(x=>perf(x)>perf(r)).length;
       const reste=Array.from({length:N_EQUIPES},(_,i)=>i+1).filter(t=>!l.some(r=>r.team===t));
       return `<details class="stand" id="dSt${e.n}"><summary><span style="font-size:22px">${e.ico}</span><div style="flex:1;min-width:0"><div class="nm">${e.n}. ${e.nom}</div><div class="barre"><div style="width:${100*l.length/N_EQUIPES}%"></div></div></div><span class="nb">${l.length}/${N_EQUIPES}</span></summary><div>
-        ${l.map(r=>`<button class="ligneRes" onclick="saisieDirecte(${e.n},${r.team})"><span><b>${r.team}</b> ${esc(nomEq(r.team))} <span class="muted">· ${esc(texteResultat(r,e))}</span> ${icoBonus(r)}</span><span class="p">${c.pts[kp(e.n,r.team)]+ptsBonus(r)} pts</span></button>`).join('')||'<p class="muted">Aucune équipe passée pour l\'instant.</p>'}
+        ${l.map(r=>`<button class="ligneRes" onclick="saisieDirecte(${e.n},${r.team})"><span>${e.type==='duel'?'':`<b class="rangE">${['🥇','🥈','🥉'][rangE(r)-1]||rangE(r)+'e'}</b> `}<b>${r.team}</b> ${esc(nomEq(r.team))} <span class="muted">· ${esc(texteResultat(r,e))}</span> ${icoBonus(r)}</span><span class="p">${c.pts[kp(e.n,r.team)]+ptsBonus(r)} pts</span></button>`).join('')||'<p class="muted">Aucune équipe passée pour l\'instant.</p>'}
         ${reste.length?`<p class="muted" style="margin:10px 0 2px"><b>Pas encore passées</b> (touchez pour saisir à leur place) :</p>${reste.map(t=>`<button class="puce" onclick="saisieDirecte(${e.n},${t})">${t}</button>`).join('')}`:'<p class="muted" style="margin-top:8px">✓ Toutes les équipes sont passées.</p>'}
       </div></details>`; }).join('');
   } else if(state.orgTab==='photos'){
