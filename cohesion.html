@@ -385,9 +385,9 @@
   @keyframes pousse { 50% { transform:translateX(4px); } }
   .ep .img::before { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent 60%,rgba(0,0,0,.18)); }
   /* passeport : 13 tampons + défis */
-  .passeport { display:grid; grid-template-columns:repeat(7,1fr); gap:8px 7px; margin-top:14px; }
+  .passeport { display:grid; grid-template-columns:repeat(7,1fr); gap:8px 7px; margin:14px auto 0; max-width:380px; }
   .passeport button { aspect-ratio:1; border-radius:50%; border:2px dashed #B8CBDB; background:#fff; font-family:var(--titre); font-weight:800; font-size:15px; color:#8DA2B5; padding:0; display:flex; align-items:center; justify-content:center; position:relative; line-height:1; }
-  .passeport button.ok { border:0; background:var(--c); color:var(--t,#fff); box-shadow:0 3px 8px rgba(0,0,0,.18), inset 0 -3px 0 rgba(0,0,0,.12); transform:rotate(-8deg); }
+  .passeport button.ok { border:0; background:var(--c); color:var(--t,#fff); box-shadow:0 3px 8px rgba(0,0,0,.18), inset 0 -3px 0 rgba(0,0,0,.12); transform:rotate(-8deg); font-size:19px; }
   .passeport button.ok::after { content:'✓'; position:absolute; right:-4px; bottom:-4px; width:17px; height:17px; border-radius:50%; background:#fff; color:var(--vert); font:900 11px/17px var(--corps); text-align:center; box-shadow:0 1px 3px rgba(0,0,0,.25); transform:rotate(8deg); }
   .passeport button.prochain { border:2px solid var(--orange); color:var(--orange); animation:pouls 1.6s ease-in-out infinite; }
   .passeport button.plus { border-style:solid; border-color:var(--nuit); color:var(--nuit); font-size:12px; }
@@ -403,8 +403,8 @@
   .etapeWA.waOk .n { background:var(--vert); } .etapeWA.waOk b { color:var(--vertf); }
   .waAide { background:#E9F9EF; border:1px solid #A6DDB9; border-radius:14px; padding:10px 12px; font-size:14px; color:#145C33; margin-top:10px; text-align:left; }
   /* saisie animateur */
-  .anim .btn.orange:not(.pret) { filter:saturate(.3) brightness(.92); }
-  .anim .btn.orange.pret { filter:none; }
+  .anim .btn.orange:not(.pret) { opacity:.55; }
+  .anim .btn.orange.pret { opacity:1; }
   .anim .codeL { display:flex; align-items:center; gap:8px; }
   .anim #codeA { font-size:22px; letter-spacing:2px; text-align:center; }
   .anim .etapeS { display:inline-flex; width:22px; height:22px; border-radius:50%; background:var(--jaune); color:var(--nuit); font-size:13px; align-items:center; justify-content:center; font-weight:900; margin-right:6px; }
