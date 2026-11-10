@@ -283,6 +283,7 @@ const CLE = 'PULLUP14';                             // clé technique exigée pa
 const N_EQUIPES = 28;
 const DEBUT_EPREUVES = ESSAI ? new Date(Date.now()-45*60000) : new Date(2026,10,14,10,15);   // en essai : comme si on jouait depuis 45 minutes
 const FIN_EPREUVES = ESSAI ? new Date(Date.now()+90*60000) : new Date(2026,10,14,12,30);
+const AVANT_JOUR_J = MODE==='reel' && new Date() < new Date(2026,10,14,0,0);   // le vrai QR code n'accepte aucune inscription avant samedi
 const CULTURE = 12;                                 // l'épreuve mise en avant (points doublés)
 const COULEURS = ['Rouge','Bleu roi','Vert','Jaune','Orange','Violet','Rose','Blanc','Noir','Turquoise','Bordeaux','Bleu ciel','Vert anis','Gris'];
 const couleur = t => COULEURS[(t-1)%14];
@@ -573,6 +574,7 @@ function render(doux){
   if(state.dbOk===false && state.view!=='podium') h += `<div class="banner err"><b>📶 Pas de réseau pour l'instant.</b> ${nq?pl(nq,'envoi')+' en attente : ils partiront tout seuls dès que le réseau revient.':'Tout est gardé sur ce téléphone.'} Continuez à jouer.</div>`;
   else if(nq && nr<nq && !['podium','bravo'].includes(state.view)) h += `<div class="banner">Envoi en cours (${nq})…</div>`;
   if(nr) h += `<div class="banner err"><b>${pl(nr,'résultat')} refusé${nr>1?'s':''} par la base.</b> Montrez ce téléphone à l'organisation.</div>`;
+  if(AVANT_JOUR_J && !state.org && !['landing','org','podium'].includes(state.view)){ $('#main').innerHTML = vAvant(); majBas(); majRebours(); return; }
   h += ({accueil:vAccueil, regles:vRegles, landing:vLanding, brief:vBrief, home:vHome, ep:vEpreuve, saisie:vSaisie, bravo:vBravo, org:vOrg, chat:vChat, podium:vPodium}[state.view]||vLanding)();
   const main=$('#main');
   if(doux && h===dernierHTML){ majBas(); majRebours(); return; }
@@ -583,6 +585,14 @@ function render(doux){
   document.body.classList.toggle('podiumOn', state.view==='podium');
   majBas(); majRebours();
   if(state.view==='chat' || (state.view==='org' && state.orgTab==='messages')) majFil(true);
+}
+function vAvant(){
+  const j=Math.ceil((new Date(2026,10,14) - new Date())/86400000);
+  return `<div class="heroAcc entree" style="background-image:url('proxim/accueil.jpg')"><div class="surt">Samedi 14 novembre</div></div>
+    <div class="card accCarte entree"><h1>Journée de cohésion</h1><p class="sous">Rendez-vous <b>samedi 14 novembre</b>${j>0?`, dans ${pl(j,'jour')}`:''}.</p>
+      <p class="muted">L'application s'ouvrira le jour J : scannez ce QR code avec votre équipe à 10h15.</p>
+      <a class="btn clair" style="text-decoration:none;text-align:center" href="?essai">Découvrir l'application (mode essai)</a></div>
+    <p style="text-align:center"><button class="lnk" onclick="aller('landing')">Organisation</button></p>`;
 }
 function vLanding(){
   return `<div class="card entree" style="text-align:center"><div style="font-size:44px">🔐</div><h2>Espace organisation</h2><p class="muted">Réservé à l'équipe Pull Up : classement en direct, corrections, messages et podium.</p>
@@ -772,6 +782,7 @@ function vuePrecedente(){
   if(v==='bravo') return 'home';
   if(v==='chat') return state.org && !state.team ? 'org' : (state.avantChat||'home');
   if(v==='landing') return 'debut';
+  if(AVANT_JOUR_J && !state.org) return null;
   if(v==='brief') return state.edition ? 'home' : (state.orgRetour ? 'org' : 'accueil');
   if(v==='home') return state.orgRetour ? 'org' : null;
   return null;
@@ -831,9 +842,14 @@ function vOrg(){
       <div class="annRap">${ANNONCES.map((a,i)=>`<button onclick="annonceRapide(${i})">${a[0]} ${esc(a[1])}</button>`).join('')}</div>
       <button class="btn clair" onclick="basculerChat()">${state.chatOuvert?'🔒 Fermer la messagerie aux équipes':'🔓 Rouvrir la messagerie aux équipes'}</button></div><div class="fil" id="fil"></div>${zoneEcrire()}`;
   } else {
-    h += `<div class="card" style="padding:14px"><p class="muted" style="margin:0">Les ${N_EQUIPES} équipes. Touchez une équipe pour ouvrir son carnet (points de chaque épreuve, corrections).</p>${state.galerie?'':'<button class="btn clair" onclick="chargerGalerie()">📷 Afficher les photos des équipes</button>'}</div><div class="gal">`;
+    h += `<div class="card" style="padding:14px"><p class="muted" style="margin:0">Les ${N_EQUIPES} équipes. Touchez une équipe pour ouvrir son carnet (points de chaque épreuve, corrections).</p>${state.galerie?'':'<button class="btn clair" onclick="chargerGalerie()">📷 Afficher les photos des équipes</button>'}</div>`;
+    const tp=temps(), dern={}; c.rows.forEach(r=>{ dern[r.team]=Math.max(dern[r.team]||0, tms(r.updated_at)); });
+    const enJeu = tp.etat==='encours'||tp.etat==='urgent'; const calmes=[];
+    for(let t=1;t<=N_EQUIPES;t++){ const e=equipe(t); if(e&&e.nom && enJeu && tp.ecoule>=25 && (!dern[t] || Date.now()-dern[t] > 25*60000)) calmes.push(t); }
+    if(calmes.length) h += `<div class="banner entree"><b>⚠ Sans nouveau résultat depuis 25 minutes :</b> ${calmes.map(t=>`<button class="puce" style="border-color:var(--orange)" onclick="voirEquipe(${t})">${t}</button>`).join('')}<br><span class="muted">Une équipe perdue, un téléphone éteint ou une longue file d'attente : allez voir.</span></div>`;
+    h += `<div class="gal">`;
     for(let t=1;t<=N_EQUIPES;t++){ const e=equipe(t), q=c.eq[t]; const p=state.galerie?state.photos[t]:'';
-      h += `<button onclick="voirEquipe(${t})" class="${e&&e.nom?'':'vide'}"><div class="ph" style="${p?`background-image:url('${p}')`:`background:${TEINTES[(t-1)%14]}`}">${p?'':t}</div><b>Équipe ${t}</b><br>${e&&e.nom?esc(e.nom)+'<br><span class="muted">'+q.faits+'/14 · '+q.total+' pts</span>':'<span class="muted">non inscrite · '+couleur(t)+'</span>'}</button>`; }
+      h += `<button onclick="voirEquipe(${t})" class="${e&&e.nom?'':'vide'}" style="${calmes.includes(t)?'box-shadow:0 0 0 3px var(--orange)':''}"><div class="ph" style="${p?`background-image:url('${p}')`:`background:${TEINTES[(t-1)%14]}`}">${p?'':t}</div><b>Équipe ${t}</b><br>${e&&e.nom?esc(e.nom)+'<br><span class="muted">'+q.faits+'/14 · '+q.total+' pts'+(dern[t]?' · '+heure(dern[t]):'')+'</span>':'<span class="muted">non inscrite · '+couleur(t)+'</span>'}</button>`; }
     h += `</div>`;
   }
   return h + `<p style="text-align:center;margin-top:16px"><button class="lnk" onclick="quitterOrg()">Quitter l'espace organisation</button></p>`;
@@ -855,6 +871,7 @@ function vCarnetOrg(){
   EP.forEach(e=>{ const r=passages()[kp(e.n,t)]; const ok=valide(r);
     h += `<button class="ligneRes" onclick="saisieDirecte(${e.n},${t},'home')"><span>${e.ico} <b>${e.n}. ${e.nom}</b><br><span class="muted">${ok?esc(texteResultat(r,e))+' '+icoBonus(r):'pas encore faite · toucher pour saisir'}</span></span>${ok?`<span class="p">${c.pts[kp(e.n,t)]+ptsBonus(r)} pts</span>`:'<span class="st">à faire</span>'}</button>`; });
   h += `</div><button class="btn clair" onclick="modifierEquipe()">✏️ Modifier le nom, le capitaine ou la photo</button>`;
+  if(eqp.nom || q.faits) h += `<p style="text-align:center;margin-top:10px"><button class="lnk" style="color:var(--rouge)" onclick="remettreAZero()">Remettre cette équipe à zéro (numéro pris par erreur)</button></p>`;
   return h;
 }
 // ---------- Podium : on dévoile les gagnants un par un ----------
@@ -1012,6 +1029,15 @@ window.supprimerPassage = ()=>{
   if(e.type==='duel' && anc && +anc.mesure>0){ const r2=passages()[kp(e.n,+anc.mesure)]; if(valide(r2) && +r2.mesure===t && confirm('Effacer aussi le résultat de l\'équipe '+(+anc.mesure)+' (même duel) ?')){ local.p[kp(e.n,+anc.mesure)]=vide(+anc.mesure); pousser('tb_passages','event,stand,team','p-'+kp(e.n,+anc.mesure),vide(+anc.mesure)); } }
   state.saisie=null; dire('Résultat effacé','ok'); const a=state.apresSaisie; state.apresSaisie='';
   if(state.org && a==='org') aller('org'); else { state.view = state.org&&state.orgRetour ? 'home' : 'ep'; render(); }
+};
+window.remettreAZero = ()=>{
+  const t=state.team; if(!state.org || !t) return;
+  if(!confirm(`Remettre l'équipe ${t} à zéro ?\n\nSon nom, sa photo et tous ses résultats seront effacés. Le numéro ${t} redevient libre.`)) return;
+  if(!confirm(`Vraiment ? Cette action ne peut pas être annulée.`)) return;
+  const maintenant=new Date().toISOString();
+  Object.values(passages()).filter(r=>r.team===t && valide(r)).forEach(r=>{ const x={ event:EVENT, stand:r.stand, team:t, resultat:'X', mesure:null, code:CLE, updated_at:maintenant }; BONUS.forEach(b=>x[b.col]=false); local.p[kp(r.stand,t)]=x; pousser('tb_passages','event,stand,team','p-'+kp(r.stand,t),x); });
+  const e={ event:EVENT, team:t, nom:null, capitaine:null, photo:null, code:CLE, updated_at:maintenant }; local.e[t]={team:t,nom:null,capitaine:null,updated_at:maintenant}; delete state.photos[t];
+  pousser('tb_equipes','event,team','e-'+t,e); dire(`Équipe ${t} remise à zéro`,'ok'); aller('org');
 };
 window.ouvrirPodium = ()=>{ state.podium={i:0, montre:false}; state.view='podium'; render(); window.scrollTo(0,0); };
 window.fermerPodium = ()=>{ aller('org'); };
