@@ -510,8 +510,8 @@ const CONSEILS = {
  5:["Toute l'équipe passe, jusqu'au dernier.","2 équipes peuvent être chronométrées en même temps.","Entrez le temps : l'application fait le classement."],
  6:["Jamais la corde enroulée autour du bras ou de la taille.","Un cri de guerre avant de tirer, et un moment pour la stratégie."],
  7:["Plusieurs équipes ensemble : faites des duels.","Faites remettre les lettres en tas pour les suivants.","Entrez le nombre de mots trouvés."],
- 8:["Un tir par participant, environ 15 tirs.","Petit échauffement possible. 2 équipes possibles."],
- 9:["La sécurité d'abord : un seul lanceur à la fois, les autres derrière la ligne.","Un lancer par participant, environ 15 lancers."],
+ 8:["Toujours 15 tirs exactement : une équipe plus petite fait tirer certains deux fois.","Entrez le total des points. Petit échauffement possible, 2 équipes à la fois."],
+ 9:["La sécurité d'abord : un seul lanceur à la fois, les autres derrière la ligne.","Toujours 15 lancers exactement : une équipe plus petite fait lancer certains deux fois."],
  10:["Un participant guidé à la fois, marteau toujours maîtrisé.","Entrez le temps : l'application fait le classement, pas besoin de grille."],
  11:["8 minutes de préparation maximum, 2 minutes pour jouer.","Une réplique « compétents et solidaires », une promotion surprise…","Applaudissez chaque scène."],
  12:["10 minutes maximum : boostez les équipes, un prix spécial est remis.","Entrez le nombre de bonnes réponses : l'application double les points."],
@@ -1026,7 +1026,7 @@ function vSaisie(){
   const cons = CONSEILS[e.n]||[];
   return `<div class="anim entree"><h2>🎯 Espace animateur</h2>
     <div class="qui">${avatar(t)}<div><div style="font-weight:900;font-size:18px">${titreEq(t)}</div><div class="muted">${e.ico} Épreuve ${e.n} · ${e.nom}</div></div></div>
-    ${cons.length?`<details class="conseils"><summary>💡 Rappel pour l'animateur</summary><ul>${cons.map(c=>`<li>${c}</li>`).join('')}<li>Les points restent secrets : ne montrez ni le code ni le barème.</li></ul></details>`:''}
+    ${cons.length?`<details class="conseils"><summary>💡 Rappel pour l'animateur</summary><ul>${cons.map(c=>`<li>${c}</li>`).join('')}<li>Coup de cœur : rare, un ou deux par heure au maximum.</li><li>Les points restent secrets : ne montrez ni le code ni le barème.</li></ul></details>`:''}
     ${champ}
     <label><span class="etapeS">2</span>Bonus (facultatif, à donner sans le dire)</label><div class="bonus">${BONUS.map(bb).join('')}</div>
     <div class="recap" id="recap"></div>
