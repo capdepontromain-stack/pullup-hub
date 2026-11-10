@@ -106,3 +106,25 @@ create policy tb_passages_equipe on tb_passages for all to authenticated using (
 -- drop policy if exists tb_messages_anon_insert on tb_messages;
 -- drop policy if exists tb_messages_anon_update on tb_messages;
 -- ============================================================
+
+-- ============================================================
+-- AJOUT DU 10/11/2026 : les défis photo et vidéo (épreuve 13)
+-- Une ligne par équipe et par défi : « envoyé » (coché par l'équipe après l'envoi WhatsApp)
+-- et la note de Romain (0 = pas reçu, 1 à 3 ; vide = 2 points d'office).
+-- ============================================================
+create table if not exists tb_defis (
+  id uuid default gen_random_uuid() primary key,
+  event text not null,
+  team int not null check (team between 1 and 28),
+  defi int not null check (defi between 0 and 20),
+  envoye boolean default false,
+  note int check (note between 0 and 3),
+  code text,
+  updated_at timestamptz default now(),
+  unique (event, team, defi)
+);
+alter table tb_defis enable row level security;
+create policy tb_defis_anon_select on tb_defis for select to anon using (true);
+create policy tb_defis_anon_insert on tb_defis for insert to anon with check (code = 'PULLUP14');
+create policy tb_defis_anon_update on tb_defis for update to anon using (true) with check (code = 'PULLUP14');
+create policy tb_defis_equipe on tb_defis for all to authenticated using (true) with check (true);
