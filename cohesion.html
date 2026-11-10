@@ -506,8 +506,8 @@ const vignette = n => n===CULTURE ? 'proxim/ep12-carre.jpg?v=3' : img(n);
 const MAXPTS = e => e.type==='quiz' ? 20 : 10;
 const BAREME = { duel:'Victoire 10 points · Égalité 6 · Défaite 3', jury:'La note du jury sur 10 donne vos points', quiz:'2 points par bonne réponse : jusqu\'à 20 points',
   chrono:'Classement entre toutes les équipes : 10 points pour la plus rapide, puis un peu moins à chaque place, jusqu\'à 1 point', points:'Classement entre toutes les équipes : 10 points pour le meilleur score, puis un peu moins à chaque place, jusqu\'à 1 point', hauteur:'Classement entre toutes les équipes : 10 points pour la plus haute tour, puis un peu moins à chaque place, jusqu\'à 1 point' };
-// Bonus donnés par l'animateur (jamais automatiques). « Coup de cœur » vaut 2 points.
-const BONUS = [ {k:'a', col:'b_ambiance', nom:'Ambiance', ico:'🎉', pts:1}, {k:'c', col:'b_cohesion', nom:'Cohésion', ico:'🤝', pts:1}, {k:'f', col:'b_fairplay', nom:'Fair-play', ico:'👏', pts:1}, {k:'h', col:'b_coeur', nom:'Coup de cœur', ico:'❤️', pts:2} ];
+// Bonus donnés par l'animateur (jamais automatiques) : +1 point par bouton, rares et mérités ; 10 points au maximum sur la matinée.
+const BONUS = [ {k:'a', col:'b_ambiance', nom:'Ambiance', ico:'🎉', pts:1}, {k:'c', col:'b_cohesion', nom:'Cohésion', ico:'🤝', pts:1}, {k:'f', col:'b_fairplay', nom:'Fair-play', ico:'👏', pts:1}, {k:'h', col:'b_coeur', nom:'Coup de cœur', ico:'❤️', pts:1} ];
 const ptsBonus = r => BONUS.reduce((s,b)=>s+(r&&r[b.col]?b.pts:0),0);
 const icoBonus = r => BONUS.filter(b=>r&&r[b.col]).map(b=>b.ico).join('');
 const DEPART_PLAN = [[1,2],[2,4],[3,3],[4,2],[5,2],[6,2],[7,2],[8,2],[9,2],[10,2],[11,2],[12,3],[13,1]];   // 29 équipes réparties sur les 13 épreuves au départ
@@ -1072,9 +1072,9 @@ function vSaisie(){
   const cons = CONSEILS[e.n]||[];
   return `<div class="anim entree"><h2>🎯 Espace animateur</h2>
     <div class="qui">${avatar(t)}<div><div style="font-weight:900;font-size:18px">${titreEq(t)}</div><div class="muted">${e.ico} Épreuve ${e.n} · ${e.nom}</div></div></div>
-    ${cons.length?`<details class="conseils"><summary>💡 Rappel pour l'animateur</summary><ul>${cons.map(c=>`<li>${c}</li>`).join('')}<li>Coup de cœur : rare, un ou deux par heure au maximum.</li><li>Les points restent secrets : ne montrez ni le code ni le barème.</li></ul></details>`:''}
+    ${cons.length?`<details class="conseils"><summary>💡 Rappel pour l'animateur</summary><ul>${cons.map(c=>`<li>${c}</li>`).join('')}<li>Bonus : rares et mérités, jamais systématiques. Seulement pour une équipe qui a vraiment mis l'ambiance, vraiment soudée, vraiment fair-play (sympa, ne râle pas), ou votre vrai coup de cœur. Deux bonus en même temps : oui, si c'est mérité.</li><li>Les points restent secrets : ne montrez ni le code ni le barème.</li></ul></details>`:''}
     ${champ}
-    <label><span class="etapeS">2</span>Bonus (facultatif, à donner sans le dire)</label><div class="bonus">${BONUS.map(bb).join('')}</div>
+    <label><span class="etapeS">2</span>Bonus : +1 point par bouton, rares et mérités</label><p class="exemple" style="margin-top:-2px">Seulement si l'équipe l'a vraiment mérité. Jamais pour tout le monde, sinon le classement est faussé.</p><div class="bonus">${BONUS.map(bb).join('')}</div>
     <div class="recap" id="recap"></div>
     ${state.org?'<p class="muted" style="margin-top:12px">Mode organisation : pas de code à saisir.</p>':`<label><span class="etapeS">3</span>🔑 Votre code d'animateur</label><input type="password" id="codeA" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="•••••" oninput="majRecap()" onkeydown="if(event.key==='Enter')validerSaisie()">`}
     <button class="btn orange gros" id="btnValider" onclick="validerSaisie()">✓ Valider le résultat</button>
@@ -1209,7 +1209,7 @@ function vOrg(){
       <li><span class="num" style="background:var(--orange)">★</span><div><b>Jury</b> (Kapla, théâtre, pyramide) : la note sur 10. <b>Culture d'entreprise</b> : 2 points par bonne réponse, jusqu'à 20 (la seule épreuve qui compte double).</div></li>
       <li><span class="num" style="background:var(--jaune);color:var(--nuit)">🎓</span><div><b>Médaille culture d'entreprise</b> : le plus de bonnes réponses. En cas d'égalité : la réponse la plus proche à la <b>question subsidiaire</b> (un nombre), puis le total de la matinée. Elle ne va jamais à l'équipe du grand prix.</div></li>
       <li><span class="num" style="background:var(--marine)">Σ</span><div><b>Grand prix</b> : épreuves (jusqu'à 140) + défis photo (10 max) + bonus (10 max) = 160 points au maximum.</div></li>
-      <li><span class="num" style="background:#FF4D6D">❤</span><div><b>Bonus des animateurs</b> : ambiance, cohésion, fair-play +1 chacun, coup de cœur +2. Ils comptent comme une épreuve : <b>10 points au maximum</b> sur la matinée.</div></li>
+      <li><span class="num" style="background:#FF4D6D">❤</span><div><b>Bonus des animateurs</b> : ambiance, cohésion, fair-play, coup de cœur : +1 point par bouton. Ils comptent comme une épreuve : <b>10 points au maximum</b> sur la matinée.</div></li>
       <li><span class="num" style="background:var(--marine)">📸</span><div><b>Défis photo et vidéo</b> : les 7 défis comptent comme une épreuve, <b>10 points au maximum</b> (7 défis notés « excellent »). Sans note, un envoi compte « bien ».</div></li>
       <li><span class="num" style="background:var(--vert)">=</span><div><b>Égalité</b> : l'équipe qui a fait le plus d'épreuves passe devant, puis la meilleure culture d'entreprise.</div></li></ul></div></details>`;
   } else if(state.orgTab==='epreuves'){
