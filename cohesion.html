@@ -890,7 +890,7 @@ function vAccueil(){
     <div class="dateS">Samedi 14 novembre</div>
     <h1>Journée de cohésion</h1><div class="devise">compétents &amp; solidaires</div>
     <div id="nbInscrites">${texteInscrites()}</div>
-    <p class="sousS"><b>Regroupez toute votre équipe</b><br>autour de ce téléphone, puis touchez le bouton.</p>
+    ${avantOuverture() ? '' : `<p class="sousS"><b>Regroupez toute votre équipe</b><br>autour de ce téléphone, puis touchez le bouton.</p>`}
     ${avantOuverture() ? `<div class="ouverture"><b>Le jeu ouvre <span id="ouvreDans">${texteOuverture()}</span></b><br>Rendez-vous devant la scène : l'équipe d'animation présente le jeu et forme les équipes. Gardez cette page ouverte, elle s'ouvrira toute seule.</div>
       <button class="lnk" onclick="location.href=location.pathname+'?essai'">Animateurs : mode essai</button>`
     : `<button class="btn orange gros respire" onclick="debuter()">👉 Touchez ici pour commencer</button>
