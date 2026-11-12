@@ -136,6 +136,7 @@
   .defi .ico { flex:0 0 52px; height:52px; border-radius:50%; background:var(--fond); display:flex; align-items:center; justify-content:center; font-size:26px; }
   .defi .txt { flex:1; min-width:0; } .defi .t { font-family:var(--titre); font-weight:800; font-size:18px; color:var(--marine); line-height:1.1; } .defi .muted { font-size:13.5px; margin-top:2px; }
   .defi .faireBtn { flex:0 0 auto; border:0; border-radius:14px; padding:13px 16px; font-weight:900; font-size:16px; color:#fff; background:linear-gradient(180deg,#FBA43A,var(--orange)); box-shadow:0 3px 0 rgba(0,0,0,.12); }
+  .defi .defiEx { display:block; width:100%; height:150px; object-fit:cover; object-position:center 40%; border-radius:12px; border:3px solid #fff; background:#0B2233; box-shadow:0 2px 8px rgba(0,0,0,.25); margin:0 0 8px; cursor:pointer; }
   .defi.ok { background:#FCE9E9; box-shadow:none; } .defi.ok .ico { background:var(--rouge); color:#fff; font-weight:900; } .defi.ok .t { color:var(--rouge); text-decoration:line-through; }
   .defi .st { font-size:11px; font-weight:900; color:var(--rouge); letter-spacing:.5px; }
   .noteDefi { display:flex; gap:10px; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--trait); }
@@ -594,10 +595,10 @@ const DEFI_EP = 14, PTS_DEFI = 1;                   // défis rangés en n°14 d
 const WHATSAPP = '262693817882', TEL_ORGA = '06 93 81 78 82';
 const DEFIS = [            // validés par Romain le 12/11 : 1 point si la photo est validée (d'office), 2 si elle est magnifique ; 20 points ramenés sur 10
  {d:0, nom:"Le selfie de toute l'équipe", ico:'🤳', type:'photo', desc:"La base : toute l'équipe sur un selfie, capitaine compris, et tout le monde les yeux ouverts !"},
- {d:1, nom:'Le Radeau de la Méduse', ico:'🖼️', type:'photo', guide:'proxim/radeau-meduse.jpg', guideLeg:'Le tableau à reproduire : Géricault, 1819', desc:"Prenez la pose du célèbre tableau de Géricault (ci-dessous) : les uns allongés sur le radeau, les autres qui tendent les bras vers l'horizon, un drapeau qui s'agite tout en haut."},
- {d:2, nom:'La solidarité', ico:'🤝', type:'photo', desc:"Une photo qui représente la solidarité. À vous de trouver l'idée qui la montre le mieux !"},
+ {d:1, nom:'Le Radeau de la Méduse', ico:'🖼️', type:'photo', guide:'proxim/radeau-meduse.jpg', guideLeg:'Le tableau à reproduire : Géricault, 1819', desc:"Reproduisez le célèbre tableau de Géricault (ci-dessus) : les uns allongés sur le radeau, les autres qui tendent les bras vers l'horizon, un drapeau qui s'agite tout en haut."},
+ {d:2, nom:'La solidarité', ico:'🤝', type:'photo', desc:"Une photo qui représente la solidarité chez Proxim'Services. À vous de trouver l'idée qui la montre le mieux !"},
  {d:3, nom:"La pub Proxim'Services", ico:'📣', type:'photo', slogan:true, desc:"Une photo de pub pour Proxim'Services avec votre slogan : tapez-le ci-dessous, il s'affichera en légende sous la photo."},
- {d:4, nom:'Jouer avec les perspectives', ico:'🔭', type:'photo', guide:'proxim/exemple-perspective.jpg', guideLeg:'Exemple d\'illusion : elle « croque » les immeubles au loin (photo Daniel Di Palma, CC BY-SA 4.0). À vous de « soulever » votre équipe !', desc:"Une illusion d'optique : quelqu'un au premier plan fait semblant de soulever entre deux doigts le reste de l'équipe, placée tout au fond. Trouvez le bon angle !"},
+ {d:4, nom:'Jouer avec les perspectives', ico:'🔭', type:'photo', guide:'proxim/exemple-perspective.jpg', guideLeg:'Exemple : des doigts géants « attrapent » le garçon au loin (photo Daniel Di Palma, CC BY-SA 4.0). À vous : quelqu\'un devant « soulève » toute l\'équipe entre deux doigts !', desc:"Une illusion d'optique : quelqu'un au premier plan fait semblant de soulever entre deux doigts le reste de l'équipe, placée tout au fond. Trouvez le bon angle !"},
  {d:5, nom:'La pose déjantée', ico:'🤪', type:'photo', desc:"Toute l'équipe dans la position la plus folle possible. Lâchez-vous !"},
  {d:6, nom:'Votre travail au quotidien', ico:'💼', type:'photo', desc:"Mettez en scène une situation de travail chez Proxim'Services, comme si on y était."},
  {d:7, nom:'Soyez fédérateurs', ico:'🌍', type:'photo', desc:"Posez avec des membres d'autres équipes : plus il y a d'équipes différentes sur la photo, mieux c'est !"},
@@ -1209,14 +1210,15 @@ function vDefis(){
       <p class="muted" style="margin:12px 0 0">Pour chaque défi : touchez <b>Faire</b>, prenez la photo, puis <b>Envoyer</b> : elle arrive directement chez l'organisation.</p></div>`;
   const photoDebut = !!(state.photos[t]||okPhoto(lsGet('photo_'+t,'')));
   h += DEFIS.map((d,i)=>{ const ok=defiEnvoye(t,d.d), c=PROXIM[i%4], txt=c===PROXIM[1]?'#3B2A00':'#fff'; const desc = d.d===0&&photoDebut&&!ok ? 'La photo prise à l\'inscription est prête : touchez Envoyer.' : d.desc;
-    return `<div class="defi entree ${ok?'ok':'couleur'}" style="--c:${c};--t:${txt};--fb:${c===PROXIM[1]?'#8A5A00':c}"><div class="ico">${ok?'✓':d.ico}</div><div class="txt"><div class="t">${d.nom}</div><div class="muted">${desc}</div><span class="tag">📷 Photo</span></div>
+    return `<div class="defi entree ${ok?'ok':'couleur'}" style="--c:${c};--t:${txt};--fb:${c===PROXIM[1]?'#8A5A00':c}">${!ok&&d.guide?'':`<div class="ico">${ok?'✓':d.ico}</div>`}<div class="txt">${!ok&&d.guide?`<img class="defiEx" src="${d.guide}" alt="Exemple" onclick="faireDefi(${d.d})">`:''}<div class="t">${d.nom}</div><div class="muted">${desc}</div><span class="tag">📷 Photo</span></div>
       ${ok?'<div class="st">ENVOYÉ</div>':`<button class="faireBtn" onclick="faireDefi(${d.d})">${d.d===0&&photoDebut?'Envoyer':'Faire'}</button>`}</div>`; }).join('');
   return h;
 }
 function vDefi(){
   const f=state.defi||{}; const D=DEFIS.find(x=>x.d===f.d)||DEFIS[0];
-  let h = `<div class="card entree" style="text-align:center"><div style="font-size:50px;line-height:1.1">${D.ico}</div><h2>${D.nom}</h2><p style="font-size:17px">${D.desc}</p>`;
+  let h = `<div class="card entree" style="text-align:center">${D.guide?'':`<div style="font-size:50px;line-height:1.1">${D.ico}</div>`}<h2>${D.nom}</h2>`;
   if(D.guide) h += `<img class="guideD" src="${D.guide}" alt="Exemple"><p class="muted" style="margin:4px 0 12px">${esc(D.guideLeg||'')}</p>`;
+  h += `<p style="font-size:17px">${D.desc}</p>`;
   if(D.slogan) h += `<label style="text-align:left">Votre slogan pour Proxim'Services</label><input type="text" id="slogan" maxlength="90" placeholder="Exemple : Proxim'Services, toujours là pour vous !" value="${esc(f.slogan||'')}" oninput="state.defi.slogan=this.value" autocomplete="off">`;
   if(!f.photo) h += `<input type="file" id="fDefi" accept="image/*" style="display:none" onchange="fichierDefi(this)">
       <button class="btn orange gros" onclick="document.getElementById('fDefi').click()">📷 Prendre ou choisir la photo</button>
