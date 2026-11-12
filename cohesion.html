@@ -489,29 +489,29 @@ const CULTURE = 12;
 // Quiz culture d'entreprise joué sur le téléphone de l'équipe : 8 minutes, QCM ou réponse à taper (orthographe tolérée), on peut passer.
 // ⚠️ QUESTIONS D'ESSAI : Romain fournira les vraies questions et réponses. Format : q, choix (QCM, bon = n° du bon choix) ou ok (réponses acceptées), rep (affichée), expl.
 const QUIZ_DUREE = 480;
-const QUIZ = [
- {q:"Quel est le plus haut sommet de La Réunion ?", choix:['Le Piton des Neiges','Le Piton de la Fournaise','Le Grand Bénare','Le Maïdo'], bon:0, expl:"Le Piton des Neiges culmine à 3 070 m : c'est le plus haut sommet de l'océan Indien."},
- {q:"Quel volcan de La Réunion est l'un des plus actifs au monde ?", ok:['Piton de la Fournaise','La Fournaise','Fournaise'], rep:'Le Piton de la Fournaise', expl:"Il entre en éruption presque chaque année."},
- {q:"Combien de communes compte La Réunion ?", choix:['20','24','26','30'], bon:1, expl:"24 communes, de Saint-Denis à Saint-Philippe."},
- {q:"Quel est le chef-lieu de La Réunion ?", ok:['Saint-Denis','St Denis','Saint Denis'], rep:'Saint-Denis', expl:"Saint-Denis est la préfecture et la plus grande ville de l'île."},
- {q:"En quelle année La Réunion est-elle devenue un département français ?", choix:['1848','1946','1958','1982'], bon:1, expl:"La loi de départementalisation date du 19 mars 1946."},
- {q:"Quelle orchidée donne la célèbre gousse « Bourbon » de La Réunion ?", ok:['Vanille','La vanille','Vanillier'], rep:'La vanille', expl:"La vanille Bourbon : l'île s'appelait île Bourbon autrefois."},
- {q:"Que signifie le sigle CESU ?", choix:['Chèque emploi service universel',"Contrat d'emploi solidaire unique","Carte d'entraide sociale urbaine","Chèque d'emploi social unifié"], bon:0, expl:"Le CESU permet de déclarer et de payer simplement les services à la personne."},
- {q:"Quel crédit d'impôt s'applique aux services à la personne à domicile ?", choix:['25 %','50 %','75 %','100 %'], bon:1, expl:"50 % des sommes dépensées, dans la limite d'un plafond annuel."},
- {q:"Quelle allocation du Département aide les personnes âgées dépendantes à payer leur aide à domicile ? (le sigle suffit)", ok:['APA','Allocation personnalisée d\'autonomie','Allocation personnalisee autonomie'], rep:"L'APA (allocation personnalisée d'autonomie)", expl:"Elle finance une partie des heures d'aide à domicile."},
- {q:"Que signifie le sigle PCH ?", choix:['Prestation de compensation du handicap','Prime de confort habitat','Plan de couverture hospitalière','Prestation chômage'], bon:0, expl:"La PCH finance les aides liées au handicap, dont l'aide humaine à domicile."},
- {q:"Quel geste simple, avant et après chaque intervention, limite la transmission des microbes ?", ok:['Se laver les mains','Lavage des mains','Laver les mains','Lavage mains','Friction hydroalcoolique','Gel hydroalcoolique'], rep:'Se laver les mains', expl:"Eau et savon, ou gel hydroalcoolique : le geste barrière numéro 1."},
- {q:"Quel numéro appeler pour joindre le SAMU ?", choix:['15','17','18','112'], bon:0, expl:"Le 15 pour une urgence médicale."},
- {q:"Quel numéro d'urgence fonctionne dans toute l'Europe ?", choix:['15','18','112','114'], bon:2, expl:"Le 112 marche partout en Europe, même sans réseau de son opérateur."},
- {q:"Comment s'appelle la position dans laquelle on place une personne inconsciente qui respire ?", ok:['Position latérale de sécurité','PLS','Position laterale securite'], rep:'La PLS (position latérale de sécurité)', expl:"Elle garde les voies respiratoires libres en attendant les secours."},
- {q:"Quel oiseau blanc à longue queue est l'emblème de La Réunion ?", ok:['Paille-en-queue','Paille en queue','Pailles en queue','Phaéton'], rep:'Le paille-en-queue', expl:"Le phaéton à bec jaune, qu'on appelle paille-en-queue."},
- {q:"Comment accède-t-on au cirque de Mafate ?", choix:['À pied ou en hélicoptère','En voiture','En bus','En bateau'], bon:0, expl:"Aucune route n'y mène : on y va à pied ou en hélicoptère."},
- {q:"Quel fruit à peau rouge, récolté en décembre, se vend en grappes au bord des routes ?", ok:['Letchi','Litchi','Letchis','Litchis','Lychee'], rep:'Le letchi', expl:"Le letchi, star des fêtes de fin d'année à La Réunion."},
- {q:"Que fête-t-on à La Réunion le 20 décembre ?", choix:["L'abolition de l'esclavage",'La fête du volcan','Le Nouvel An tamoul','La fête de la vanille'], bon:0, expl:"Le 20 décembre 1848, l'abolition de l'esclavage est proclamée à La Réunion : c'est la Fèt Kaf."},
+const QUIZ = [            // tirées du site proximservices-reunion.org (12/11/2026)
+ {q:"En quelle année Proxim'Services Réunion a-t-elle été fondée ?", choix:['1983','1993','2003','2008'], bon:1, expl:"Fondée en 1993 par BAC Réunion, une association intermédiaire : plus de 30 ans au service des familles."},
+ {q:"Sous quel nom l'association est-elle reconnue partenaire social par le Conseil Départemental depuis 2008 ? (un sigle)", ok:['PRORESAP','Pro Re Sap','Proresap'], rep:'PRORESAP', expl:"Depuis avril 2008, sous le nom de PRORESAP."},
+ {q:"Combien d'intervenants qualifiés compte l'équipe de Proxim'Services ?", choix:['Plus de 150','Plus de 450','Plus de 850','Plus de 1 500'], bon:2, expl:"Une équipe compétente et dévouée de plus de 850 intervenants qualifiés."},
+ {q:"Combien d'antennes Proxim'Services compte-t-elle à La Réunion ?", choix:['7','10','13','24'], bon:2, expl:"13 antennes, pour rester proches des usagers sur toute l'île."},
  {q:"Complétez la signature de Proxim'Services : « compétents & … »", ok:['Solidaires','Solidaire'], rep:'Solidaires', expl:"« Compétents & solidaires » : c'est écrit sous le logo !"},
- {q:"Quel plat réunionnais mélange du riz jaune, des grains et de la viande ?", ok:['Zembrocal','Zambrocal','Riz zembrocal'], rep:'Le zembrocal', expl:"Le zembrocal : riz au safran péi (curcuma), grains et viande."}
+ {q:"Quelles valeurs humanistes guident chacune des actions de l'association ?", choix:['La loyauté, la tolérance et l\'engagement','La vitesse, le profit et la compétition','Le luxe, le prestige et l\'exclusivité','Le silence, la discipline et l\'obéissance'], bon:0, expl:"Loyauté, tolérance et engagement, fondées sur le droit et la démocratie."},
+ {q:"Qu'est-ce que l'association inscrit « au cœur de son dispositif » ?", ok:["L'Humain",'Humain','Les humains','L\'humain au coeur'], rep:"L'Humain", expl:"Acteur de l'économie sociale et solidaire, PRORESAP met l'Humain au cœur de tout."},
+ {q:"Avec l'avance immédiate du crédit d'impôt, combien paie un client pour 200 € de services ?", choix:['50 €','100 €','150 €','200 €'], bon:1, expl:"50 % de déduction immédiate : 200 € de services, 100 € à payer."},
+ {q:"Quelle prestation n'est PAS concernée par l'avance immédiate du crédit d'impôt ?", choix:["La garde d'enfants",'Le ménage','Le jardinage','L\'aide aux personnes fragiles'], bon:0, expl:"La garde d'enfants n'est pas concernée, ni les prestations déjà prises en charge (APA, PCH…)."},
+ {q:"Quel organisme valide l'inscription à l'avance immédiate du crédit d'impôt ?", ok:['URSSAF','L\'URSSAF','Ursaf'], rep:"L'URSSAF", expl:"La première déduction arrive sur la facture du mois qui suit la validation par l'URSSAF."},
+ {q:"Hors garde spécialisée, à partir de quel âge Proxim'Services garde-t-elle les enfants ?", choix:['Dès la naissance','Plus de 1 an','Plus de 3 ans','Plus de 6 ans'], bon:2, expl:"La garde d'enfant de plus de 3 ans, à la maison, en présence des parents ou non."},
+ {q:"La garde d'enfant spécialisée s'adresse aux enfants porteurs de…", ok:['Handicap','Un handicap','Handicaps','Porteurs de handicap'], rep:'Handicap', expl:"Des intervenants spécialement formés, pour un environnement sûr et adapté."},
+ {q:"Chez le client, avec quels produits ménagers l'intervenant travaille-t-il ?", choix:['Le matériel et les produits du client',"Ses propres produits","Des produits fournis par l'antenne","Des produits achetés en chemin"], bon:0, expl:"Il utilise le matériel et les produits du client, pour respecter ses habitudes."},
+ {q:"Avec quel partenaire Proxim'Services propose-t-elle la téléassistance ?", ok:['Mondial Assistance','Mondial'], rep:'Mondial Assistance', expl:"La téléassistance assure surveillance et aide en cas de problème médical ou d'urgence."},
+ {q:"Selon le type d'intervention, quand Proxim'Services peut-elle intervenir ?", choix:['7 jours sur 7, 24 h sur 24','Du lundi au vendredi seulement','En semaine, de 8 h à 17 h','Uniquement le matin'], bon:0, expl:"7 j/7 et 24 h/24, week-ends et jours fériés compris, avec une astreinte téléphonique."},
+ {q:"Quel taux de satisfaction a obtenu le service prestataire dans l'enquête 2023 ?", choix:['77 %','87 %','97 %','100 %'], bon:2, expl:"97 % de clients satisfaits, comme pour le service mandataire. Bravo à toutes les équipes !"},
+ {q:"Comment s'appelle le Centre d'Hébergement et de Réinsertion Sociale (CHRS) de Proxim'Services ?", ok:['Relais du CAP','Le Relais du C.A.P','Relais du cap','Relais'], rep:'Le Relais du C.A.P', expl:"Il accueille familles et personnes isolées en appartements, avec un accompagnement vers l'autonomie."},
+ {q:"Quelle semaine dédiée aux aînés Proxim'Services a-t-elle célébrée en octobre (loto, Cilaos, Le Port) ?", choix:['La Semaine Bleue','La Semaine Verte','La Semaine Rose','La Semaine Dorée'], bon:0, expl:"La Semaine Bleue : loto quine, ateliers créatifs et beaux moments de partage avec les bénéficiaires."},
+ {q:"Pendant la Semaine Bleue au Port, sur quoi les participants ont-ils peint ?", ok:['Galets','Des galets','Galet','Sur des galets'], rep:'Sur des galets', expl:"Un atelier de peinture sur galets organisé par l'antenne du Port, un vrai succès !"},
+ {q:"Lequel de ces travaux l'intervenant jardinage ne fait-il PAS ?", choix:['Tailler les haies à hauteur d\'homme','Tondre la pelouse','Débroussailler','Abattre de grands arbres'], bon:3, expl:"Débroussaillage, tonte, arrosage, plantations, haies à hauteur d'homme : oui. L'abattage de grands arbres : non."}
 ];
-const QUIZ_SUBSID = "Question subsidiaire : combien de personnes participent à cette journée de cohésion ?";   // la bonne réponse est tapée par l'organisation
+const QUIZ_SUBSID = "Question subsidiaire : combien d'avis compte l'enquête de satisfaction 2023 du service prestataire ?", QUIZ_SUBSID_REP = 1168;   // l'organisation peut changer la bonne réponse
 const qB = m => m==null ? null : (+m>=1000 ? Math.floor(+m/1000) : Math.round(+m));                // bonnes réponses (le quiz de l'appli code : bonnes × 1000 + secondes restantes)
 const qTemps = m => m!=null && +m>=1000 ? QUIZ_DUREE - (+m%1000) : null;                          // temps mis, en secondes (si joué dans l'appli)                                 // l'épreuve mise en avant (points doublés)
 const COULEURS = ['Rouge','Bleu roi','Vert','Jaune','Orange','Violet','Rose','Blanc','Noir','Turquoise','Bordeaux','Bleu ciel','Vert anis','Gris'];
@@ -678,7 +678,7 @@ let state = {
   org: Q.has('org') && orgMemorise(),                  // l'organisation ne s'ouvre que par son lien (?org=1) ou par « Organisation » : le QR des équipes ouvre toujours le jeu
   view:'', ep:0, orgTab:'direct', orgRetour:false, apresSaisie:'',
   passages:{}, equipes:{}, photos:{}, defis:{}, defi:null, filtrePhotos:'anoter', dbOk:null, err:'', messages:[], chatOk:null, chatOuvert:true, majA:0, vus:{},
-  saisie:null, bravo:null, galerie:false, photosDefis:{}, zoom:null, edition:false, podium:{i:0, montre:false}, vientDeFaire:0, subsid:{}, reponseSubsid:null
+  saisie:null, bravo:null, galerie:false, photosDefis:{}, zoom:null, edition:false, podium:{i:0, montre:false}, vientDeFaire:0, subsid:{}, reponseSubsid:QUIZ_SUBSID_REP
 };
 if(tQ>=1 && tQ<=N_EQUIPES) lsSet('team', tQ);          // ancien lien direct par équipe : toujours accepté
 const confirmee = () => !!state.team && lsGet('team',0)===state.team;
