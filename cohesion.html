@@ -504,9 +504,9 @@ const DEBUT_EPREUVES = ESSAI ? new Date(Date.now()-45*60000) : new Date(2026,10,
 const FIN_EPREUVES = ESSAI ? new Date(Date.now()+90*60000) : new Date(2026,10,14,12,15);
 const AVANT_JOUR_J = false;                           // (ancien verrou remplacé par la période de test)
 const CULTURE = 12;
-// Quiz culture d'entreprise joué sur le téléphone de l'équipe : 8 minutes, QCM ou réponse à taper (orthographe tolérée), on peut passer.
+// Quiz culture d'entreprise joué sur le téléphone de l'équipe : 10 minutes, QCM ou réponse à taper (orthographe tolérée), on peut passer.
 // ⚠️ QUESTIONS D'ESSAI : Romain fournira les vraies questions et réponses. Format : q, choix (QCM, bon = n° du bon choix) ou ok (réponses acceptées), rep (affichée), expl.
-const QUIZ_DUREE = 480;
+const QUIZ_DUREE = 600;                              // 10 minutes (Romain, 12/11)
 const QUIZ = [            // tirées du site proximservices-reunion.org (12/11/2026)
  {q:"En quelle année Proxim'Services Réunion a-t-elle été fondée ?", choix:['1983','1993','2003','2008'], bon:1, expl:"Fondée en 1993 par BAC Réunion, une association intermédiaire : plus de 30 ans au service des familles."},
  {q:"Que signifie le sigle PRO.RE.SAP ?", choix:['Professionnels Réunionnais des Services à la Personne','Programme Réunionnais d\'Entraide Sociale et d\'Accueil Personnalisé','Pôle Régional des Soins et de l\'Aide aux Personnes','Projet Réunionnais pour l\'Autonomie et la Santé'], bon:0, expl:"PRO.RE.SAP : les Professionnels Réunionnais des Services à la Personne."},
@@ -550,8 +550,9 @@ const QUIZ = [            // tirées du site proximservices-reunion.org (12/11/2
  {q:"Quel projet des services civiques de Saint-Louis et Saint-Pierre a remporté le Coup de cœur du public en 2026 ?", choix:['Été sous les Tropics','Noël au soleil','Les aînés en fête','Vacances péi'], bon:0, expl:"« Été sous les Tropics », un projet auprès des seniors. Bravo à eux !"}
 ];
 const QUIZ_SUBSID = "Question subsidiaire : combien d'avis compte l'enquête de satisfaction 2023 du service prestataire ?", QUIZ_SUBSID_REP = 1168;   // l'organisation peut changer la bonne réponse
-const qB = m => m==null ? null : (+m>=1000 ? Math.floor(+m/1000) : Math.round(+m));                // bonnes réponses (le quiz de l'appli code : bonnes × 1000 + secondes restantes)
-const qTemps = m => m!=null && +m>=1000 ? QUIZ_DUREE - (+m%1000) : null;                          // temps mis, en secondes (si joué dans l'appli)                                 // l'épreuve mise en avant (points doublés)
+const QUIZ_OFF = 100000;                             // repère « quiz chronométré » : 100000 + bonnes × 1000 + secondes restantes (même avec 0 bonne réponse)
+const qB = m => m==null ? null : (+m>=QUIZ_OFF ? Math.floor((+m-QUIZ_OFF)/1000) : +m>=1000 ? Math.floor(+m/1000) : Math.round(+m));                // bonnes réponses (le quiz de l'appli code : bonnes × 1000 + secondes restantes)
+const qTemps = m => m!=null && +m>=1000 ? QUIZ_DUREE - (+m%1000) : null;      // QUIZ_OFF est un multiple de 1000 : le reste donne toujours les secondes                          // temps mis, en secondes (si joué dans l'appli)                                 // l'épreuve mise en avant (points doublés)
 const COULEURS = ['Rouge','Bleu roi','Vert','Jaune','Orange','Violet','Rose','Blanc','Noir','Turquoise','Bordeaux','Bleu ciel','Vert anis','Gris'];
 const couleur = t => COULEURS[(t-1)%14];
 const TEINTES = ['#F26B12','#EC0512','#0784B0','#E0A800','#0D6897','#E8540C','#0E94BE','#C9040F','#F26B12','#EC0512','#0784B0','#E0A800','#0D6897','#0E94BE'];   // couleurs du logo Proxim'Services
@@ -572,7 +573,7 @@ const EP = [            // programme validé le 10/11 (présentation complète) 
  {n:9, nom:'Le lancer de haches', ico:'🪓', type:'points', tirs:15, places:2, min:10, desc:"15 lancers, un seul lanceur à la fois : l'animateur compte chaque hache sur ce téléphone et les points s'additionnent."},
  {n:10, nom:'Le jeu du clou', ico:'🔨', type:'chrono', places:2, min:8, desc:"Les yeux bandés, guidé par son équipe, chacun va enfoncer le clou : le chrono tourne !"},
  {n:11, nom:'Le théâtre', ico:'🎭', type:'jury', places:3, min:10, desc:"Jouez l'ascension d'un membre de Proxim'Services, du premier jour jusqu'au poste de PDG : 8 minutes de préparation au maximum, 2 minutes pour jouer. Le jury note votre scène."},
- {n:12, nom:"La culture d'entreprise", ico:'🎓', type:'quiz', places:3, min:10, desc:"40 questions en 8 minutes sur Proxim'Services et votre métier, directement sur ce téléphone. Classement au nombre de bonnes réponses, puis à la rapidité. C'est l'épreuve qui rapporte le plus : points doublés !"},
+ {n:12, nom:"La culture d'entreprise", ico:'🎓', type:'quiz', places:3, min:10, desc:"40 questions en 10 minutes sur Proxim'Services et votre métier, directement sur ce téléphone. Classement au nombre de bonnes réponses, puis à la rapidité. C'est l'épreuve qui rapporte le plus : points doublés !"},
  {n:13, nom:'La pyramide humaine', ico:'🤸', type:'jury', places:3, min:5, desc:"Toute l'équipe construit une pyramide humaine, en sécurité. Pour la valider, l'animateur monte tout en haut, et la pyramide se prend en photo !"},
  {n:14, nom:'Défis photo', ico:'📸', type:'defis', places:40, min:0, desc:"10 défis à faire avec vos téléphones, en parallèle des épreuves : idéal pendant l'attente. Chaque photo part directement chez l'organisation, depuis l'application."}
 ];
@@ -639,7 +640,7 @@ const CONSEILS = {
  9:["La sécurité d'abord : un seul lanceur à la fois, les autres derrière la ligne.","Toujours 15 lancers exactement : une équipe plus petite fait lancer certains deux fois."],
  10:["Un participant guidé à la fois, marteau toujours maîtrisé.","Entrez le temps : l'application fait le classement, pas besoin de grille."],
  11:["Notez sur 10 : création, idées, jeu, tous ensemble, bonne humeur, créativité.","8 minutes de préparation maximum, 2 minutes pour jouer.","Une réplique « compétents et solidaires », une promotion surprise…","Applaudissez chaque scène."],
- 12:["L'équipe vous tend son téléphone : tapez votre code, le chrono de 8 minutes démarre et le quiz se corrige tout seul (fautes d'orthographe acceptées).","Le classement se fait au nombre de bonnes réponses, puis à la rapidité, et les points sont doublés. À la fin, l'équipe répond à la question subsidiaire.","Des bonus à donner ? Touchez « Ajouter des bonus » à la fin du quiz. Pas de téléphone ? Saisissez le nombre de bonnes réponses comme avant."],
+ 12:["L'équipe vous tend son téléphone : tapez votre code, le chrono de 10 minutes démarre et le quiz se corrige tout seul (fautes d'orthographe acceptées).","Le classement se fait au nombre de bonnes réponses, puis à la rapidité, et les points sont doublés. À la fin, l'équipe répond à la question subsidiaire.","Des bonus à donner ? Touchez « Ajouter des bonus » à la fin du quiz. Pas de téléphone ? Saisissez le nombre de bonnes réponses comme avant."],
  13:["Notez sur 10 : créativité, joie, beauté de la pyramide, collectif, rapidité.","Faites réfléchir l'équipe pour que personne ne se blesse.","Pour valider, montez tout en haut. Et la photo de la pyramide !"]
 };
 const ANNONCES = [ ['📸','Pensez aux défis photo : ils rapportent des points !'], ['⏰','Plus que 30 minutes d\'épreuves : foncez !'], ['⏰','Plus que 10 minutes : dernière épreuve !'], ['🎓','N\'oubliez pas la culture d\'entreprise : points doublés !'], ['🏆','Les épreuves sont terminées : tout le monde au podium !'] ];
@@ -1174,7 +1175,7 @@ window.quizEnregistrer = ()=>{ const t=state.team, Q=quizEtat(t); if(!Q || Q.pha
   const v=parseFloat(String(($('#qSub')||{}).value||'').replace(',','.')); if(isNaN(v)){ dire('Répondez à la question subsidiaire (un nombre).','err'); const el=$('#qSub'); if(el) el.focus(); return; }
   state.quizEnvoi=true; Q.fin=Q.fin||Date.now();
   const bonnes=Q.rep.filter(x=>x.ok).length, sec=Math.min(QUIZ_DUREE, Math.round((Q.fin-Q.debut)/1000));
-  const row={ event:EVENT, stand:CULTURE, team:t, resultat:'F', mesure: bonnes*1000 + (QUIZ_DUREE-sec), code:CLE, updated_at:horloge().toISOString() }; BONUS.forEach(b=>row[b.col]=false);
+  const row={ event:EVENT, stand:CULTURE, team:t, resultat:'F', mesure: QUIZ_OFF + bonnes*1000 + (QUIZ_DUREE-sec), code:CLE, updated_at:horloge().toISOString() }; BONUS.forEach(b=>row[b.col]=false);
   envoyerSubsid(t, v); local.p[kp(CULTURE,t)]=row; pousser('tb_passages','event,stand,team','p-'+kp(CULTURE,t),row);
   Q.phase='fin'; Q.sub=v; quizSet(t,Q); state.quizEnvoi=false; vibre([30,40,30]); render(); window.scrollTo(0,0); confettis(false); };
 window.quizBravo = ()=>{ const t=state.team; state.ep=CULTURE; state.bravo={ ep:CULTURE }; state.vientDeFaire=CULTURE; setTimeout(()=>{ state.vientDeFaire=0; }, 4000);
@@ -1731,7 +1732,7 @@ window.validerSaisie = ()=>{
   const bizarre = (e.type==='chrono' && (mes<10 || mes>20*60)) ? 'Temps de '+fmtT(mes)+' : c\'est bien ça ?' : (e.type==='points' && mes>300) ? mes+' points : c\'est bien ça ?' : (e.type==='quiz' && mes>40) ? mes+' bonnes réponses : c\'est bien ça ?' : (e.type==='hauteur' && mes>400) ? mes+' cm : c\'est bien ça ?' : '';
   if(bizarre && !confirm(bizarre)) return;
   if(!codeSaisieOk()) return;
-  if(e.type==='quiz') mes = Math.round(mes)*1000 + (s.qReste||0);            // même échelle que le quiz joué dans l'appli
+  if(e.type==='quiz') mes = QUIZ_OFF + Math.round(mes)*1000 + (s.qReste||0);            // même échelle que le quiz joué dans l'appli
   const maintenant=horloge().toISOString(); const etaitFait=fait(e.n,t);
   const row={ event:EVENT, stand:e.n, team:t, resultat:res, mesure:mes, code:CLE, updated_at:maintenant }; BONUS.forEach(b=>row[b.col]=!!s.bonus[b.k]);
   if(e.type==='quiz'){ const v=parseFloat(String(($('#subsid')||{}).value||'').replace(',','.')); if(!isNaN(v)) envoyerSubsid(t, v); }
