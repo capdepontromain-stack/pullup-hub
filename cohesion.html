@@ -1206,6 +1206,7 @@ function vOrg(){
         <label>Bonne réponse à la question subsidiaire</label><div class="row"><input type="number" id="repSubsid" inputmode="decimal" placeholder="Un nombre" value="${state.reponseSubsid??''}"><button class="btn marine" style="margin-top:0;flex:0 0 auto;width:auto;padding:0 18px" onclick="enregistrerReponse()">OK</button></div>
         <p class="muted" style="margin:8px 0 0">La réponse la plus proche gagne. Sans réponse, c'est le total de la matinée qui départage.</p></div>`;
     }
+    const av=aVerifier(c); if(av.length) h += `<div class="banner err entree"><b>⚠ ${pl(av.length,'résultat')} à vérifier</b> : très loin de ceux des autres équipes (faute de frappe ?). Touchez pour corriger ou confirmer.<br>${av.map(x=>`<button class="puce" style="border-color:var(--rouge)" onclick="saisieDirecte(${x.e.n},${x.r.team})">${x.e.n}. ${esc(x.e.nom)} · équipe ${x.r.team} : ${esc(texteResultat(x.r,x.e))}</button>`).join('')}</div>`;
     if(c.general){ const top3=c.ordre.filter(t=>c.eq[t].total>0).slice(0,3), mc=Object.values(c.eq).filter(e=>e.coeurs>0).sort((a,b)=>b.coeurs-a.coeurs||b.fairplay-a.fairplay||b.total-a.total)[0];
       h += `<div class="card entree" style="padding:12px 14px"><b style="font-family:var(--titre);color:var(--marine);font-size:17px">En un coup d'œil</b>
         ${top3.map((t,i)=>`<div class="ligneRes" onclick="voirEquipe(${t})"><span>${['🥇','🥈','🥉'][i]} <b>${t}</b> ${esc(nomEq(t))}</span><span class="p">${nb(c.eq[t].total)} pts</span></div>`).join('')}
@@ -1240,10 +1241,10 @@ function vOrg(){
           <p class="muted">${pl(c.dfs.filter(r=>r.envoye).length,'envoi')} au total · ${pl(fin,'équipe')} ont tout envoyé. Notez les photos dans l'onglet Photos.</p><button class="btn clair" style="margin-top:4px" onclick="orgTab('photos')">📸 Ouvrir l'onglet Photos</button></div></details>`; }
       const perf = r => e.type==='duel' ? ({V:2,N:1,D:0}[r.resultat]||0) : (r.mesure==null ? -1e9 : (e.type==='chrono' ? -r.mesure : +r.mesure));   // la performance brute : temps, points, note
       const l=all.filter(r=>r.stand===e.n).sort((a,b)=> perf(b)-perf(a) || c.pts[kp(e.n,b.team)]-c.pts[kp(e.n,a.team)]);
-      const rangE = r => 1 + l.filter(x=>perf(x)>perf(r)).length;
+      const rangE = r => 1 + l.filter(x=>perf(x)>perf(r)).length; const susp = new Set(aVerifier(c).filter(x=>x.e.n===e.n).map(x=>x.r.team));
       const reste=Array.from({length:N_EQUIPES},(_,i)=>i+1).filter(t=>!l.some(r=>r.team===t));
       return `<details class="stand" id="dSt${e.n}"><summary><span style="font-size:22px">${e.ico}</span><div style="flex:1;min-width:0"><div class="nm">${e.n}. ${e.nom}</div><div class="barre"><div style="width:${100*l.length/N_EQUIPES}%"></div></div></div><span class="nb">${l.length}/${N_EQUIPES}</span></summary><div>
-        ${l.map(r=>`<button class="ligneRes" onclick="saisieDirecte(${e.n},${r.team})"><span>${e.type==='duel'?'':`<b class="rangE">${['🥇','🥈','🥉'][rangE(r)-1]||rangE(r)+'e'}</b> `}<b>${r.team}</b> ${esc(nomEq(r.team))} <span class="muted">· ${esc(texteResultat(r,e))}</span> ${icoBonus(r)}</span><span class="p">${nb(c.pts[kp(e.n,r.team)])} pts</span></button>`).join('')||'<p class="muted">Aucune équipe passée pour l\'instant.</p>'}
+        ${l.map(r=>`<button class="ligneRes" onclick="saisieDirecte(${e.n},${r.team})"><span>${e.type==='duel'?'':`<b class="rangE">${['🥇','🥈','🥉'][rangE(r)-1]||rangE(r)+'e'}</b> `}<b>${r.team}</b> ${esc(nomEq(r.team))} <span class="muted">· ${esc(texteResultat(r,e))}</span> ${icoBonus(r)}${susp.has(r.team)?' <b style="color:var(--rouge)">⚠ à vérifier</b>':''}</span><span class="p">${nb(c.pts[kp(e.n,r.team)])} pts</span></button>`).join('')||'<p class="muted">Aucune équipe passée pour l\'instant.</p>'}
         ${reste.length?`<p class="muted" style="margin:10px 0 2px"><b>Pas encore passées</b> (touchez pour saisir à leur place) :</p>${reste.map(t=>`<button class="puce" onclick="saisieDirecte(${e.n},${t})">${t}</button>`).join('')}`:'<p class="muted" style="margin-top:8px">✓ Toutes les équipes sont passées.</p>'}
       </div></details>`; }).join('');
   } else if(state.orgTab==='photos'){
@@ -1271,6 +1272,12 @@ function vOrg(){
   }
   return h + `<p style="text-align:center;margin-top:16px"><button class="lnk" onclick="quitterOrg()">Quitter l'espace organisation</button></p>`;
 }
+// Contrôle d'honnêteté : un temps ou un total très loin de ceux des autres équipes est signalé à l'organisation (faute de frappe probable)
+function aVerifier(c){ const l=[];
+  EP.forEach(e=>{ if(!['chrono','points','quiz'].includes(e.type)) return; const v=c.rows.filter(r=>r.stand===e.n && r.mesure!=null); if(v.length<4) return;
+    const ms=v.map(r=>+r.mesure).sort((a,b)=>a-b), med=ms[Math.floor(ms.length/2)]; if(!(med>0)) return;
+    v.forEach(r=>{ const x=+r.mesure; const loin = e.type==='chrono' ? (x < med/3 || x > med*4) : (x > med*2.5 || x < med*0.15); if(loin) l.push({e, r, med}); }); });
+  return l; }
 function pourquoi(e){ return `Épreuves ${nb(e.base)} · Photos ${nb(e.photos)}/10 · Bonus ${e.bonus}/10${e.coeurs?' (❤️ '+e.coeurs+')':''} · ${e.faits}/${NB_EP}${e.quiz!=null?' · 🎓 '+e.quiz:''}`; }
 function aNoterNb(){ return Object.values(defis()).filter(r=>r.envoye && r.note==null).length; }
 function ligneDefiOrg(r, avecEquipe){ const D=DEFIS.find(x=>x.d===r.defi)||{nom:'?',ico:''}; const n=r.note==null?null:+r.note;
@@ -1478,7 +1485,7 @@ window.validerSaisie = ()=>{
   if(lu.erreur){ dire(lu.erreur,'err'); return; }
   const mes=lu.mes, res=lu.res;
   // valeurs étonnantes : on fait confirmer
-  const bizarre = (e.type==='chrono' && (mes<10 || mes>20*60)) ? 'Temps de '+fmtT(mes)+' : c\'est bien ça ?' : (e.type==='points' && mes>300) ? mes+' points : c\'est bien ça ?' : (e.type==='hauteur' && mes>400) ? mes+' cm : c\'est bien ça ?' : '';
+  const bizarre = (e.type==='chrono' && (mes<10 || mes>20*60)) ? 'Temps de '+fmtT(mes)+' : c\'est bien ça ?' : (e.type==='points' && mes>300) ? mes+' points : c\'est bien ça ?' : (e.type==='quiz' && mes>40) ? mes+' bonnes réponses : c\'est bien ça ?' : (e.type==='hauteur' && mes>400) ? mes+' cm : c\'est bien ça ?' : '';
   if(bizarre && !confirm(bizarre)) return;
   if(!codeSaisieOk()) return;
   const maintenant=horloge().toISOString(); const etaitFait=fait(e.n,t);
