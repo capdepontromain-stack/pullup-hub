@@ -1206,6 +1206,10 @@ function vOrg(){
         <label>Bonne réponse à la question subsidiaire</label><div class="row"><input type="number" id="repSubsid" inputmode="decimal" placeholder="Un nombre" value="${state.reponseSubsid??''}"><button class="btn marine" style="margin-top:0;flex:0 0 auto;width:auto;padding:0 18px" onclick="enregistrerReponse()">OK</button></div>
         <p class="muted" style="margin:8px 0 0">La réponse la plus proche gagne. Sans réponse, c'est le total de la matinée qui départage.</p></div>`;
     }
+    if(c.general){ const top3=c.ordre.filter(t=>c.eq[t].total>0).slice(0,3), mc=Object.values(c.eq).filter(e=>e.coeurs>0).sort((a,b)=>b.coeurs-a.coeurs||b.fairplay-a.fairplay||b.total-a.total)[0];
+      h += `<div class="card entree" style="padding:12px 14px"><b style="font-family:var(--titre);color:var(--marine);font-size:17px">En un coup d'œil</b>
+        ${top3.map((t,i)=>`<div class="ligneRes" onclick="voirEquipe(${t})"><span>${['🥇','🥈','🥉'][i]} <b>${t}</b> ${esc(nomEq(t))}</span><span class="p">${nb(c.eq[t].total)} pts</span></div>`).join('')}
+        ${mc?`<div class="ligneRes" onclick="voirEquipe(${mc.t})"><span>❤️ Le plus de coups de cœur : <b>${mc.t}</b> ${esc(nomEq(mc.t))}</span><span class="p" style="color:#D6336C">${mc.coeurs}</span></div>`:''}</div>`; }
     h += `<h3>Classement</h3><div class="card" style="padding:8px 8px 4px"><table><thead><tr><th>#</th><th style="text-align:left">Équipe et détail des points</th><th>Total</th></tr></thead><tbody>`;
     c.ordre.forEach((t,i)=>{ const e=c.eq[t]; const med = e.total>0 ? (['🥇','🥈','🥉'][i]||i+1) : i+1;
       h += `<tr class="${e.total>0&&i<3?'top'+(i+1):''}" onclick="voirEquipe(${t})"><td>${med}</td><td class="l"><b>${t}</b> ${esc(nomEq(t))||'<span class="muted">non inscrite</span>'}${e.total>0?`<div class="detail">${pourquoi(e)}</div>`:''}</td><td><b style="font-size:17px">${nb(e.total)}</b></td></tr>`; });
