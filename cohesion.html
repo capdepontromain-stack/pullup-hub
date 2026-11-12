@@ -466,7 +466,7 @@ const teinteEp = n => PROXIM[(n-1)%4];
 const EMPREINTES = /*EMPREINTES*/{org:'a6ca8ea66d7c7a26b79fab5298620f3efb5d4f7f66244fbe6c6affab93bb8cf4',mots:['96f99aa2ff66d5d72f426153fbc18bffef24b9021a1205ea2628104ea0c772bd','ff29bece9439c435bd6344efba9fef08d27452a98ec9bd8478cb75f42a487ad5','7bcb70b7feaeb1b11fa4dcbac9138b9f04a81f39a16f5efa1f25c9cde82a0871'],lien:'de3eaa536eaa09313575392ba967fff3490b0630521514f81b3f0f9cfe33f126'};
 // type : duel / chrono (secondes) / points / jury (note sur 10) / quiz (bonnes réponses sur 10) / hauteur (cm)
 const EP = [            // programme validé le 10/11 (présentation complète) : 13 épreuves + les défis photo et vidéo en parallèle
- {n:1, nom:'La catapulte', ico:'🏐', type:'duel', places:2, min:7, desc:"Volley géant avec des catapultes : deux équipes se renvoient des ballons de baudruche remplis d'eau. Un match d'environ 7 minutes."},
+ {n:1, nom:'La catapulte', ico:'🏐', type:'duel', places:4, min:7, desc:"Volley géant avec des catapultes : deux équipes se renvoient des ballons de baudruche remplis d'eau. Un match d'environ 7 minutes."},
  {n:2, nom:'Les roues', ico:'🎡', type:'chrono', places:5, min:5, desc:"Toute l'équipe à l'intérieur des roues de couleur : un parcours aller-retour chronométré. Pas de pied en dehors de la bâche !"},
  {n:3, nom:'Le Kapla', ico:'🧱', type:'jury', places:5, min:5, desc:"Construisez une sculpture sur la cohésion et la solidarité chez Proxim'Services, puis présentez-la à l'oral en une minute. Le jury note l'œuvre et la présentation."},
  {n:4, nom:"L'Archery Tag", ico:'🏹', type:'duel', places:4, min:10, desc:"Arcs et flèches à embout mousse : deux équipes face à face, on compte les personnes touchées. Quand on est touché, on passe l'arc à un coéquipier."},
@@ -475,7 +475,7 @@ const EP = [            // programme validé le 10/11 (présentation complète) 
  {n:7, nom:'Les lettres', ico:'🔤', type:'points', unite:"Nombre de mots trouvés", court:'mots', places:4, min:7, desc:"Une énigme, des lettres : reconstituez un maximum de mots dans le temps donné."},
  {n:8, nom:'Les cibles de foot', ico:'⚽', type:'points', places:2, min:10, desc:"Chaque participant tire une fois sur la cible géante : les points de toute l'équipe s'additionnent."},
  {n:9, nom:'Le lancer de haches', ico:'🪓', type:'points', places:2, min:10, desc:"Un lancer par participant, un seul lanceur à la fois : les points de toute l'équipe s'additionnent."},
- {n:10, nom:'Le jeu du clou', ico:'🔨', type:'chrono', places:3, min:8, desc:"Les yeux bandés, guidé par son équipe, chacun va enfoncer le clou : le chrono tourne !"},
+ {n:10, nom:'Le jeu du clou', ico:'🔨', type:'chrono', places:2, min:8, desc:"Les yeux bandés, guidé par son équipe, chacun va enfoncer le clou : le chrono tourne !"},
  {n:11, nom:'Le théâtre', ico:'🎭', type:'jury', places:3, min:10, desc:"Jouez l'ascension d'un membre de Proxim'Services, du premier jour jusqu'au poste de PDG : 8 minutes de préparation au maximum, 2 minutes pour jouer. Le jury note votre scène."},
  {n:12, nom:"La culture d'entreprise", ico:'🎓', type:'quiz', places:3, min:10, desc:"Un maximum de bonnes réponses sur Proxim'Services et votre métier, contre la montre. C'est l'épreuve qui rapporte le plus : points doublés !"},
  {n:13, nom:'La pyramide humaine', ico:'🤸', type:'jury', places:3, min:5, desc:"Toute l'équipe construit une pyramide humaine, en sécurité. Pour la valider, l'animateur monte tout en haut, et la pyramide se prend en photo !"},
@@ -526,7 +526,7 @@ const BAREME = { duel:'Victoire 10 points · Égalité 6 · Défaite 3', jury:'L
 const BONUS = [ {k:'a', col:'b_ambiance', nom:'Ambiance', ico:'🎉', pts:1}, {k:'c', col:'b_cohesion', nom:'Cohésion', ico:'🤝', pts:1}, {k:'f', col:'b_fairplay', nom:'Fair-play', ico:'👏', pts:1}, {k:'h', col:'b_coeur', nom:'Coup de cœur', ico:'❤️', pts:1} ];
 const ptsBonus = r => BONUS.reduce((s,b)=>s+(r&&r[b.col]?b.pts:0),0);
 const icoBonus = r => BONUS.filter(b=>r&&r[b.col]).map(b=>b.ico).join('');
-const DEPART_PLAN = [[1,2],[2,3],[3,2],[4,4],[5,2],[6,2],[7,1],[8,2],[9,2],[10,3],[11,1],[12,2],[13,3]];   // validé par Romain le 12/11 : roues 3, Archery Tag 4, clou 3, pyramide 3   // 29 équipes réparties sur les 13 épreuves au départ
+const DEPART_PLAN = [[1,4],[2,3],[3,3],[4,4],[5,1],[6,2],[7,2],[8,1],[9,1],[10,2],[11,2],[12,3],[13,1]];   // validé par Romain le 12/11 (2e version) ; pyramide à revoir   // 29 équipes réparties sur les 13 épreuves au départ
 const DEPART = {}; (()=>{ let t=1; DEPART_PLAN.forEach(([s,n])=>{ for(let i=0;i<n;i++) DEPART[t++]=s; }); })();
 // Rappels pour l'animateur (repris du briefing de la présentation complète)
 const CONSEILS = {
