@@ -429,6 +429,16 @@
   .zoomP .zn { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; } .zoomP .zn button { border:2px solid rgba(255,255,255,.5); background:transparent; color:#fff; border-radius:14px; padding:14px 6px; font-weight:900; font-size:16px; }
   .zoomP .zn button.sel { background:var(--jaune); border-color:var(--jaune); color:var(--nuit); } .zoomP .zn button.auto { border-style:dashed; border-color:var(--jaune); }
   .guideD { width:100%; aspect-ratio:900/614; border-radius:14px; background:#000 center/cover; box-shadow:var(--ombre); }
+  .quizBar { display:flex; align-items:center; justify-content:space-between; gap:8px; background:var(--marine); color:#fff; border-radius:18px; padding:10px 16px; margin:0 0 12px; position:sticky; top:6px; z-index:5; box-shadow:var(--ombre); }
+  .quizBar small { display:block; font-size:11px; opacity:.8; text-transform:uppercase; letter-spacing:.06em; } .quizBar b { font-size:20px; }
+  .qChrono { font-size:34px; font-weight:900; font-variant-numeric:tabular-nums; letter-spacing:.02em; } .qChrono.urgent { color:var(--jaune); animation:qpulse 1s infinite; } @keyframes qpulse { 50% { opacity:.45; } }
+  .qNum { font-size:12px; font-weight:900; color:var(--orange); text-transform:uppercase; letter-spacing:.08em; } .qQ { font-size:22px; line-height:1.25; margin:6px 0 14px; }
+  .qChoix { display:grid; gap:10px; } .qChoix button { display:flex; align-items:center; gap:12px; text-align:left; font:inherit; font-size:17px; font-weight:700; padding:14px; border-radius:14px; border:2px solid rgba(13,104,151,.25); background:#fff; color:var(--nuit); }
+  .qChoix button:active { background:rgba(13,104,151,.1); } .qChoix i { font-style:normal; flex:0 0 32px; height:32px; border-radius:50%; background:var(--marine); color:#fff; display:grid; place-items:center; font-weight:900; }
+  .qFb { text-align:center; } .qFb.ok { border:3px solid var(--vert); } .qFb.ko { border:3px solid var(--rouge); } .qFb.passe { border:3px solid var(--gris); }
+  .qVerdict { font-size:26px; font-weight:900; margin:4px 0 8px; } .qFb.ok .qVerdict { color:var(--vert); } .qFb.ko .qVerdict { color:var(--rouge); } .qFb.passe .qVerdict { color:var(--gris); }
+  .qBonne { font-size:18px; } .qExpl { font-size:15.5px; background:rgba(13,104,151,.07); border-radius:12px; padding:10px 12px; text-align:left; }
+  ul.regQ { list-style:none; padding:0; margin:0 0 12px; } ul.regQ li { margin:0 0 8px; font-size:16px; }
   .rangE { display:inline-block; min-width:30px; font-family:var(--titre); color:var(--marine); }
   .champU { position:relative; } .champU input { padding-right:58px; font-family:var(--titre); font-size:30px; text-align:center; letter-spacing:1px; padding-top:9px; padding-bottom:9px; }
   .champU span { position:absolute; right:14px; top:50%; transform:translateY(-50%); font-weight:900; font-size:16px; color:var(--gris); pointer-events:none; }
@@ -475,7 +485,35 @@ const NB_EP = 13;                                   // épreuves notées par les
 const DEBUT_EPREUVES = ESSAI ? new Date(Date.now()-45*60000) : new Date(2026,10,14,10,15);   // en essai : comme si on jouait depuis 45 minutes
 const FIN_EPREUVES = ESSAI ? new Date(Date.now()+90*60000) : new Date(2026,10,14,12,15);
 const AVANT_JOUR_J = false;                           // (ancien verrou remplacé par la période de test)
-const CULTURE = 12;                                 // l'épreuve mise en avant (points doublés)
+const CULTURE = 12;
+// Quiz culture d'entreprise joué sur le téléphone de l'équipe : 8 minutes, QCM ou réponse à taper (orthographe tolérée), on peut passer.
+// ⚠️ QUESTIONS D'ESSAI : Romain fournira les vraies questions et réponses. Format : q, choix (QCM, bon = n° du bon choix) ou ok (réponses acceptées), rep (affichée), expl.
+const QUIZ_DUREE = 480;
+const QUIZ = [
+ {q:"Quel est le plus haut sommet de La Réunion ?", choix:['Le Piton des Neiges','Le Piton de la Fournaise','Le Grand Bénare','Le Maïdo'], bon:0, expl:"Le Piton des Neiges culmine à 3 070 m : c'est le plus haut sommet de l'océan Indien."},
+ {q:"Quel volcan de La Réunion est l'un des plus actifs au monde ?", ok:['Piton de la Fournaise','La Fournaise','Fournaise'], rep:'Le Piton de la Fournaise', expl:"Il entre en éruption presque chaque année."},
+ {q:"Combien de communes compte La Réunion ?", choix:['20','24','26','30'], bon:1, expl:"24 communes, de Saint-Denis à Saint-Philippe."},
+ {q:"Quel est le chef-lieu de La Réunion ?", ok:['Saint-Denis','St Denis','Saint Denis'], rep:'Saint-Denis', expl:"Saint-Denis est la préfecture et la plus grande ville de l'île."},
+ {q:"En quelle année La Réunion est-elle devenue un département français ?", choix:['1848','1946','1958','1982'], bon:1, expl:"La loi de départementalisation date du 19 mars 1946."},
+ {q:"Quelle orchidée donne la célèbre gousse « Bourbon » de La Réunion ?", ok:['Vanille','La vanille','Vanillier'], rep:'La vanille', expl:"La vanille Bourbon : l'île s'appelait île Bourbon autrefois."},
+ {q:"Que signifie le sigle CESU ?", choix:['Chèque emploi service universel',"Contrat d'emploi solidaire unique","Carte d'entraide sociale urbaine","Chèque d'emploi social unifié"], bon:0, expl:"Le CESU permet de déclarer et de payer simplement les services à la personne."},
+ {q:"Quel crédit d'impôt s'applique aux services à la personne à domicile ?", choix:['25 %','50 %','75 %','100 %'], bon:1, expl:"50 % des sommes dépensées, dans la limite d'un plafond annuel."},
+ {q:"Quelle allocation du Département aide les personnes âgées dépendantes à payer leur aide à domicile ? (le sigle suffit)", ok:['APA','Allocation personnalisée d\'autonomie','Allocation personnalisee autonomie'], rep:"L'APA (allocation personnalisée d'autonomie)", expl:"Elle finance une partie des heures d'aide à domicile."},
+ {q:"Que signifie le sigle PCH ?", choix:['Prestation de compensation du handicap','Prime de confort habitat','Plan de couverture hospitalière','Prestation chômage'], bon:0, expl:"La PCH finance les aides liées au handicap, dont l'aide humaine à domicile."},
+ {q:"Quel geste simple, avant et après chaque intervention, limite la transmission des microbes ?", ok:['Se laver les mains','Lavage des mains','Laver les mains','Lavage mains','Friction hydroalcoolique','Gel hydroalcoolique'], rep:'Se laver les mains', expl:"Eau et savon, ou gel hydroalcoolique : le geste barrière numéro 1."},
+ {q:"Quel numéro appeler pour joindre le SAMU ?", choix:['15','17','18','112'], bon:0, expl:"Le 15 pour une urgence médicale."},
+ {q:"Quel numéro d'urgence fonctionne dans toute l'Europe ?", choix:['15','18','112','114'], bon:2, expl:"Le 112 marche partout en Europe, même sans réseau de son opérateur."},
+ {q:"Comment s'appelle la position dans laquelle on place une personne inconsciente qui respire ?", ok:['Position latérale de sécurité','PLS','Position laterale securite'], rep:'La PLS (position latérale de sécurité)', expl:"Elle garde les voies respiratoires libres en attendant les secours."},
+ {q:"Quel oiseau blanc à longue queue est l'emblème de La Réunion ?", ok:['Paille-en-queue','Paille en queue','Pailles en queue','Phaéton'], rep:'Le paille-en-queue', expl:"Le phaéton à bec jaune, qu'on appelle paille-en-queue."},
+ {q:"Comment accède-t-on au cirque de Mafate ?", choix:['À pied ou en hélicoptère','En voiture','En bus','En bateau'], bon:0, expl:"Aucune route n'y mène : on y va à pied ou en hélicoptère."},
+ {q:"Quel fruit à peau rouge, récolté en décembre, se vend en grappes au bord des routes ?", ok:['Letchi','Litchi','Letchis','Litchis','Lychee'], rep:'Le letchi', expl:"Le letchi, star des fêtes de fin d'année à La Réunion."},
+ {q:"Que fête-t-on à La Réunion le 20 décembre ?", choix:["L'abolition de l'esclavage",'La fête du volcan','Le Nouvel An tamoul','La fête de la vanille'], bon:0, expl:"Le 20 décembre 1848, l'abolition de l'esclavage est proclamée à La Réunion : c'est la Fèt Kaf."},
+ {q:"Complétez la signature de Proxim'Services : « compétents & … »", ok:['Solidaires','Solidaire'], rep:'Solidaires', expl:"« Compétents & solidaires » : c'est écrit sous le logo !"},
+ {q:"Quel plat réunionnais mélange du riz jaune, des grains et de la viande ?", ok:['Zembrocal','Zambrocal','Riz zembrocal'], rep:'Le zembrocal', expl:"Le zembrocal : riz au safran péi (curcuma), grains et viande."}
+];
+const QUIZ_SUBSID = "Question subsidiaire : combien de personnes participent à cette journée de cohésion ?";   // la bonne réponse est tapée par l'organisation
+const qB = m => m==null ? null : (+m>=1000 ? Math.floor(+m/1000) : Math.round(+m));                // bonnes réponses (le quiz de l'appli code : bonnes × 1000 + secondes restantes)
+const qTemps = m => m!=null && +m>=1000 ? QUIZ_DUREE - (+m%1000) : null;                          // temps mis, en secondes (si joué dans l'appli)                                 // l'épreuve mise en avant (points doublés)
 const COULEURS = ['Rouge','Bleu roi','Vert','Jaune','Orange','Violet','Rose','Blanc','Noir','Turquoise','Bordeaux','Bleu ciel','Vert anis','Gris'];
 const couleur = t => COULEURS[(t-1)%14];
 const TEINTES = ['#F26B12','#EC0512','#0784B0','#E0A800','#0D6897','#E8540C','#0E94BE','#C9040F','#F26B12','#EC0512','#0784B0','#E0A800','#0D6897','#0E94BE'];   // couleurs du logo Proxim'Services
@@ -496,9 +534,9 @@ const EP = [            // programme validé le 10/11 (présentation complète) 
  {n:9, nom:'Le lancer de haches', ico:'🪓', type:'points', places:2, min:10, desc:"Un lancer par participant, un seul lanceur à la fois : les points de toute l'équipe s'additionnent."},
  {n:10, nom:'Le jeu du clou', ico:'🔨', type:'chrono', places:2, min:8, desc:"Les yeux bandés, guidé par son équipe, chacun va enfoncer le clou : le chrono tourne !"},
  {n:11, nom:'Le théâtre', ico:'🎭', type:'jury', places:3, min:10, desc:"Jouez l'ascension d'un membre de Proxim'Services, du premier jour jusqu'au poste de PDG : 8 minutes de préparation au maximum, 2 minutes pour jouer. Le jury note votre scène."},
- {n:12, nom:"La culture d'entreprise", ico:'🎓', type:'quiz', places:3, min:10, desc:"Un maximum de bonnes réponses sur Proxim'Services et votre métier, contre la montre. C'est l'épreuve qui rapporte le plus : points doublés !"},
+ {n:12, nom:"La culture d'entreprise", ico:'🎓', type:'quiz', places:3, min:10, desc:"20 questions en 8 minutes sur Proxim'Services et votre métier, directement sur ce téléphone. Classement au nombre de bonnes réponses, puis à la rapidité. C'est l'épreuve qui rapporte le plus : points doublés !"},
  {n:13, nom:'La pyramide humaine', ico:'🤸', type:'jury', places:3, min:5, desc:"Toute l'équipe construit une pyramide humaine, en sécurité. Pour la valider, l'animateur monte tout en haut, et la pyramide se prend en photo !"},
- {n:14, nom:'Défis photo', ico:'📸', type:'defis', places:40, min:0, desc:"7 défis à faire avec vos téléphones, en parallèle des épreuves : idéal pendant l'attente. Chaque photo part directement chez l'organisation, depuis l'application."}
+ {n:14, nom:'Défis photo', ico:'📸', type:'defis', places:40, min:0, desc:"10 défis à faire avec vos téléphones, en parallèle des épreuves : idéal pendant l'attente. Chaque photo part directement chez l'organisation, depuis l'application."}
 ];
 // Notation validée par Romain le 12/11 : note sur 10 avec critères (catapulte, Kapla, Archery Tag, corde, lettres, théâtre, pyramide),
 // temps (roues, parcours, clou), total de points (cibles, haches), bonnes réponses classées et doublées (culture).
@@ -513,16 +551,19 @@ const CRITERES = {
 };
 EP.forEach(e=>{ if([1,4,6].includes(e.n)) e.duel=true; if(CRITERES[e.n]){ e.type='jury'; e.critere=CRITERES[e.n]; } });
 const EPN = Object.fromEntries(EP.map(e=>[e.n,e]));
-const DEFI_EP = 14, PTS_DEFI = 1;                   // les défis sont rangés en n°14 dans le code mais affichés « + »                     // chaque défi envoyé rapporte 2 points ; Romain peut noter de 0 à 3
+const DEFI_EP = 14, PTS_DEFI = 1;                   // défis rangés en n°14 dans le code ; une photo reçue vaut 1 d'office, Romain peut mettre 0, 1 ou 2
 const WHATSAPP = '262693817882', TEL_ORGA = '06 93 81 78 82';
-const DEFIS = [            // validés par Romain le 12/11 : 2 points par photo (1 si le thème est respecté, 1 de plus si elle est belle)
+const DEFIS = [            // validés par Romain le 12/11 : 1 point si la photo est validée (d'office), 2 si elle est magnifique ; 20 points ramenés sur 10
  {d:0, nom:"Le selfie de toute l'équipe", ico:'🤳', type:'photo', desc:"La base : toute l'équipe sur un selfie, capitaine compris, et tout le monde les yeux ouverts !"},
  {d:1, nom:'Le Radeau de la Méduse', ico:'🖼️', type:'photo', guide:'proxim/radeau-meduse.jpg', desc:"Prenez la pose du célèbre tableau de Géricault (ci-dessous) : les uns allongés sur le radeau, les autres qui tendent les bras vers l'horizon, un drapeau qui s'agite tout en haut."},
  {d:2, nom:'La solidarité', ico:'🤝', type:'photo', desc:"Une photo qui représente la solidarité. À vous de trouver l'idée qui la montre le mieux !"},
  {d:3, nom:"La pub Proxim'Services", ico:'📣', type:'photo', slogan:true, desc:"Une photo de pub pour Proxim'Services avec votre slogan : tapez-le ci-dessous, il s'affichera en légende sous la photo."},
  {d:4, nom:'Jouer avec les perspectives', ico:'🔭', type:'photo', desc:"Une illusion d'optique : quelqu'un au premier plan fait semblant de soulever entre deux doigts le reste de l'équipe, placée tout au fond. Trouvez le bon angle !"},
  {d:5, nom:'La pose déjantée', ico:'🤪', type:'photo', desc:"Toute l'équipe dans la position la plus folle possible. Lâchez-vous !"},
- {d:6, nom:'Votre travail au quotidien', ico:'💼', type:'photo', desc:"Une photo qui représente votre métier chez Proxim'Services, au quotidien."}
+ {d:6, nom:'Votre travail au quotidien', ico:'💼', type:'photo', desc:"Mettez en scène une situation de travail chez Proxim'Services, comme si on y était."},
+ {d:7, nom:'Soyez fédérateurs', ico:'🌍', type:'photo', desc:"Posez avec des membres d'autres équipes : plus il y a d'équipes différentes sur la photo, mieux c'est !"},
+ {d:8, nom:"L'art humain", ico:'🎨', type:'photo', desc:"C'est quoi l'art pour vous ? Créez une œuvre d'art vivante avec vos corps : une sculpture, un tableau, une forme… Soyez créatifs !"},
+ {d:9, nom:'La position de guerrier', ico:'⚔️', type:'photo', desc:"Une photo d'équipe qui intimide vos adversaires : regards de feu, poses de combat, cri de guerre figé !"}
 ];
 const kd = (t,d)=>`${t}-${d}`;
 // WhatsApp en un geste : on dit bonjour une fois (lien direct, pas besoin d'enregistrer le contact) ;
@@ -539,7 +580,7 @@ const lienWA = txt => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(txt)}
 const img = n => n===DEFI_EP ? 'proxim/defis.jpg?v=4' : `proxim/ep${String(n).padStart(2,'0')}.jpg?v=4`;
 const vignette = n => n===CULTURE ? 'proxim/ep12-carre.jpg?v=3' : img(n);
 const MAXPTS = e => e.type==='quiz' ? 20 : 10;
-const BAREME = { duel:'Victoire 10 points · Égalité 6 · Défaite 3', jury:'La note sur 10 de l\'animateur donne vos points', quiz:'Classement des bonnes réponses, points doublés : jusqu\'à 20 points',
+const BAREME = { duel:'Victoire 10 points · Égalité 6 · Défaite 3', jury:'La note sur 10 de l\'animateur donne vos points', quiz:'Classement au nombre de bonnes réponses, puis à la rapidité, points doublés : jusqu\'à 20 points',
   chrono:'Classement entre toutes les équipes : 10 points pour la plus rapide, puis un peu moins à chaque place, jusqu\'à 1 point', points:'Classement entre toutes les équipes : 10 points pour le meilleur score, puis un peu moins à chaque place, jusqu\'à 1 point', hauteur:'Classement entre toutes les équipes : 10 points pour la plus haute tour, puis un peu moins à chaque place, jusqu\'à 1 point' };
 // Bonus donnés par l'animateur (jamais automatiques) : +1 point par bouton, rares et mérités ; 10 points au maximum sur la matinée.
 const BONUS = [ {k:'a', col:'b_ambiance', nom:'Ambiance', ico:'🎉', pts:1}, {k:'c', col:'b_cohesion', nom:'Cohésion', ico:'🤝', pts:1}, {k:'f', col:'b_fairplay', nom:'Fair-play', ico:'👏', pts:1}, {k:'h', col:'b_coeur', nom:'Coup de cœur', ico:'❤️', pts:1} ];
@@ -560,7 +601,7 @@ const CONSEILS = {
  9:["La sécurité d'abord : un seul lanceur à la fois, les autres derrière la ligne.","Toujours 15 lancers exactement : une équipe plus petite fait lancer certains deux fois."],
  10:["Un participant guidé à la fois, marteau toujours maîtrisé.","Entrez le temps : l'application fait le classement, pas besoin de grille."],
  11:["Notez sur 10 : création, idées, jeu, tous ensemble, bonne humeur, créativité.","8 minutes de préparation maximum, 2 minutes pour jouer.","Une réplique « compétents et solidaires », une promotion surprise…","Applaudissez chaque scène."],
- 12:["Contre la montre : boostez les équipes, un prix spécial est remis.","Entrez le nombre de bonnes réponses : l'application classe les équipes et double les points.","Notez aussi la réponse à la question subsidiaire (un nombre) : elle départage les égalités pour la médaille."],
+ 12:["L'équipe vous tend son téléphone : tapez votre code, le chrono de 8 minutes démarre et le quiz se corrige tout seul (fautes d'orthographe acceptées).","Le classement se fait au nombre de bonnes réponses, puis à la rapidité, et les points sont doublés. À la fin, l'équipe répond à la question subsidiaire.","Des bonus à donner ? Touchez « Ajouter des bonus » à la fin du quiz. Pas de téléphone ? Saisissez le nombre de bonnes réponses comme avant."],
  13:["Notez sur 10 : créativité, joie, beauté de la pyramide, collectif, rapidité.","Faites réfléchir l'équipe pour que personne ne se blesse.","Pour valider, montez tout en haut. Et la photo de la pyramide !"]
 };
 const ANNONCES = [ ['📸','Pensez aux défis photo : ils rapportent des points !'], ['⏰','Plus que 30 minutes d\'épreuves : foncez !'], ['⏰','Plus que 10 minutes : dernière épreuve !'], ['🎓','N\'oubliez pas la culture d\'entreprise : points doublés !'], ['🏆','Les épreuves sont terminées : tout le monde au podium !'] ];
@@ -752,7 +793,7 @@ function defis(){ const all={...state.defis}; Object.entries(local.d).forEach(([
 const defiEnvoye = (t,d) => { const r=defis()[kd(t,d)]; return !!(r && r.envoye); };
 const nbDefis = t => DEFIS.filter(x=>defiEnvoye(t,x.d)).length;
 const ptsDefi = r => r.note!=null ? Math.max(0,Math.min(2,+r.note)) : (r.envoye ? PTS_DEFI : 0);          // valeur d'un défi : la note de Romain (0 à 3), ou « bien » (2) sans note
-const DEFIS_MAX = 10, BONUS_MAX = 10;                                                 // les 7 défis ensemble = une épreuve (10 points max) ; les bonus aussi (10 max)
+const DEFIS_MAX = 10, BONUS_MAX = 10, DEFIS_DIVISEUR = 2;                                                 // les 10 défis : 20 points bruts ramenés sur 10, comme une épreuve ; les bonus aussi (10 max)
 const ptsDefiVal = r => ptsDefi(r);                                                   // 1 point par défi envoyé, 2 ou 3 si Romain trouve la photo réussie (10 max au total)
 const fait = (n,t) => n===DEFI_EP ? nbDefis(t)>=DEFIS.length : valide(passages()[kp(n,t)]);
 function calcul(){
@@ -766,19 +807,19 @@ function calcul(){
       v.forEach(r=>{ const mieux=v.filter(x=> asc ? +x.mesure<+r.mesure : +x.mesure>+r.mesure).length; pts[kp(e.n,r.team)] = (e.type==='quiz'?2:1) * (n<=1 ? 10 : r1(1 + 9*(n-1-mieux)/(n-1))); rang[kp(e.n,r.team)]={r:mieux+1,n}; }); }
   });
   const eq={};
-  for(let t=1;t<=N_EQUIPES;t++) eq[t]={t,faits:0,base:0,bonus:0,bonusBrut:0,coeurs:0,fairplay:0,photos:0,defisBrut:0,nbDefis:0,total:0,quiz:null,subsid:null};
+  for(let t=1;t<=N_EQUIPES;t++) eq[t]={t,faits:0,base:0,bonus:0,bonusBrut:0,coeurs:0,fairplay:0,photos:0,defisBrut:0,nbDefis:0,total:0,quiz:null,quizBrut:0,subsid:null};
   rows.forEach(r=>{ const e=eq[r.team]; if(!e) return; const p=pts[kp(r.stand,r.team)]; if(p==null) return;
     const b=ptsBonus(r);
-    e.faits++; e.base+=p; e.bonusBrut+=b; e.coeurs+=r.b_coeur?1:0; e.fairplay+=r.b_fairplay?1:0; if(r.stand===CULTURE) e.quiz=Math.max(0,Math.round(+r.mesure||0)); });
+    e.faits++; e.base+=p; e.bonusBrut+=b; e.coeurs+=r.b_coeur?1:0; e.fairplay+=r.b_fairplay?1:0; if(r.stand===CULTURE){ e.quiz=Math.max(0,qB(r.mesure)||0); e.quizBrut=+r.mesure||0; } });
   const dfs = Object.values(defis()).filter(r=>r.envoye || r.note!=null);
   dfs.forEach(r=>{ const e=eq[r.team]; if(!e) return; e.defisBrut+=ptsDefi(r); if(r.envoye) e.nbDefis++; });
-  Object.values(eq).forEach(e=>{ e.base=r1(e.base); e.bonus=Math.min(BONUS_MAX, e.bonusBrut); e.photos=r1(Math.min(DEFIS_MAX, e.defisBrut));
+  Object.values(eq).forEach(e=>{ e.base=r1(e.base); e.bonus=Math.min(BONUS_MAX, e.bonusBrut); e.photos=r1(Math.min(DEFIS_MAX, e.defisBrut/DEFIS_DIVISEUR));
     e.total=r1(e.base+e.bonus+e.photos); e.subsid = state.subsid && state.subsid[e.t]!=null ? state.subsid[e.t] : null; });   // arrondi au dixième
-  const ordre = Object.values(eq).sort((a,b)=> b.total-a.total || b.faits-a.faits || (b.quiz||0)-(a.quiz||0) || a.t-b.t).map(e=>e.t);
+  const ordre = Object.values(eq).sort((a,b)=> b.total-a.total || b.faits-a.faits || (b.quizBrut||0)-(a.quizBrut||0) || a.t-b.t).map(e=>e.t);
   const general = eq[ordre[0]].total>0 ? ordre[0] : null;
   const ecart = e => (state.reponseSubsid!=null && e.subsid!=null) ? Math.abs(e.subsid-state.reponseSubsid) : Infinity;
-  const qz = Object.values(eq).filter(e=>e.quiz!=null && e.t!==general).sort((a,b)=> b.quiz-a.quiz || ecart(a)-ecart(b) || b.total-a.total || a.t-b.t);
-  const exaequo = qz.length>1 && qz[1].quiz===qz[0].quiz ? qz.filter(e=>e.quiz===qz[0].quiz) : [];   // égalité de bonnes réponses en tête
+  const qz = Object.values(eq).filter(e=>e.quiz!=null && e.t!==general).sort((a,b)=> b.quizBrut-a.quizBrut || ecart(a)-ecart(b) || b.total-a.total || a.t-b.t);   // bonnes réponses, puis rapidité, puis subsidiaire
+  const exaequo = qz.length>1 && qz[1].quizBrut===qz[0].quizBrut ? qz.filter(e=>e.quizBrut===qz[0].quizBrut) : [];   // égalité de bonnes réponses en tête
   const amb = Object.values(eq).filter(e=>e.coeurs+e.fairplay>0).sort((a,b)=> (b.coeurs+b.fairplay)-(a.coeurs+a.fairplay) || b.coeurs-a.coeurs || b.bonus-a.bonus || b.total-a.total || a.t-b.t);   // trophée « coups de cœur et fair-play »
   return { pts, rang, eq, ordre, rows, dfs, general, exaequo, departage: exaequo.length>0 && ecart(qz[0])<ecart(qz[1]), prixQuiz: qz.length?qz[0].t:null, ambiance: amb.length?amb[0].t:null, saisies: rows.length + dfs.length };
 }
@@ -787,7 +828,7 @@ function texteResultat(r, e){
   if(e.type==='duel'){ const v={V:'Victoire',N:'Égalité',D:'Défaite'}[r.resultat]||'?'; const a=r.mesure; return v + (a==null?'':(+a===0?' contre les animateurs':' contre l\'équipe '+(+a))); }
   if(e.type==='chrono') return r.mesure!=null ? fmtT(r.mesure) : 'fait';
   if(e.type==='jury') return (r.mesure!=null?+r.mesure:'?')+'/10';
-  if(e.type==='quiz') return (r.mesure!=null?+r.mesure:'?')+' bonnes réponses';
+  if(e.type==='quiz') return (r.mesure!=null?qB(r.mesure):'?')+' bonnes réponses'+(qTemps(r.mesure)!=null?' en '+fmtT(qTemps(r.mesure)):'');
   if(e.type==='points') return (r.mesure!=null?+r.mesure:'?')+' '+(e.court||'points');
   if(e.type==='hauteur') return (r.mesure!=null?+r.mesure:'?')+' cm';
   return 'fait';
@@ -821,7 +862,8 @@ function vueParDefaut(){
   if(state.org && !state.team) return 'org';
   const inscrite = state.team && equipe(state.team) && equipe(state.team).nom;
   if(state.orgRetour) return inscrite ? 'home' : 'brief';
-  if(confirmee() && inscrite) return lsGet('regles_vues',false) ? 'home' : 'regles';
+  if(confirmee() && inscrite){ const Q=quizEtat(state.team); if(Q && Q.debut && Q.phase!=='fin' && !fait(CULTURE,state.team)) return 'quiz';   // quiz en cours : on y revient tout seul
+    return lsGet('regles_vues',false) ? 'home' : 'regles'; }
   if(avantOuverture()) return 'accueil';
   let vu=false; try{ vu = sessionStorage.getItem('pxc_acc_'+EVENT)==='1'; }catch(e){}   // l'accueil revient à chaque nouvelle ouverture (seul un retour de l'appareil photo le saute)
   return vu ? 'brief' : 'accueil';
@@ -830,7 +872,7 @@ function renderDoux(){
   majChoix();                                                            // sans toucher au champ en cours de saisie
   const a=document.activeElement;
   if(a && (a.tagName==='INPUT'||a.tagName==='SELECT'||a.tagName==='TEXTAREA')) { majBas(); return; }
-  if(['saisie','bravo','landing','regles','podium','defi','envoiPhoto','passage'].includes(state.view)) return;
+  if(['saisie','bravo','landing','regles','podium','defi','envoiPhoto','passage','quiz'].includes(state.view)) return;
   if(state.view==='accueil'){ if(confirmee() && equipe(state.team) && equipe(state.team).nom){ state.view=''; render(); return; } const z=document.getElementById('nbInscrites'); if(z){ const h=texteInscrites(); if(z.innerHTML!==h) z.innerHTML=h; } return; }
   if(state.view==='chat' || (state.view==='org' && state.orgTab==='messages')){ majFil(); majBas(); return; }
   if(state.view==='brief'){                                              // un autre téléphone de l'équipe a déjà inscrit l'équipe
@@ -855,7 +897,7 @@ function render(doux){
   else if(nq && nr<nq && !['podium','bravo'].includes(state.view)) h += `<div class="banner" id="banEnvoi">Envoi en cours (${nq})…</div>`;
   if(nr) h += `<div class="banner err"><b>${pl(nr,'résultat')} refusé${nr>1?'s':''} par la base.</b> Montrez ce téléphone à l'organisation.</div>`;
   if(AVANT_JOUR_J && !state.org && !['landing','org','podium'].includes(state.view)){ $('#main').innerHTML = vAvant(); majBas(); majRebours(); return; }
-  const VUES = {accueil:vAccueil, regles:vRegles, landing:vLanding, brief:vBrief, home:vHome, ep:vEpreuve, passage:vPassage, defi:vDefi, envoiPhoto:vEnvoiPhoto, saisie:vSaisie, bravo:vBravo, org:vOrg, chat:vChat, podium:vPodium};
+  const VUES = {accueil:vAccueil, regles:vRegles, landing:vLanding, brief:vBrief, home:vHome, ep:vEpreuve, passage:vPassage, defi:vDefi, envoiPhoto:vEnvoiPhoto, saisie:vSaisie, quiz:vQuiz, bravo:vBravo, org:vOrg, chat:vChat, podium:vPodium};
   if(!VUES[state.view]) state.view = vueParDefaut();
   try{ h += (VUES[state.view]||vAccueil)(); }
   catch(e){ noterErreur(e, 'écran '+state.view); h += vSecours(); }
@@ -922,7 +964,7 @@ const REGLES = `<ul class="regles">
       <li><span class="num" style="background:var(--orange)">2</span><div><b>N'oubliez pas la culture d'entreprise :</b> elle rapporte le double de points.</div></li>
       <li><span class="num" style="background:var(--rouge)">3</span><div><b>Épreuve en duel ?</b> À vous de trouver une équipe adverse pour l'affronter.</div></li>
       <li><span class="num" style="background:var(--vert)">4</span><div><b>À la fin de chaque épreuve,</b> tendez ce téléphone à l'animateur : c'est lui qui entre votre résultat.</div></li>
-      <li><span class="num" style="background:var(--marine)">📸</span><div><b>Défis photo, en parallèle :</b> 7 défis à faire quand vous voulez, envoyés à l'organisation directement depuis l'application. Parfait pendant l'attente !</div></li>
+      <li><span class="num" style="background:var(--marine)">📸</span><div><b>Défis photo, en parallèle :</b> 10 défis à faire quand vous voulez, envoyés à l'organisation directement depuis l'application. Parfait pendant l'attente !</div></li>
       <li><span class="num" style="background:var(--jaune);color:var(--nuit)">+</span><div><b>Bonus :</b> les animateurs récompensent l'ambiance, la cohésion, le fair-play, et donnent des coups de cœur. Les points restent secrets jusqu'au podium.</div></li>
     </ul>`;
 const avantOuverture = () => MODE==='essai' && !Q.has('essai') && jourJ(horloge()) && horloge() < BASCULE;
@@ -1013,6 +1055,76 @@ function vHome(){
     <p class="muted" style="margin:10px 0 0">Rien n'est effacé. Pour retrouver votre équipe, retapez simplement son numéro.</p></div>`;
   return h;
 }
+// ---------- Quiz culture d'entreprise ----------
+function quizEtat(t){ return ((local.quiz||{})[t]) || null; }
+function quizSet(t, Q){ local.quiz=local.quiz||{}; local.quiz[t]=Q; save(); }
+function quizReste(Q){ if(!Q || !Q.debut) return QUIZ_DUREE; const fin = Q.fin || Date.now(); return Math.max(0, Math.ceil(QUIZ_DUREE - (fin-Q.debut)/1000)); }
+const mmss = s => Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+function normRep(x){ return String(x||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/œ/g,'oe').replace(/æ/g,'ae')
+  .replace(/[^a-z0-9]+/g,' ').split(' ').filter(m=>m && !['le','la','les','l','un','une','des','du','de','d','au','aux','a','en','c','est','s'].includes(m)).join(' '); }
+function distance(a,b){ const m=a.length, n=b.length; if(!m) return n; if(!n) return m; let pr=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){ const cu=[i]; for(let j=1;j<=n;j++) cu[j]=Math.min(pr[j]+1, cu[j-1]+1, pr[j-1]+(a[i-1]===b[j-1]?0:1)); pr=cu; } return pr[n]; }
+function reponseOk(rep, oks){ const r=normRep(rep); if(!r) return false; const rc=r.replace(/ /g,'');
+  return oks.some(o=>{ const n=normRep(o); if(!n) return false; const nc=n.replace(/ /g,'');
+    if(/^\d+$/.test(nc)) return rc===nc;                                                    // un nombre : il doit être exact
+    const tol = nc.length<=3 ? 0 : nc.length<=5 ? 1 : nc.length<=9 ? 2 : Math.floor(nc.length*0.25);
+    return r===n || distance(rc,nc)<=tol || (nc.length>=4 && (' '+r+' ').includes(' '+n+' ')); }); }
+function vQuiz(){
+  const t=state.team, Q=quizEtat(t), N=QUIZ.length;
+  if(fait(CULTURE,t) && !(Q && Q.phase==='fin')) return `<div class="fait entree"><div class="gros">✓ Quiz déjà fait</div><p style="margin:6px 0 0">Le résultat de la culture d'entreprise est enregistré.</p></div><button class="btn clair" onclick="aller('home')">Voir toutes les épreuves</button>`;
+  if(!Q || !Q.debut) return `<div class="card entree"><div class="qNum">Épreuve ${CULTURE} · points doublés</div><h2 style="margin:4px 0 12px">🎓 Le quiz culture d'entreprise</h2><ul class="regQ"><li>⏱ <b>${N} questions, ${QUIZ_DUREE/60} minutes</b> : le chrono part dès que l'animateur lance le quiz.</li><li>✍️ Choix multiples ou réponse à taper : <b>pas besoin d'une orthographe parfaite</b>.</li><li>⏭ Vous séchez ? <b>Passez</b> la question : elle ne rapporte rien, mais vous gagnez du temps.</li><li>🏆 Classement au <b>nombre de bonnes réponses</b>, puis à la <b>rapidité</b>.</li></ul>
+      <label>Animateur : votre code pour lancer le chrono</label><input type="text" id="codeQ" autocomplete="off" autocapitalize="off" placeholder="Code de l'animateur" enterkeyhint="go" onkeydown="if(event.key==='Enter'){event.preventDefault();lancerQuiz();}">
+      <button class="btn vert gros" onclick="lancerQuiz()">▶ Lancer le chrono</button></div>`;
+  const reste=quizReste(Q), bonnes=Q.rep.filter(x=>x.ok).length;
+  let h = Q.phase==='fin' ? '' : `<div class="quizBar entree"><div><small>Question</small><b>${Math.min(Q.i+1,N)}/${N}</b></div><div id="qChrono" class="qChrono ${reste<=60?'urgent':''}">${mmss(reste)}</div><div><small>Bonnes</small><b>${bonnes}</b></div></div>`;
+  if(Q.phase==='q'){ const x=QUIZ[Q.i];
+    h += `<div class="card entree qCarte"><div class="qNum">Question ${Q.i+1}</div><h2 class="qQ">${esc(x.q)}</h2>`;
+    if(x.choix) h += `<div class="qChoix">${x.choix.map((c,k)=>`<button onclick="quizRepondre(${k})"><i>${'ABCD'[k]}</i>${esc(c)}</button>`).join('')}</div>`;
+    else h += `<input type="text" id="qRep" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Votre réponse" enterkeyhint="send" onkeydown="if(event.key==='Enter'){event.preventDefault();quizRepondre(null);}">
+      <button class="btn marine gros" onclick="quizRepondre(null)">Valider</button>`;
+    h += `<button class="btn clair" onclick="quizPasser()">⏭ Passer cette question</button></div>`; }
+  else if(Q.phase==='fb'){ const x=QUIZ[Q.i], r=Q.rep[Q.rep.length-1]||{}, bonne = x.choix ? x.choix[x.bon] : x.rep;
+    h += `<div class="card entree qFb ${r.ok?'ok':r.passe?'passe':'ko'}"><div class="qVerdict">${r.ok?'✓ Bonne réponse !':r.passe?'⏭ Question passée':'✗ Raté…'}</div>
+      ${r.ok?'':`<p class="qBonne">La réponse : <b>${esc(bonne)}</b></p>`}${!r.ok&&!r.passe&&r.r!=null&&!x.choix?`<p class="muted">Vous avez répondu : ${esc(r.r)}</p>`:''}
+      ${x.expl?`<p class="qExpl">${esc(x.expl)}</p>`:''}
+      <button class="btn orange gros" onclick="quizSuivante()">${Q.i+1<N?'Question suivante →':'Terminer le quiz →'}</button></div>`; }
+  else if(Q.phase==='subsid'){
+    h += `<div class="card entree">${Q.tempsFini?'<div class="qVerdict" style="color:var(--rouge)">⏰ Temps écoulé !</div>':'<div class="qVerdict" style="color:var(--vert)">🏁 Toutes les questions sont faites !</div>'}
+      <p style="font-size:17px">${bonnes} bonne${bonnes>1?'s':''} réponse${bonnes>1?'s':''} sur ${N}, en ${fmtT(QUIZ_DUREE-reste)}.</p>
+      <label>${esc(QUIZ_SUBSID)}</label><input type="number" id="qSub" inputmode="decimal" placeholder="Un nombre" enterkeyhint="done" onkeydown="if(event.key==='Enter'){event.preventDefault();quizEnregistrer();}">
+      <p class="muted" style="margin:6px 0 0">Elle sert seulement à départager une égalité parfaite pour la médaille.</p>
+      <button class="btn vert gros" ${state.quizEnvoi?'disabled':''} onclick="quizEnregistrer()">${state.quizEnvoi?'Envoi…':'Enregistrer le résultat'}</button></div>`; }
+  else if(Q.phase==='fin'){
+    h += `<div class="fait entree"><div class="gros">🎓 ${bonnes}/${N}</div><p style="margin:6px 0 0;font-size:17px">en ${fmtT(QUIZ_DUREE-reste)} · résultat enregistré ✓</p></div>
+      <button class="btn orange gros" onclick="quizBravo()">Continuer →</button>
+      <p style="text-align:center"><button class="lnk" onclick="state.ep=CULTURE;demarrerSaisie()">Animateur : ajouter des bonus</button></p>`; }
+  return h;
+}
+window.lancerQuiz = ()=>{ const t=state.team; const el=$('#codeQ'), c=el?el.value.trim():'';
+  if(!state.org && !codeStandOk(CULTURE,c)){ dire(c?'Code de l\'animateur incorrect.':'Code de l\'animateur : à taper par l\'animateur.','err'); if(el){ el.value=''; el.focus(); } return; }
+  quizSet(t, { debut:Date.now(), i:0, rep:[], phase:'q' }); vibre([40,30,40]); son(false); render(); window.scrollTo(0,0); };
+function quizAvance(Q){ if(quizReste(Q)<=0){ Q.phase='subsid'; Q.tempsFini=true; Q.fin=Q.fin||Q.debut+QUIZ_DUREE*1000; } }
+window.quizRepondre = k=>{ const t=state.team, Q=quizEtat(t); if(!Q || Q.phase!=='q') return; quizAvance(Q); if(Q.phase!=='q'){ quizSet(t,Q); render(); return; }
+  const x=QUIZ[Q.i]; let r, ok;
+  if(x.choix){ r=x.choix[k]; ok = k===x.bon; }
+  else { r=String(($('#qRep')||{}).value||'').trim(); if(!r){ dire('Tapez votre réponse, ou passez la question.','err'); const el=$('#qRep'); if(el) el.focus(); return; } ok=reponseOk(r, x.ok||[x.rep]); }
+  Q.rep.push({ i:Q.i, r, ok }); Q.phase='fb'; quizSet(t,Q); vibre(ok?[25]:[60,40,60]); if(ok) son(false); render(); window.scrollTo(0,0); };
+window.quizPasser = ()=>{ const t=state.team, Q=quizEtat(t); if(!Q || Q.phase!=='q') return; Q.rep.push({ i:Q.i, r:null, ok:false, passe:true }); Q.phase='fb'; quizAvance(Q); quizSet(t,Q); render(); window.scrollTo(0,0); };
+window.quizSuivante = ()=>{ const t=state.team, Q=quizEtat(t); if(!Q || Q.phase!=='fb') return; Q.i++;
+  if(Q.i>=QUIZ.length){ Q.phase='subsid'; Q.fin=Date.now(); } else Q.phase='q'; quizAvance(Q); quizSet(t,Q); render(); window.scrollTo(0,0);
+  if(Q.phase==='q' && !QUIZ[Q.i].choix) setTimeout(()=>{ const el=$('#qRep'); if(el) el.focus(); }, 60); };
+window.quizEnregistrer = ()=>{ const t=state.team, Q=quizEtat(t); if(!Q || Q.phase!=='subsid' || state.quizEnvoi) return;
+  const v=parseFloat(String(($('#qSub')||{}).value||'').replace(',','.')); if(isNaN(v)){ dire('Répondez à la question subsidiaire (un nombre).','err'); const el=$('#qSub'); if(el) el.focus(); return; }
+  state.quizEnvoi=true; Q.fin=Q.fin||Date.now();
+  const bonnes=Q.rep.filter(x=>x.ok).length, sec=Math.min(QUIZ_DUREE, Math.round((Q.fin-Q.debut)/1000));
+  const row={ event:EVENT, stand:CULTURE, team:t, resultat:'F', mesure: bonnes*1000 + (QUIZ_DUREE-sec), code:CLE, updated_at:horloge().toISOString() }; BONUS.forEach(b=>row[b.col]=false);
+  envoyerSubsid(t, v); local.p[kp(CULTURE,t)]=row; pousser('tb_passages','event,stand,team','p-'+kp(CULTURE,t),row);
+  Q.phase='fin'; Q.sub=v; quizSet(t,Q); state.quizEnvoi=false; vibre([30,40,30]); render(); window.scrollTo(0,0); confettis(false); };
+window.quizBravo = ()=>{ const t=state.team; state.ep=CULTURE; state.bravo={ ep:CULTURE }; state.vientDeFaire=CULTURE; setTimeout(()=>{ state.vientDeFaire=0; }, 4000);
+  const nbF=EP.filter(x=>x.n!==DEFI_EP && fait(x.n,t)).length, palier=[5,10,NB_EP].includes(nbF); state.view='bravo'; render(); window.scrollTo(0,0); confettis(palier); son(palier); };
+setInterval(()=>{ if(state.view!=='quiz') return; const Q=quizEtat(state.team); if(!Q || !Q.debut || !['q','fb'].includes(Q.phase)) return;
+  const reste=quizReste(Q), el=document.getElementById('qChrono'); if(el){ el.textContent=mmss(reste); el.classList.toggle('urgent', reste<=60); }
+  if(reste<=0){ quizAvance(Q); quizSet(state.team,Q); vibre([80,50,80]); render(); window.scrollTo(0,0); } }, 500);
 function vEpreuve(){
   if(state.ep===DEFI_EP) return vDefis();
   const e=EPN[state.ep], t=state.team, deja=fait(e.n,t);
@@ -1022,6 +1134,10 @@ function vEpreuve(){
       <p class="muted" style="margin:12px 0 0">L'animateur note votre résultat et peut ajouter des bonus : ambiance, cohésion, fair-play et coup de cœur. Les points restent secrets jusqu'au podium.</p></div>`;
   if(deja) h += `<div class="fait entree"><div class="gros">✓ Épreuve faite</div><p style="margin:6px 0 0">Résultat enregistré par l'animateur. Passez à une autre épreuve !</p></div>
       ${epSuivante()?`<button class="btn orange" onclick="suivante()">Épreuve suivante →</button>`:''}<button class="btn clair" onclick="aller('home')">Voir toutes les épreuves</button><p style="text-align:center"><button class="lnk" onclick="demarrerSaisie()">Corriger ce résultat (animateur)</button></p>`;
+  else if(e.n===CULTURE){ const Q=quizEtat(t), enCours=Q && Q.debut && Q.phase!=='fin';
+    h += enCours ? `<button class="btn orange gros entree" onclick="aller('quiz')">▶ Reprendre le quiz<br><small>${quizReste(Q)>0?'il reste '+fmtT(quizReste(Q)):'temps écoulé'}</small></button>`
+      : `<button class="btn vert gros entree" onclick="aller('quiz')">🎓 Lancer le quiz :<br>je tends le téléphone à l'animateur</button>`;
+    h += `<p style="text-align:center"><button class="lnk" onclick="passerTelephone()">Pas de quiz sur ce téléphone ? L'animateur saisit le résultat</button></p>`; }
   else h += `<button class="btn vert gros entree" onclick="passerTelephone()">Épreuve terminée :<br>je tends le téléphone à l'animateur</button>`;
   return h;
 }
@@ -1030,7 +1146,7 @@ function vDefis(){
   const t=state.team, nb=nbDefis(t), e=EPN[DEFI_EP];
   let h = `<div class="heroEp entree" style="background-image:url('${img(DEFI_EP)}')"><div class="tt"><small>En parallèle des ${NB_EP} épreuves</small><div>${e.nom}</div></div></div>
     <div class="card entree"><p style="font-size:17px">${e.desc}</p>
-      <div class="avance">${anneau(nb, DEFIS.length)}<div class="txt">${nb>=DEFIS.length?'Tous les défis sont envoyés, bravo !':pl(DEFIS.length-nb,'défi')+' encore à faire'}<span class="muted">2 points par photo : thème respecté, et belle photo (jusqu'à ${DEFIS_MAX} points)</span></div></div>
+      <div class="avance">${anneau(nb, DEFIS.length)}<div class="txt">${nb>=DEFIS.length?'Tous les défis sont envoyés, bravo !':pl(DEFIS.length-nb,'défi')+' encore à faire'}<span class="muted">1 point par photo validée, 2 si elle est magnifique (ramené sur ${DEFIS_MAX} points)</span></div></div>
       <p class="muted" style="margin:12px 0 0">Pour chaque défi : touchez <b>Faire</b>, prenez la photo, puis <b>Envoyer</b> : elle arrive directement chez l'organisation.</p></div>`;
   const photoDebut = !!(state.photos[t]||okPhoto(lsGet('photo_'+t,'')));
   h += DEFIS.map((d,i)=>{ const ok=defiEnvoye(t,d.d), c=PROXIM[i%4], txt=c===PROXIM[1]?'#3B2A00':'#fff'; const desc = d.d===0&&photoDebut&&!ok ? 'La photo prise à l\'inscription est prête : touchez Envoyer.' : d.desc;
@@ -1262,16 +1378,16 @@ function vOrg(){
       <li><span class="num" style="background:var(--orange)">2</span><div><b>Corriger un résultat :</b> touchez une ligne des derniers résultats, une équipe du classement, ou une épreuve dans l'onglet Épreuves. Pas de code à taper ici.</div></li>
       <li><span class="num" style="background:var(--rouge)">3</span><div><b>Téléphone perdu ou batterie vide :</b> onglet Épreuves, touchez le numéro de l'équipe sous « Pas encore passées » et saisissez à sa place.</div></li>
       <li><span class="num" style="background:var(--vert)">4</span><div><b>Annonces :</b> onglet Messages, un geste suffit. Le message s'affiche chez toutes les équipes et leur téléphone vibre.</div></li>
-      <li><span class="num" style="background:var(--marine)">📸</span><div><b>Photos :</b> onglet Photos : chaque photo vaut 1 point d'office (thème respecté) ; touchez 2 si elle est belle, 0 si elle est hors sujet.</div></li>
+      <li><span class="num" style="background:var(--marine)">📸</span><div><b>Photos :</b> onglet Photos, filtre « À noter » : 1 si la photo est validée, 2 si elle est magnifique, 0 si elle est refusée.</div></li>
       <li><span class="num" style="background:var(--jaune);color:var(--nuit)">🏆</span><div><b>Au podium :</b> « Lancer le podium », puis « Révéler » pour chacune des deux distinctions (un compte à rebours 3, 2, 1 fait monter le suspense) : d'abord la médaille culture d'entreprise, puis le grand prix de la cohésion. Sous chaque équipe, le débrief à lire au micro.</div></li></ul></div></details>
     <details class="regl" id="dBareme"><summary>Le barème des points</summary><div><ul class="regles">
       <li><span class="num" style="background:var(--orange)">★</span><div><b>Note sur 10</b> (catapulte, Kapla, Archery Tag, tir à la corde, lettres, théâtre, pyramide) : l'animateur note avec des critères affichés sous les boutons. La note = les points.</div></li>
       <li><span class="num" style="background:var(--bleu)">⏱</span><div><b>Au temps et aux points</b> (roues, parcours, clou, cibles, haches) : l'animateur tape le temps ou le total, l'appli classe toutes les équipes passées : 10 points pour la 1re place, puis un peu moins à chaque place, jusqu'à 1 point pour la dernière (ex æquo : mêmes points). Le classement se recalcule à chaque nouveau résultat.</div></li>
       <li><span class="num" style="background:var(--rouge)">×2</span><div><b>Culture d'entreprise</b> : le nombre de bonnes réponses dans le temps imparti, classé comme les autres, et points doublés (jusqu'à 20).</div></li>
-      <li><span class="num" style="background:var(--jaune);color:var(--nuit)">🎓</span><div><b>Médaille culture d'entreprise</b> : le plus de bonnes réponses. En cas d'égalité : la réponse la plus proche à la <b>question subsidiaire</b> (un nombre), puis le total de la matinée. Elle ne va jamais à l'équipe du grand prix.</div></li>
+      <li><span class="num" style="background:var(--jaune);color:var(--nuit)">🎓</span><div><b>Médaille culture d'entreprise</b> : le plus de bonnes réponses, puis la plus rapide. En cas d'égalité parfaite : la réponse la plus proche à la <b>question subsidiaire</b> (un nombre), puis le total de la matinée. Elle ne va jamais à l'équipe du grand prix.</div></li>
       <li><span class="num" style="background:var(--marine)">Σ</span><div><b>Grand prix</b> : épreuves (jusqu'à 140) + défis photo (10 max) + bonus (10 max) = 160 points au maximum.</div></li>
       <li><span class="num" style="background:#FF4D6D">❤</span><div><b>Bonus des animateurs</b> : ambiance, cohésion, fair-play, coup de cœur : +1 point par bouton. Ils comptent comme une épreuve : <b>10 points au maximum</b> sur la matinée.</div></li>
-      <li><span class="num" style="background:var(--marine)">📸</span><div><b>Défis photo</b> : 7 photos à thème, 2 points chacune (1 si le thème est respecté, 1 de plus si elle est belle), <b>10 points au maximum</b> comme une épreuve.</div></li>
+      <li><span class="num" style="background:var(--marine)">📸</span><div><b>Défis photo</b> : 10 photos à thème, 1 point si elle est validée, 2 si elle est magnifique. Le total (sur 20) est ramené sur <b>10 points</b>, comme une épreuve.</div></li>
       <li><span class="num" style="background:var(--vert)">=</span><div><b>Égalité</b> : l'équipe qui a fait le plus d'épreuves passe devant, puis la meilleure culture d'entreprise.</div></li></ul></div></details>`;
   } else if(state.orgTab==='epreuves'){
     const all=c.rows;
@@ -1291,7 +1407,7 @@ function vOrg(){
     const l=c.dfs.filter(r=>r.envoye).sort((a,b)=>tms(b.updated_at)-tms(a.updated_at)), aNoter=l.filter(r=>r.note==null);
     const liste = state.filtrePhotos==='tout' ? l : aNoter; chargerPhotosDefis(liste);
     h += `<div class="card" style="padding:14px"><b style="font-family:var(--titre);font-size:19px;color:var(--marine)">📸 Défis photo</b>
-      <p class="muted" style="margin:4px 0 10px">Chaque photo vaut <b>2 points</b> : <b>1</b> si elle est envoyée et que le thème est respecté (d'office), <b>2</b> si elle est en plus belle, <b>0</b> si elle est hors sujet. Touchez une photo pour la voir en grand. 10 points au maximum par équipe, comme une épreuve.</p>
+      <p class="muted" style="margin:4px 0 10px">Touchez une photo pour la voir en grand et la noter : <b>1</b> = validée (thème respecté), <b>2</b> = magnifique, <b>0</b> = refusée. Une photo pas encore notée compte 1 d'office. 10 photos, donc 20 points au maximum, ramenés sur 10 comme une épreuve.</p>
       <div class="filtre"><button class="${state.filtrePhotos!=='tout'?'on':''}" onclick="filtrePhotos('anoter')">À noter (${aNoter.length})</button><button class="${state.filtrePhotos==='tout'?'on':''}" onclick="filtrePhotos('tout')">Toutes (${l.length})</button></div></div>`;
     h += liste.length ? `<div class="galD">${liste.map(r=>{ const k=kd(r.team,r.defi), D=DEFIS.find(x=>x.d===r.defi)||{nom:'?'}, ph=state.photosDefis[k]; const n=r.note==null?null:+r.note;
         return `<div class="vign"><button class="im" style="${ph?`background-image:url('${ph}')`:''}" onclick="zoomPhoto('${k}')">${ph?'':(ph===''?'pas de photo':'chargement…')}</button>
@@ -1302,7 +1418,7 @@ function vOrg(){
     if(state.zoom){ const [zt,zd]=state.zoom.split('-').map(Number), r=defis()[state.zoom]||{}, D=DEFIS.find(x=>x.d===zd)||{nom:'?'}, ph=state.photosDefis[state.zoom], n=r.note==null?null:+r.note;
       h += `<div class="zoomP" onclick="if(event.target===this)fermerZoom()"><div class="zc"><div class="zi" style="${ph?`background-image:url('${ph}')`:''}">${ph?'':'chargement…'}</div>
         <div class="zt"><b>Équipe ${zt} · ${esc(nomEq(zt))}</b><br>${D.ico} ${D.nom}</div>
-        <div class="zn">${[[1,'1 · thème respecté'],[2,'2 · belle photo'],[0,'0 · hors sujet']].map(([x,lab])=>`<button class="${n===x?'sel':(n==null&&x===PTS_DEFI?'auto':'')}" onclick="noterZoom(${zt},${zd},${x})">${lab}</button>`).join('')}</div>
+        <div class="zn">${[[1,'1 · validée'],[2,'2 · magnifique'],[0,'0 · refusée']].map(([x,lab])=>`<button class="${n===x?'sel':(n==null&&x===PTS_DEFI?'auto':'')}" onclick="noterZoom(${zt},${zd},${x})">${lab}</button>`).join('')}</div>
         <button class="lnk" style="color:#CFE4F3" onclick="fermerZoom()">Fermer</button></div></div>`; }
   } else if(state.orgTab==='messages'){
     h += `<div class="card" style="padding:14px"><b style="font-family:var(--titre);font-size:19px;color:var(--marine)">📣 Annonces rapides</b><p class="muted" style="margin:4px 0 0">Un geste : le message s'affiche en haut de l'écran de toutes les équipes, et leur téléphone vibre.</p>
@@ -1324,8 +1440,8 @@ function vOrg(){
 // Contrôle d'honnêteté : un temps ou un total très loin de ceux des autres équipes est signalé à l'organisation (faute de frappe probable)
 function aVerifier(c){ const l=[];
   EP.forEach(e=>{ if(!['chrono','points','quiz'].includes(e.type)) return; const v=c.rows.filter(r=>r.stand===e.n && r.mesure!=null); if(v.length<4) return;
-    const ms=v.map(r=>+r.mesure).sort((a,b)=>a-b), med=ms[Math.floor(ms.length/2)]; if(!(med>0)) return;
-    v.forEach(r=>{ const x=+r.mesure; const loin = e.type==='chrono' ? (x < med/3 || x > med*4) : (x > med*2.5 || x < med*0.15); if(loin) l.push({e, r, med}); }); });
+    const val=r=>e.type==='quiz'?qB(r.mesure):+r.mesure, ms=v.map(val).sort((a,b)=>a-b), med=ms[Math.floor(ms.length/2)]; if(!(med>0)) return;
+    v.forEach(r=>{ const x=val(r); const loin = e.type==='chrono' ? (x < med/3 || x > med*4) : (x > med*2.5 || x < med*0.15); if(loin) l.push({e, r, med}); }); });
   return l; }
 function pourquoi(e){ return `Épreuves ${nb(e.base)} · Photos ${nb(e.photos)}/10 · Bonus ${e.bonus}/10${e.coeurs?' (❤️ '+e.coeurs+')':''} · ${e.faits}/${NB_EP}${e.quiz!=null?' · 🎓 '+e.quiz:''}`; }
 function aNoterNb(){ return Object.values(defis()).filter(r=>r.envoye && r.note==null).length; }
@@ -1370,7 +1486,7 @@ function debrief(t, focus, place){
     else if(e.type==='jury' && +r.mesure>=8) hl.push({p:1.5, txt:`une très belle note ${au(e.nom)} : ${val}`}); });
   const duels=EP.filter(e=>e.type==='duel').map(e=>({e, r:P[kp(e.n,t)]})).filter(x=>valide(x.r)), gagnes=duels.filter(x=>x.r.resultat==='V');
   if(gagnes.length) hl.push({p: gagnes.length>=2 ? 2.5 : 1.5, txt: gagnes.length===duels.length && duels.length>1 ? `${duels.length} duels sur ${duels.length} gagnés, ${enListe(gagnes.map(x=>au(x.e.nom)))}` : `${gagnes.length===1?'un duel gagné':gagnes.length+' duels gagnés'} ${enListe(gagnes.map(x=>au(x.e.nom)))}`});
-  if(focus!=='culture' && q.quiz!=null){ const cq=c.rows.filter(x=>x.stand===CULTURE && x.mesure!=null), rg=1+cq.filter(x=>+x.mesure>q.quiz).length;
+  if(focus!=='culture' && q.quiz!=null){ const cq=c.rows.filter(x=>x.stand===CULTURE && x.mesure!=null), rg=1+cq.filter(x=>+x.mesure>q.quizBrut).length;
     if(rg===1 && cq.length>=2) hl.push({p:3, txt:`le meilleur score en culture d'entreprise : ${q.quiz} bonnes réponses`}); else if(rg<=3 && cq.length>=4) hl.push({p:2, txt:`${rg}e en culture d'entreprise (${q.quiz} bonnes réponses)`}); }
   if(q.nbDefis>=DEFIS.length) hl.push({p:2, txt:`les ${DEFIS.length} défis photo envoyés`}); else if(q.nbDefis>=4) hl.push({p:1, txt:`${q.nbDefis} défis photo envoyés`});
   if(focus!=='coeur'){ if(q.coeurs>=2) hl.push({p:2, txt:`${q.coeurs} coups de cœur des animateurs`}); else if(q.coeurs===1) hl.push({p:1, txt:`un coup de cœur des animateurs`});
@@ -1504,11 +1620,13 @@ window.modifierEquipe = ()=>{
 };
 window.passerTelephone = ()=>{ state.view='passage'; render(); window.scrollTo(0,0); vibre(25); };
 window.ouvrir = n=>{ state.ep=n; state.view='ep'; render(); window.scrollTo(0,0); };
-window.demarrerSaisie = ()=>{ chT0=0; chAcc=0; clearInterval(chTimer); const r=passages()[kp(state.ep,state.team)]; const ok=state.org&&valide(r); const e=EPN[state.ep];
+window.demarrerSaisie = ()=>{ chT0=0; chAcc=0; clearInterval(chTimer); const r=passages()[kp(state.ep,state.team)]; const ok=state.org&&valide(r); const e=EPN[state.ep]; const okQ=valide(r)&&e.type==='quiz';   // quiz : on garde le score et la rapidité pour ajouter des bonus
   state.saisie={ res: ok&&e.type==='duel'?r.resultat:'', adv: ok&&e.type==='duel'&&r.mesure>0?+r.mesure:null, contreAnim: !!(ok&&e.type==='duel'&&r.mesure!=null&&+r.mesure===0),
     note: ok&&e.type==='jury'&&r.mesure!=null?+r.mesure:null, mm: ok&&e.type==='chrono'&&r.mesure!=null?Math.floor(r.mesure/60):null, ss: ok&&e.type==='chrono'&&r.mesure!=null?Math.round(r.mesure%60):null,
-    mv: ok&&(e.type==='points'||e.type==='hauteur'||e.type==='quiz')&&r.mesure!=null?+r.mesure:null, bonus:{}, subsid: (state.org && e.type==='quiz' && state.subsid[state.team]!=null) ? state.subsid[state.team] : null };
+    mv: (ok||okQ)&&(e.type==='points'||e.type==='hauteur'||e.type==='quiz')&&r.mesure!=null?(e.type==='quiz'?qB(r.mesure):+r.mesure):null, qReste: (ok||okQ)&&e.type==='quiz'&&+r.mesure>=1000 ? +r.mesure%1000 : 0, bonus:{}, subsid: (state.org && e.type==='quiz' && state.subsid[state.team]!=null) ? state.subsid[state.team] : null };
   BONUS.forEach(b=>state.saisie.bonus[b.k]=!!(ok&&r[b.col]));
+  const Qd=quizEtat(state.team); if(e.type==='quiz' && state.saisie.mv==null && Qd && Qd.phase==='fin' && Qd.fin){        // le téléphone de l'équipe ne connaît pas les points : on reprend son quiz
+    state.saisie.mv=Qd.rep.filter(x=>x.ok).length; state.saisie.qReste=QUIZ_DUREE-Math.min(QUIZ_DUREE, Math.round((Qd.fin-Qd.debut)/1000)); }
   state.view='saisie'; render(); window.scrollTo(0,0); majRecap(); };
 window.annulerSaisie = ()=>{ state.saisie=null; const p=vuePrecedente(); if(p==='org') aller('org'); else { state.view=p||'ep'; render(); window.scrollTo(0,0); } };
 // Chronomètre intégré (épreuves au temps)
@@ -1533,11 +1651,12 @@ window.validerSaisie = ()=>{
   if(state.view!=='saisie' || !state.saisie) return;            // double appui : déjà validé
   const e=EPN[state.ep], t=state.team, s=state.saisie; const lu=lireSaisie();
   if(lu.erreur){ dire(lu.erreur,'err'); return; }
-  const mes=lu.mes, res=lu.res;
+  let mes=lu.mes; const res=lu.res;
   // valeurs étonnantes : on fait confirmer
   const bizarre = (e.type==='chrono' && (mes<10 || mes>20*60)) ? 'Temps de '+fmtT(mes)+' : c\'est bien ça ?' : (e.type==='points' && mes>300) ? mes+' points : c\'est bien ça ?' : (e.type==='quiz' && mes>40) ? mes+' bonnes réponses : c\'est bien ça ?' : (e.type==='hauteur' && mes>400) ? mes+' cm : c\'est bien ça ?' : '';
   if(bizarre && !confirm(bizarre)) return;
   if(!codeSaisieOk()) return;
+  if(e.type==='quiz') mes = Math.round(mes)*1000 + (s.qReste||0);            // même échelle que le quiz joué dans l'appli
   const maintenant=horloge().toISOString(); const etaitFait=fait(e.n,t);
   const row={ event:EVENT, stand:e.n, team:t, resultat:res, mesure:mes, code:CLE, updated_at:maintenant }; BONUS.forEach(b=>row[b.col]=!!s.bonus[b.k]);
   if(e.type==='quiz'){ const v=parseFloat(String(($('#subsid')||{}).value||'').replace(',','.')); if(!isNaN(v)) envoyerSubsid(t, v); }
