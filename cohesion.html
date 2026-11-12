@@ -1129,15 +1129,30 @@ function majRecap(){
   const bv=$('#btnValider'), ca=$('#codeA'); if(bv) bv.classList.toggle('pret', !r.erreur && (state.org || !!(ca && ca.value.trim())));
   const an=$('#advNom'); if(an && state.ep && EPN[state.ep].type==='duel'){ const a=parseInt(($('#adv')||{}).value,10); an.textContent = s.contreAnim ? '' : (a>=1&&a<=N_EQUIPES ? (a===state.team?'⚠ C\'est la même équipe':'Équipe '+a+(nomEq(a)?' · '+nomEq(a):' (pas encore inscrite)')) : ''); }
 }
+// Le message après chaque épreuve : premier pas, relance (phrase différente à chaque fois), ou fin du parcours
+const BOOST = ["Quelle équipe ! On ne vous arrête plus.", "Vous êtes lancés : gardez ce rythme !", "Encore une de faite, la cohésion est là !",
+  "Bien joué ! L'équipe prend de la vitesse.", "Superbe ! Les autres équipes n'ont qu'à bien se tenir.", "Compétents et solidaires : vous le prouvez à chaque épreuve !",
+  "Vous êtes en feu ! Direction la suivante.", "Belle énergie ! Continuez comme ça.", "Ça, c'est de l'esprit d'équipe !",
+  "Encore un tampon ! Le podium se rapproche.", "Bravo ! On souffle un coup, et on repart."];
+function messageBravo(nb, e){
+  const t=state.team, nom=esc(nomEq(t)||'l\'équipe '+t), reste=NB_EP-nb, nd=DEFIS.length-nbDefis(t);
+  const defis = nd>0 ? `<p class="alerte">📸 Et les défis photo et vidéo ? Encore ${pl(nd,'défi')} à envoyer : ils rapportent des points, faites-les pendant l'attente !</p>` : '';
+  const chat = `<p class="alerte">💬 Le chat de l'appli : parlez entre équipes, lancez-vous des défis, chambrez-vous gentiment !</p>`;
+  if(nb===1) return `<div class="libre"><b>🏁 Bravo ${nom} pour cette première épreuve !</b>
+      <p>À partir de maintenant, <b>le parcours est libre</b> : allez sur les épreuves que vous voulez, dans l'ordre que vous voulez.</p>
+      <p class="alerte">⏰ Attention : à <b>12h15, tout s'arrête</b>. À vous de gérer votre temps : allez vite, mais sans bâcler les épreuves !</p>${chat}</div>`;
+  if(reste<=0) return `<div class="libre"><b>🏆 Les ${NB_EP} épreuves sont faites, chapeau ${nom} !</b>
+      ${nd>0 ? `<p>Il vous reste <b>${pl(nd,'défi')} photo et vidéo</b> à envoyer avant 12h15 : foncez, chaque envoi rapporte des points !</p>` : `<p>Tout est fait, défis compris. Profitez, encouragez les autres équipes, et <b>rendez-vous au podium à 12h15</b> !</p>`}</div>`;
+  const phrase = reste<=3 ? (reste===1 ? `Plus qu'une épreuve : tout donner jusqu'au bout !` : `Plus que ${reste} épreuves : tout donner jusqu'au bout !`) : BOOST[(nb*7 + t) % BOOST.length];
+  const rappel = [2,5,8,11].includes(nb) ? defis : ([3,7].includes(nb) ? chat : '');
+  return `<div class="libre"><b>${phrase}</b><p>${esc(e.nom||'Cette épreuve')} : c'est dans la boîte ! Continuez le parcours : ${reste===1 ? 'rendez-vous sur <b>la dernière épreuve</b> qu\'il vous reste.' : `rendez-vous sur une des <b>${reste} épreuves</b> qu'il vous reste.`}</p>${rappel}</div>`;
+}
 function vBravo(){
   const b=state.bravo||{}; const e=EPN[b.ep]||{}; const nb=EP.filter(x=>x.n!==DEFI_EP && fait(x.n,state.team)).length;
   const palier = nb===NB_EP ? '🏆 Les 13 épreuves sont faites !' : (nb===10 ? '🔥 10 épreuves déjà !' : (nb===5 ? '⭐ 5 épreuves, belle lancée !' : ''));
   return `<div class="rendre">📱 Animateur : rendez le téléphone à l'équipe</div><div class="bravo"><img class="pictoTourne" src="proxim/picto.png" alt=""><svg class="coche" viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27 l7.5 7.5 L37.5 19"/></svg>
       ${palier?`<div class="palier">${palier}</div>`:''}<h2>Bravo ${esc(nomEq(state.team)||'l\'équipe '+state.team)} !</h2><div class="ep2">${e.ico||''} ${esc(e.nom||'')} : c'est dans la boîte</div>
-      ${nb===1 ? `<div class="libre"><b>🏁 Bravo ${esc(nomEq(state.team)||'l\'équipe '+state.team)} pour cette première épreuve !</b>
-        <p>À partir de maintenant, <b>le parcours est libre</b> : allez sur les épreuves que vous voulez, dans l'ordre que vous voulez.</p>
-        <p class="alerte">⏰ Attention : à <b>12h15, tout s'arrête</b>. À vous de gérer votre temps : allez vite, mais sans bâcler les épreuves !</p></div>`
-      : `<p style="margin:10px 0 0;font-size:16px">Un tampon de plus : ${nb} épreuve${nb>1?'s':''} sur ${NB_EP}. Les points restent secrets jusqu'au podium.</p>`}
+      ${messageBravo(nb, e)}
       ${passeport(state.team, b.ep, true)}
       <div class="etatEnvoi" id="etatEnvoi">${texteEnvoi()}</div></div>
     ${!defiEnvoye(state.team,0)?`<button class="rappelPhoto" onclick="envoyerPhotoEquipe()"><span>📸</span><div><b>Et la photo de l'équipe ?</b><br>Elle n'est pas encore partie sur WhatsApp : touchez ici.</div></button>`:''}
