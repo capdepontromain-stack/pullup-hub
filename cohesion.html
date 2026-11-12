@@ -526,7 +526,7 @@ const BAREME = { duel:'Victoire 10 points · Égalité 6 · Défaite 3', jury:'L
 const BONUS = [ {k:'a', col:'b_ambiance', nom:'Ambiance', ico:'🎉', pts:1}, {k:'c', col:'b_cohesion', nom:'Cohésion', ico:'🤝', pts:1}, {k:'f', col:'b_fairplay', nom:'Fair-play', ico:'👏', pts:1}, {k:'h', col:'b_coeur', nom:'Coup de cœur', ico:'❤️', pts:1} ];
 const ptsBonus = r => BONUS.reduce((s,b)=>s+(r&&r[b.col]?b.pts:0),0);
 const icoBonus = r => BONUS.filter(b=>r&&r[b.col]).map(b=>b.ico).join('');
-const DEPART_PLAN = [[1,4],[2,3],[3,3],[4,4],[5,1],[6,2],[7,2],[8,1],[9,1],[10,2],[11,2],[12,3],[13,1]];   // validé par Romain le 12/11 (2e version) ; pyramide à revoir   // 29 équipes réparties sur les 13 épreuves au départ
+const DEPART_PLAN = [[1,4],[2,2],[3,3],[4,4],[5,1],[6,2],[7,2],[8,1],[9,1],[10,2],[11,2],[12,3],[13,2]];   // validé par Romain le 12/11 (3e version, définitive)   // 29 équipes réparties sur les 13 épreuves au départ
 const DEPART = {}; (()=>{ let t=1; DEPART_PLAN.forEach(([s,n])=>{ for(let i=0;i<n;i++) DEPART[t++]=s; }); })();
 // Rappels pour l'animateur (repris du briefing de la présentation complète)
 const CONSEILS = {
