@@ -575,7 +575,7 @@ const EP = [            // programme validé le 10/11 (présentation complète) 
  {n:10, nom:'Le jeu du clou', ico:'🔨', type:'chrono', places:2, min:8, desc:"Les yeux bandés, guidé par son équipe, chacun va enfoncer le clou : le chrono tourne !"},
  {n:11, nom:'Le théâtre', ico:'🎭', type:'jury', places:3, min:10, desc:"Jouez l'ascension d'un membre de Proxim'Services, du premier jour jusqu'au poste de PDG : 8 minutes de préparation au maximum, 2 minutes pour jouer. Le jury note votre scène."},
  {n:12, nom:"La culture d'entreprise", ico:'🎓', type:'quiz', places:3, min:10, desc:"40 questions en 10 minutes sur Proxim'Services et votre métier, directement sur ce téléphone. Classement au nombre de bonnes réponses, puis à la rapidité. C'est l'épreuve qui rapporte le plus : points doublés !"},
- {n:13, nom:'La pyramide humaine', ico:'🤸', type:'jury', places:3, min:5, desc:"Toute l'équipe construit une pyramide humaine, en sécurité. Pour la valider, l'animateur monte tout en haut, et la pyramide se prend en photo !"},
+ {n:13, nom:'La pyramide humaine', ico:'🤸', type:'jury', places:3, min:5, desc:"Toute l'équipe construit une pyramide humaine, en sécurité. Pour la valider, l'animateur monte tout en haut !"},
  {n:14, nom:'Défis photo', ico:'📸', type:'defis', places:40, min:0, desc:"10 défis à faire avec vos téléphones, en parallèle des épreuves : idéal pendant l'attente. Chaque photo part directement chez l'organisation, depuis l'application."}
 ];
 // Notation validée par Romain le 12/11 : note sur 10 avec critères (catapulte, Kapla, Archery Tag, corde, lettres, théâtre, pyramide),
@@ -642,7 +642,7 @@ const CONSEILS = {
  10:["Un participant guidé à la fois, marteau toujours maîtrisé.","Entrez le temps : l'application fait le classement, pas besoin de grille."],
  11:["Notez sur 10 : création, idées, jeu, tous ensemble, bonne humeur, créativité.","8 minutes de préparation maximum, 2 minutes pour jouer.","Une réplique « compétents et solidaires », une promotion surprise…","Applaudissez chaque scène."],
  12:["L'équipe vous tend son téléphone : tapez votre code, le chrono de 10 minutes démarre et le quiz se corrige tout seul (fautes d'orthographe acceptées).","Le classement se fait au nombre de bonnes réponses, puis à la rapidité, et les points sont doublés. À la fin, l'équipe répond à la question subsidiaire.","Des bonus à donner ? Touchez « Ajouter des bonus » à la fin du quiz. Pas de téléphone ? Saisissez le nombre de bonnes réponses comme avant."],
- 13:["Notez sur 10 : créativité, joie, beauté de la pyramide, collectif, rapidité.","Faites réfléchir l'équipe pour que personne ne se blesse.","Pour valider, montez tout en haut. Et la photo de la pyramide !"]
+ 13:["Notez sur 10 : créativité, joie, beauté de la pyramide, collectif, rapidité.","Faites réfléchir l'équipe pour que personne ne se blesse.","Pour valider, montez tout en haut."]
 };
 const ANNONCES = [ ['📸','Pensez aux défis photo : ils rapportent des points !'], ['⏰','Plus que 30 minutes d\'épreuves : foncez !'], ['⏰','Plus que 10 minutes : dernière épreuve !'], ['🎓','N\'oubliez pas la culture d\'entreprise : points doublés !'], ['🏆','Les épreuves sont terminées : tout le monde au podium !'] ];
 
@@ -686,7 +686,8 @@ function sha256(ascii){
 const sansAccent = c => String(c==null?'':c).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]/g,'').toUpperCase();   // « Kiwi. », « kiwi ! », espaces : tout est accepté
 const empreinte = (quoi, code) => sha256('proxim14|'+quoi+'|'+sansAccent(code));
 const codeOrgOk = code => !!code && empreinte('org',code) === EMPREINTES.org;
-const codeStandOk = (stand, code) => !!code && ((EMPREINTES.mots||[]).includes(empreinte('mot',code)) || (EMPREINTES.mots||[]).includes(empreinte('mot',String(code).trim().replace(/s$/i,''))) || codeOrgOk(code));   // « kiwis » accepté aussi
+const codeStandOk = (stand, code) => !!code && ((+stand===13 && sansAccent(code)==='A') ||      // pyramide : Anthony est en haut, la lettre A suffit (Romain, 12/11)
+  (EMPREINTES.mots||[]).includes(empreinte('mot',code)) || (EMPREINTES.mots||[]).includes(empreinte('mot',String(code).trim().replace(/s$/i,''))) || codeOrgOk(code));   // « kiwis » accepté aussi
 
 // Petit message en bas de l'écran (remplace les fenêtres d'alerte)
 let toastT=0;
