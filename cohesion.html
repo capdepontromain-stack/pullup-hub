@@ -1120,7 +1120,8 @@ function quizEtat(t){ return ((local.quiz||{})[t]) || null; }
 function quizSet(t, Q){ local.quiz=local.quiz||{}; local.quiz[t]=Q; save(); }
 function quizReste(Q){ if(!Q || !Q.debut) return QUIZ_DUREE; const fin = Q.fin || Date.now(); return Math.max(0, Math.ceil(QUIZ_DUREE - (fin-Q.debut)/1000)); }
 const mmss = s => Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
-function normRep(x){ return String(x||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/œ/g,'oe').replace(/æ/g,'ae')
+function normRep(x){ return String(x||'').replace(/\b(?:[A-Za-z]\.){1,}[A-Za-z]\b\.?/g, m=>m.replace(/\./g,'')).toLowerCase()   // « H.A.S », « P.L.S » : sigles à points recollés
+    .normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/œ/g,'oe').replace(/æ/g,'ae')
   .replace(/[^a-z0-9]+/g,' ').split(' ').filter(m=>m && !['le','la','les','l','un','une','des','du','de','d','au','aux','a','en','c','est','s'].includes(m)).join(' '); }
 function distance(a,b){ const m=a.length, n=b.length; if(!m) return n; if(!n) return m; let pr=Array.from({length:n+1},(_,j)=>j);
   for(let i=1;i<=m;i++){ const cu=[i]; for(let j=1;j<=n;j++) cu[j]=Math.min(pr[j]+1, cu[j-1]+1, pr[j-1]+(a[i-1]===b[j-1]?0:1)); pr=cu; } return pr[n]; }
