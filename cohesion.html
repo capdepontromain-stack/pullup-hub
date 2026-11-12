@@ -641,7 +641,7 @@ const CONSEILS = {
  9:["La sécurité d'abord : un seul lanceur à la fois, les autres derrière la ligne.","Toujours 15 lancers exactement : une équipe plus petite fait lancer certains deux fois."],
  10:["Un participant guidé à la fois, marteau toujours maîtrisé.","Entrez le temps : l'application fait le classement, pas besoin de grille."],
  11:["Notez sur 10 : création, idées, jeu, tous ensemble, bonne humeur, créativité.","8 minutes de préparation maximum, 2 minutes pour jouer.","Une réplique « compétents et solidaires », une promotion surprise…","Applaudissez chaque scène."],
- 12:["L'équipe vous tend son téléphone : tapez votre code, le chrono de 10 minutes démarre et le quiz se corrige tout seul (fautes d'orthographe acceptées).","Le classement se fait au nombre de bonnes réponses, puis à la rapidité, et les points sont doublés. À la fin, l'équipe répond à la question subsidiaire.","Rien à saisir à la fin : l'équipe passe directement à la suite. Un bonus à donner ? Sur la page de l'épreuve, touchez « Corriger ce résultat ». Pas de téléphone ? Saisissez le nombre de bonnes réponses."],
+ 12:["L'équipe vous tend son téléphone : tapez votre code, le chrono de 10 minutes démarre et le quiz se corrige tout seul (fautes d'orthographe acceptées).","Le classement se fait au nombre de bonnes réponses, puis à la rapidité, et les points sont doublés.","Rien à saisir à la fin : l'équipe passe directement à la suite. Un bonus à donner ? Sur la page de l'épreuve, touchez « Corriger ce résultat ». Pas de téléphone ? Saisissez le nombre de bonnes réponses."],
  13:["Notez sur 10 : créativité, joie, beauté de la pyramide, collectif, rapidité.","Faites réfléchir l'équipe pour que personne ne se blesse.","Pour valider, montez tout en haut."]
 };
 const ANNONCES = [ ['📸','Pensez aux défis photo : ils rapportent des points !'], ['⏰','Plus que 30 minutes d\'épreuves : foncez !'], ['⏰','Plus que 10 minutes : dernière épreuve !'], ['🎓','N\'oubliez pas la culture d\'entreprise : points doublés !'], ['🏆','Les épreuves sont terminées : tout le monde au podium !'] ];
@@ -874,7 +874,7 @@ function calcul(){
   const general = eq[ordre[0]].total>0 ? ordre[0] : null;
   const ecart = e => (state.reponseSubsid!=null && e.subsid!=null) ? Math.abs(e.subsid-state.reponseSubsid) : Infinity;
   const qz = Object.values(eq).filter(e=>e.quiz!=null && e.t!==general).sort((a,b)=> b.quizBrut-a.quizBrut || ecart(a)-ecart(b) || b.total-a.total || a.t-b.t);   // bonnes réponses, puis rapidité, puis subsidiaire
-  const exaequo = qz.length>1 && qz[1].quizBrut===qz[0].quizBrut ? qz.filter(e=>e.quizBrut===qz[0].quizBrut) : [];   // égalité de bonnes réponses en tête
+  const exaequo = [];                                   // plus de question subsidiaire (Romain, 12/11) : égalité parfaite = le total de la matinée départage   // égalité de bonnes réponses en tête
   const amb = Object.values(eq).filter(e=>e.coeurs+e.fairplay>0).sort((a,b)=> (b.coeurs+b.fairplay)-(a.coeurs+a.fairplay) || b.coeurs-a.coeurs || b.bonus-a.bonus || b.total-a.total || a.t-b.t);   // trophée « coups de cœur et fair-play »
   return { pts, rang, eq, ordre, rows, dfs, general, exaequo, departage: exaequo.length>0 && ecart(qz[0])<ecart(qz[1]), prixQuiz: qz.length?qz[0].t:null, ambiance: amb.length?amb[0].t:null, saisies: rows.length + dfs.length };
 }
@@ -1148,12 +1148,9 @@ function vQuiz(){
       ${r.ok?'':`<p class="qBonne">La réponse : <b>${esc(bonne)}</b></p>`}${!r.ok&&!r.passe&&r.r!=null&&!x.choix?`<p class="muted">Vous avez répondu : ${esc(r.r)}</p>`:''}
       ${x.expl?`<p class="qExpl">${esc(x.expl)}</p>`:''}
       <button class="btn orange gros" onclick="quizSuivante()">${Q.i+1<N?'Question suivante →':'Terminer le quiz →'}</button></div>`; }
-  else if(Q.phase==='subsid'){
-    h += `<div class="card entree">${Q.tempsFini?'<div class="qVerdict" style="color:var(--rouge)">⏰ Temps écoulé !</div>':'<div class="qVerdict" style="color:var(--vert)">🏁 Toutes les questions sont faites !</div>'}
-      <p style="font-size:17px">${bonnes} bonne${bonnes>1?'s':''} réponse${bonnes>1?'s':''} sur ${N}, en ${fmtT(QUIZ_DUREE-reste)}.</p>
-      <label>${esc(QUIZ_SUBSID)}</label><input type="number" id="qSub" inputmode="decimal" placeholder="Un nombre" enterkeyhint="done" onkeydown="if(event.key==='Enter'){event.preventDefault();quizEnregistrer();}">
-      <p class="muted" style="margin:6px 0 0">Elle sert seulement à départager une égalité parfaite pour la médaille.</p>
-      <button class="btn vert gros" ${state.quizEnvoi?'disabled':''} onclick="quizEnregistrer()">${state.quizEnvoi?'Envoi…':'Enregistrer le résultat'}</button></div>`; }
+  else if(Q.phase==='subsid'){                                // dernière question ou chrono fini : on enregistre tout seul, puis Bravo
+    if(!state.quizEnvoi) setTimeout(()=>quizEnregistrer(), 30);
+    h += `<div class="card entree" style="text-align:center"><div class="qVerdict">${Q.tempsFini?'⏰ Temps écoulé !':'🏁 Quiz terminé !'}</div><p class="muted">Enregistrement du résultat…</p></div>`; }
   else if(Q.phase==='fin'){
     h += `<div class="fait entree"><div class="gros">🎓 ${bonnes}/${N}</div><p style="margin:6px 0 0;font-size:17px">en ${fmtT(QUIZ_DUREE-reste)} · résultat enregistré ✓</p></div>
       <button class="btn orange gros" onclick="quizBravo()">Continuer →</button>
@@ -1174,13 +1171,12 @@ window.quizSuivante = ()=>{ const t=state.team, Q=quizEtat(t); if(!Q || Q.phase!
   if(Q.i>=QUIZ.length){ Q.phase='subsid'; Q.fin=Date.now(); } else Q.phase='q'; quizAvance(Q); quizSet(t,Q); render(); window.scrollTo(0,0);
   if(Q.phase==='q' && !QUIZ[Q.i].choix) setTimeout(()=>{ const el=$('#qRep'); if(el) el.focus(); }, 60); };
 window.quizEnregistrer = ()=>{ const t=state.team, Q=quizEtat(t); if(!Q || Q.phase!=='subsid' || state.quizEnvoi) return;
-  const v=parseFloat(String(($('#qSub')||{}).value||'').replace(',','.')); if(isNaN(v)){ dire('Répondez à la question subsidiaire (un nombre).','err'); const el=$('#qSub'); if(el) el.focus(); return; }
   state.quizEnvoi=true; Q.fin=Q.fin||Date.now();
   const bonnes=Q.rep.filter(x=>x.ok).length, sec=Math.min(QUIZ_DUREE, Math.round((Q.fin-Q.debut)/1000));
   const row={ event:EVENT, stand:CULTURE, team:t, resultat:'F', mesure: QUIZ_OFF + bonnes*1000 + (QUIZ_DUREE-sec), code:CLE, updated_at:horloge().toISOString() }; BONUS.forEach(b=>row[b.col]=false);
-  envoyerSubsid(t, v); local.p[kp(CULTURE,t)]=row; pousser('tb_passages','event,stand,team','p-'+kp(CULTURE,t),row);
-  Q.phase='fin'; Q.sub=v; quizSet(t,Q); state.quizEnvoi=false; vibre([30,40,30]); quizBravo(); };   // directement le Bravo : pas besoin de rendre le téléphone à l'animateur
-window.quizBravo = ()=>{ const t=state.team, Q=quizEtat(t)||{rep:[]}; state.ep=CULTURE; state.bravo={ ep:CULTURE, quiz:true, bonnes:(Q.rep||[]).filter(x=>x.ok).length }; state.vientDeFaire=CULTURE; setTimeout(()=>{ state.vientDeFaire=0; }, 4000);
+  local.p[kp(CULTURE,t)]=row; pousser('tb_passages','event,stand,team','p-'+kp(CULTURE,t),row);
+  Q.phase='fin'; quizSet(t,Q); state.quizEnvoi=false; vibre([30,40,30]); quizBravo(); };   // directement le Bravo : pas besoin de rendre le téléphone à l'animateur
+window.quizBravo = ()=>{ const t=state.team, Q=quizEtat(t)||{rep:[]}; state.ep=CULTURE; state.bravo={ ep:CULTURE, quiz:true, tempsFini:!!Q.tempsFini, bonnes:(Q.rep||[]).filter(x=>x.ok).length }; state.vientDeFaire=CULTURE; setTimeout(()=>{ state.vientDeFaire=0; }, 4000);
   const nbF=EP.filter(x=>x.n!==DEFI_EP && fait(x.n,t)).length, palier=[5,10,NB_EP].includes(nbF); state.view='bravo'; render(); window.scrollTo(0,0); confettis(palier); son(palier); };
 setInterval(()=>{ if(state.view!=='quiz') return; const Q=quizEtat(state.team); if(!Q || !Q.debut || !['q','fb'].includes(Q.phase)) return;
   const reste=quizReste(Q), el=document.getElementById('qChrono'); if(el){ el.textContent=mmss(reste); el.classList.toggle('urgent', reste<=60); }
@@ -1278,9 +1274,9 @@ function vSaisie(){
     <div class="chrono"><div class="aff" id="chAff">0:00.0</div><button id="chBtn" onclick="chronoBouton()">▶ Chrono</button><button class="z" onclick="chronoZero()" aria-label="Remettre à zéro">↺</button></div>
     <p class="muted" style="margin:6px 0 0">Chronométrez ici ou avec votre propre chrono : le temps se remplit tout seul à l'arrêt.</p>`;
   else if(e.type==='jury') champ = `<label>Note sur 10</label>${e.critere?`<p class="exemple" style="margin:-2px 2px 9px">${e.critere}</p>`:''}<div class="notes" id="grpNote">${Array.from({length:11},(_,i)=>`<button class="${s.note===i?'sel':''}" onclick="choisirNote(${i},this)">${i}</button>`).join('')}</div>`;
-  else if(e.type==='quiz') champ = `<label>Nombre de bonnes réponses</label><div class="champU"><input type="number" id="mv" inputmode="numeric" pattern="[0-9]*" min="0" placeholder="0" enterkeyhint="next" oninput="majRecap()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('subsid').focus();}" value="${s.mv??''}"><span>✓</span></div>
+  else if(e.type==='quiz') champ = `<label>Nombre de bonnes réponses</label><div class="champU"><input type="number" id="mv" inputmode="numeric" pattern="[0-9]*" min="0" placeholder="0" enterkeyhint="next" oninput="majRecap()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" value="${s.mv??''}"><span>✓</span></div>
     <p class="exemple">Les bonnes réponses dans le temps imparti : l'application classe toutes les équipes et double les points.</p>
-    <label>Question subsidiaire : la réponse de l'équipe</label><div class="champU"><input type="number" id="subsid" inputmode="decimal" placeholder="Un nombre" value="${s.subsid??''}" oninput="majRecap()" enterkeyhint="done" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"><span>?</span></div><p class="exemple">Sert uniquement à départager les égalités pour la médaille culture d'entreprise.</p>`;
+    `;
   else champ = (e.tirs ? `<label>Comptez chaque ${e.n===9?'hache':'tir'} (${e.tirs} au total)</label><div id="tirsZone">${htmlTirs()}</div>` : '') + `<label>${e.type==='points'?(e.unite||'Total des points de l\'équipe'):'Hauteur de la tour (en cm)'}</label><div class="champU"><input type="number" id="mv" inputmode="numeric" pattern="[0-9]*" min="0" placeholder="0" enterkeyhint="done" oninput="majRecap()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" value="${s.mv??''}"><span>${e.type==='points'?(e.court||'pts'):'cm'}</span></div>
     <p class="exemple">${e.type!=='points' ? 'Un seul nombre, en centimètres.' : e.court ? 'Un seul nombre : le nombre de mots trouvés. Exemple : <b>12</b>.' : (e.tirs ? 'Il se remplit tout seul avec les lancers comptés ci-dessus. Vous pouvez aussi taper directement le total.' : 'Additionnez les points de tous les tirs, puis tapez <b>le total</b>. Exemple : <b>45</b>.')}</p>`;
   champ = champ.replace('<label>','<label><span class="etapeS">1</span>');
@@ -1341,7 +1337,7 @@ function vBravo(){
   const b=state.bravo||{}; const e=EPN[b.ep]||{}; const nb=EP.filter(x=>x.n!==DEFI_EP && fait(x.n,state.team)).length;
   const palier = nb===NB_EP ? '🏆 Les 13 épreuves sont faites !' : (nb===10 ? '🔥 10 épreuves déjà !' : (nb===5 ? '⭐ 5 épreuves, belle lancée !' : ''));
   return `${b.quiz?'':'<div class="rendre">📱 Animateur : rendez le téléphone à l\'équipe</div>'}<div class="bravo"><img class="pictoTourne" src="proxim/picto.png" alt=""><svg class="coche" viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27 l7.5 7.5 L37.5 19"/></svg>
-      ${palier?`<div class="palier">${palier}</div>`:''}<h2>Bravo ${esc(nomEq(state.team)||'l\'équipe '+state.team)} !</h2><div class="ep2">${b.quiz ? `🎓 Quiz terminé : ${b.bonnes} bonne${b.bonnes>1?'s':''} réponse${b.bonnes>1?'s':''} sur ${QUIZ.length} !${nb<NB_EP?'<br>Passez vite à une autre épreuve.':''}` : `${e.ico||''} ${esc(e.nom||'')} : c'est dans la boîte`}</div>
+      ${palier?`<div class="palier">${palier}</div>`:''}<h2>Bravo ${esc(nomEq(state.team)||'l\'équipe '+state.team)} !</h2><div class="ep2">${b.quiz ? `${b.tempsFini?'⏰ Temps écoulé ! ':'🎓 '}Quiz terminé : ${b.bonnes} bonne${b.bonnes>1?'s':''} réponse${b.bonnes>1?'s':''} sur ${QUIZ.length} !${nb<NB_EP?'<br>Passez vite à une autre épreuve.':''}` : `${e.ico||''} ${esc(e.nom||'')} : c'est dans la boîte`}</div>
       ${messageBravo(nb, e)}
       ${passeport(state.team, b.ep, true)}
       <div class="etatEnvoi" id="etatEnvoi">${texteEnvoi()}</div></div>
@@ -1447,7 +1443,7 @@ function vOrg(){
       <li><span class="num" style="background:var(--orange)">★</span><div><b>Note sur 10</b> (catapulte, Kapla, Archery Tag, tir à la corde, lettres, théâtre, pyramide) : l'animateur note avec des critères affichés sous les boutons. La note = les points.</div></li>
       <li><span class="num" style="background:var(--bleu)">⏱</span><div><b>Au temps et aux points</b> (roues, parcours, clou, cibles, haches) : l'animateur tape le temps ou le total, l'appli classe toutes les équipes passées : 10 points pour la 1re place, puis un peu moins à chaque place, jusqu'à 1 point pour la dernière (ex æquo : mêmes points). Le classement se recalcule à chaque nouveau résultat.</div></li>
       <li><span class="num" style="background:var(--rouge)">×2</span><div><b>Culture d'entreprise</b> : le nombre de bonnes réponses dans le temps imparti, classé comme les autres, et points doublés (jusqu'à 20).</div></li>
-      <li><span class="num" style="background:var(--jaune);color:var(--nuit)">🎓</span><div><b>Médaille culture d'entreprise</b> : le plus de bonnes réponses, puis la plus rapide. En cas d'égalité parfaite : la réponse la plus proche à la <b>question subsidiaire</b> (un nombre), puis le total de la matinée. Elle ne va jamais à l'équipe du grand prix.</div></li>
+      <li><span class="num" style="background:var(--jaune);color:var(--nuit)">🎓</span><div><b>Médaille culture d'entreprise</b> : le plus de bonnes réponses, puis la plus rapide. En cas d'égalité parfaite (même score, même temps) : le total de la matinée. Elle ne va jamais à l'équipe du grand prix.</div></li>
       <li><span class="num" style="background:var(--marine)">Σ</span><div><b>Grand prix</b> : épreuves (jusqu'à 140) + défis photo (10 max) + bonus (10 max) = 160 points au maximum.</div></li>
       <li><span class="num" style="background:#FF4D6D">❤</span><div><b>Bonus des animateurs</b> : ambiance, cohésion, fair-play, coup de cœur : +1 point par bouton. Ils comptent comme une épreuve : <b>10 points au maximum</b> sur la matinée.</div></li>
       <li><span class="num" style="background:var(--marine)">📸</span><div><b>Défis photo</b> : 10 photos à thème, 1 point si elle est validée, 2 si elle est magnifique. Le total (sur 20) est ramené sur <b>10 points</b>, comme une épreuve.</div></li>
