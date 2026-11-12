@@ -416,6 +416,8 @@
   .depart .t { font-family:var(--titre); font-size:28px; font-weight:800; line-height:1.05; margin-top:3px; } .depart .d { font-size:14.5px; margin-top:6px; font-weight:700; opacity:.95; }
   .libre { margin:14px 0 4px; background:rgba(255,255,255,.12); border:2px solid var(--jaune); border-radius:18px; padding:14px 14px 6px; text-align:left; font-size:16px; line-height:1.35; }
   .libre > b { display:block; font-family:var(--titre); font-size:20px; color:var(--jaune); margin-bottom:6px; } .libre p { margin:0 0 8px; } .libre .alerte { background:rgba(0,0,0,.2); border-radius:12px; padding:8px 10px; }
+  .rappelChat { display:flex; gap:12px; align-items:center; width:100%; text-align:left; border:0; border-radius:18px; padding:14px 16px; margin-bottom:12px; background:linear-gradient(135deg,#22A45D,#0E94BE); color:#fff; font:inherit; box-shadow:var(--ombre); }
+  .rappelChat span { font-size:34px; }
   .rangE { display:inline-block; min-width:30px; font-family:var(--titre); color:var(--marine); }
   .champU { position:relative; } .champU input { padding-right:58px; font-family:var(--titre); font-size:30px; text-align:center; letter-spacing:1px; padding-top:9px; padding-bottom:9px; }
   .champU span { position:absolute; right:14px; top:50%; transform:translateY(-50%); font-weight:900; font-size:16px; color:var(--gris); pointer-events:none; }
@@ -984,6 +986,8 @@ function vHome(){
   if(tp.etat==='urgent') h += `<div class="banner err entree" style="font-size:16px"><b>⏰ Dernière ligne droite :</b> moins de 10 minutes ! Finissez l'épreuve en cours.</div>`;
   if(tp.etat!=='fini' && !defiEnvoye(t,0)) h += `<button class="rappelPhoto entree" onclick="envoyerPhotoEquipe()"><span>📸</span><div><b>Vous n'avez pas encore envoyé la photo de l'équipe</b><br>Touchez ici pour l'envoyer à l'organisation sur WhatsApp.</div></button>`;
   else if(tp.etat!=='fini' && nbDefis(t)<DEFIS.length && (nb>=3 || tp.ecoule>=40)) h += `<button class="rappelDefis entree" onclick="ouvrir(${DEFI_EP})"><span>🎬</span><div><b>${nbDefis(t)<=1?'Et les défis photo et vidéo ?':'Encore '+pl(DEFIS.length-nbDefis(t),'défi')+' photo et vidéo !'}</b><br>Cri de guerre, haka, Radeau de la Méduse… ils rapportent des points : faites-les pendant l'attente !</div></button>`;
+  const aEcrit = state.messages.some(m=>m.team===t) || Object.values(local.m||{}).some(m=>m.team===t);
+  if(tp.etat!=='fini' && nb>=1 && !aEcrit) h += `<button class="rappelChat entree" onclick="aller('chat')"><span>💬</span><div><b>Et si vous écriviez aux autres équipes ?</b><br>Un défi, un encouragement, une petite vanne gentille : le chat est ouvert à toutes les équipes.</div></button>`;
   if(nb===0 && tp.etat!=='fini') h = h.replace('<div class="card entree"><div class="eqCarte">', carteDepart(t)+'<div class="card entree"><div class="eqCarte">');   // tout en haut, avant la carte de l'équipe
   if(!fait(CULTURE,t)){ const cl = nb>=3 || tp.ecoule>=60;
     h += `<button class="vedette entree ${cl?'clignote':''}" onclick="ouvrir(${CULTURE})"><div class="img" style="background-image:url('${img(CULTURE)}')"></div><div class="txt">
@@ -1144,7 +1148,7 @@ function messageBravo(nb, e){
   if(reste<=0) return `<div class="libre"><b>🏆 Les ${NB_EP} épreuves sont faites, chapeau ${nom} !</b>
       ${nd>0 ? `<p>Il vous reste <b>${pl(nd,'défi')} photo et vidéo</b> à envoyer avant 12h15 : foncez, chaque envoi rapporte des points !</p>` : `<p>Tout est fait, défis compris. Profitez, encouragez les autres équipes, et <b>rendez-vous au podium à 12h15</b> !</p>`}</div>`;
   const phrase = reste<=3 ? (reste===1 ? `Plus qu'une épreuve : tout donner jusqu'au bout !` : `Plus que ${reste} épreuves : tout donner jusqu'au bout !`) : BOOST[(nb*7 + t) % BOOST.length];
-  const rappel = [2,5,8,11].includes(nb) ? defis : ([3,7].includes(nb) ? chat : '');
+  const rappel = [2,5,8,11].includes(nb) ? defis : ([3,6,9,12].includes(nb) ? chat : '');
   return `<div class="libre"><b>${phrase}</b><p>${esc(e.nom||'Cette épreuve')} : c'est dans la boîte ! Continuez le parcours : ${reste===1 ? 'rendez-vous sur <b>la dernière épreuve</b> qu\'il vous reste.' : `rendez-vous sur une des <b>${reste} épreuves</b> qu'il vous reste.`}</p>${rappel}</div>`;
 }
 function vBravo(){
