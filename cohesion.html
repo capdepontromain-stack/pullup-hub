@@ -641,7 +641,7 @@ const CONSEILS = {
  9:["La sécurité d'abord : un seul lanceur à la fois, les autres derrière la ligne.","Toujours 15 lancers exactement : une équipe plus petite fait lancer certains deux fois."],
  10:["Un participant guidé à la fois, marteau toujours maîtrisé.","Entrez le temps : l'application fait le classement, pas besoin de grille."],
  11:["Notez sur 10 : création, idées, jeu, tous ensemble, bonne humeur, créativité.","8 minutes de préparation maximum, 2 minutes pour jouer.","Une réplique « compétents et solidaires », une promotion surprise…","Applaudissez chaque scène."],
- 12:["L'équipe vous tend son téléphone : tapez votre code, le chrono de 10 minutes démarre et le quiz se corrige tout seul (fautes d'orthographe acceptées).","Le classement se fait au nombre de bonnes réponses, puis à la rapidité, et les points sont doublés. À la fin, l'équipe répond à la question subsidiaire.","Des bonus à donner ? Touchez « Ajouter des bonus » à la fin du quiz. Pas de téléphone ? Saisissez le nombre de bonnes réponses comme avant."],
+ 12:["L'équipe vous tend son téléphone : tapez votre code, le chrono de 10 minutes démarre et le quiz se corrige tout seul (fautes d'orthographe acceptées).","Le classement se fait au nombre de bonnes réponses, puis à la rapidité, et les points sont doublés. À la fin, l'équipe répond à la question subsidiaire.","Rien à saisir à la fin : l'équipe passe directement à la suite. Un bonus à donner ? Sur la page de l'épreuve, touchez « Corriger ce résultat ». Pas de téléphone ? Saisissez le nombre de bonnes réponses."],
  13:["Notez sur 10 : créativité, joie, beauté de la pyramide, collectif, rapidité.","Faites réfléchir l'équipe pour que personne ne se blesse.","Pour valider, montez tout en haut."]
 };
 const ANNONCES = [ ['📸','Pensez aux défis photo : ils rapportent des points !'], ['⏰','Plus que 30 minutes d\'épreuves : foncez !'], ['⏰','Plus que 10 minutes : dernière épreuve !'], ['🎓','N\'oubliez pas la culture d\'entreprise : points doublés !'], ['🏆','Les épreuves sont terminées : tout le monde au podium !'] ];
@@ -1179,8 +1179,8 @@ window.quizEnregistrer = ()=>{ const t=state.team, Q=quizEtat(t); if(!Q || Q.pha
   const bonnes=Q.rep.filter(x=>x.ok).length, sec=Math.min(QUIZ_DUREE, Math.round((Q.fin-Q.debut)/1000));
   const row={ event:EVENT, stand:CULTURE, team:t, resultat:'F', mesure: QUIZ_OFF + bonnes*1000 + (QUIZ_DUREE-sec), code:CLE, updated_at:horloge().toISOString() }; BONUS.forEach(b=>row[b.col]=false);
   envoyerSubsid(t, v); local.p[kp(CULTURE,t)]=row; pousser('tb_passages','event,stand,team','p-'+kp(CULTURE,t),row);
-  Q.phase='fin'; Q.sub=v; quizSet(t,Q); state.quizEnvoi=false; vibre([30,40,30]); render(); window.scrollTo(0,0); confettis(false); };
-window.quizBravo = ()=>{ const t=state.team; state.ep=CULTURE; state.bravo={ ep:CULTURE }; state.vientDeFaire=CULTURE; setTimeout(()=>{ state.vientDeFaire=0; }, 4000);
+  Q.phase='fin'; Q.sub=v; quizSet(t,Q); state.quizEnvoi=false; vibre([30,40,30]); quizBravo(); };   // directement le Bravo : pas besoin de rendre le téléphone à l'animateur
+window.quizBravo = ()=>{ const t=state.team, Q=quizEtat(t)||{rep:[]}; state.ep=CULTURE; state.bravo={ ep:CULTURE, quiz:true, bonnes:(Q.rep||[]).filter(x=>x.ok).length }; state.vientDeFaire=CULTURE; setTimeout(()=>{ state.vientDeFaire=0; }, 4000);
   const nbF=EP.filter(x=>x.n!==DEFI_EP && fait(x.n,t)).length, palier=[5,10,NB_EP].includes(nbF); state.view='bravo'; render(); window.scrollTo(0,0); confettis(palier); son(palier); };
 setInterval(()=>{ if(state.view!=='quiz') return; const Q=quizEtat(state.team); if(!Q || !Q.debut || !['q','fb'].includes(Q.phase)) return;
   const reste=quizReste(Q), el=document.getElementById('qChrono'); if(el){ el.textContent=mmss(reste); el.classList.toggle('urgent', reste<=60); }
@@ -1340,8 +1340,8 @@ function messageBravo(nb, e){
 function vBravo(){
   const b=state.bravo||{}; const e=EPN[b.ep]||{}; const nb=EP.filter(x=>x.n!==DEFI_EP && fait(x.n,state.team)).length;
   const palier = nb===NB_EP ? '🏆 Les 13 épreuves sont faites !' : (nb===10 ? '🔥 10 épreuves déjà !' : (nb===5 ? '⭐ 5 épreuves, belle lancée !' : ''));
-  return `<div class="rendre">📱 Animateur : rendez le téléphone à l'équipe</div><div class="bravo"><img class="pictoTourne" src="proxim/picto.png" alt=""><svg class="coche" viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27 l7.5 7.5 L37.5 19"/></svg>
-      ${palier?`<div class="palier">${palier}</div>`:''}<h2>Bravo ${esc(nomEq(state.team)||'l\'équipe '+state.team)} !</h2><div class="ep2">${e.ico||''} ${esc(e.nom||'')} : c'est dans la boîte</div>
+  return `${b.quiz?'':'<div class="rendre">📱 Animateur : rendez le téléphone à l\'équipe</div>'}<div class="bravo"><img class="pictoTourne" src="proxim/picto.png" alt=""><svg class="coche" viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27 l7.5 7.5 L37.5 19"/></svg>
+      ${palier?`<div class="palier">${palier}</div>`:''}<h2>Bravo ${esc(nomEq(state.team)||'l\'équipe '+state.team)} !</h2><div class="ep2">${b.quiz ? `🎓 Quiz terminé : ${b.bonnes} bonne${b.bonnes>1?'s':''} réponse${b.bonnes>1?'s':''} sur ${QUIZ.length} !${nb<NB_EP?'<br>Passez vite à une autre épreuve.':''}` : `${e.ico||''} ${esc(e.nom||'')} : c'est dans la boîte`}</div>
       ${messageBravo(nb, e)}
       ${passeport(state.team, b.ep, true)}
       <div class="etatEnvoi" id="etatEnvoi">${texteEnvoi()}</div></div>
