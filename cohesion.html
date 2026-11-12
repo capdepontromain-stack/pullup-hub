@@ -777,7 +777,7 @@ async function refresh(force){
 }
 const couleurEq = t => ((local.coul||{})[t]) || (state.couleurs||{})[t] || '';
 const hexCouleur = n => (TEINTES_BANDEAU.find(c=>c[0]===n)||[])[1] || '';
-const pastilleC = t => { const h=hexCouleur(couleurEq(t)); return h ? `<i class="dotC" style="background:${h}" title="${esc(couleurEq(t))}"></i>` : ''; };
+const pastilleC = t => '';                           // pas de rond de couleur : les vraies teintes des bandeaux ne sont pas connues
 function envoyerCouleur(t, c){ local.coul=local.coul||{}; local.coul[t]=c; save();
   pousser('tb_messages','cid','m-coul-'+t, { event:EVENT, cid:'coul-'+EVENT+'-'+t, team:t, texte:'__COULEUR__'+c, code:CLE }); }
 window.choisirCouleur = (c,btn)=>{ lsSet('brouillon_coul', c); document.querySelectorAll('#grpCoul button').forEach(b=>b.classList.toggle('sel', b===btn)); vibre(12); };
@@ -984,7 +984,7 @@ function htmlZone(){
   }
   const p=photoForm();
   const cs=lsGet('brouillon_coul','');
-  return `<label>Couleur de votre bandeau</label><div class="couls" id="grpCoul">${TEINTES_BANDEAU.map(([n,h])=>`<button type="button" class="${cs===n?'sel':''}" onclick="choisirCouleur('${n}',this)"><i style="background:${h}"></i>${n}</button>`).join('')}</div>
+  return `<label>Quelle est la couleur de votre bandeau ?</label><input type="text" id="fCoul" maxlength="30" placeholder="Exemple : bleu clair" value="${esc(cs)}" oninput="lsSet('brouillon_coul',this.value)" autocomplete="off" enterkeyhint="next" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('fNom').focus();}">
       <label>Nom de l'équipe</label><input type="text" id="fNom" maxlength="28" placeholder="Exemple : Les Pirates" value="${esc(lsGet('brouillon_nom',''))}" oninput="garderBrouillon()" autocomplete="off" enterkeyhint="next" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('fCap').focus();}">
       <label>Pseudo du capitaine</label><input type="text" id="fCap" maxlength="24" placeholder="Exemple : Barbe Noire" value="${esc(lsGet('brouillon_cap',''))}" oninput="garderBrouillon()" autocomplete="off" enterkeyhint="done" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">
       <label>Photo de toute l'équipe <span style="font-weight:700;color:var(--gris)">(un selfie, tout le monde les yeux ouverts !)</span></label>
@@ -1069,7 +1069,7 @@ function vHome(){
   let h='';
   const ann = annonce(); if(ann) h += `<div class="annonce entree"><div class="ico">📣</div><div><b>Message de l'organisation</b>${esc(ann.texte)}<br><button class="lnk" onclick="annonceVue('${ann.cid}')">J'ai lu</button></div></div>`;
   const encour = nb===0 ? 'Première épreuve : allez-y&nbsp;!' : nb>=NB_EP ? 'Tout est fait, bravo&nbsp;!' : nb>=10 ? 'Superbe, encore un effort&nbsp;!' : nb>=5 ? 'Belle lancée, continuez&nbsp;!' : 'C\'est parti, enchaînez&nbsp;!';
-  h += `<div class="card entree"><div class="eqCarte">${avatar(t)}<div><div class="nom">${esc(eqp.nom||'')}</div><div class="det">Équipe ${t} · Capitaine ${esc(eqp.capitaine||'')}${couleurEq(t)?' · '+pastilleC(t)+esc(couleurEq(t)):''}</div></div></div>
+  h += `<div class="card entree"><div class="eqCarte">${avatar(t)}<div><div class="nom">${esc(eqp.nom||'')}</div><div class="det">Équipe ${t} · Capitaine ${esc(eqp.capitaine||'')}${couleurEq(t)?' · bandeau '+esc(couleurEq(t)):''}</div></div></div>
     <div class="avance">${anneau(nb)}<div class="txt">${encour}<span class="muted">${NB_EP-nb===0?NB_EP+' épreuves sur '+NB_EP:pl(NB_EP-nb,'épreuve')+' encore à faire'} · vos points restent secrets jusqu'au podium</span></div></div>
     ${passeport(t, state.vientDeFaire)}<div class="legendeP">Votre passeport : un tampon par épreuve réussie. Touchez un numéro pour l'ouvrir.</div></div>`;
   if(tp.etat==='fini') h += `<div class="finCarte entree"><div style="font-size:44px">🏆</div><div class="p">C'est terminé !</div><p style="margin:8px 0 0;font-size:17px"><b>Rendez-vous au podium</b> pour les résultats.</p><p style="margin:10px 0 0">Votre bilan : <b>${pl(nb,'épreuve')}</b> et <b>${pl(nbDefis(t),'défi')}</b> photo. Bravo à toute l'équipe !</p></div>`;
@@ -1473,7 +1473,7 @@ function vOrg(){
     if(calmes.length) h += `<div class="banner entree"><b>⚠ Sans nouveau résultat depuis 25 minutes :</b> ${calmes.map(t=>`<button class="puce" style="border-color:var(--orange)" onclick="voirEquipe(${t})">${t}</button>`).join('')}<br><span class="muted">Une équipe perdue, un téléphone éteint ou une longue file d'attente : allez voir.</span></div>`;
     h += `<div class="gal">`;
     for(let t=1;t<=N_EQUIPES;t++){ const e=equipe(t), q=c.eq[t]; const p=state.galerie?state.photos[t]:'';
-      h += `<button onclick="voirEquipe(${t})" class="${e&&e.nom?'':'vide'}" style="${calmes.includes(t)?'box-shadow:0 0 0 3px var(--orange)':''}"><div class="ph" style="${p?`background-image:url('${p}')`:`background:${TEINTES[(t-1)%14]}`}">${p?'':t}</div><b>Équipe ${t}</b><br>${e&&e.nom?esc(e.nom)+'<br><span class="muted">'+q.faits+'/'+NB_EP+' · '+nb(q.total)+' pts'+(dern[t]?' · '+heure(dern[t]):'')+'</span>':'<span class="muted">non inscrite · '+couleur(t)+'</span>'}</button>`; }
+      h += `<button onclick="voirEquipe(${t})" class="${e&&e.nom?'':'vide'}" style="${calmes.includes(t)?'box-shadow:0 0 0 3px var(--orange)':''}"><div class="ph" style="${p?`background-image:url('${p}')`:`background:${TEINTES[(t-1)%14]}`}">${p?'':t}</div><b>Équipe ${t}</b><br>${e&&e.nom?esc(e.nom)+'<br><span class="muted">'+q.faits+'/'+NB_EP+' · '+nb(q.total)+' pts'+(dern[t]?' · '+heure(dern[t]):'')+'</span>':'<span class="muted">non inscrite</span>'}</button>`; }
     h += `</div>`;
   }
   return h + `<p style="text-align:center;margin-top:16px"><button class="lnk" onclick="quitterOrg()">Quitter l'espace organisation</button></p>`;
@@ -1501,7 +1501,7 @@ function journal(c){
 function vCarnetOrg(){
   const t=state.team, eqp=equipe(t)||{}, c=calcul(), q=c.eq[t], rang=c.ordre.indexOf(t)+1;
   let h = `<div class="orgBan entree"><span>👁 Vue organisation</span><button onclick="aller('org')">← Organisation</button></div>
-    <div class="card entree"><div class="eqCarte">${avatar(t)}<div><div class="nom">${esc(eqp.nom||'Équipe '+t)}</div><div class="det">Équipe ${t} · Capitaine ${esc(eqp.capitaine||'')}${couleurEq(t)?' · '+pastilleC(t)+esc(couleurEq(t)):''}</div></div></div>
+    <div class="card entree"><div class="eqCarte">${avatar(t)}<div><div class="nom">${esc(eqp.nom||'Équipe '+t)}</div><div class="det">Équipe ${t} · Capitaine ${esc(eqp.capitaine||'')}${couleurEq(t)?' · bandeau '+esc(couleurEq(t)):''}</div></div></div>
     <div class="kpis" style="margin-top:14px"><div><b>${nb(q.total)}</b><span>points</span></div><div><b>${q.total>0?rang+'<small style="font-size:14px">e</small>':'·'}</b><span>au classement</span></div><div><b>${q.faits}<small style="font-size:14px;color:var(--gris)">/${NB_EP}</small></b><span>épreuves</span></div></div></div>
     <div class="card carnet entree" style="padding:6px 14px">`;
   h = h.replace('<div class="card carnet entree" style="padding:6px 14px">', `<div class="banner bleu entree"><b>Pourquoi ${nb(q.total)} points :</b> ${pourquoi(q)}</div><div class="card carnet entree" style="padding:6px 14px">`);
@@ -1639,8 +1639,7 @@ async function inscrire2(sansPhoto){
   const nom=($('#fNom').value||'').trim(), cap=($('#fCap').value||'').trim(); const photo=photoForm();
   if(!nom){ dire('Donnez un nom à votre équipe.','err'); $('#fNom').focus(); return; }
   if(!cap){ dire('Indiquez le pseudo du capitaine.','err'); $('#fCap').focus(); return; }
-  const coul=lsGet('brouillon_coul',''); if(!coul){ dire('Touchez la couleur de votre bandeau.','err'); const g=$('#grpCoul'); if(g) g.scrollIntoView({block:'center'}); return; }
-  if(!estTest(t) && !state.edition && couleur(t) && coul!==couleur(t) && !confirm(`Le bandeau de l'équipe ${t} est normalement ${couleur(t)}, et vous avez choisi ${coul}.\n\nVérifiez votre numéro d'équipe. Continuer quand même ?`)) return;   // repère une erreur de numéro
+  const coul=String((($('#fCoul')||{}).value ?? lsGet('brouillon_coul',''))||'').trim().replace(/\s+/g,' ').slice(0,30); if(!coul){ dire('Écrivez la couleur de votre bandeau.','err'); const g=$('#fCoul'); if(g) g.focus(); return; }
   if(!photo && !sansPhoto){ dire('Prenez la photo de toute l\'équipe (ou touchez « Continuer sans photo »).','err'); return; }
   if(!state.edition){            // un autre téléphone vient peut-être d'inscrire ce numéro : on vérifie avant d'écraser
     garderBrouillon();
