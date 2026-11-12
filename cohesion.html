@@ -563,7 +563,7 @@ const teinteEp = n => PROXIM[(n-1)%4];
 const EMPREINTES = /*EMPREINTES*/{org:'a6ca8ea66d7c7a26b79fab5298620f3efb5d4f7f66244fbe6c6affab93bb8cf4',mots:['96f99aa2ff66d5d72f426153fbc18bffef24b9021a1205ea2628104ea0c772bd','ff29bece9439c435bd6344efba9fef08d27452a98ec9bd8478cb75f42a487ad5','7bcb70b7feaeb1b11fa4dcbac9138b9f04a81f39a16f5efa1f25c9cde82a0871'],lien:'de3eaa536eaa09313575392ba967fff3490b0630521514f81b3f0f9cfe33f126'};
 // type : duel / chrono (secondes) / points / jury (note sur 10) / quiz (bonnes réponses sur 10) / hauteur (cm)
 const EP = [            // programme validé le 10/11 (présentation complète) : 13 épreuves + les défis photo en parallèle
- {n:1, nom:'La catapulte', ico:'🏐', type:'duel', places:4, min:7, desc:"Volley géant avec des catapultes : deux équipes se renvoient des ballons de baudruche remplis d'eau. Un match d'environ 7 minutes."},
+ {n:1, nom:'La catapulte', ico:'🏐', type:'duel', places:4, min:7, desc:"Volley géant avec des catapultes : deux équipes se renvoient des ballons de baudruche remplis d'eau."},
  {n:2, nom:'Les roues', ico:'🎡', type:'chrono', places:5, min:5, desc:"Toute l'équipe à l'intérieur des roues de couleur : un parcours aller-retour chronométré. Pas de pied en dehors de la bâche !"},
  {n:3, nom:'Le Kapla', ico:'🧱', type:'jury', places:5, min:5, desc:"Construisez une sculpture sur la cohésion et la solidarité chez Proxim'Services, puis présentez-la à l'oral en une minute. Le jury note l'œuvre et la présentation."},
  {n:4, nom:"L'Archery Tag", ico:'🏹', type:'duel', places:4, min:10, desc:"Arcs et flèches à embout mousse : deux équipes face à face, on compte les personnes touchées. Quand on est touché, on passe l'arc à un coéquipier."},
@@ -1073,7 +1073,7 @@ function carteEp(e){
   return `<button class="ep entree couleur${cu?' culture':''}" style="--c:${c};--t:${tx}" onclick="ouvrir(${e.n})">
     <div class="img" style="background-image:url('${vignette(e.n)}')"><i>${e.n}</i></div>
     <div class="txt"><div class="t">${e.nom}</div>
-      <span class="tag pts">${MAXPTS(e)} points à gagner</span>${e.duel?'<span class="tag duel">DUEL</span>':''}${cu?'<span class="tag double">×2</span>':''}<span class="tag gris">${e.min} min</span></div>
+      <span class="tag pts">${MAXPTS(e)} points à gagner</span>${e.duel?'<span class="tag duel">DUEL</span>':''}${cu?'<span class="tag double">×2</span>':''}</div>
     <div class="go"><b>›</b>À FAIRE</div></button>`;
 }
 // Le passeport de l'équipe : un tampon de couleur par épreuve faite, le « + » pour les défis photo
@@ -1191,7 +1191,7 @@ function vEpreuve(){
   const e=EPN[state.ep], t=state.team, deja=fait(e.n,t);
   let h = `<div class="heroEp entree ${e.n===CULTURE?'logo':''}" style="background-image:url('${img(e.n)}')"><div class="tt"><small>Épreuve ${e.n} sur ${NB_EP}</small><div>${e.nom}</div></div></div>
     <div class="card entree carteEp" style="--c:${teinteEp(e.n)}"><p style="font-size:17px">${e.desc}</p>
-      <p style="margin:0"><span class="tag pts">${MAXPTS(e)} points à gagner</span>${e.duel?'<span class="tag duel">DUEL : trouvez une équipe adverse</span>':''}${e.n===CULTURE?'<span class="tag double">POINTS DOUBLÉS</span>':''}<span class="tag gris">⏱ ${e.min} min</span><span class="tag gris">${pl(e.places,'équipe')} à la fois</span></p>
+      <p style="margin:0"><span class="tag pts">${MAXPTS(e)} points à gagner</span>${e.duel?'<span class="tag duel">DUEL : trouvez une équipe adverse</span>':''}${e.n===CULTURE?'<span class="tag double">POINTS DOUBLÉS</span>':''}<span class="tag gris">${pl(e.places,'équipe')} à la fois</span></p>
       <p class="muted" style="margin:12px 0 0">L'animateur note votre résultat et peut ajouter des bonus : ambiance, cohésion, fair-play et coup de cœur. Les points restent secrets jusqu'au podium.</p></div>`;
   if(deja) h += `<div class="fait entree"><div class="gros">✓ Épreuve faite</div><p style="margin:6px 0 0">Résultat enregistré par l'animateur. Passez à une autre épreuve !</p></div>
       ${epSuivante()?`<button class="btn orange" onclick="suivante()">Épreuve suivante →</button>`:''}<button class="btn clair" onclick="aller('home')">Voir toutes les épreuves</button><p style="text-align:center"><button class="lnk" onclick="demarrerSaisie()">Corriger ce résultat (animateur)</button></p>`;
