@@ -661,10 +661,10 @@ function sha256(ascii){
   for(i=0;i<8;i++){ for(j=3;j+1;j--){ var b=(hash[i]>>(j*8))&255; result+=((b<16)?0:'')+b.toString(16); } }
   return result;
 }
-const sansAccent = c => String(c==null?'':c).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,'').toUpperCase();
+const sansAccent = c => String(c==null?'':c).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]/g,'').toUpperCase();   // « Kiwi. », « kiwi ! », espaces : tout est accepté
 const empreinte = (quoi, code) => sha256('proxim14|'+quoi+'|'+sansAccent(code));
 const codeOrgOk = code => !!code && empreinte('org',code) === EMPREINTES.org;
-const codeStandOk = (stand, code) => !!code && ((EMPREINTES.mots||[]).includes(empreinte('mot',code)) || codeOrgOk(code));
+const codeStandOk = (stand, code) => !!code && ((EMPREINTES.mots||[]).includes(empreinte('mot',code)) || (EMPREINTES.mots||[]).includes(empreinte('mot',String(code).trim().replace(/s$/i,''))) || codeOrgOk(code));   // « kiwis » accepté aussi
 
 // Petit message en bas de l'écran (remplace les fenêtres d'alerte)
 let toastT=0;
@@ -1594,7 +1594,8 @@ window.debuter = ()=>{ try{ sessionStorage.setItem('pxc_acc_'+EVENT,'1'); }catch
 window.reglesVues = ()=>{ lsSet('regles_vues',true); state.view='home'; render(); window.scrollTo(0,0); refresh(); };
 window.rejoindre = ()=>{ if(!state.team) return; const eq=equipe(state.team); if(eq){ local.e[state.team]={team:state.team,nom:eq.nom,capitaine:eq.capitaine,updated_at:eq.updated_at||''}; save(); }
   lsSet('team',state.team); lsSet('brouillon_nom',''); lsSet('brouillon_cap',''); lsSet('regles_vues',true); state.view='home'; render(); window.scrollTo(0,0); refresh(); dire('Bon retour parmi vous ! 👋','ok'); };
-window.entrerOrg = ()=>{ const el=$('#codeOrg'); if(el && codeOrgOk(el.value)){ state.org=true; try{ localStorage.setItem('pxc_org','1'); }catch(e){} state.team=confirmee()?state.team:0; aller('org'); } else { dire('Code incorrect.','err'); if(el){ el.value=''; el.focus(); } } };
+window.entrerOrg = ()=>{ const el=$('#codeOrg'); if(el && !codeOrgOk(el.value) && codeStandOk(0,el.value)){ dire('Ça, c\'est un code ANIMATEUR : il sert à valider un résultat sur le téléphone d\'une équipe. L\'espace organisation s\'ouvre avec le code organisation.','err'); el.value=''; return; }
+  if(el && codeOrgOk(el.value)){ state.org=true; try{ localStorage.setItem('pxc_org','1'); }catch(e){} state.team=confirmee()?state.team:0; aller('org'); } else { dire('Code incorrect.','err'); if(el){ el.value=''; el.focus(); } } };
 window.quitterOrg = ()=>{ state.org=false; try{ localStorage.removeItem('pxc_org'); }catch(e){} state.orgRetour=false; state.team=lsGet('team',0); state.view=''; render(); };
 window.orgTab = k=>{ state.orgTab=k; render(); window.scrollTo(0,0); if(k==='messages') lireMessages(); };
 let dernierEnvoi=0;
