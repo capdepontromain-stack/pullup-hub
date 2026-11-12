@@ -410,6 +410,10 @@
   details.debrief summary { list-style:none; padding:12px 14px; font-weight:900; color:var(--jaune); } details.debrief summary::-webkit-details-marker { display:none; }
   details.debrief p, .debriefTxt p { margin:0 14px 10px; font-size:17px; line-height:1.45; } details.debrief p { color:#fff; } .debriefTxt p { margin:0 0 10px; color:var(--texte); }
   ul.pointsD { margin:0 14px 10px 30px; padding:0; font-size:17px; line-height:1.4; } ul.pointsD li { margin:4px 0; } details.debrief ul.pointsD { color:#fff; } .debriefTxt ul.pointsD { margin-left:18px; margin-right:0; }
+  .depart { display:block; width:100%; border:0; padding:0; border-radius:24px; overflow:hidden; text-align:left; color:var(--t,#fff); background:var(--c); font:inherit; margin-bottom:14px; box-shadow:0 0 0 4px #fff, 0 0 0 7px var(--c), 0 14px 30px rgba(0,0,0,.18); animation:pouls 2.2s ease-in-out infinite; }
+  .depart .img { height:130px; background:#fff center/cover; position:relative; } .depart .img i { position:absolute; left:12px; top:12px; width:38px; height:38px; border-radius:50%; background:var(--c); color:var(--t,#fff); font-style:normal; font-weight:900; font-size:18px; display:flex; align-items:center; justify-content:center; border:3px solid #fff; }
+  .depart .txt { padding:14px 16px 16px; } .depart small { display:block; font-weight:900; letter-spacing:1px; text-transform:uppercase; font-size:13px; opacity:.95; }
+  .depart .t { font-family:var(--titre); font-size:28px; font-weight:800; line-height:1.05; margin-top:3px; } .depart .d { font-size:14.5px; margin-top:6px; font-weight:700; opacity:.95; }
   .rangE { display:inline-block; min-width:30px; font-family:var(--titre); color:var(--marine); }
   .champU { position:relative; } .champU input { padding-right:58px; font-family:var(--titre); font-size:30px; text-align:center; letter-spacing:1px; padding-top:9px; padding-bottom:9px; }
   .champU span { position:absolute; right:14px; top:50%; transform:translateY(-50%); font-weight:900; font-size:16px; color:var(--gris); pointer-events:none; }
@@ -925,9 +929,13 @@ function vAccueil(){
     <p class="reprise">Vous aviez déjà commencé ? Touchez le bouton et retapez <b>votre numéro d'équipe</b> : vous retrouvez toute votre partie.</p>`}
     <button class="lnk" onclick="aller('landing')">Organisation</button></div>`;
 }
+// La grande carte « Votre première épreuve » : l'équipe sait où aller dès qu'elle a tapé son numéro
+function carteDepart(t){ const n=DEPART[t]; if(!n || fait(n,t)) return ''; const e=EPN[n], c=teinteEp(n), tx=c===PROXIM[1]?'#3B2A00':'#fff';
+  return `<button class="depart entree" style="--c:${c};--t:${tx}" onclick="ouvrir(${n})"><div class="img" style="background-image:url('${vignette(n)}')"><i>${n}</i></div>
+    <div class="txt"><small>👉 Votre première épreuve</small><div class="t">${e.ico} ${e.nom}</div><div class="d">Allez-y directement : l'animateur vous attend. Ensuite, toutes les autres épreuves, dans l'ordre que vous voulez.</div></div></button>`; }
 function vRegles(){
   const e=equipe(state.team)||{};
-  return `<div class="card entree"><div style="font-size:40px;line-height:1">🚀</div><h1>C'est parti${e.nom?',<br>'+esc(e.nom):''} !</h1>${REGLES}
+  return `${carteDepart(state.team)}<div class="card entree"><div style="font-size:40px;line-height:1">🚀</div><h1>C'est parti${e.nom?',<br>'+esc(e.nom):''} !</h1>${REGLES}
       <button class="btn orange gros" onclick="reglesVues()">OK, voir les épreuves</button></div>`;
 }
 function vBrief(){
@@ -974,7 +982,7 @@ function vHome(){
   if(tp.etat==='urgent') h += `<div class="banner err entree" style="font-size:16px"><b>⏰ Dernière ligne droite :</b> moins de 10 minutes ! Finissez l'épreuve en cours.</div>`;
   if(tp.etat!=='fini' && !defiEnvoye(t,0)) h += `<button class="rappelPhoto entree" onclick="envoyerPhotoEquipe()"><span>📸</span><div><b>Vous n'avez pas encore envoyé la photo de l'équipe</b><br>Touchez ici pour l'envoyer à l'organisation sur WhatsApp.</div></button>`;
   else if(tp.etat!=='fini' && nbDefis(t)<DEFIS.length && (nb>=3 || tp.ecoule>=40)) h += `<button class="rappelDefis entree" onclick="ouvrir(${DEFI_EP})"><span>🎬</span><div><b>${nbDefis(t)<=1?'Et les défis photo et vidéo ?':'Encore '+pl(DEFIS.length-nbDefis(t),'défi')+' photo et vidéo !'}</b><br>Cri de guerre, haka, Radeau de la Méduse… ils rapportent des points : faites-les pendant l'attente !</div></button>`;
-  if(nb===0 && tp.etat!=='fini') h += `<div class="banner bleu entree"><b>Pour bien démarrer :</b> commencez par l'épreuve ${DEPART[t]}, ${EPN[DEPART[t]].nom}. Ensuite, allez où vous voulez.</div>`;
+  if(nb===0 && tp.etat!=='fini') h = h.replace('<div class="card entree"><div class="eqCarte">', carteDepart(t)+'<div class="card entree"><div class="eqCarte">');   // tout en haut, avant la carte de l'équipe
   if(!fait(CULTURE,t)){ const cl = nb>=3 || tp.ecoule>=60;
     h += `<button class="vedette entree ${cl?'clignote':''}" onclick="ouvrir(${CULTURE})"><div class="img" style="background-image:url('${img(CULTURE)}')"></div><div class="txt">
       <div class="t">${cl?'Vous n\'avez pas encore fait la culture d\'entreprise !':'À ne pas manquer : la culture d\'entreprise'}</div>
