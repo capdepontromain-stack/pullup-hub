@@ -505,9 +505,9 @@ const DEBUT_EPREUVES = ESSAI ? new Date(Date.now()-45*60000) : new Date(2026,10,
 const FIN_EPREUVES = ESSAI ? new Date(Date.now()+90*60000) : new Date(2026,10,14,12,15);
 const AVANT_JOUR_J = false;                           // (ancien verrou remplacé par la période de test)
 const CULTURE = 12;
-// Quiz culture d'entreprise joué sur le téléphone de l'équipe : 10 minutes, QCM ou réponse à taper (orthographe tolérée), on peut passer.
+// Quiz culture d'entreprise joué sur le téléphone de l'équipe : 15 minutes, QCM ou réponse à taper (orthographe tolérée), on peut passer.
 // ⚠️ QUESTIONS D'ESSAI : Romain fournira les vraies questions et réponses. Format : q, choix (QCM, bon = n° du bon choix) ou ok (réponses acceptées), rep (affichée), expl.
-const QUIZ_DUREE = 600;                              // 10 minutes (Romain, 12/11)
+const QUIZ_DUREE = 900;                              // 15 minutes (Romain, 12/11 au soir)
 const QUIZ = [            // tirées du site proximservices-reunion.org (12/11/2026)
  {q:"En quelle année Proxim'Services Réunion a-t-elle été fondée ?", choix:['1983','1993','2003','2008'], bon:1, expl:"Fondée en 1993 par BAC Réunion, une association intermédiaire : plus de 30 ans au service des familles."},
  {q:"Que signifie le sigle PRO.RE.SAP ?", choix:['Professionnels Réunionnais des Services à la Personne','Programme Réunionnais d\'Entraide Sociale et d\'Accueil Personnalisé','Pôle Régional des Soins et de l\'Aide aux Personnes','Projet Réunionnais pour l\'Autonomie et la Santé'], bon:0, expl:"PRO.RE.SAP : les Professionnels Réunionnais des Services à la Personne."},
@@ -574,7 +574,7 @@ const EP = [            // programme validé le 10/11 (présentation complète) 
  {n:9, nom:'Le lancer de haches', ico:'🪓', type:'points', tirs:15, places:2, min:10, desc:"15 lancers, un seul lanceur à la fois : l'animateur compte chaque hache sur ce téléphone et les points s'additionnent."},
  {n:10, nom:'Le jeu du clou', ico:'🔨', type:'chrono', places:2, min:8, desc:"Les yeux bandés, guidé par son équipe, chacun va enfoncer le clou : le chrono tourne !"},
  {n:11, nom:'Le théâtre', ico:'🎭', type:'jury', places:3, min:10, desc:"Jouez l'ascension d'un membre de Proxim'Services, du premier jour jusqu'au poste de PDG : 8 minutes de préparation au maximum, 2 minutes pour jouer. Le jury note votre scène."},
- {n:12, nom:"La culture d'entreprise", ico:'🎓', type:'quiz', places:3, min:10, desc:"40 questions en 10 minutes sur Proxim'Services et votre métier, directement sur ce téléphone. Classement au nombre de bonnes réponses, puis à la rapidité. C'est l'épreuve qui rapporte le plus : points doublés !"},
+ {n:12, nom:"La culture d'entreprise", ico:'🎓', type:'quiz', places:5, min:15, desc:"40 questions en 15 minutes sur Proxim'Services et votre métier, directement sur ce téléphone. Classement au nombre de bonnes réponses, puis à la rapidité. C'est l'épreuve qui rapporte le plus : points doublés !"},
  {n:13, nom:'La pyramide humaine', ico:'🤸', type:'jury', places:3, min:5, desc:"Toute l'équipe construit une pyramide humaine, en sécurité. Pour la valider, l'animateur monte tout en haut !"},
  {n:14, nom:'Défis photo', ico:'📸', type:'defis', places:40, min:0, desc:"10 défis à faire avec vos téléphones, en parallèle des épreuves : idéal pendant l'attente. Chaque photo part directement chez l'organisation, depuis l'application."}
 ];
@@ -641,7 +641,7 @@ const CONSEILS = {
  9:["La sécurité d'abord : un seul lanceur à la fois, les autres derrière la ligne.","Toujours 15 lancers exactement : une équipe plus petite fait lancer certains deux fois."],
  10:["Un participant guidé à la fois, marteau toujours maîtrisé.","Entrez le temps : l'application fait le classement, pas besoin de grille."],
  11:["Notez sur 10 : création, idées, jeu, tous ensemble, bonne humeur, créativité.","8 minutes de préparation maximum, 2 minutes pour jouer.","Une réplique « compétents et solidaires », une promotion surprise…","Applaudissez chaque scène."],
- 12:["L'équipe vous tend son téléphone : tapez votre code, le chrono de 10 minutes démarre et le quiz se corrige tout seul (fautes d'orthographe acceptées).","Le classement se fait au nombre de bonnes réponses, puis à la rapidité, et les points sont doublés.","Rien à saisir à la fin : l'équipe passe directement à la suite. Un bonus à donner ? Sur la page de l'épreuve, touchez « Corriger ce résultat ». Pas de téléphone ? Saisissez le nombre de bonnes réponses."],
+ 12:["L'équipe vous tend son téléphone : tapez votre code, le chrono de 15 minutes démarre et le quiz se corrige tout seul (fautes d'orthographe acceptées).","Le classement se fait au nombre de bonnes réponses, puis à la rapidité, et les points sont doublés.","Rien à saisir à la fin : l'équipe passe directement à la suite. Un bonus à donner ? Sur la page de l'épreuve, touchez « Corriger ce résultat ». Pas de téléphone ? Saisissez le nombre de bonnes réponses."],
  13:["Notez sur 10 : créativité, joie, beauté de la pyramide, collectif, rapidité.","Faites réfléchir l'équipe pour que personne ne se blesse.","Pour valider, montez tout en haut."]
 };
 const ANNONCES = [ ['📸','Pensez aux défis photo : ils rapportent des points !'], ['⏰','Plus que 30 minutes d\'épreuves : foncez !'], ['⏰','Plus que 10 minutes : dernière épreuve !'], ['🎓','N\'oubliez pas la culture d\'entreprise : points doublés !'], ['🏆','Les épreuves sont terminées : tout le monde au podium !'] ];
@@ -1129,7 +1129,11 @@ function reponseOk(rep, oks){ const r=normRep(rep); if(!r) return false; const r
   return oks.some(o=>{ const n=normRep(o); if(!n) return false; const nc=n.replace(/ /g,'');
     if(/^\d+$/.test(nc)) return rc===nc;                                                    // un nombre : il doit être exact
     const tol = nc.length<=3 ? 0 : nc.length<=5 ? 1 : nc.length<=9 ? 2 : Math.floor(nc.length*0.25);
-    return r===n || distance(rc,nc)<=tol || (nc.length>=4 && (' '+r+' ').includes(' '+n+' ')); }); }
+    if(r===n || distance(rc,nc)<=tol || (nc.length>=4 && (' '+r+' ').includes(' '+n+' '))) return true;
+    // réponse incomplète mais juste : au moins 60 % des mots attendus (à une faute près chacun), sans mot en trop qui change le sens
+    const motOk=(x,w)=> x===w || (w.length>3 && distance(x,w) <= (w.length<=5?1:2)), rw=r.split(' ').filter(w=>w.length>1), nw=n.split(' ').filter(w=>w.length>1);
+    if(nw.length>=2 && rw.length){ const hit=nw.filter(w=>rw.some(x=>motOk(x,w))).length, extra=rw.filter(x=>!nw.some(w=>motOk(x,w))).length; if(hit/nw.length>=0.6 && extra===0) return true; }
+    return false; }); }
 function vQuiz(){
   const t=state.team, Q=quizEtat(t), N=QUIZ.length;
   if(fait(CULTURE,t) && !(Q && Q.phase==='fin')) return `<div class="fait entree"><div class="gros">✓ Quiz déjà fait</div><p style="margin:6px 0 0">Le résultat de la culture d'entreprise est enregistré.</p></div><button class="btn clair" onclick="aller('home')">Voir toutes les épreuves</button>`;
