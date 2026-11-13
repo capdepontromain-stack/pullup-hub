@@ -578,7 +578,7 @@ const EP = [            // programme validé le 10/11 (présentation complète) 
  {n:11, nom:'Le théâtre', ico:'🎭', type:'jury', places:3, min:10, desc:"Jouez l'ascension d'un membre de Proxim'Services, du premier jour jusqu'au poste de PDG : 8 minutes de préparation au maximum, 2 minutes pour jouer. Le jury note votre scène."},
  {n:12, nom:'Le jeu du clou', ico:'🔨', type:'chrono', chronoDebut:true, places:2, min:8, desc:"Les yeux bandés, guidé par son équipe, chacun va enfoncer le clou : le chrono tourne !"},
  {n:13, nom:'La pyramide humaine', ico:'🤸', type:'jury', places:3, min:5, desc:"Toute l'équipe construit une pyramide humaine, en sécurité. Pour la valider, l'animateur monte tout en haut !"},
- {n:14, nom:'Défis photo', ico:'📸', type:'defis', places:40, min:0, desc:"10 défis à faire avec vos téléphones, en parallèle des épreuves : idéal pendant l'attente. Chaque photo part directement chez l'organisation, depuis l'application."}
+ {n:14, nom:'Défis photo', ico:'📸', type:'defis', places:40, min:0, desc:"11 défis à faire avec vos téléphones, en parallèle des épreuves : idéal pendant l'attente. Chaque photo part directement chez l'organisation, depuis l'application."}
 ];
 // Notation validée par Romain le 12/11 : note sur 10 avec critères (catapulte, Kapla, Archery Tag, corde, lettres, théâtre, pyramide),
 // temps (roues, parcours, clou), total de points (cibles, haches), bonnes réponses classées et doublées (culture).
@@ -606,7 +606,8 @@ const DEFIS = [            // validés par Romain le 12/11 : 1 point si la photo
  {d:6, nom:'Votre travail au quotidien', ico:'💼', type:'photo', desc:"Mettez en scène une situation de travail chez Proxim'Services, comme si on y était."},
  {d:7, nom:'Soyez fédérateurs', ico:'🌍', type:'photo', desc:"Posez avec des membres d'autres équipes : plus il y a d'équipes différentes sur la photo, mieux c'est !"},
  {d:8, nom:"L'art humain", ico:'🎨', type:'photo', desc:"C'est quoi l'art pour vous ? Créez une œuvre d'art vivante avec vos corps : une sculpture, un tableau, une forme… Soyez créatifs !"},
- {d:9, nom:'La position de guerrier', ico:'⚔️', type:'photo', guide:'proxim/exemple-guerrier.jpg', guideLeg:'Exemple : le haka des All Blacks (1932). Faites encore plus impressionnant !', desc:"Une photo d'équipe qui intimide vos adversaires : regards de feu, poses de combat, cri de guerre figé !"}
+ {d:9, nom:'La position de guerrier', ico:'⚔️', type:'photo', guide:'proxim/exemple-guerrier.jpg', guideLeg:'Exemple : le haka des All Blacks (1932). Faites encore plus impressionnant !', desc:"Une photo d'équipe qui intimide vos adversaires : regards de feu, poses de combat, cri de guerre figé !"},
+ {d:10, nom:'La photo avec Kenza', ico:'😂', type:'photo', guide:'proxim/exemple-kenza.jpg', guidePos:'center 12%', guideLeg:'Kenza est sur place aujourd\'hui : à vous de trouver Kenza !', desc:"Retrouvez Kenza pendant la journée et prenez ensemble une photo pleine d'humour. Faites rire tout le monde !"}
 ];
 const kd = (t,d)=>`${t}-${d}`;
 // WhatsApp en un geste : on dit bonjour une fois (lien direct, pas besoin d'enregistrer le contact) ;
@@ -852,7 +853,7 @@ function defis(){ const all={...state.defis}; Object.entries(local.d).forEach(([
 const defiEnvoye = (t,d) => { const r=defis()[kd(t,d)]; return !!(r && r.envoye); };
 const nbDefis = t => DEFIS.filter(x=>defiEnvoye(t,x.d)).length;
 const ptsDefi = r => r.note!=null ? Math.max(0,Math.min(2,+r.note)) : (r.envoye ? PTS_DEFI : 0);          // valeur d'un défi : la note de Romain (0 à 3), ou « bien » (2) sans note
-const DEFIS_MAX = 10, BONUS_MAX = 10, DEFIS_DIVISEUR = 2;                                                 // les 10 défis : 20 points bruts ramenés sur 10, comme une épreuve ; les bonus aussi (10 max)
+const DEFIS_MAX = 10, BONUS_MAX = 10, DEFIS_DIVISEUR = 2;                                                 // les 11 défis : total divisé par 2, plafonné à 10, comme une épreuve ; les bonus aussi (10 max)
 const ptsDefiVal = r => ptsDefi(r);                                                   // 1 point par défi envoyé, 2 ou 3 si Romain trouve la photo réussie (10 max au total)
 const fait = (n,t) => n===DEFI_EP ? nbDefis(t)>=DEFIS.length : valide(passages()[kp(n,t)]);
 function calcul(){
@@ -1029,7 +1030,7 @@ const REGLES = `<ul class="regles">
       <li><span class="num" style="background:var(--orange)">2</span><div><b>N'oubliez pas la culture d'entreprise :</b> elle rapporte le double de points.</div></li>
       <li><span class="num" style="background:var(--rouge)">3</span><div><b>Épreuve en duel ?</b> À vous de trouver une équipe adverse pour l'affronter.</div></li>
       <li><span class="num" style="background:var(--vert)">4</span><div><b>À la fin de chaque épreuve,</b> tendez ce téléphone à l'animateur : c'est lui qui entre votre résultat.</div></li>
-      <li><span class="num" style="background:var(--marine)">📸</span><div><b>Défis photo, en parallèle :</b> 10 défis à faire quand vous voulez, envoyés à l'organisation directement depuis l'application. Parfait pendant l'attente !</div></li>
+      <li><span class="num" style="background:var(--marine)">📸</span><div><b>Défis photo, en parallèle :</b> 11 défis à faire quand vous voulez, envoyés à l'organisation directement depuis l'application. Parfait pendant l'attente !</div></li>
       <li><span class="num" style="background:var(--vert)">💬</span><div><b>Défi chat :</b> envoyez un premier message aux autres équipes (un défi, une vanne gentille) : <b>+1 point</b>.</div></li>
       <li><span class="num" style="background:var(--jaune);color:var(--nuit)">+</span><div><b>Bonus :</b> les animateurs récompensent l'ambiance, la cohésion, le fair-play, et donnent des coups de cœur. Les points restent secrets jusqu'au podium.</div></li>
     </ul>`;
@@ -1219,7 +1220,7 @@ function vDefis(){
       <p class="muted" style="margin:12px 0 0">Pour chaque défi : touchez <b>Faire</b>, prenez la photo, puis <b>Envoyer</b> : elle arrive directement chez l'organisation.</p></div>`;
   const photoDebut = !!(state.photos[t]||okPhoto(lsGet('photo_'+t,'')));
   h += DEFIS.map((d,i)=>{ const ok=defiEnvoye(t,d.d), c=PROXIM[i%4], txt=c===PROXIM[1]?'#3B2A00':'#fff'; const desc = d.d===0&&photoDebut&&!ok ? 'La photo prise à l\'inscription est prête : touchez Envoyer.' : d.desc;
-    return `<div class="defi entree ${ok?'ok':'couleur'}" style="--c:${c};--t:${txt};--fb:${c===PROXIM[1]?'#8A5A00':c}">${!ok&&d.guide?'':`<div class="ico">${ok?'✓':d.ico}</div>`}<div class="txt">${!ok&&d.guide?`<img class="defiEx" src="${d.guide}" alt="Exemple" onclick="faireDefi(${d.d})">`:''}<div class="t">${d.nom}</div><div class="muted">${desc}</div><span class="tag">📷 Photo</span></div>
+    return `<div class="defi entree ${ok?'ok':'couleur'}" style="--c:${c};--t:${txt};--fb:${c===PROXIM[1]?'#8A5A00':c}">${!ok&&d.guide?'':`<div class="ico">${ok?'✓':d.ico}</div>`}<div class="txt">${!ok&&d.guide?`<img class="defiEx" src="${d.guide}" alt="Exemple" ${d.guidePos?`style="object-position:${d.guidePos}"`:''} onclick="faireDefi(${d.d})">`:''}<div class="t">${d.nom}</div><div class="muted">${desc}</div><span class="tag">📷 Photo</span></div>
       ${ok?'<div class="st">ENVOYÉ</div>':`<button class="faireBtn" onclick="faireDefi(${d.d})">${d.d===0&&photoDebut?'Envoyer':'Faire'}</button>`}</div>`; }).join('');
   return h;
 }
@@ -1460,7 +1461,7 @@ function vOrg(){
       <li><span class="num" style="background:var(--jaune);color:var(--nuit)">🎓</span><div><b>Médaille culture d'entreprise</b> : le plus de bonnes réponses, puis la plus rapide. En cas d'égalité parfaite (même score, même temps) : le total de la matinée. Elle ne va jamais à l'équipe du grand prix.</div></li>
       <li><span class="num" style="background:var(--marine)">Σ</span><div><b>Grand prix</b> : épreuves (jusqu'à 140) + défis photo (10 max) + bonus (10 max) = 160 points au maximum.</div></li>
       <li><span class="num" style="background:#FF4D6D">❤</span><div><b>Bonus des animateurs</b> : ambiance, cohésion, fair-play, coup de cœur : +1 point par bouton. Ils comptent comme une épreuve : <b>10 points au maximum</b> sur la matinée.</div></li>
-      <li><span class="num" style="background:var(--marine)">📸</span><div><b>Défis photo</b> : 10 photos à thème, 1 point si elle est validée, 2 si elle est magnifique. Le total (sur 20) est ramené sur <b>10 points</b>, comme une épreuve.</div></li>
+      <li><span class="num" style="background:var(--marine)">📸</span><div><b>Défis photo</b> : 11 photos à thème, 1 point si elle est validée, 2 si elle est magnifique. Le total est divisé par 2, avec <b>10 points au maximum</b>, comme une épreuve.</div></li>
       <li><span class="num" style="background:var(--vert)">💬</span><div><b>Défi chat</b> : <b>+1 point</b> pour chaque équipe qui a écrit au moins un message (un message masqué ne compte pas).</div></li>
       <li><span class="num" style="background:var(--vert)">=</span><div><b>Égalité</b> : l'équipe qui a fait le plus d'épreuves passe devant, puis la meilleure culture d'entreprise.</div></li></ul></div></details>`;
   } else if(state.orgTab==='epreuves'){
@@ -1481,7 +1482,7 @@ function vOrg(){
     const l=c.dfs.filter(r=>r.envoye).sort((a,b)=>tms(b.updated_at)-tms(a.updated_at)), aNoter=l.filter(r=>r.note==null);
     const liste = state.filtrePhotos==='tout' ? l : aNoter; chargerPhotosDefis(liste);
     h += `<div class="card" style="padding:14px"><b style="font-family:var(--titre);font-size:19px;color:var(--marine)">📸 Défis photo</b>
-      <p class="muted" style="margin:4px 0 10px">Touchez une photo pour la voir en grand et la noter : <b>1</b> = validée (thème respecté), <b>2</b> = magnifique, <b>0</b> = refusée. Une photo pas encore notée compte 1 d'office. 10 photos, donc 20 points au maximum, ramenés sur 10 comme une épreuve.</p>
+      <p class="muted" style="margin:4px 0 10px">Touchez une photo pour la voir en grand et la noter : <b>1</b> = validée (thème respecté), <b>2</b> = magnifique, <b>0</b> = refusée. Une photo pas encore notée compte 1 d'office. 11 photos : le total est divisé par 2, avec 10 points au maximum, comme une épreuve.</p>
       <div class="filtre"><button class="${state.filtrePhotos!=='tout'?'on':''}" onclick="filtrePhotos('anoter')">À noter (${aNoter.length})</button><button class="${state.filtrePhotos==='tout'?'on':''}" onclick="filtrePhotos('tout')">Toutes (${l.length})</button></div>
       ${aNoter.length?`<button class="btn orange gros" style="margin-top:10px" onclick="noterSuite()">▶ Noter les ${aNoter.length} photos une par une</button>`:''}</div>`;
     h += liste.length ? `<div class="galD">${liste.map(r=>{ const k=kd(r.team,r.defi), D=DEFIS.find(x=>x.d===r.defi)||{nom:'?'}, ph=state.photosDefis[k]; const n=r.note==null?null:+r.note;
