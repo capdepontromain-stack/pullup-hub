@@ -285,6 +285,9 @@
   .tirsTete { display:flex; justify-content:space-between; align-items:baseline; font-size:22px; color:#fff; margin:2px 0 8px; } .tirsTete span { color:#CFE4F3; font-size:16px; } .tirsTete span b { font-size:30px; color:var(--jaune); }
   .tirsListe { display:flex; flex-wrap:wrap; gap:5px; margin:0 0 10px; } .tirsListe i { font-style:normal; width:30px; height:30px; border-radius:8px; display:grid; place-items:center; font-weight:900; background:#fff; color:var(--marine); font-size:14px; } .tirsListe i.vide { background:rgba(255,255,255,.14); }
   .tirsBtns { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; } .tirsBtns button { font:inherit; font-size:24px; font-weight:900; padding:14px 0; border-radius:14px; border:0; background:var(--orange); color:#fff; box-shadow:0 3px 0 #B84F0A; } .tirsBtns button:active { transform:translateY(2px); box-shadow:none; }
+  @keyframes clignoteP { 0%,100% { box-shadow:0 0 0 0 rgba(242,107,18,.7), var(--ombre); filter:brightness(1); } 50% { box-shadow:0 0 0 10px rgba(242,107,18,0), var(--ombre); filter:brightness(1.15); } }
+  button.photosANoter, button.photosANoter.entree { animation:clignoteP 1.3s ease-in-out infinite !important; }
+  .tabs .pastille { animation:clignoteP 1.3s ease-in-out infinite !important; }
   .photosANoter { display:flex; align-items:center; gap:12px; width:100%; border:0; border-radius:18px; padding:16px; margin:0 0 12px; background:linear-gradient(135deg,var(--orange),var(--corail)); color:#fff; font:inherit; font-size:18px; font-weight:900; text-align:left; box-shadow:var(--ombre); } .photosANoter span { font-size:34px; }
   .zoomP .zd { font-size:13px; color:#CFE4F3; margin:4px 0 8px; line-height:1.35; }
   .msg.masque { opacity:.45; text-decoration:line-through; }
