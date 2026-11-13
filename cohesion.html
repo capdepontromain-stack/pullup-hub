@@ -163,6 +163,7 @@
   .chrono .aff { flex:1; font-family:var(--titre); font-weight:800; font-size:30px; color:var(--jaune); background:rgba(0,0,0,.25); border-radius:14px; padding:6px 12px; text-align:center; font-variant-numeric:tabular-nums; }
   .chrono button { border:0; border-radius:14px; padding:14px 14px; font-weight:900; font-size:16px; background:#2DBB6C; color:#fff; }
   .chrono button.run { background:#F05A5A; } .chrono button.z { background:rgba(255,255,255,.15); }
+  .chrono.grand { flex-wrap:wrap; } .chrono.grand .aff { flex:1 1 100%; font-size:54px; padding:12px; } .chrono.grand button#chBtn { flex:1; font-size:24px; padding:20px; } .chrono.grand button.z { font-size:22px; padding:20px 22px; }
   .rendre { text-align:center; background:var(--jaune); color:var(--nuit); font-weight:900; border-radius:14px; padding:10px; margin-bottom:10px; animation:pouls 1.4s ease-in-out 3; }
   .palier { display:inline-block; margin-top:12px; background:var(--jaune); color:var(--nuit); font-weight:900; border-radius:20px; padding:6px 14px; animation:revele .7s cubic-bezier(.2,1.4,.4,1) both; }
   .rappelDefis { display:flex; gap:12px; align-items:center; width:100%; text-align:left; border:0; border-radius:18px; padding:14px 16px; margin-bottom:12px; background:linear-gradient(135deg,#7B4FC4,#E2558C); color:#fff; font:inherit; box-shadow:var(--ombre); }
@@ -564,10 +565,10 @@ const EMPREINTES = /*EMPREINTES*/{org:'a6ca8ea66d7c7a26b79fab5298620f3efb5d4f7f6
 // type : duel / chrono (secondes) / points / jury (note sur 10) / quiz (bonnes réponses sur 10) / hauteur (cm)
 const EP = [            // programme validé le 10/11 (présentation complète) : 13 épreuves + les défis photo en parallèle
  {n:1, nom:'La catapulte', ico:'🏐', type:'duel', places:4, min:7, desc:"Volley géant avec des catapultes : deux équipes se renvoient des ballons de baudruche remplis d'eau."},
- {n:2, nom:'Les roues', ico:'🎡', type:'chrono', places:5, min:5, desc:"Toute l'équipe à l'intérieur des roues de couleur : un parcours aller-retour chronométré. Pas de pied en dehors de la bâche !"},
+ {n:2, nom:'Les roues', ico:'🎡', type:'chrono', chronoDebut:true, places:5, min:5, desc:"Toute l'équipe à l'intérieur des roues de couleur : un parcours aller-retour chronométré. Pas de pied en dehors de la bâche !"},
  {n:3, nom:'Le Kapla', ico:'🧱', type:'jury', places:5, min:5, desc:"Construisez une sculpture sur la cohésion et la solidarité chez Proxim'Services, puis présentez-la à l'oral en une minute. Le jury note l'œuvre et la présentation."},
  {n:4, nom:"L'Archery Tag", ico:'🏹', type:'duel', places:4, min:10, desc:"Arcs et flèches à embout mousse : deux équipes face à face, on compte les personnes touchées. Quand on est touché, on passe l'arc à un coéquipier."},
- {n:5, nom:"Le parcours d'obstacles", ico:'🏃', type:'chrono', places:2, min:5, desc:"Toute l'équipe franchit le parcours, jusqu'au dernier : le chrono s'arrête quand le dernier arrive."},
+ {n:5, nom:"Le parcours d'obstacles", ico:'🏃', type:'chrono', chronoDebut:true, places:2, min:5, desc:"Toute l'équipe franchit le parcours, jusqu'au dernier : le chrono s'arrête quand le dernier arrive."},
  {n:6, nom:'Le tir à la corde', ico:'💪', type:'duel', places:2, min:5, desc:"Deux équipes, une corde : définissez votre stratégie, un cri de guerre, et tirez ! Jamais la corde enroulée autour du bras ou de la taille."},
  {n:7, nom:'Les lettres', ico:'🔤', type:'points', unite:"Nombre de mots trouvés", court:'mots', places:4, min:7, desc:"Une énigme, des lettres : reconstituez un maximum de mots dans le temps donné."},
  {n:8, nom:'Les cibles de foot', ico:'⚽', type:'points', tirs:15, places:2, min:10, desc:"15 tirs sur la cible géante, un par participant : l'animateur compte chaque tir sur ce téléphone et les points s'additionnent."},
@@ -1200,6 +1201,7 @@ function vEpreuve(){
       : `<button class="btn vert gros entree" onclick="aller('quiz')">🎓 Lancer le quiz :<br>je tends le téléphone à l'animateur</button>`;
     h += `<p style="text-align:center"><button class="lnk" onclick="passerTelephone()">Pas de quiz sur ce téléphone ? L'animateur saisit le résultat</button></p>`; }
   else if(e.tirs) h += `<button class="btn vert gros entree" onclick="passerTelephone()">On commence :<br>je tends le téléphone à l'animateur</button><p class="muted" style="text-align:center">L'animateur compte chaque ${e.n===9?'hache':'tir'} sur ce téléphone.</p>`;
+  else if(e.chronoDebut) h += `<button class="btn vert gros entree" onclick="passerTelephone()">On commence :<br>je tends le téléphone à l'animateur</button><p class="muted" style="text-align:center">L'animateur lance le chrono sur ce téléphone.</p>`;
   else h += `<button class="btn vert gros entree" onclick="passerTelephone()">Épreuve terminée :<br>je tends le téléphone à l'animateur</button>`;
   return h;
 }
@@ -1260,9 +1262,9 @@ async function preparerPhotoEquipe(){
 }
 
 function vPassage(){ const e=EPN[state.ep], t=state.team;
-  return `<div class="passage entree"><div class="mainP"><img src="proxim/picto.png" alt=""><span>📲</span></div><div class="pt">${e.tirs?'C\'est parti !':'Épreuve terminée !'}</div><h1>Tendez le téléphone à l'animateur</h1>${e.tirs?`<p style="color:#CFE4F3;margin:-4px 0 12px">Il compte vos ${e.tirs} ${e.n===9?'haches':'tirs'} un par un sur ce téléphone.</p>`:''}
+  return `<div class="passage entree"><div class="mainP"><img src="proxim/picto.png" alt=""><span>📲</span></div><div class="pt">${e.tirs||e.chronoDebut?'C\'est parti !':'Épreuve terminée !'}</div><h1>Tendez le téléphone à l'animateur</h1>${e.tirs?`<p style="color:#CFE4F3;margin:-4px 0 12px">Il compte vos ${e.tirs} ${e.n===9?'haches':'tirs'} un par un sur ce téléphone.</p>`:e.chronoDebut?'<p style="color:#CFE4F3;margin:-4px 0 12px">Il lance le chrono sur ce téléphone au moment du départ.</p>':''}
     <div class="qui2">${avatar(t)}<div><b>${titreEq(t)}</b><br>${e.ico} ${e.nom}</div></div>
-    <button class="btn or gros" onclick="demarrerSaisie()">${e.tirs?'Je suis l\'animateur : compter les '+(e.n===9?'haches':'tirs'):'Je suis l\'animateur : noter le résultat'}</button>
+    <button class="btn or gros" onclick="demarrerSaisie()">${e.tirs?'Je suis l\'animateur : compter les '+(e.n===9?'haches':'tirs'):e.chronoDebut?'Je suis l\'animateur : ouvrir le chrono':'Je suis l\'animateur : noter le résultat'}</button>
     <button class="lnk" style="color:#CFE4F3" onclick="aller('ep')">← Pas encore fini</button></div>`; }
 // ---------- Saisie de l'animateur ----------
 function vSaisie(){
@@ -1274,10 +1276,11 @@ function vSaisie(){
       <button class="chipAnim ${s.contreAnim?'sel':''}" onclick="contreAnimateurs(this)">Contre les animateurs</button>
       <div class="advNom" id="advNom"></div>
       <label>Résultat de l'équipe ${t}</label><div class="choix" id="grpRes"><button class="v ${s.res==='V'?'sel':''}" onclick="choisirRes('V',this)">Gagné</button><button class="${s.res==='N'?'sel':''}" onclick="choisirRes('N',this)">Égalité</button><button class="d ${s.res==='D'?'sel':''}" onclick="choisirRes('D',this)">Perdu</button></div>`;
-  } else if(e.type==='chrono') champ = `<label>Temps de l'équipe</label><div class="row"><div class="champU"><input type="number" id="mm" inputmode="numeric" pattern="[0-9]*" min="0" max="59" placeholder="0" enterkeyhint="next" oninput="majRecap()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('ss').focus();}" value="${s.mm??''}"><span>min</span></div><div class="champU"><input type="number" id="ss" inputmode="numeric" pattern="[0-9]*" min="0" placeholder="00" enterkeyhint="done" oninput="majRecap()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" value="${s.ss??''}"><span>s</span></div></div>
+  } else if(e.type==='chrono') champ = (e.chronoDebut ? `<label>Lancez le chrono au départ de l'équipe</label><div class="chrono grand"><div class="aff" id="chAff">0:00.0</div><button id="chBtn" onclick="chronoBouton()">▶ Départ</button><button class="z" onclick="chronoZero()" aria-label="Remettre à zéro">↺</button></div>
+    <p class="muted" style="margin:6px 0 14px">Touchez <b>Stop</b> à l'arrivée du dernier : le temps se remplit tout seul ci-dessous. Si l'écran se met en veille, le chrono continue.</p>` : '') + `<label>Temps de l'équipe</label><div class="row"><div class="champU"><input type="number" id="mm" inputmode="numeric" pattern="[0-9]*" min="0" max="59" placeholder="0" enterkeyhint="next" oninput="majRecap()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('ss').focus();}" value="${s.mm??''}"><span>min</span></div><div class="champU"><input type="number" id="ss" inputmode="numeric" pattern="[0-9]*" min="0" placeholder="00" enterkeyhint="done" oninput="majRecap()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" value="${s.ss??''}"><span>s</span></div></div>
     <p class="exemple">Exemple : <b>1 min 20 s</b> → tapez <b>1</b> dans « min » puis <b>20</b> dans « s ».</p>
-    <div class="chrono"><div class="aff" id="chAff">0:00.0</div><button id="chBtn" onclick="chronoBouton()">▶ Chrono</button><button class="z" onclick="chronoZero()" aria-label="Remettre à zéro">↺</button></div>
-    <p class="muted" style="margin:6px 0 0">Chronométrez ici ou avec votre propre chrono : le temps se remplit tout seul à l'arrêt.</p>`;
+    ${e.chronoDebut ? '' : `<div class="chrono"><div class="aff" id="chAff">0:00.0</div><button id="chBtn" onclick="chronoBouton()">▶ Chrono</button><button class="z" onclick="chronoZero()" aria-label="Remettre à zéro">↺</button></div>
+    <p class="muted" style="margin:6px 0 0">Chronométrez ici ou avec votre propre chrono : le temps se remplit tout seul à l'arrêt.</p>`}`;
   else if(e.type==='jury') champ = `<label>Note sur 10</label>${e.critere?`<p class="exemple" style="margin:-2px 2px 9px">${e.critere}</p>`:''}<div class="notes" id="grpNote">${Array.from({length:11},(_,i)=>`<button class="${s.note===i?'sel':''}" onclick="choisirNote(${i},this)">${i}</button>`).join('')}</div>`;
   else if(e.type==='quiz') champ = `<label>Nombre de bonnes réponses</label><div class="champU"><input type="number" id="mv" inputmode="numeric" pattern="[0-9]*" min="0" placeholder="0" enterkeyhint="next" oninput="majRecap()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" value="${s.mv??''}"><span>✓</span></div>
     <p class="exemple">Les bonnes réponses dans le temps imparti : l'application classe toutes les équipes et double les points.</p>
@@ -1696,7 +1699,9 @@ window.demarrerSaisie = ()=>{ chT0=0; chAcc=0; clearInterval(chTimer); const r=p
   if(e.tirs){ state.saisie.tirs = lsGet(cleTirs(), []); if(state.saisie.tirs.length && state.saisie.mv==null) state.saisie.mv=state.saisie.tirs.reduce((a,b)=>a+b,0); }
   const Qd=quizEtat(state.team); if(e.type==='quiz' && state.saisie.mv==null && Qd && Qd.phase==='fin' && Qd.fin){        // le téléphone de l'équipe ne connaît pas les points : on reprend son quiz
     state.saisie.mv=Qd.rep.filter(x=>x.ok).length; state.saisie.qReste=QUIZ_DUREE-Math.min(QUIZ_DUREE, Math.round((Qd.fin-Qd.debut)/1000)); }
-  state.view='saisie'; render(); window.scrollTo(0,0); majRecap(); };
+  if(e.type==='chrono'){ const c=lsGet(cleChrono(), null); if(c && (c.t0||c.acc)){ chT0=c.t0||0; chAcc=c.acc||0; } }      // chrono repris après une veille ou un rechargement
+  state.view='saisie'; render(); window.scrollTo(0,0); majRecap();
+  if(e.type==='chrono' && (chT0||chAcc)){ chronoAff(); const b=$('#chBtn'); if(chT0){ chTimer=setInterval(chronoAff,100); if(b){ b.textContent='■ Stop'; b.classList.add('run'); } } else if(b) b.textContent='▶ Reprendre'; } };
 // Comptage lancer par lancer : gardé sur le téléphone jusqu'à la validation (un rechargement ne perd rien)
 const cleTirs = ()=>'tirs_'+state.ep+'_'+state.team;
 function htmlTirs(){ const e=EPN[state.ep], T=(state.saisie&&state.saisie.tirs)||[], n=e.tirs, tot=T.reduce((a,b)=>a+b,0), mot=e.n===9?'Hache':'Tir';
@@ -1711,9 +1716,11 @@ window.annulerSaisie = ()=>{ state.saisie=null; const p=vuePrecedente(); if(p===
 // Chronomètre intégré (épreuves au temps)
 let chT0=0, chAcc=0, chTimer=0;
 function chronoAff(){ const ms=chAcc+(chT0?Date.now()-chT0:0), s=ms/1000; const el=$('#chAff'); if(el) el.textContent=Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0')+'.'+Math.floor((ms%1000)/100); }
-window.chronoBouton = ()=>{ const b=$('#chBtn'); if(!chT0){ chT0=Date.now(); clearInterval(chTimer); chTimer=setInterval(chronoAff,100); if(b){ b.textContent='■ Stop'; b.classList.add('run'); } vibre(20); }
-  else { chAcc+=Date.now()-chT0; chT0=0; clearInterval(chTimer); chronoAff(); const s=Math.round(chAcc/1000); const mm=$('#mm'), ss=$('#ss'); if(mm) mm.value=Math.floor(s/60); if(ss) ss.value=s%60; if(b){ b.textContent='▶ Reprendre'; b.classList.remove('run'); } vibre([30,30,30]); majRecap(); } };
-window.chronoZero = ()=>{ chT0=0; chAcc=0; clearInterval(chTimer); chronoAff(); const b=$('#chBtn'); if(b){ b.textContent='▶ Chrono'; b.classList.remove('run'); } };
+const cleChrono = ()=>'chrono_'+state.ep+'_'+state.team;
+const garderChrono = ()=>lsSet(cleChrono(), (chT0||chAcc) ? {t0:chT0, acc:chAcc} : null);
+window.chronoBouton = ()=>{ const b=$('#chBtn'); if(!chT0){ chT0=Date.now(); clearInterval(chTimer); chTimer=setInterval(chronoAff,100); if(b){ b.textContent='■ Stop'; b.classList.add('run'); } vibre(20); garderChrono(); }
+  else { chAcc+=Date.now()-chT0; chT0=0; clearInterval(chTimer); chronoAff(); const s=Math.round(chAcc/1000); const mm=$('#mm'), ss=$('#ss'); if(mm) mm.value=Math.floor(s/60); if(ss) ss.value=s%60; if(b){ b.textContent='▶ Reprendre'; b.classList.remove('run'); } vibre([30,30,30]); majRecap(); garderChrono(); } };
+window.chronoZero = ()=>{ if(chT0 && !confirm('Remettre le chrono à zéro ?')) return; chT0=0; chAcc=0; clearInterval(chTimer); chronoAff(); const b=$('#chBtn'); if(b){ b.textContent=EPN[state.ep]&&EPN[state.ep].chronoDebut?'▶ Départ':'▶ Chrono'; b.classList.remove('run'); } garderChrono(); };
 window.choisirRes = (r,btn)=>{ state.saisie.res=r; document.querySelectorAll('#grpRes button').forEach(b=>b.classList.toggle('sel',b===btn)); vibre(15); majRecap(); };
 window.choisirNote = (n,btn)=>{ state.saisie.note=n; document.querySelectorAll('#grpNote button').forEach(b=>b.classList.toggle('sel',b===btn)); vibre(15); majRecap(); };
 window.basculerBonus = (k,btn)=>{ state.saisie.bonus[k]=!state.saisie.bonus[k]; btn.classList.toggle('sel',state.saisie.bonus[k]); vibre(15); majRecap(); };
@@ -1740,7 +1747,7 @@ window.validerSaisie = ()=>{
   const maintenant=horloge().toISOString(); const etaitFait=fait(e.n,t);
   const row={ event:EVENT, stand:e.n, team:t, resultat:res, mesure:mes, code:CLE, updated_at:maintenant }; BONUS.forEach(b=>row[b.col]=!!s.bonus[b.k]);
   if(e.type==='quiz'){ const v=parseFloat(String(($('#subsid')||{}).value||'').replace(',','.')); if(!isNaN(v)) envoyerSubsid(t, v); }
-  local.p[kp(e.n,t)]=row; pousser('tb_passages','event,stand,team','p-'+kp(e.n,t),row); if(e.tirs) lsSet('tirs_'+e.n+'_'+t, []);
+  local.p[kp(e.n,t)]=row; pousser('tb_passages','event,stand,team','p-'+kp(e.n,t),row); if(e.tirs) lsSet('tirs_'+e.n+'_'+t, []); if(e.type==='chrono'){ lsSet('chrono_'+e.n+'_'+t, null); chT0=0; chAcc=0; clearInterval(chTimer); }
   // Duel : on enregistre aussi le résultat de l'équipe adverse (sauf si elle a déjà un résultat contre une autre équipe)
   let noteAdv='';
   if(e.type==='duel' && mes>0){ const r2=passages()[kp(e.n,mes)];
