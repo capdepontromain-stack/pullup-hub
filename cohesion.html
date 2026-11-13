@@ -506,7 +506,7 @@ const NB_EP = 13;                                   // épreuves notées par les
 const DEBUT_EPREUVES = ESSAI ? new Date(Date.now()-45*60000) : new Date(2026,10,14,10,15);   // en essai : comme si on jouait depuis 45 minutes
 const FIN_EPREUVES = ESSAI ? new Date(Date.now()+90*60000) : new Date(2026,10,14,12,15);
 const AVANT_JOUR_J = false;                           // (ancien verrou remplacé par la période de test)
-const CULTURE = 12;
+const CULTURE = 10;                                  // numéro du terrain (renuméroté le 13/11)
 // Quiz culture d'entreprise joué sur le téléphone de l'équipe : 15 minutes, QCM ou réponse à taper (orthographe tolérée), on peut passer.
 // ⚠️ QUESTIONS D'ESSAI : Romain fournira les vraies questions et réponses. Format : q, choix (QCM, bon = n° du bon choix) ou ok (réponses acceptées), rep (affichée), expl.
 const QUIZ_DUREE = 900;                              // 15 minutes (Romain, 12/11 au soir)
@@ -565,33 +565,34 @@ const teinteEp = n => PROXIM[(n-1)%4];
 const EMPREINTES = /*EMPREINTES*/{org:'a6ca8ea66d7c7a26b79fab5298620f3efb5d4f7f66244fbe6c6affab93bb8cf4',mots:['96f99aa2ff66d5d72f426153fbc18bffef24b9021a1205ea2628104ea0c772bd','ff29bece9439c435bd6344efba9fef08d27452a98ec9bd8478cb75f42a487ad5','7bcb70b7feaeb1b11fa4dcbac9138b9f04a81f39a16f5efa1f25c9cde82a0871'],lien:'de3eaa536eaa09313575392ba967fff3490b0630521514f81b3f0f9cfe33f126'};
 // type : duel / chrono (secondes) / points / jury (note sur 10) / quiz (bonnes réponses sur 10) / hauteur (cm)
 const EP = [            // programme validé le 10/11 (présentation complète) : 13 épreuves + les défis photo en parallèle
- {n:1, nom:'La catapulte', ico:'🏐', type:'duel', places:4, min:7, desc:"Volley géant avec des catapultes : deux équipes se renvoient des ballons de baudruche remplis d'eau."},
+ {n:1, nom:"L'Archery Tag", ico:'🏹', type:'duel', places:4, min:10, desc:"Arcs et flèches à embout mousse : deux équipes face à face, on compte les personnes touchées. Quand on est touché, on passe l'arc à un coéquipier."},
  {n:2, nom:'Les roues', ico:'🎡', type:'chrono', chronoDebut:true, places:5, min:5, desc:"Toute l'équipe à l'intérieur des roues de couleur : un parcours aller-retour chronométré. Pas de pied en dehors de la bâche !"},
  {n:3, nom:'Le Kapla', ico:'🧱', type:'jury', places:5, min:5, desc:"Construisez une sculpture sur la cohésion et la solidarité chez Proxim'Services, puis présentez-la à l'oral en une minute. Le jury note l'œuvre et la présentation."},
- {n:4, nom:"L'Archery Tag", ico:'🏹', type:'duel', places:4, min:10, desc:"Arcs et flèches à embout mousse : deux équipes face à face, on compte les personnes touchées. Quand on est touché, on passe l'arc à un coéquipier."},
- {n:5, nom:"Le parcours d'obstacles", ico:'🏃', type:'chrono', chronoDebut:true, places:2, min:5, desc:"Toute l'équipe franchit le parcours, jusqu'au dernier : le chrono s'arrête quand le dernier arrive."},
+ {n:4, nom:'Les lettres', ico:'🔤', type:'points', unite:"Nombre de mots trouvés", court:'mots', places:4, min:7, desc:"Une énigme, des lettres : reconstituez un maximum de mots dans le temps donné."},
+ {n:5, nom:'La catapulte', ico:'🏐', type:'duel', places:4, min:7, desc:"Volley géant avec des catapultes : deux équipes se renvoient des ballons de baudruche remplis d'eau."},
  {n:6, nom:'Le tir à la corde', ico:'💪', type:'duel', places:2, min:5, desc:"Deux équipes, une corde : définissez votre stratégie, un cri de guerre, et tirez ! Jamais la corde enroulée autour du bras ou de la taille."},
- {n:7, nom:'Les lettres', ico:'🔤', type:'points', unite:"Nombre de mots trouvés", court:'mots', places:4, min:7, desc:"Une énigme, des lettres : reconstituez un maximum de mots dans le temps donné."},
+ {n:7, nom:'Le lancer de haches', ico:'🪓', type:'points', tirs:15, places:2, min:10, desc:"15 lancers, un seul lanceur à la fois : l'animateur compte chaque hache sur ce téléphone et les points s'additionnent."},
  {n:8, nom:'Les cibles de foot', ico:'⚽', type:'points', tirs:15, places:2, min:10, desc:"15 tirs sur la cible géante, un par participant : l'animateur compte chaque tir sur ce téléphone et les points s'additionnent."},
- {n:9, nom:'Le lancer de haches', ico:'🪓', type:'points', tirs:15, places:2, min:10, desc:"15 lancers, un seul lanceur à la fois : l'animateur compte chaque hache sur ce téléphone et les points s'additionnent."},
- {n:10, nom:'Le jeu du clou', ico:'🔨', type:'chrono', chronoDebut:true, places:2, min:8, desc:"Les yeux bandés, guidé par son équipe, chacun va enfoncer le clou : le chrono tourne !"},
+ {n:9, nom:"Le parcours d'obstacles", ico:'🏃', type:'chrono', chronoDebut:true, places:2, min:5, desc:"Toute l'équipe franchit le parcours, jusqu'au dernier : le chrono s'arrête quand le dernier arrive."},
+ {n:10, nom:"La culture d'entreprise", ico:'🎓', type:'quiz', places:5, min:15, desc:"40 questions en 15 minutes sur Proxim'Services et votre métier, directement sur ce téléphone. Classement au nombre de bonnes réponses, puis à la rapidité. C'est l'épreuve qui rapporte le plus : points doublés !"},
  {n:11, nom:'Le théâtre', ico:'🎭', type:'jury', places:3, min:10, desc:"Jouez l'ascension d'un membre de Proxim'Services, du premier jour jusqu'au poste de PDG : 8 minutes de préparation au maximum, 2 minutes pour jouer. Le jury note votre scène."},
- {n:12, nom:"La culture d'entreprise", ico:'🎓', type:'quiz', places:5, min:15, desc:"40 questions en 15 minutes sur Proxim'Services et votre métier, directement sur ce téléphone. Classement au nombre de bonnes réponses, puis à la rapidité. C'est l'épreuve qui rapporte le plus : points doublés !"},
+ {n:12, nom:'Le jeu du clou', ico:'🔨', type:'chrono', chronoDebut:true, places:2, min:8, desc:"Les yeux bandés, guidé par son équipe, chacun va enfoncer le clou : le chrono tourne !"},
  {n:13, nom:'La pyramide humaine', ico:'🤸', type:'jury', places:3, min:5, desc:"Toute l'équipe construit une pyramide humaine, en sécurité. Pour la valider, l'animateur monte tout en haut !"},
  {n:14, nom:'Défis photo', ico:'📸', type:'defis', places:40, min:0, desc:"10 défis à faire avec vos téléphones, en parallèle des épreuves : idéal pendant l'attente. Chaque photo part directement chez l'organisation, depuis l'application."}
 ];
 // Notation validée par Romain le 12/11 : note sur 10 avec critères (catapulte, Kapla, Archery Tag, corde, lettres, théâtre, pyramide),
 // temps (roues, parcours, clou), total de points (cibles, haches), bonnes réponses classées et doublées (culture).
 const CRITERES = {
- 1:"Notez sur 10 : la victoire, le nombre de passes réussies, la stratégie, la répartition sur le terrain, le fair-play et l'ambiance.",
+ 1:"Notez sur 10 : ont-ils touché souvent, se sont-ils fait peu toucher, les rotations de l'arc, l'engagement et le jeu collectif.",
  3:"Notez sur 10 : la cohésion (tout le monde a participé ?), la beauté de la construction, les valeurs qui s'en dégagent et l'explication à l'oral.",
- 4:"Notez sur 10 : ont-ils touché souvent, se sont-ils fait peu toucher, les rotations de l'arc, l'engagement et le jeu collectif.",
+ 4:"Notez sur 10 : le nombre de mots trouvés, l'habileté, la stratégie et le collectif.",
+ 5:"Notez sur 10 : la victoire, le nombre de passes réussies, la stratégie, la répartition sur le terrain, le fair-play et l'ambiance.",
  6:"Notez sur 10 : la victoire ou la défaite, le collectif, la stratégie et l'engagement de toute l'équipe.",
- 7:"Notez sur 10 : le nombre de mots trouvés, l'habileté, la stratégie et le collectif.",
  11:"Notez sur 10 : la création et les idées, la façon de jouer, tous ensemble sur scène, la bonne humeur et la créativité.",
  13:"Notez sur 10 : la créativité, la joie, la beauté de la pyramide, le collectif et la rapidité."
 };
-EP.forEach(e=>{ if([1,4,6].includes(e.n)) e.duel=true; if(CRITERES[e.n]){ e.type='jury'; e.critere=CRITERES[e.n]; } });
+EP.forEach(e=>{ if([1,5,6].includes(e.n)) e.duel=true;   // Archery Tag 1, catapulte 5, tir à la corde 6 (numéros du terrain)
+  if(CRITERES[e.n]){ e.type='jury'; e.critere=CRITERES[e.n]; } });
 const EPN = Object.fromEntries(EP.map(e=>[e.n,e]));
 const DEFI_EP = 14, PTS_DEFI = 1;                   // défis rangés en n°14 dans le code ; une photo reçue vaut 1 d'office, Romain peut mettre 0, 1 ou 2
 const WHATSAPP = '262693817882', TEL_ORGA = '06 93 81 78 82';
@@ -619,7 +620,8 @@ const CONTACT_WA = (titre)=> waFait()
   <a class="lnk" style="display:block;text-align:center" href="proxim/organisation.vcf" onclick="waBonjour()">ou enregistrer le contact de l'organisation</a>`;
 window.waBonjour = ()=>{ lsSet('wa_ok',true); setTimeout(()=>{ if(['envoiPhoto','ep','defi'].includes(state.view)) render(true); }, 1200); };
 const lienWA = txt => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(txt)}`;
-const img = n => n===DEFI_EP ? 'proxim/defis.jpg?v=4' : `proxim/ep${String(n).padStart(2,'0')}.jpg?v=4`;
+const PHOTO_EP = {1:4,2:2,3:3,4:7,5:1,6:6,7:9,8:8,9:5,10:12,11:11,12:10,13:13};   // nouveau numéro -> fichier photo (les fichiers gardent l'ancien numéro)
+const img = n => n===DEFI_EP ? 'proxim/defis.jpg?v=4' : `proxim/ep${String(PHOTO_EP[n]||n).padStart(2,'0')}.jpg?v=4`;
 const vignette = n => n===CULTURE ? 'proxim/ep12-carre.jpg?v=3' : img(n);
 const MAXPTS = e => e.type==='quiz' ? 20 : 10;
 const BAREME = { duel:'Victoire 10 points · Égalité 6 · Défaite 3', jury:'La note sur 10 de l\'animateur donne vos points', quiz:'Classement au nombre de bonnes réponses, puis à la rapidité, points doublés : jusqu\'à 20 points',
@@ -628,22 +630,22 @@ const BAREME = { duel:'Victoire 10 points · Égalité 6 · Défaite 3', jury:'L
 const BONUS = [ {k:'a', col:'b_ambiance', nom:'Ambiance', ico:'🎉', pts:1}, {k:'c', col:'b_cohesion', nom:'Cohésion', ico:'🤝', pts:1}, {k:'f', col:'b_fairplay', nom:'Fair-play', ico:'👏', pts:1}, {k:'h', col:'b_coeur', nom:'Coup de cœur', ico:'❤️', pts:1} ];
 const ptsBonus = r => BONUS.reduce((s,b)=>s+(r&&r[b.col]?b.pts:0),0);
 const icoBonus = r => BONUS.filter(b=>r&&r[b.col]).map(b=>b.ico).join('');
-const DEPART_PLAN = [[1,4],[2,2],[3,3],[4,4],[5,1],[6,2],[7,2],[8,1],[9,1],[10,2],[11,2],[12,3],[13,2]];   // validé par Romain le 12/11 (3e version, définitive)   // 29 équipes réparties sur les 13 épreuves au départ
+const DEPART_PLAN = [[1,4],[2,2],[3,3],[4,2],[5,4],[6,2],[7,1],[8,1],[9,1],[10,3],[11,2],[12,2],[13,2]];   // même plan qu'avant (12/11), renuméroté selon le terrain le 13/11   // validé par Romain le 12/11 (3e version, définitive)   // 29 équipes réparties sur les 13 épreuves au départ
 const DEPART = {}; (()=>{ let t=1; DEPART_PLAN.forEach(([s,n])=>{ for(let i=0;i<n;i++) DEPART[t++]=s; }); })();
 // Rappels pour l'animateur (repris du briefing de la présentation complète)
 const CONSEILS = {
- 1:["Notez sur 10 : victoire, passes, stratégie, répartition sur le terrain, fair-play, ambiance.","Annoncez un match d'environ 7 minutes : parlez en durée, pas en points.","Ne dites ni le score ni le temps restant.","4 équipes ensemble : deux équipes alliées contre deux."],
+ 1:["Notez sur 10 : touches données et reçues, rotations, engagement, jeu collectif.","Quand on est touché, on passe l'arc à un coéquipier.","Plusieurs équipes : alliances, 2 contre 2.","Une hôtesse peut compter les points."],
  2:["Pas de pied en dehors de la bâche, sinon pénalité.","5 roues : 5 équipes ensemble ou à la suite.","Entrez le temps : l'application classe toutes les équipes toute seule."],
  3:["5 minutes pour construire, puis une petite minute de présentation à l'oral.","Notez sur 10 : cohésion, beauté de la construction, valeurs, explications."],
- 4:["Notez sur 10 : touches données et reçues, rotations, engagement, jeu collectif.","Quand on est touché, on passe l'arc à un coéquipier.","Plusieurs équipes : alliances, 2 contre 2.","Une hôtesse peut compter les points."],
- 5:["Toute l'équipe passe, jusqu'au dernier.","2 équipes peuvent être chronométrées en même temps.","Entrez le temps : l'application fait le classement."],
+ 4:["Plusieurs équipes ensemble : faites des duels.","Faites remettre les lettres en tas pour les suivants.","Notez sur 10 : mots trouvés, habileté, stratégie, collectif."],
+ 5:["Notez sur 10 : victoire, passes, stratégie, répartition sur le terrain, fair-play, ambiance.","Annoncez un match d'environ 7 minutes : parlez en durée, pas en points.","Ne dites ni le score ni le temps restant.","4 équipes ensemble : deux équipes alliées contre deux."],
  6:["Jamais la corde enroulée autour du bras ou de la taille.","Un cri de guerre avant de tirer, et un moment pour la stratégie.","Notez sur 10 : victoire ou défaite, collectif, stratégie, engagement."],
- 7:["Plusieurs équipes ensemble : faites des duels.","Faites remettre les lettres en tas pour les suivants.","Notez sur 10 : mots trouvés, habileté, stratégie, collectif."],
+ 7:["La sécurité d'abord : un seul lanceur à la fois, les autres derrière la ligne.","Toujours 15 lancers exactement : une équipe plus petite fait lancer certains deux fois."],
  8:["Toujours 15 tirs exactement : une équipe plus petite fait tirer certains deux fois.","Entrez le total des points. Petit échauffement possible, 2 équipes à la fois."],
- 9:["La sécurité d'abord : un seul lanceur à la fois, les autres derrière la ligne.","Toujours 15 lancers exactement : une équipe plus petite fait lancer certains deux fois."],
- 10:["Un participant guidé à la fois, marteau toujours maîtrisé.","Entrez le temps : l'application fait le classement, pas besoin de grille."],
+ 9:["Toute l'équipe passe, jusqu'au dernier.","2 équipes peuvent être chronométrées en même temps.","Entrez le temps : l'application fait le classement."],
+ 10:["L'équipe vous tend son téléphone : tapez votre code, le chrono de 15 minutes démarre et le quiz se corrige tout seul (fautes d'orthographe acceptées).","Le classement se fait au nombre de bonnes réponses, puis à la rapidité, et les points sont doublés.","Rien à saisir à la fin : l'équipe passe directement à la suite. Un bonus à donner ? Sur la page de l'épreuve, touchez « Corriger ce résultat ». Pas de téléphone ? Saisissez le nombre de bonnes réponses."],
  11:["Notez sur 10 : création, idées, jeu, tous ensemble, bonne humeur, créativité.","8 minutes de préparation maximum, 2 minutes pour jouer.","Une réplique « compétents et solidaires », une promotion surprise…","Applaudissez chaque scène."],
- 12:["L'équipe vous tend son téléphone : tapez votre code, le chrono de 15 minutes démarre et le quiz se corrige tout seul (fautes d'orthographe acceptées).","Le classement se fait au nombre de bonnes réponses, puis à la rapidité, et les points sont doublés.","Rien à saisir à la fin : l'équipe passe directement à la suite. Un bonus à donner ? Sur la page de l'épreuve, touchez « Corriger ce résultat ». Pas de téléphone ? Saisissez le nombre de bonnes réponses."],
+ 12:["Un participant guidé à la fois, marteau toujours maîtrisé.","Entrez le temps : l'application fait le classement, pas besoin de grille."],
  13:["Notez sur 10 : créativité, joie, beauté de la pyramide, collectif, rapidité.","Faites réfléchir l'équipe pour que personne ne se blesse.","Pour valider, montez tout en haut."]
 };
 const ANNONCES = [ ['📸','Pensez aux défis photo : ils rapportent des points !'], ['⏰','Plus que 30 minutes d\'épreuves : foncez !'], ['⏰','Plus que 10 minutes : dernière épreuve !'], ['🎓','N\'oubliez pas la culture d\'entreprise : points doublés !'], ['🏆','Les épreuves sont terminées : tout le monde au podium !'] ];
@@ -1201,7 +1203,7 @@ function vEpreuve(){
     h += enCours ? `<button class="btn orange gros entree" onclick="aller('quiz')">▶ Reprendre le quiz<br><small>${quizReste(Q)>0?'il reste '+fmtT(quizReste(Q)):'temps écoulé'}</small></button>`
       : `<button class="btn vert gros entree" onclick="aller('quiz')">🎓 Lancer le quiz :<br>je tends le téléphone à l'animateur</button>`;
     h += `<p style="text-align:center"><button class="lnk" onclick="passerTelephone()">Pas de quiz sur ce téléphone ? L'animateur saisit le résultat</button></p>`; }
-  else if(e.tirs) h += `<button class="btn vert gros entree" onclick="passerTelephone()">On commence :<br>je tends le téléphone à l'animateur</button><p class="muted" style="text-align:center">L'animateur compte chaque ${e.n===9?'hache':'tir'} sur ce téléphone.</p>`;
+  else if(e.tirs) h += `<button class="btn vert gros entree" onclick="passerTelephone()">On commence :<br>je tends le téléphone à l'animateur</button><p class="muted" style="text-align:center">L'animateur compte chaque ${e.n===7?'hache':'tir'} sur ce téléphone.</p>`;
   else if(e.chronoDebut) h += `<button class="btn vert gros entree" onclick="passerTelephone()">On commence :<br>je tends le téléphone à l'animateur</button><p class="muted" style="text-align:center">L'animateur lance le chrono sur ce téléphone.</p>`;
   else h += `<button class="btn vert gros entree" onclick="passerTelephone()">Épreuve terminée :<br>je tends le téléphone à l'animateur</button>`;
   return h;
@@ -1263,9 +1265,9 @@ async function preparerPhotoEquipe(){
 }
 
 function vPassage(){ const e=EPN[state.ep], t=state.team;
-  return `<div class="passage entree"><div class="mainP"><img src="proxim/picto.png" alt=""><span>📲</span></div><div class="pt">${e.tirs||e.chronoDebut?'C\'est parti !':'Épreuve terminée !'}</div><h1>Tendez le téléphone à l'animateur</h1>${e.tirs?`<p style="color:#CFE4F3;margin:-4px 0 12px">Il compte vos ${e.tirs} ${e.n===9?'haches':'tirs'} un par un sur ce téléphone.</p>`:e.chronoDebut?'<p style="color:#CFE4F3;margin:-4px 0 12px">Il lance le chrono sur ce téléphone au moment du départ.</p>':''}
+  return `<div class="passage entree"><div class="mainP"><img src="proxim/picto.png" alt=""><span>📲</span></div><div class="pt">${e.tirs||e.chronoDebut?'C\'est parti !':'Épreuve terminée !'}</div><h1>Tendez le téléphone à l'animateur</h1>${e.tirs?`<p style="color:#CFE4F3;margin:-4px 0 12px">Il compte vos ${e.tirs} ${e.n===7?'haches':'tirs'} un par un sur ce téléphone.</p>`:e.chronoDebut?'<p style="color:#CFE4F3;margin:-4px 0 12px">Il lance le chrono sur ce téléphone au moment du départ.</p>':''}
     <div class="qui2">${avatar(t)}<div><b>${titreEq(t)}</b><br>${e.ico} ${e.nom}</div></div>
-    <button class="btn or gros" onclick="demarrerSaisie()">${e.tirs?'Je suis l\'animateur : compter les '+(e.n===9?'haches':'tirs'):e.chronoDebut?'Je suis l\'animateur : ouvrir le chrono':'Je suis l\'animateur : noter le résultat'}</button>
+    <button class="btn or gros" onclick="demarrerSaisie()">${e.tirs?'Je suis l\'animateur : compter les '+(e.n===7?'haches':'tirs'):e.chronoDebut?'Je suis l\'animateur : ouvrir le chrono':'Je suis l\'animateur : noter le résultat'}</button>
     <button class="lnk" style="color:#CFE4F3" onclick="aller('ep')">← Pas encore fini</button></div>`; }
 // ---------- Saisie de l'animateur ----------
 function vSaisie(){
@@ -1286,7 +1288,7 @@ function vSaisie(){
   else if(e.type==='quiz') champ = `<label>Nombre de bonnes réponses</label><div class="champU"><input type="number" id="mv" inputmode="numeric" pattern="[0-9]*" min="0" placeholder="0" enterkeyhint="next" oninput="majRecap()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" value="${s.mv??''}"><span>✓</span></div>
     <p class="exemple">Les bonnes réponses dans le temps imparti : l'application classe toutes les équipes et double les points.</p>
     `;
-  else champ = (e.tirs ? `<label>Comptez chaque ${e.n===9?'hache':'tir'} (${e.tirs} au total)</label><div id="tirsZone">${htmlTirs()}</div>` : '') + `<label>${e.type==='points'?(e.unite||'Total des points de l\'équipe'):'Hauteur de la tour (en cm)'}</label><div class="champU"><input type="number" id="mv" inputmode="numeric" pattern="[0-9]*" min="0" placeholder="0" enterkeyhint="done" oninput="majRecap()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" value="${s.mv??''}"><span>${e.type==='points'?(e.court||'pts'):'cm'}</span></div>
+  else champ = (e.tirs ? `<label>Comptez chaque ${e.n===7?'hache':'tir'} (${e.tirs} au total)</label><div id="tirsZone">${htmlTirs()}</div>` : '') + `<label>${e.type==='points'?(e.unite||'Total des points de l\'équipe'):'Hauteur de la tour (en cm)'}</label><div class="champU"><input type="number" id="mv" inputmode="numeric" pattern="[0-9]*" min="0" placeholder="0" enterkeyhint="done" oninput="majRecap()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" value="${s.mv??''}"><span>${e.type==='points'?(e.court||'pts'):'cm'}</span></div>
     <p class="exemple">${e.type!=='points' ? 'Un seul nombre, en centimètres.' : e.court ? 'Un seul nombre : le nombre de mots trouvés. Exemple : <b>12</b>.' : (e.tirs ? 'Il se remplit tout seul avec les lancers comptés ci-dessus. Vous pouvez aussi taper directement le total.' : 'Additionnez les points de tous les tirs, puis tapez <b>le total</b>. Exemple : <b>45</b>.')}</p>`;
   champ = champ.replace('<label>','<label><span class="etapeS">1</span>');
   const bb = b=>`<button class="${b.k} ${s.bonus[b.k]?'sel':''}" onclick="basculerBonus('${b.k}',this)"><span class="e">${b.ico}</span><span>${b.nom}<small>+${b.pts} point${b.pts>1?'s':''}</small></span></button>`;
@@ -1705,8 +1707,8 @@ window.demarrerSaisie = ()=>{ chT0=0; chAcc=0; clearInterval(chTimer); const r=p
   if(e.type==='chrono' && (chT0||chAcc)){ chronoAff(); const b=$('#chBtn'); if(chT0){ chTimer=setInterval(chronoAff,100); if(b){ b.textContent='■ Stop'; b.classList.add('run'); } } else if(b) b.textContent='▶ Reprendre'; } };
 // Comptage lancer par lancer : gardé sur le téléphone jusqu'à la validation (un rechargement ne perd rien)
 const cleTirs = ()=>'tirs_'+state.ep+'_'+state.team;
-function htmlTirs(){ const e=EPN[state.ep], T=(state.saisie&&state.saisie.tirs)||[], n=e.tirs, tot=T.reduce((a,b)=>a+b,0), mot=e.n===9?'Hache':'Tir';
-  return `<div class="tirsTete"><b>${T.length<n?mot+' '+(T.length+1)+' sur '+n:'✓ Les '+n+' '+(e.n===9?'haches sont comptées':'tirs sont comptés')}</b><span>Total <b>${tot}</b></span></div>
+function htmlTirs(){ const e=EPN[state.ep], T=(state.saisie&&state.saisie.tirs)||[], n=e.tirs, tot=T.reduce((a,b)=>a+b,0), mot=e.n===7?'Hache':'Tir';
+  return `<div class="tirsTete"><b>${T.length<n?mot+' '+(T.length+1)+' sur '+n:'✓ Les '+n+' '+(e.n===7?'haches sont comptées':'tirs sont comptés')}</b><span>Total <b>${tot}</b></span></div>
     <div class="tirsListe">${T.map(v=>`<i>${v}</i>`).join('')}${'<i class="vide"></i>'.repeat(Math.max(0,n-T.length))}</div>
     ${T.length<n?`<div class="tirsBtns">${[0,1,2,3,4,5,6,7,8,9,10].map(v=>`<button type="button" onclick="tir(${v})">${v}</button>`).join('')}<button type="button" style="background:var(--gris);box-shadow:0 3px 0 #3E4C59;font-size:15px" onclick="tirAnnuler()">↩ Retour</button></div>`
       :`<button type="button" class="lnk" onclick="tirAnnuler()">↩ Corriger le dernier</button>`}`; }
