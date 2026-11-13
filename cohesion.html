@@ -433,6 +433,7 @@
   .libre > b { display:block; font-family:var(--titre); font-size:20px; color:var(--jaune); margin-bottom:6px; } .libre p { margin:0 0 8px; } .libre .alerte { background:rgba(0,0,0,.2); border-radius:12px; padding:8px 10px; }
   .rappelChat { display:flex; gap:12px; align-items:center; width:100%; text-align:left; border:0; border-radius:18px; padding:14px 16px; margin-bottom:12px; background:linear-gradient(135deg,#22A45D,#0E94BE); color:#fff; font:inherit; box-shadow:var(--ombre); }
   .rappelChat span { font-size:34px; }
+  .actionsAnim { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; } .actionsAnim .btn { margin:0; font-size:14.5px; padding:12px 8px; line-height:1.25; } .actionsAnim small { font-weight:600; opacity:.75; font-size:12px; }
   .defiChat { margin-top:10px; padding:10px 12px; border-radius:12px; background:#FFF4D6; color:#6B4B00; font-size:15px; } .defiChat.ok { background:#DDF5E6; color:var(--vertf); font-weight:800; }
   .galD { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
   .galD .vign { background:#fff; border-radius:16px; overflow:hidden; box-shadow:var(--ombre); padding-bottom:8px; }
@@ -918,7 +919,7 @@ function vueParDefaut(){
   if(state.org && !state.team) return 'org';
   const inscrite = state.team && equipe(state.team) && equipe(state.team).nom;
   if(state.orgRetour) return inscrite ? 'home' : 'brief';
-  if(confirmee() && inscrite){ const Q=quizEtat(state.team); if(Q && Q.debut && Q.phase!=='fin' && !fait(CULTURE,state.team)) return 'quiz';   // quiz en cours : on y revient tout seul
+  if(confirmee() && inscrite){ const Q=quizEtat(state.team); if(Q && Q.debut && Q.phase!=='fin' && (!fait(CULTURE,state.team) || Q.refaire)) return 'quiz';   // quiz en cours : on y revient tout seul
     return lsGet('regles_vues',false) ? 'home' : 'regles'; }
   if(avantOuverture()) return 'accueil';
   let vu=false; try{ vu = sessionStorage.getItem('pxc_acc_'+EVENT)==='1'; }catch(e){}   // l'accueil revient à chaque nouvelle ouverture (seul un retour de l'appareil photo le saute)
@@ -1137,9 +1138,9 @@ function reponseOk(rep, oks){ const r=normRep(rep); if(!r) return false; const r
     return false; }); }
 function vQuiz(){
   const t=state.team, Q=quizEtat(t), N=QUIZ.length;
-  if(fait(CULTURE,t) && !(Q && Q.phase==='fin')) return `<div class="fait entree"><div class="gros">✓ Quiz déjà fait</div><p style="margin:6px 0 0">Le résultat de la culture d'entreprise est enregistré.</p></div><button class="btn clair" onclick="aller('home')">Voir toutes les épreuves</button>`;
+  if(fait(CULTURE,t) && !(Q && (Q.phase==='fin' || Q.refaire)) && !state.refaireQuiz) return `<div class="fait entree"><div class="gros">✓ Quiz déjà fait</div><p style="margin:6px 0 0">Le résultat de la culture d'entreprise est enregistré.</p></div><button class="btn clair" onclick="aller('home')">Voir toutes les épreuves</button>`;
   if(!Q || !Q.debut) return `<div class="card entree"><div class="qNum">Épreuve ${CULTURE} · points doublés</div><h2 style="margin:4px 0 12px">🎓 Le quiz culture d'entreprise</h2><ul class="regQ"><li>⏱ <b>${N} questions, ${QUIZ_DUREE/60} minutes</b> : le chrono part dès que l'animateur lance le quiz.</li><li>✍️ Choix multiples ou réponse à taper : <b>pas besoin d'une orthographe parfaite</b>.</li><li>⏭ Vous séchez ? <b>Passez</b> la question : elle ne rapporte rien, mais vous gagnez du temps.</li><li>🏆 Classement au <b>nombre de bonnes réponses</b>, puis à la <b>rapidité</b>.</li></ul>
-      <label>Animateur : votre code pour lancer le chrono</label><input type="text" id="codeQ" autocomplete="off" autocapitalize="off" placeholder="Code de l'animateur" enterkeyhint="go" onkeydown="if(event.key==='Enter'){event.preventDefault();lancerQuiz();}">
+      ${codeDejaOk(CULTURE)?'<p class="muted">🔑 Code animateur déjà vérifié ✓</p>':''}<label ${codeDejaOk(CULTURE)?'style="display:none"':''}>Animateur : votre code pour lancer le chrono</label><input ${codeDejaOk(CULTURE)?'type="hidden"':'type="text"'} id="codeQ" autocomplete="off" autocapitalize="off" placeholder="Code de l'animateur" enterkeyhint="go" onkeydown="if(event.key==='Enter'){event.preventDefault();lancerQuiz();}">
       <button class="btn vert gros" onclick="lancerQuiz()">▶ Lancer le chrono</button></div>`;
   const reste=quizReste(Q), bonnes=Q.rep.filter(x=>x.ok).length;
   let h = Q.phase==='fin' ? '' : `<div class="quizBar entree"><div><small>Question</small><b>${Math.min(Q.i+1,N)}/${N}</b></div><div id="qChrono" class="qChrono ${reste<=60?'urgent':''}">${mmss(reste)}</div><div><small>Bonnes</small><b>${bonnes}</b></div></div>`;
@@ -1164,8 +1165,8 @@ function vQuiz(){
   return h;
 }
 window.lancerQuiz = ()=>{ const t=state.team; const el=$('#codeQ'), c=el?el.value.trim():'';
-  if(!state.org && !codeStandOk(CULTURE,c)){ dire(c?'Code de l\'animateur incorrect.':'Code de l\'animateur : à taper par l\'animateur.','err'); if(el){ el.value=''; el.focus(); } return; }
-  quizSet(t, { debut:Date.now(), i:0, rep:[], phase:'q' }); vibre([40,30,40]); son(false); render(); window.scrollTo(0,0); };
+  if(!codeDejaOk(CULTURE) && !codeStandOk(CULTURE,c)){ dire(c?'Code de l\'animateur incorrect.':'Code de l\'animateur : à taper par l\'animateur.','err'); if(el){ el.value=''; el.focus(); } return; }
+  quizSet(t, { debut:Date.now(), i:0, rep:[], phase:'q', refaire:!!state.refaireQuiz }); state.refaireQuiz=false; vibre([40,30,40]); son(false); render(); window.scrollTo(0,0); };
 function quizAvance(Q){ if(quizReste(Q)<=0){ Q.phase='subsid'; Q.tempsFini=true; Q.fin=Q.fin||Q.debut+QUIZ_DUREE*1000; } }
 window.quizRepondre = k=>{ const t=state.team, Q=quizEtat(t); if(!Q || Q.phase!=='q') return; quizAvance(Q); if(Q.phase!=='q'){ quizSet(t,Q); render(); return; }
   const x=QUIZ[Q.i]; let r, ok;
@@ -1181,7 +1182,7 @@ window.quizEnregistrer = ()=>{ const t=state.team, Q=quizEtat(t); if(!Q || Q.pha
   const bonnes=Q.rep.filter(x=>x.ok).length, sec=Math.min(QUIZ_DUREE, Math.round((Q.fin-Q.debut)/1000));
   const row={ event:EVENT, stand:CULTURE, team:t, resultat:'F', mesure: QUIZ_OFF + bonnes*1000 + (QUIZ_DUREE-sec), code:CLE, updated_at:horloge().toISOString() }; BONUS.forEach(b=>row[b.col]=false);
   local.p[kp(CULTURE,t)]=row; pousser('tb_passages','event,stand,team','p-'+kp(CULTURE,t),row);
-  Q.phase='fin'; quizSet(t,Q); state.quizEnvoi=false; vibre([30,40,30]); quizBravo(); };   // directement le Bravo : pas besoin de rendre le téléphone à l'animateur
+  Q.phase='fin'; quizSet(t,Q); state.quizEnvoi=false; state.modifEnCours=false; vibre([30,40,30]); quizBravo(); };   // directement le Bravo : pas besoin de rendre le téléphone à l'animateur
 window.quizBravo = ()=>{ const t=state.team, Q=quizEtat(t)||{rep:[]}; state.ep=CULTURE; state.bravo={ ep:CULTURE, quiz:true, tempsFini:!!Q.tempsFini, bonnes:(Q.rep||[]).filter(x=>x.ok).length }; state.vientDeFaire=CULTURE; setTimeout(()=>{ state.vientDeFaire=0; }, 4000);
   const nbF=EP.filter(x=>x.n!==DEFI_EP && fait(x.n,t)).length, palier=[5,10,NB_EP].includes(nbF); state.view='bravo'; render(); window.scrollTo(0,0); confettis(palier); son(palier); };
 setInterval(()=>{ if(state.view!=='quiz') return; const Q=quizEtat(state.team); if(!Q || !Q.debut || !['q','fb'].includes(Q.phase)) return;
@@ -1195,7 +1196,7 @@ function vEpreuve(){
       <p style="margin:0"><span class="tag pts">${MAXPTS(e)} points à gagner</span>${e.duel?'<span class="tag duel">DUEL : trouvez une équipe adverse</span>':''}${e.n===CULTURE?'<span class="tag double">POINTS DOUBLÉS</span>':''}<span class="tag gris">${pl(e.places,'équipe')} à la fois</span></p>
       <p class="muted" style="margin:12px 0 0">L'animateur note votre résultat et peut ajouter des bonus : ambiance, cohésion, fair-play et coup de cœur. Les points restent secrets jusqu'au podium.</p></div>`;
   if(deja) h += `<div class="fait entree"><div class="gros">✓ Épreuve faite</div><p style="margin:6px 0 0">Résultat enregistré par l'animateur. Passez à une autre épreuve !</p></div>
-      ${epSuivante()?`<button class="btn orange" onclick="suivante()">Épreuve suivante →</button>`:''}<button class="btn clair" onclick="aller('home')">Voir toutes les épreuves</button><p style="text-align:center"><button class="lnk" onclick="demarrerSaisie()">Corriger ce résultat (animateur)</button></p>`;
+      ${epSuivante()?`<button class="btn orange" onclick="suivante()">Épreuve suivante →</button>`:''}<button class="btn clair" onclick="aller('home')">Voir toutes les épreuves</button><div class="actionsAnim"><button class="btn clair" onclick="modifierResultat()">✏️ Modifier le résultat<br><small>animateur, avec son code</small></button><button class="btn clair" onclick="refaireEpreuve()">↺ Refaire l'épreuve<br><small>animateur, avec son code</small></button></div>`;
   else if(e.n===CULTURE){ const Q=quizEtat(t), enCours=Q && Q.debut && Q.phase!=='fin';
     h += enCours ? `<button class="btn orange gros entree" onclick="aller('quiz')">▶ Reprendre le quiz<br><small>${quizReste(Q)>0?'il reste '+fmtT(quizReste(Q)):'temps écoulé'}</small></button>`
       : `<button class="btn vert gros entree" onclick="aller('quiz')">🎓 Lancer le quiz :<br>je tends le téléphone à l'animateur</button>`;
@@ -1297,7 +1298,7 @@ function vSaisie(){
     ${champ}
     <label><span class="etapeS">2</span>Bonus : +1 point par bouton, rares et mérités</label><p class="exemple" style="margin-top:-2px">Seulement si l'équipe l'a vraiment mérité. Jamais pour tout le monde, sinon le classement est faussé.</p><div class="bonus">${BONUS.map(bb).join('')}</div>
     <div class="recap" id="recap"></div>
-    ${state.org?'<p class="muted" style="margin-top:12px">Mode organisation : pas de code à saisir.</p>':`<label><span class="etapeS">3</span>🔑 Votre code d'animateur</label><input type="password" id="codeA" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="•••••" oninput="majRecap()" onkeydown="if(event.key==='Enter')validerSaisie()">`}
+    ${state.org?'<p class="muted" style="margin-top:12px">Mode organisation : pas de code à saisir.</p>':codeDejaOk(state.ep)?'<p class="muted" style="margin-top:12px">🔑 Code animateur déjà vérifié ✓</p>':`<label><span class="etapeS">3</span>🔑 Votre code d'animateur</label><input type="password" id="codeA" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="•••••" oninput="majRecap()" onkeydown="if(event.key==='Enter')validerSaisie()">`}
     <button class="btn orange gros" id="btnValider" onclick="validerSaisie()">✓ Valider le résultat</button>
     <button class="btn clair" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.4)" onclick="annulerSaisie()">Annuler</button>
     ${existe ? '<p style="text-align:center;margin:6px 0 0"><button class="lnk" style="color:#C9DCEC" onclick="supprimerPassage()">Effacer ce résultat</button></p>':''}
@@ -1691,13 +1692,13 @@ window.modifierEquipe = ()=>{
 };
 window.passerTelephone = ()=>{ state.view='passage'; render(); window.scrollTo(0,0); vibre(25); };
 window.ouvrir = n=>{ state.ep=n; state.view='ep'; render(); window.scrollTo(0,0); };
-window.demarrerSaisie = ()=>{ chT0=0; chAcc=0; clearInterval(chTimer); const r=passages()[kp(state.ep,state.team)]; const ok=state.org&&valide(r); const e=EPN[state.ep]; const okQ=valide(r)&&e.type==='quiz';   // quiz : on garde le score et la rapidité pour ajouter des bonus
+window.demarrerSaisie = ()=>{ chT0=0; chAcc=0; clearInterval(chTimer); const r=passages()[kp(state.ep,state.team)]; const ok=state.org&&valide(r)&&!state.saisieNeuve; const e=EPN[state.ep]; const okQ=valide(r)&&e.type==='quiz'&&!state.saisieNeuve;   // quiz : on garde le score et la rapidité pour ajouter des bonus
   state.saisie={ res: ok&&e.type==='duel'?r.resultat:'', adv: ok&&e.type==='duel'&&r.mesure>0?+r.mesure:null, contreAnim: !!(ok&&e.type==='duel'&&r.mesure!=null&&+r.mesure===0),
     note: ok&&e.type==='jury'&&r.mesure!=null?+r.mesure:null, mm: ok&&e.type==='chrono'&&r.mesure!=null?Math.floor(r.mesure/60):null, ss: ok&&e.type==='chrono'&&r.mesure!=null?Math.round(r.mesure%60):null,
     mv: (ok||okQ)&&(e.type==='points'||e.type==='hauteur'||e.type==='quiz')&&r.mesure!=null?(e.type==='quiz'?qB(r.mesure):+r.mesure):null, qReste: (ok||okQ)&&e.type==='quiz'&&+r.mesure>=1000 ? +r.mesure%1000 : 0, bonus:{}, subsid: (state.org && e.type==='quiz' && state.subsid[state.team]!=null) ? state.subsid[state.team] : null };
   BONUS.forEach(b=>state.saisie.bonus[b.k]=!!(ok&&r[b.col]));
   if(e.tirs){ state.saisie.tirs = lsGet(cleTirs(), []); if(state.saisie.tirs.length && state.saisie.mv==null) state.saisie.mv=state.saisie.tirs.reduce((a,b)=>a+b,0); }
-  const Qd=quizEtat(state.team); if(e.type==='quiz' && state.saisie.mv==null && Qd && Qd.phase==='fin' && Qd.fin){        // le téléphone de l'équipe ne connaît pas les points : on reprend son quiz
+  const Qd=quizEtat(state.team); if(e.type==='quiz' && !state.saisieNeuve && state.saisie.mv==null && Qd && Qd.phase==='fin' && Qd.fin){        // le téléphone de l'équipe ne connaît pas les points : on reprend son quiz
     state.saisie.mv=Qd.rep.filter(x=>x.ok).length; state.saisie.qReste=QUIZ_DUREE-Math.min(QUIZ_DUREE, Math.round((Qd.fin-Qd.debut)/1000)); }
   if(e.type==='chrono'){ const c=lsGet(cleChrono(), null); if(c && (c.t0||c.acc)){ chT0=c.t0||0; chAcc=c.acc||0; } }      // chrono repris après une veille ou un rechargement
   state.view='saisie'; render(); window.scrollTo(0,0); majRecap();
@@ -1712,7 +1713,7 @@ function htmlTirs(){ const e=EPN[state.ep], T=(state.saisie&&state.saisie.tirs)|
 function majTirs(){ const z=$('#tirsZone'); if(z) z.innerHTML=htmlTirs(); const T=state.saisie.tirs||[]; const mv=$('#mv'); if(mv && T.length) mv.value=T.reduce((a,b)=>a+b,0); lsSet(cleTirs(), T); majRecap(); }
 window.tir = v=>{ const e=EPN[state.ep]; if(!state.saisie) return; const T=state.saisie.tirs=state.saisie.tirs||[]; if(T.length>=e.tirs) return; T.push(v); vibre(T.length===e.tirs?[40,40,40]:12); majTirs(); };
 window.tirAnnuler = ()=>{ if(!state.saisie||!state.saisie.tirs||!state.saisie.tirs.length) return; state.saisie.tirs.pop(); vibre(20); majTirs(); };
-window.annulerSaisie = ()=>{ state.saisie=null; const p=vuePrecedente(); if(p==='org') aller('org'); else { state.view=p||'ep'; render(); window.scrollTo(0,0); } };
+window.annulerSaisie = ()=>{ state.saisie=null; state.modifEnCours=false; const p=vuePrecedente(); if(p==='org') aller('org'); else { state.view=p||'ep'; render(); window.scrollTo(0,0); } };
 // Chronomètre intégré (épreuves au temps)
 let chT0=0, chAcc=0, chTimer=0;
 function chronoAff(){ const ms=chAcc+(chT0?Date.now()-chT0:0), s=ms/1000; const el=$('#chAff'); if(el) el.textContent=Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0')+'.'+Math.floor((ms%1000)/100); }
@@ -1726,7 +1727,17 @@ window.choisirNote = (n,btn)=>{ state.saisie.note=n; document.querySelectorAll('
 window.basculerBonus = (k,btn)=>{ state.saisie.bonus[k]=!state.saisie.bonus[k]; btn.classList.toggle('sel',state.saisie.bonus[k]); vibre(15); majRecap(); };
 window.saisirAdv = v=>{ state.saisie.adv=parseInt(v,10)||null; majRecap(); };
 window.contreAnimateurs = btn=>{ const s=state.saisie; s.contreAnim=!s.contreAnim; btn.classList.toggle('sel',s.contreAnim); const a=$('#adv'); if(a){ a.disabled=s.contreAnim; if(s.contreAnim) a.value=''; } majRecap(); };
-function codeSaisieOk(){ if(state.org) return true; const el=$('#codeA'); const c=el?el.value:''; if(!c){ dire('Code de l\'animateur : à saisir par l\'animateur.','err'); if(el) el.focus(); return false; }
+function codeDejaOk(ep){ const cv=state.codeValide; return !!(state.org || (cv && cv.ep===ep && cv.team===state.team && Date.now()-cv.t < 20*60000)); }
+function demanderCode(ep){ if(codeDejaOk(ep)) return true; const c=prompt('Code de l\'animateur :'); if(c===null) return false;
+  if(!codeStandOk(ep,c)){ dire('Code de l\'animateur incorrect.','err'); return false; } state.codeValide={ep, team:state.team, t:Date.now()}; return true; }
+window.modifierResultat = ()=>{ if(!demanderCode(state.ep)) return; state.modifEnCours=true; demarrerSaisie(); };
+window.refaireEpreuve = ()=>{ const e=EPN[state.ep], t=state.team; if(!demanderCode(e.n)) return;
+  if(!confirm(`Refaire « ${e.nom} » pour l'équipe ${t} ?\n\nLe nouveau résultat remplacera l'ancien.`)) return;
+  state.modifEnCours=true;
+  if(e.n===CULTURE){ quizSet(t, null); state.refaireQuiz=true; aller('quiz'); return; }
+  lsSet('chrono_'+e.n+'_'+t, null); if(e.tirs) lsSet('tirs_'+e.n+'_'+t, []); chT0=0; chAcc=0; clearInterval(chTimer);
+  state.saisieNeuve=true; demarrerSaisie(); state.saisieNeuve=false; };
+function codeSaisieOk(){ if(codeDejaOk(state.ep)) return true; const el=$('#codeA'); const c=el?el.value:''; if(!c){ dire('Code de l\'animateur : à saisir par l\'animateur.','err'); if(el) el.focus(); return false; }
   if(!codeStandOk(state.ep,c)){ dire('Code de l\'animateur incorrect.','err'); el.value=''; el.focus(); return false; } return true; }
 function envoyerSubsid(t, v){ local.subsid=local.subsid||{}; local.subsid[t]=v; state.subsid[t]=v; if(t===0) state.reponseSubsid=v;
   pousser('tb_messages','cid','m-subsid-'+t, { event:EVENT, cid:'subsid-'+EVENT+'-'+t, team:t, texte:'__SUBSID__'+v, code:CLE }); }
@@ -1738,10 +1749,22 @@ window.validerSaisie = ()=>{
   const e=EPN[state.ep], t=state.team, s=state.saisie; const lu=lireSaisie();
   if(lu.erreur){ dire(lu.erreur,'err'); return; }
   let mes=lu.mes; const res=lu.res;
-  if(e.tirs && s.tirs && s.tirs.length && s.tirs.length<e.tirs && !confirm(`Seulement ${s.tirs.length} lancers comptés sur ${e.tirs}. Valider quand même ?`)) return;
   // valeurs étonnantes : on fait confirmer
-  const bizarre = (e.type==='chrono' && (mes<10 || mes>20*60)) ? 'Temps de '+fmtT(mes)+' : c\'est bien ça ?' : (e.type==='points' && mes>300) ? mes+' points : c\'est bien ça ?' : (e.type==='quiz' && mes>40) ? mes+' bonnes réponses : c\'est bien ça ?' : (e.type==='hauteur' && mes>400) ? mes+' cm : c\'est bien ça ?' : '';
-  if(bizarre && !confirm(bizarre)) return;
+  // impossible : on bloque
+  if(e.tirs && mes > e.tirs*10){ dire(`Impossible : ${e.tirs} lancers à 10 points maximum, soit ${e.tirs*10}. Vérifiez le total.`,'err'); return; }
+  if(e.type==='quiz' && mes > QUIZ.length){ dire(`Impossible : le quiz n'a que ${QUIZ.length} questions.`,'err'); return; }
+  // étonnant : on fait confirmer à l'animateur
+  const alertes=[], nbB=BONUS.filter(b=>s.bonus[b.k]).length, sommeTirs=(e.tirs && s.tirs && s.tirs.length) ? s.tirs.reduce((a,b)=>a+b,0) : null;
+  if(e.type==='chrono' && (mes<10 || mes>20*60)) alertes.push('Temps de '+fmtT(mes)+' : '+(mes<10?'très court':'très long')+'.');
+  if(e.type==='points' && !e.tirs && mes>300) alertes.push(mes+' points : c\'est beaucoup.');
+  if(e.tirs && s.tirs && s.tirs.length && s.tirs.length<e.tirs) alertes.push(`Seulement ${s.tirs.length} lancers comptés sur ${e.tirs}.`);
+  if(sommeTirs!=null && sommeTirs!==mes) alertes.push(`Le total tapé (${mes}) n'est pas la somme des lancers comptés (${sommeTirs}).`);
+  if(e.type==='jury' && mes===0) alertes.push('Note de 0 sur 10.');
+  if(e.type==='jury' && mes===10) alertes.push('Note parfaite : 10 sur 10.');
+  if(e.type==='hauteur' && mes>400) alertes.push(mes+' cm : c\'est très haut.');
+  if(nbB>=3) alertes.push(nbB+' bonus d\'un coup pour la même équipe : vraiment mérité ?');
+  if(fait(e.n,t) && !state.modifEnCours && !state.org) alertes.push('Cette équipe a déjà un résultat sur cette épreuve : il sera remplacé.');
+  if(alertes.length && !confirm('⚠️ Vérifiez avant de valider :\n\n• '+alertes.join('\n• ')+'\n\nC\'est bien ça ?')) return;
   if(!codeSaisieOk()) return;
   if(e.type==='quiz') mes = QUIZ_OFF + Math.round(mes)*1000 + (s.qReste||0);            // même échelle que le quiz joué dans l'appli
   const maintenant=horloge().toISOString(); const etaitFait=fait(e.n,t);
@@ -1755,7 +1778,7 @@ window.validerSaisie = ()=>{
     else { const row2={ event:EVENT, stand:e.n, team:mes, resultat:inverse(res), mesure:t, code:CLE, updated_at:maintenant };
       if(state.org && valide(r2)) BONUS.forEach(b=>row2[b.col]=!!r2[b.col]);          // sinon on n'envoie pas les bonus : la base garde ceux déjà donnés à l'équipe adverse
       local.p[kp(e.n,mes)]={...(r2||{}), ...row2}; pousser('tb_passages','event,stand,team','p-'+kp(e.n,mes),row2); } }
-  state.saisie=null; vibre([30,40,30]); cacherToast();
+  state.saisie=null; state.modifEnCours=false; vibre([30,40,30]); cacherToast();
   if(state.org && state.orgRetour){ dire('Résultat enregistré ✓'+(noteAdv?' '+noteAdv:''),'ok'); const a=state.apresSaisie; state.apresSaisie=''; if(a==='org') aller('org'); else { state.view='home'; render(); window.scrollTo(0,0); } return; }
   state.bravo={ ep:e.n }; state.vientDeFaire=e.n; setTimeout(()=>{ state.vientDeFaire=0; }, 4000);
   const nbF=EP.filter(x=>x.n!==DEFI_EP && fait(x.n,t)).length, palier=[5,10,NB_EP].includes(nbF) && !etaitFait;
