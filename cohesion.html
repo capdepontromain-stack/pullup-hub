@@ -497,7 +497,7 @@ const jourJ = d => d.getFullYear()===2026 && d.getMonth()===10 && d.getDate()===
 const modeDuMoment = () => Q.has('demo') ? 'demo' : ((Q.has('essai') || horloge() < BASCULE) ? 'essai' : 'reel');
 const MODE = modeDuMoment();                          // demo : journée simulée · essai : période de test (jusqu'à samedi 9h40) · reel : la journée
 const ESSAI = MODE!=='reel';
-const EVENT = {demo:'demo2-2026-11-14', essai:'essai4-2026-11-14', reel:'cohesion-2026-11-14'}[MODE];   // zone neuve pour le jour J (l'ancienne proxim-2026-11-14 n'est plus lue)
+const EVENT = {demo:'demo2-2026-11-14', essai:'essai5-2026-11-14', reel:'cohesion-2026-11-14'}[MODE];   // zone neuve pour le jour J (l'ancienne proxim-2026-11-14 n'est plus lue)
 const LOCAL = ['localhost','127.0.0.1'].includes(location.hostname);
 const SUPABASE_URL = (LOCAL && Q.get('api')) ? Q.get('api') : 'https://vincxrmtfjbenlzhjwby.supabase.co';
 const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpbmN4cm10ZmpiZW5semhqd2J5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyOTI1MTksImV4cCI6MjA5Nzg2ODUxOX0.M9_ChGDlOIUKKZtbBHs1xn4cdy4FwUAQKN0aYyXefQY';
@@ -799,7 +799,7 @@ async function refresh(force){
     chargerPhoto(state.team);
     try{ const cq = await dbGet('tb_messages','select=team,texte&texte=like.__COULEUR*'); const cc={}; cq.forEach(m=>{ if(m.team>0) cc[m.team]=String(m.texte).slice(11); }); state.couleurs=cc;
       if(local.coul) Object.keys(local.coul).forEach(t=>{ if(!queue['m-coul-'+t] && cc[t]===local.coul[t]) delete local.coul[t]; }); }catch(x){}
-    if(state.org) try{ const cm = await dbGet('tb_messages','select=team,texte,masque&team=gt.0'); state.chatEq = new Set(cm.filter(m=>!m.masque && !/^__[A-Z]/.test(m.texte||'')).map(m=>m.team)); }catch(x){}
+    if(state.org) try{ const cm = await dbGet('tb_messages','select=team,texte,masque&team=gt.0&cid=not.like.etat-*'); state.chatEq = new Set(cm.filter(m=>!m.masque && !/^__[A-Z]/.test(m.texte||'')).map(m=>m.team)); }catch(x){}
     try{ const dq = state.org ? 'select=team,defi,envoye,note,updated_at' : `select=team,defi,envoye,updated_at&team=eq.${state.team||0}`;
       const dd = await dbGet('tb_defis', dq); state.defis={}; dd.forEach(x=>state.defis[kd(x.team,x.defi)]=x);
       Object.keys(local.d).forEach(k=>{ if(!queue['d-'+k] && state.defis[k]) delete local.d[k]; }); save(); }catch(e){}
@@ -816,7 +816,7 @@ function envoyerCouleur(t, c){ local.coul=local.coul||{}; local.coul[t]=c; save(
 window.choisirCouleur = (c,btn)=>{ lsSet('brouillon_coul', c); document.querySelectorAll('#grpCoul button').forEach(b=>b.classList.toggle('sel', b===btn)); vibre(12); };
 async function lireMessages(silencieux){
   try{
-    const [r,ct] = await Promise.all([ dbGet('tb_messages','select=cid,team,texte,masque,created_at&order=created_at.desc&limit=120'),
+    const [r,ct] = await Promise.all([ dbGet('tb_messages','select=cid,team,texte,masque,created_at&cid=not.like.etat-*&order=created_at.desc&limit=120'),
                                        dbGet('tb_messages','select=texte,created_at&team=eq.0&texte=like.__CHAT*&order=created_at.desc&limit=1') ]);
     const avant=state.chatOuvert; state.chatOk=true; state.chatOuvert = !(ct[0] && ct[0].texte==='__CHAT_OFF__');
     if(avant!==state.chatOuvert && state.view==='chat'){ const el=document.getElementById('msgTxt'); const brouillon=el?el.value:''; render(); const el2=document.getElementById('msgTxt'); if(el2) el2.value=brouillon; }
@@ -1129,7 +1129,16 @@ function vHome(){
 }
 // ---------- Quiz culture d'entreprise ----------
 function quizEtat(t){ return ((local.quiz||{})[t]) || null; }
-function quizSet(t, Q){ local.quiz=local.quiz||{}; local.quiz[t]=Q; save(); }
+// Épreuve en cours sauvegardée AUSSI en ligne (chrono, lancers, quiz) : si le téléphone s'éteint, un autre téléphone de l'équipe reprend là où on en était
+function sauverEtat(kind, ep, data, t){ t=t||state.team; if(!t || state.org&&!state.orgRetour) return;
+  pousser('tb_messages','cid','etat-'+kind+'-'+t+'-'+ep, { event:EVENT, cid:'etat-'+EVENT+'-'+kind+'-'+t+'-'+ep, team:t, texte:'__ETAT__'+JSON.stringify(data==null?null:data), code:CLE }); }
+async function lireEtat(kind, ep, t){ t=t||state.team; try{ const r=await dbGet('tb_messages',`cid=eq.etat-${EVENT}-${kind}-${t}-${ep}&select=texte`); return r[0] ? JSON.parse(String(r[0].texte).slice(8)) : null; }catch(e){ return null; } }
+let repriseQuizT=0;
+function repriseQuiz(){ const t=state.team; if(!t || Date.now()-repriseQuizT<8000) return; const Q=quizEtat(t); if(Q && Q.debut) return; repriseQuizT=Date.now();
+  lireEtat('quiz', CULTURE, t).then(S=>{ if(!S || !S.debut || S.phase==='fin' || state.team!==t) return; const L=quizEtat(t); if(L && L.debut) return;
+    local.quiz=local.quiz||{}; local.quiz[t]={...S, debut:S.debut-DECAL, fin:S.fin?S.fin-DECAL:0}; save(); render(); dire('Quiz en cours repris depuis l\'autre téléphone ✓','ok'); }); }
+function quizSet(t, Q){ local.quiz=local.quiz||{}; local.quiz[t]=Q; save();
+  sauverEtat('quiz', CULTURE, Q ? { debut:Q.debut?Q.debut+DECAL:0, i:Q.i, phase:Q.phase, rep:(Q.rep||[]).map(x=>({i:x.i, ok:!!x.ok, passe:!!x.passe})), tempsFini:!!Q.tempsFini, fin:Q.fin?Q.fin+DECAL:0, refaire:!!Q.refaire } : null, t); }
 function quizReste(Q){ if(!Q || !Q.debut) return QUIZ_DUREE; const fin = Q.fin || Date.now(); return Math.max(0, Math.ceil(QUIZ_DUREE - (fin-Q.debut)/1000)); }
 const mmss = s => Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
 function normRep(x){ return String(x||'').replace(/\b(?:[A-Za-z]\.){1,}[A-Za-z]\b\.?/g, m=>m.replace(/\./g,'')).toLowerCase()   // « H.A.S », « P.L.S » : sigles à points recollés
@@ -1149,9 +1158,9 @@ function reponseOk(rep, oks){ const r=normRep(rep); if(!r) return false; const r
 function vQuiz(){
   const t=state.team, Q=quizEtat(t), N=QUIZ.length;
   if(fait(CULTURE,t) && !(Q && (Q.phase==='fin' || Q.refaire)) && !state.refaireQuiz) return `<div class="fait entree"><div class="gros">✓ Quiz déjà fait</div><p style="margin:6px 0 0">Le résultat de la culture d'entreprise est enregistré.</p></div><button class="btn clair" onclick="aller('home')">Voir toutes les épreuves</button>`;
-  if(!Q || !Q.debut) return `<div class="card entree"><div class="qNum">Épreuve ${CULTURE} · points doublés</div><h2 style="margin:4px 0 12px">🎓 Le quiz culture d'entreprise</h2><ul class="regQ"><li>⏱ <b>${N} questions, ${QUIZ_DUREE/60} minutes</b> : le chrono part dès que l'animateur lance le quiz.</li><li>✍️ Choix multiples ou réponse à taper : <b>pas besoin d'une orthographe parfaite</b>.</li><li>⏭ Vous séchez ? <b>Passez</b> la question : elle ne rapporte rien, mais vous gagnez du temps.</li><li>🏆 Classement au <b>nombre de bonnes réponses</b>, puis à la <b>rapidité</b>.</li></ul>
+  if(!Q || !Q.debut){ repriseQuiz(); return `<div class="card entree"><div class="qNum">Épreuve ${CULTURE} · points doublés</div><h2 style="margin:4px 0 12px">🎓 Le quiz culture d'entreprise</h2><ul class="regQ"><li>⏱ <b>${N} questions, ${QUIZ_DUREE/60} minutes</b> : le chrono part dès que l'animateur lance le quiz.</li><li>✍️ Choix multiples ou réponse à taper : <b>pas besoin d'une orthographe parfaite</b>.</li><li>⏭ Vous séchez ? <b>Passez</b> la question : elle ne rapporte rien, mais vous gagnez du temps.</li><li>🏆 Classement au <b>nombre de bonnes réponses</b>, puis à la <b>rapidité</b>.</li></ul>
       ${codeDejaOk(CULTURE)?'<p class="muted">🔑 Code animateur déjà vérifié ✓</p>':''}<label ${codeDejaOk(CULTURE)?'style="display:none"':''}>Animateur : votre code pour lancer le chrono</label><input ${codeDejaOk(CULTURE)?'type="hidden"':'type="text"'} id="codeQ" autocomplete="off" autocapitalize="off" placeholder="Code de l'animateur" enterkeyhint="go" onkeydown="if(event.key==='Enter'){event.preventDefault();lancerQuiz();}">
-      <button class="btn vert gros" onclick="lancerQuiz()">▶ Lancer le chrono</button></div>`;
+      <button class="btn vert gros" onclick="lancerQuiz()">▶ Lancer le chrono</button></div>`; }
   const reste=quizReste(Q), bonnes=Q.rep.filter(x=>x.ok).length;
   let h = Q.phase==='fin' ? '' : `<div class="quizBar entree"><div><small>Question</small><b>${Math.min(Q.i+1,N)}/${N}</b></div><div id="qChrono" class="qChrono ${reste<=60?'urgent':''}">${mmss(reste)}</div><div><small>Bonnes</small><b>${bonnes}</b></div></div>`;
   if(Q.phase==='q'){ const x=QUIZ[Q.i];
@@ -1213,7 +1222,7 @@ function vEpreuve(){
       <p class="muted" style="margin:12px 0 0">L'animateur note votre résultat et peut ajouter des bonus : ambiance, cohésion, fair-play et coup de cœur. Les points restent secrets jusqu'au podium.</p></div>`;
   if(deja) h += `<div class="fait entree"><div class="gros">✓ Épreuve faite</div><p style="margin:6px 0 0">Résultat enregistré par l'animateur. Passez à une autre épreuve !</p></div>
       ${epSuivante()?`<button class="btn orange" onclick="suivante()">Épreuve suivante →</button>`:''}<button class="btn clair" onclick="aller('home')">Voir toutes les épreuves</button><div class="actionsAnim"><button class="btn clair" onclick="modifierResultat()">✏️ Modifier le résultat<br><small>animateur, avec son code</small></button><button class="btn clair" onclick="refaireEpreuve()">↺ Refaire l'épreuve<br><small>animateur, avec son code</small></button></div>`;
-  else if(e.n===CULTURE){ const Q=quizEtat(t), enCours=Q && Q.debut && Q.phase!=='fin';
+  else if(e.n===CULTURE){ repriseQuiz(); const Q=quizEtat(t), enCours=Q && Q.debut && Q.phase!=='fin';
     h += enCours ? `<button class="btn orange gros entree" onclick="aller('quiz')">▶ Reprendre le quiz<br><small>${quizReste(Q)>0?'il reste '+fmtT(quizReste(Q)):'temps écoulé'}</small></button>`
       : `<button class="btn vert gros entree" onclick="aller('quiz')">🎓 Lancer le quiz :<br>je tends le téléphone à l'animateur</button>`;
     h += `<p style="text-align:center"><button class="lnk" onclick="passerTelephone()">Pas de quiz sur ce téléphone ? L'animateur saisit le résultat</button></p>`; }
@@ -1714,10 +1723,16 @@ window.demarrerSaisie = ()=>{ chT0=0; chAcc=0; clearInterval(chTimer); const r=p
     note: ok&&e.type==='jury'&&r.mesure!=null?+r.mesure:null, mm: ok&&e.type==='chrono'&&r.mesure!=null?Math.floor(r.mesure/60):null, ss: ok&&e.type==='chrono'&&r.mesure!=null?Math.round(r.mesure%60):null,
     mv: (ok||okQ)&&(e.type==='points'||e.type==='hauteur'||e.type==='quiz')&&r.mesure!=null?(e.type==='quiz'?qB(r.mesure):+r.mesure):null, qReste: (ok||okQ)&&e.type==='quiz'&&+r.mesure>=1000 ? +r.mesure%1000 : 0, bonus:{}, subsid: (state.org && e.type==='quiz' && state.subsid[state.team]!=null) ? state.subsid[state.team] : null };
   BONUS.forEach(b=>state.saisie.bonus[b.k]=!!(ok&&r[b.col]));
-  if(e.tirs){ state.saisie.tirs = lsGet(cleTirs(), []); if(state.saisie.tirs.length && state.saisie.mv==null) state.saisie.mv=state.saisie.tirs.reduce((a,b)=>a+b,0); }
+  if(e.tirs){ state.saisie.tirs = lsGet(cleTirs(), []); if(state.saisie.tirs.length && state.saisie.mv==null) state.saisie.mv=state.saisie.tirs.reduce((a,b)=>a+b,0);
+    if(!state.saisie.tirs.length && !state.saisieNeuve && !(state.org&&!state.orgRetour)) lireEtat('tirs', e.n).then(T=>{ if(!Array.isArray(T) || !T.length || state.view!=='saisie' || state.ep!==e.n || !state.saisie || (state.saisie.tirs||[]).length) return;
+      state.saisie.tirs=T; majTirs(); dire('Lancers repris depuis l\'autre téléphone ✓','ok'); }); }
   const Qd=quizEtat(state.team); if(e.type==='quiz' && !state.saisieNeuve && state.saisie.mv==null && Qd && Qd.phase==='fin' && Qd.fin){        // le téléphone de l'équipe ne connaît pas les points : on reprend son quiz
     state.saisie.mv=Qd.rep.filter(x=>x.ok).length; state.saisie.qReste=QUIZ_DUREE-Math.min(QUIZ_DUREE, Math.round((Qd.fin-Qd.debut)/1000)); }
   if(e.type==='chrono'){ const c=lsGet(cleChrono(), null); if(c && (c.t0||c.acc)){ chT0=c.t0||0; chAcc=c.acc||0; } }      // chrono repris après une veille ou un rechargement
+  if(e.type==='chrono' && !chT0 && !chAcc && !state.saisieNeuve && !(state.org&&!state.orgRetour)) lireEtat('chrono', e.n).then(c=>{       // nouveau téléphone : chrono repris en ligne
+    if(!c || state.view!=='saisie' || state.ep!==e.n || chT0 || chAcc) return; chT0=c.t0?c.t0-DECAL:0; chAcc=c.acc||0; lsSet(cleChrono(), {t0:chT0, acc:chAcc}); chronoAff();
+    const b=$('#chBtn'); if(chT0){ clearInterval(chTimer); chTimer=setInterval(chronoAff,100); if(b){ b.textContent='■ Stop'; b.classList.add('run'); } } else if(b) b.textContent='▶ Reprendre';
+    dire('Chrono repris depuis l\'autre téléphone ✓','ok'); });
   state.view='saisie'; render(); window.scrollTo(0,0); majRecap();
   if(e.type==='chrono' && (chT0||chAcc)){ chronoAff(); const b=$('#chBtn'); if(chT0){ chTimer=setInterval(chronoAff,100); if(b){ b.textContent='■ Stop'; b.classList.add('run'); } } else if(b) b.textContent='▶ Reprendre'; } };
 // Comptage lancer par lancer : gardé sur le téléphone jusqu'à la validation (un rechargement ne perd rien)
@@ -1727,7 +1742,7 @@ function htmlTirs(){ const e=EPN[state.ep], T=(state.saisie&&state.saisie.tirs)|
     <div class="tirsListe">${T.map(v=>`<i>${v}</i>`).join('')}${'<i class="vide"></i>'.repeat(Math.max(0,n-T.length))}</div>
     ${T.length<n?`<div class="tirsBtns">${[0,1,2,3,4,5,6,7,8,9,10].map(v=>`<button type="button" onclick="tir(${v})">${v}</button>`).join('')}<button type="button" style="background:var(--gris);box-shadow:0 3px 0 #3E4C59;font-size:15px" onclick="tirAnnuler()">↩ Retour</button></div>`
       :`<button type="button" class="lnk" onclick="tirAnnuler()">↩ Corriger le dernier</button>`}`; }
-function majTirs(){ const z=$('#tirsZone'); if(z) z.innerHTML=htmlTirs(); const T=state.saisie.tirs||[]; const mv=$('#mv'); if(mv && T.length) mv.value=T.reduce((a,b)=>a+b,0); lsSet(cleTirs(), T); majRecap(); }
+function majTirs(){ const z=$('#tirsZone'); if(z) z.innerHTML=htmlTirs(); const T=state.saisie.tirs||[]; const mv=$('#mv'); if(mv && T.length) mv.value=T.reduce((a,b)=>a+b,0); lsSet(cleTirs(), T); sauverEtat('tirs', state.ep, T.length?T:null); majRecap(); }
 window.tir = v=>{ const e=EPN[state.ep]; if(!state.saisie) return; const T=state.saisie.tirs=state.saisie.tirs||[]; if(T.length>=e.tirs) return; T.push(v); vibre(T.length===e.tirs?[40,40,40]:12); majTirs(); };
 window.tirAnnuler = ()=>{ if(!state.saisie||!state.saisie.tirs||!state.saisie.tirs.length) return; state.saisie.tirs.pop(); vibre(20); majTirs(); };
 window.annulerSaisie = ()=>{ state.saisie=null; state.modifEnCours=false; const p=vuePrecedente(); if(p==='org') aller('org'); else { state.view=p||'ep'; render(); window.scrollTo(0,0); } };
@@ -1735,7 +1750,7 @@ window.annulerSaisie = ()=>{ state.saisie=null; state.modifEnCours=false; const 
 let chT0=0, chAcc=0, chTimer=0;
 function chronoAff(){ const ms=chAcc+(chT0?Date.now()-chT0:0), s=ms/1000; const el=$('#chAff'); if(el) el.textContent=Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0')+'.'+Math.floor((ms%1000)/100); }
 const cleChrono = ()=>'chrono_'+state.ep+'_'+state.team;
-const garderChrono = ()=>lsSet(cleChrono(), (chT0||chAcc) ? {t0:chT0, acc:chAcc} : null);
+const garderChrono = ()=>{ lsSet(cleChrono(), (chT0||chAcc) ? {t0:chT0, acc:chAcc} : null); sauverEtat('chrono', state.ep, (chT0||chAcc) ? {t0:chT0?chT0+DECAL:0, acc:chAcc} : null); };
 window.chronoBouton = ()=>{ const b=$('#chBtn'); if(!chT0){ chT0=Date.now(); clearInterval(chTimer); chTimer=setInterval(chronoAff,100); if(b){ b.textContent='■ Stop'; b.classList.add('run'); } vibre(20); garderChrono(); }
   else { chAcc+=Date.now()-chT0; chT0=0; clearInterval(chTimer); chronoAff(); const s=Math.round(chAcc/1000); const mm=$('#mm'), ss=$('#ss'); if(mm) mm.value=Math.floor(s/60); if(ss) ss.value=s%60; if(b){ b.textContent='▶ Reprendre'; b.classList.remove('run'); } vibre([30,30,30]); majRecap(); garderChrono(); } };
 window.chronoZero = ()=>{ if(chT0 && !confirm('Remettre le chrono à zéro ?')) return; chT0=0; chAcc=0; clearInterval(chTimer); chronoAff(); const b=$('#chBtn'); if(b){ b.textContent=EPN[state.ep]&&EPN[state.ep].chronoDebut?'▶ Départ':'▶ Chrono'; b.classList.remove('run'); } garderChrono(); };
@@ -1752,7 +1767,7 @@ window.refaireEpreuve = ()=>{ const e=EPN[state.ep], t=state.team; if(!demanderC
   if(!confirm(`Refaire « ${e.nom} » pour l'équipe ${t} ?\n\nLe nouveau résultat remplacera l'ancien.`)) return;
   state.modifEnCours=true;
   if(e.n===CULTURE){ quizSet(t, null); state.refaireQuiz=true; aller('quiz'); return; }
-  lsSet('chrono_'+e.n+'_'+t, null); if(e.tirs) lsSet('tirs_'+e.n+'_'+t, []); chT0=0; chAcc=0; clearInterval(chTimer);
+  lsSet('chrono_'+e.n+'_'+t, null); if(e.tirs) lsSet('tirs_'+e.n+'_'+t, []); if(e.type==='chrono') sauverEtat('chrono', e.n, null, t); if(e.tirs) sauverEtat('tirs', e.n, null, t); chT0=0; chAcc=0; clearInterval(chTimer);
   state.saisieNeuve=true; demarrerSaisie(); state.saisieNeuve=false; };
 function codeSaisieOk(){ if(codeDejaOk(state.ep)) return true; const el=$('#codeA'); const c=el?el.value:''; if(!c){ dire('Code de l\'animateur : à saisir par l\'animateur.','err'); if(el) el.focus(); return false; }
   if(!codeStandOk(state.ep,c)){ dire('Code de l\'animateur incorrect.','err'); el.value=''; el.focus(); return false; } return true; }
@@ -1787,7 +1802,7 @@ window.validerSaisie = ()=>{
   const maintenant=horloge().toISOString(); const etaitFait=fait(e.n,t);
   const row={ event:EVENT, stand:e.n, team:t, resultat:res, mesure:mes, code:CLE, updated_at:maintenant }; BONUS.forEach(b=>row[b.col]=!!s.bonus[b.k]);
   if(e.type==='quiz'){ const v=parseFloat(String(($('#subsid')||{}).value||'').replace(',','.')); if(!isNaN(v)) envoyerSubsid(t, v); }
-  local.p[kp(e.n,t)]=row; pousser('tb_passages','event,stand,team','p-'+kp(e.n,t),row); if(e.tirs) lsSet('tirs_'+e.n+'_'+t, []); if(e.type==='chrono'){ lsSet('chrono_'+e.n+'_'+t, null); chT0=0; chAcc=0; clearInterval(chTimer); }
+  local.p[kp(e.n,t)]=row; pousser('tb_passages','event,stand,team','p-'+kp(e.n,t),row); if(e.tirs){ lsSet('tirs_'+e.n+'_'+t, []); sauverEtat('tirs', e.n, null, t); } if(e.type==='chrono'){ lsSet('chrono_'+e.n+'_'+t, null); sauverEtat('chrono', e.n, null, t); chT0=0; chAcc=0; clearInterval(chTimer); }
   // Duel : on enregistre aussi le résultat de l'équipe adverse (sauf si elle a déjà un résultat contre une autre équipe)
   let noteAdv='';
   if(e.type==='duel' && mes>0){ const r2=passages()[kp(e.n,mes)];
