@@ -289,6 +289,7 @@
   button.photosANoter, button.photosANoter.entree { animation:clignoteP 1.3s ease-in-out infinite !important; }
   .tabs .pastille { animation:clignoteP 1.3s ease-in-out infinite !important; }
   .photosANoter { display:flex; align-items:center; gap:12px; width:100%; border:0; border-radius:18px; padding:16px; margin:0 0 12px; background:linear-gradient(135deg,var(--orange),var(--corail)); color:#fff; font:inherit; font-size:18px; font-weight:900; text-align:left; box-shadow:var(--ombre); } .photosANoter span { font-size:34px; }
+  .zoomP .tourner { border:2px solid rgba(255,255,255,.5); background:rgba(255,255,255,.12); color:#fff; font:inherit; font-weight:800; font-size:15px; border-radius:12px; padding:9px 14px; }
   .zoomP .zd { font-size:13px; color:#CFE4F3; margin:4px 0 8px; line-height:1.35; }
   .msg.masque { opacity:.45; text-decoration:line-through; }
   .msg .lnk { padding:2px 0 0; font-size:12.5px; }
@@ -1498,7 +1499,7 @@ function vOrg(){
       h += `<div class="zoomP" onclick="if(event.target===this)fermerZoom()"><div class="zc"><div class="zi" style="${ph?`background-image:url('${ph}')`:''}">${ph?'':'chargement…'}</div>
         <div class="zt"><b>Équipe ${zt} · ${esc(nomEq(zt))}</b><br>${D.ico} ${D.nom}</div><div class="zd">${esc(D.desc||'')}${aNoterNb()?' · encore '+aNoterNb()+' à noter':''}</div>
         <div class="zn">${[[1,'1 · validée'],[2,'2 · magnifique'],[0,'0 · refusée']].map(([x,lab])=>`<button class="${n===x?'sel':(n==null&&x===PTS_DEFI?'auto':'')}" onclick="noterZoom(${zt},${zd},${x})">${lab}</button>`).join('')}</div>
-        <button class="lnk" style="color:#CFE4F3" onclick="fermerZoom()">Fermer</button></div></div>`; }
+        <div style="display:flex;gap:8px;justify-content:center;align-items:center;margin-top:8px">${ph?`<button class="tourner" onclick="tournerPhoto('${state.zoom}')">↻ Tourner la photo</button>`:''}<button class="lnk" style="color:#CFE4F3" onclick="fermerZoom()">Fermer</button></div></div></div>`; }
   } else if(state.orgTab==='messages'){
     h += `<div class="card" style="padding:14px"><b style="font-family:var(--titre);font-size:19px;color:var(--marine)">📣 Annonces rapides</b><p class="muted" style="margin:4px 0 0">Un geste : le message s'affiche en haut de l'écran de toutes les équipes, et leur téléphone vibre.</p>
       <div class="annRap">${ANNONCES.map((a,i)=>`<button onclick="annonceRapide(${i})">${a[0]} ${esc(a[1])}</button>`).join('')}</div>
@@ -1874,6 +1875,15 @@ function chargerPhotosDefis(liste){
     dbGet('tb_defis',`team=eq.${r.team}&defi=eq.${r.defi}&select=photo`).then(x=>{ const ph=x[0]&&okPhoto(x[0].photo); state.photosDefis[k]= ph || ''; })
       .catch(()=>{}).finally(()=>{ chargementsPhotos--; if(state.view==='org' && state.orgTab==='photos') render(true); }); }); }
 window.zoomPhoto = k=>{ state.zoom=k; render(true); };
+// Photo prise de travers : on la tourne d'un quart de tour et on l'enregistre ainsi (elle sortira droite aussi dans le montage vidéo)
+window.tournerPhoto = async k=>{ const ph=state.photosDefis[k]; if(!ph || state.rotEnCours) return; state.rotEnCours=true;
+  try{ const im=await new Promise((ok,ko)=>{ const i=new Image(); i.onload=()=>ok(i); i.onerror=ko; setTimeout(()=>ko('délai'),8000); i.src=ph; }); const cv=document.createElement('canvas'); cv.width=im.naturalHeight; cv.height=im.naturalWidth;
+    const c=cv.getContext('2d'); c.translate(cv.width,0); c.rotate(Math.PI/2); c.drawImage(im,0,0); const nv=cv.toDataURL('image/jpeg',0.85);
+    state.photosDefis[k]=nv; const [t,d]=k.split('-').map(Number); const r=defis()[k]||{};
+    const row={ event:EVENT, team:t, defi:d, envoye:true, photo:nv, code:CLE, updated_at:horloge().toISOString() }; if(r.note!=null) row.note=r.note;
+    pousser('tb_defis','event,team,defi','r-'+k,row); vibre(15); render(true); dire('Photo tournée ✓ (touchez encore si besoin)','ok'); }
+  catch(e){ dire('Impossible de tourner cette photo.','err'); }
+  state.rotEnCours=false; };
 window.noterSuite = ()=>{ const l=Object.values(defis()).filter(r=>r.envoye && r.note==null && !estTest(r.team)).sort((a,b)=>tms(b.updated_at)-tms(a.updated_at));
   if(!l.length){ dire('Toutes les photos sont notées ✓','ok'); return; }
   state.view='org'; state.orgTab='photos'; state.filtrePhotos='anoter'; chargerPhotosDefis(l.slice(0,6)); state.zoom=kd(l[0].team,l[0].defi); render(); window.scrollTo(0,0); };
