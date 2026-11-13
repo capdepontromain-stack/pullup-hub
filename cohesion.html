@@ -878,9 +878,11 @@ function calcul(){
   const general = eq[ordre[0]].total>0 ? ordre[0] : null;
   const ecart = e => (state.reponseSubsid!=null && e.subsid!=null) ? Math.abs(e.subsid-state.reponseSubsid) : Infinity;
   const qz = Object.values(eq).filter(e=>e.quiz!=null && e.t!==general).sort((a,b)=> b.quizBrut-a.quizBrut || ecart(a)-ecart(b) || b.total-a.total || a.t-b.t);   // bonnes réponses, puis rapidité, puis subsidiaire
+  const qzTous = Object.values(eq).filter(e=>e.quiz!=null).sort((a,b)=> b.quizBrut-a.quizBrut || b.total-a.total || a.t-b.t);
+  const cumul = !!(general && qzTous.length && qzTous[0].t===general);     // le grand prix a aussi le meilleur quiz : la médaille passe à la suivante (Romain en est informé)
   const exaequo = [];                                   // plus de question subsidiaire (Romain, 12/11) : égalité parfaite = le total de la matinée départage   // égalité de bonnes réponses en tête
   const amb = Object.values(eq).filter(e=>e.coeurs+e.fairplay>0).sort((a,b)=> (b.coeurs+b.fairplay)-(a.coeurs+a.fairplay) || b.coeurs-a.coeurs || b.bonus-a.bonus || b.total-a.total || a.t-b.t);   // trophée « coups de cœur et fair-play »
-  return { pts, rang, eq, ordre, rows, dfs, general, exaequo, departage: exaequo.length>0 && ecart(qz[0])<ecart(qz[1]), prixQuiz: qz.length?qz[0].t:null, ambiance: amb.length?amb[0].t:null, saisies: rows.length + dfs.length };
+  return { pts, rang, eq, ordre, rows, dfs, general, cumul, exaequo, departage: exaequo.length>0 && ecart(qz[0])<ecart(qz[1]), prixQuiz: qz.length?qz[0].t:null, ambiance: amb.length?amb[0].t:null, saisies: rows.length + dfs.length };
 }
 function texteResultat(r, e){
   if(!valide(r)) return '';
@@ -1427,6 +1429,7 @@ function vOrg(){
       h += `<h3>Les prix en ce moment</h3>`;
       h += `<div class="prix entree" style="background:linear-gradient(150deg,var(--bleu),var(--marine))" onclick="voirEquipe(${c.general})">${phPrix(c.general,'🏆')}<div><div class="t">Grand prix de la cohésion</div><div class="n">${titreEq(c.general)}</div><div>${nb(c.eq[c.general].total)} points · ${pl(c.eq[c.general].faits,'épreuve')}</div><div style="font-size:13px;opacity:.9">${pourquoi(c.eq[c.general])}</div></div></div>`;
       h += c.prixQuiz ? `<div class="prix entree" style="background:linear-gradient(150deg,var(--orange),var(--corail))" onclick="voirEquipe(${c.prixQuiz})">${phPrix(c.prixQuiz,'🎓')}<div><div class="t">Médaille culture d'entreprise</div><div class="n">${titreEq(c.prixQuiz)}</div><div>${c.eq[c.prixQuiz].quiz} bonnes réponses${c.departage?' · départagée par la question subsidiaire':''}</div></div></div>` : `<div class="banner">Médaille culture d'entreprise : en attente des premiers résultats.</div>`;
+      if(c.cumul && c.prixQuiz) h += `<div class="banner entree" style="font-size:15px"><b>ℹ️ Pour ton info :</b> le meilleur score au quiz est aussi celui de l'équipe du grand prix, ${titreEq(c.general)} (${c.eq[c.general].quiz} bonnes réponses). Comme prévu, la médaille culture passe à la suivante : ${titreEq(c.prixQuiz)} (${c.eq[c.prixQuiz].quiz} bonnes réponses).</div>`;
       if(c.exaequo.length) h += `<div class="card entree" style="padding:14px"><b style="color:var(--orange)">🎓 Égalité pour la médaille : ${c.exaequo.length} équipes à ${c.exaequo[0].quiz} bonnes réponses</b>
         <div style="margin-top:6px">${c.exaequo.map(e=>`<div class="ligneRes"><span><b>${e.t}</b> ${esc(nomEq(e.t))}</span><span class="muted">${e.subsid!=null?'subsidiaire : <b>'+nb(e.subsid)+'</b>'+(state.reponseSubsid!=null?' (écart '+nb(Math.abs(e.subsid-state.reponseSubsid))+')':''):'pas de réponse subsidiaire'}</span></div>`).join('')}</div>
         <label>Bonne réponse à la question subsidiaire</label><div class="row"><input type="number" id="repSubsid" inputmode="decimal" placeholder="Un nombre" value="${state.reponseSubsid??''}"><button class="btn marine" style="margin-top:0;flex:0 0 auto;width:auto;padding:0 18px" onclick="enregistrerReponse()">OK</button></div>
