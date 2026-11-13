@@ -501,6 +501,7 @@ const EVENT = {demo:'demo2-2026-11-14', essai:'essai5-2026-11-14', reel:'cohesio
 const LOCAL = ['localhost','127.0.0.1'].includes(location.hostname);
 const SUPABASE_URL = (LOCAL && Q.get('api')) ? Q.get('api') : 'https://vincxrmtfjbenlzhjwby.supabase.co';
 const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpbmN4cm10ZmpiZW5semhqd2J5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyOTI1MTksImV4cCI6MjA5Nzg2ODUxOX0.M9_ChGDlOIUKKZtbBHs1xn4cdy4FwUAQKN0aYyXefQY';
+const TEL = (()=>{ try{ let v=localStorage.getItem('pxc_tel'); if(!v){ v=Math.random().toString(36).slice(2,10); localStorage.setItem('pxc_tel',v); } return v; }catch(e){ return Math.random().toString(36).slice(2,10); } })();   // identifiant de CE téléphone (le quiz ne se joue que sur un téléphone à la fois)
 const CLE = 'PULLUP14';                             // clé technique exigée par la base (ce n'est pas le code des animateurs)
 const N_EQUIPES = 29;
 const N_MAX = 32, estTest = t => t > N_EQUIPES;     // 30, 31, 32 : équipes de TEST (pour essayer le jeu), jamais au classement
@@ -559,8 +560,16 @@ const QUIZ = [            // QUIZ FINAL validé par la directrice de PRORESAP (1
 ];
 const QUIZ_SUBSID = "Question subsidiaire : combien d'avis compte l'enquête de satisfaction 2023 du service prestataire ?", QUIZ_SUBSID_REP = 1168;   // l'organisation peut changer la bonne réponse
 const QUIZ_OFF = 100000;                             // repère « quiz chronométré » : 100000 + bonnes × 1000 + secondes restantes (même avec 0 bonne réponse)
-const qB = m => m==null ? null : (+m>=QUIZ_OFF ? Math.floor((+m-QUIZ_OFF)/1000) : +m>=1000 ? Math.floor(+m/1000) : Math.round(+m));                // bonnes réponses (le quiz de l'appli code : bonnes × 1000 + secondes restantes)
-const qTemps = m => m!=null && +m>=1000 ? QUIZ_DUREE - (+m%1000) : null;      // QUIZ_OFF est un multiple de 1000 : le reste donne toujours les secondes                          // temps mis, en secondes (si joué dans l'appli)                                 // l'épreuve mise en avant (points doublés)
+const QZ = 1000000000;                                // barème du quiz (13/11) : 1 000 000 000 + bonnes × 10 000 000 + secondes restantes à la fin × 10 000 + dixièmes de seconde restants à la dernière bonne réponse
+// 1) le plus de bonnes réponses, 2) à égalité, la plus rapide à finir, 3) encore à égalité, celle qui a trouvé sa dernière bonne réponse le plus tôt (au dixième de seconde) : pas d'ex aequo
+const qB = m => m==null ? null : (+m>=QZ ? Math.floor((+m-QZ)/1e7) : +m>=QUIZ_OFF ? Math.floor((+m-QUIZ_OFF)/1000) : +m>=1000 ? Math.floor(+m/1000) : Math.round(+m));
+const qTemps = m => m==null ? null : (+m>=QZ ? QUIZ_DUREE - Math.floor(((+m-QZ)%1e7)/1e4) : +m>=1000 ? QUIZ_DUREE - (+m%1000) : null);
+const qQueue = m => m==null ? 0 : (+m>=QZ ? (+m-QZ)%1e7 : +m>=1000 ? (+m%1000)*1e4 : 0);      // la partie « départage » (rapidité), gardée si l'animateur corrige le nombre de bonnes réponses
+function quizMesure(Q){ const rep=Q.rep||[], bonnes=rep.filter(x=>x.ok).length, fin=Q.fin||Date.now();
+  const resteFin = Math.max(0, Math.min(QUIZ_DUREE, QUIZ_DUREE - Math.round((fin-Q.debut)/1000)));
+  const ts = rep.filter(x=>x.ok && x.t!=null).map(x=>x.t), der = ts.length ? Math.max(...ts) : (bonnes ? (fin-Q.debut) : QUIZ_DUREE*1000);
+  const resteDer = Math.max(0, Math.min(9999, Math.round((QUIZ_DUREE*1000 - der)/100)));
+  return QZ + bonnes*1e7 + resteFin*1e4 + resteDer; }
 const COULEURS = ['Rouge','Bleu roi','Vert','Jaune','Orange','Violet','Rose','Blanc','Noir','Turquoise','Bordeaux','Bleu ciel','Vert anis','Gris'];
 const couleur = t => COULEURS[(t-1)%14];
 const TEINTES = ['#F26B12','#EC0512','#0784B0','#E0A800','#0D6897','#E8540C','#0E94BE','#C9040F','#F26B12','#EC0512','#0784B0','#E0A800','#0D6897','#0E94BE'];   // couleurs du logo Proxim'Services
@@ -803,6 +812,11 @@ async function refresh(force){
     try{ const dq = state.org ? 'select=team,defi,envoye,note,updated_at' : `select=team,defi,envoye,updated_at&team=eq.${state.team||0}`;
       const dd = await dbGet('tb_defis', dq); state.defis={}; dd.forEach(x=>state.defis[kd(x.team,x.defi)]=x);
       Object.keys(local.d).forEach(k=>{ if(!queue['d-'+k] && state.defis[k]) delete local.d[k]; }); save(); }catch(e){}
+    // quiz en cours ici, mais repris volontairement sur un autre téléphone de l'équipe (panne) : ce téléphone-ci s'arrête
+    const Qi=!state.org && state.team ? quizEtat(state.team) : null;
+    if(Qi && Qi.debut && Qi.phase!=='fin' && Qi.tel){ const S=await lireEtat('quiz', CULTURE, state.team);
+      if(quizEnCoursAilleurs(S) && quizEtat(state.team)===Qi){ local.quiz[state.team]=null; save(); state.quizAilleurs=state.quizAilleurs||{}; state.quizAilleurs[state.team]=S;
+        if(state.view==='quiz'){ state.ep=CULTURE; state.view='ep'; } dire('Le quiz continue sur un autre téléphone de votre équipe.','err'); } }
   }catch(e){ state.dbOk=false; state.err=String(e.message||e); }
   await lireMessages(true);
   if(force) dire(state.dbOk?'À jour ✓':'Pas de réseau pour l\'instant', state.dbOk?'ok':'err');
@@ -1134,11 +1148,18 @@ function sauverEtat(kind, ep, data, t){ t=t||state.team; if(!t || state.org&&!st
   pousser('tb_messages','cid','etat-'+kind+'-'+t+'-'+ep, { event:EVENT, cid:'etat-'+EVENT+'-'+kind+'-'+t+'-'+ep, team:t, texte:'__ETAT__'+JSON.stringify(data==null?null:data), code:CLE }); }
 async function lireEtat(kind, ep, t){ t=t||state.team; try{ const r=await dbGet('tb_messages',`cid=eq.etat-${EVENT}-${kind}-${t}-${ep}&select=texte`); return r[0] ? JSON.parse(String(r[0].texte).slice(8)) : null; }catch(e){ return null; } }
 let repriseQuizT=0;
+const quizEnCoursAilleurs = S => !!(S && S.debut && S.phase!=='fin' && S.tel && S.tel!==TEL);
 function repriseQuiz(){ const t=state.team; if(!t || Date.now()-repriseQuizT<8000) return; const Q=quizEtat(t); if(Q && Q.debut) return; repriseQuizT=Date.now();
-  lireEtat('quiz', CULTURE, t).then(S=>{ if(!S || !S.debut || S.phase==='fin' || state.team!==t) return; const L=quizEtat(t); if(L && L.debut) return;
-    local.quiz=local.quiz||{}; local.quiz[t]={...S, debut:S.debut-DECAL, fin:S.fin?S.fin-DECAL:0}; save(); render(); dire('Quiz en cours repris depuis l\'autre téléphone ✓','ok'); }); }
+  lireEtat('quiz', CULTURE, t).then(S=>{ if(state.team!==t) return; const avant=!!(state.quizAilleurs||{})[t]; state.quizAilleurs=state.quizAilleurs||{};
+    state.quizAilleurs[t] = quizEnCoursAilleurs(S) ? S : null; if(avant!==!!state.quizAilleurs[t] && ['ep','quiz'].includes(state.view)) render(); }); }
+// Le téléphone qui jouait le quiz est en panne : on le reprend ici, avec le temps qui a continué de tourner
+window.reprendreQuizIci = async ()=>{ const t=state.team; const S=await lireEtat('quiz', CULTURE, t);
+  if(!quizEnCoursAilleurs(S)){ (state.quizAilleurs||{})[t]=null; dire('Plus de quiz en cours sur un autre téléphone.','err'); render(); return; }
+  if(!confirm('Reprendre le quiz sur CE téléphone ?\n\nÀ faire seulement si l\'autre téléphone est en panne : il ne pourra plus continuer.')) return;
+  state.quizAilleurs[t]=null; quizSet(t, {...S, debut:S.debut-DECAL, fin:S.fin?S.fin-DECAL:0, tel:TEL}); dire('Quiz repris sur ce téléphone ✓ (le temps a continué de tourner)','ok'); aller('quiz'); };
+const carteQuizAilleurs = S => `<div class="card entree" style="border:3px solid #F26B12;text-align:center"><div style="font-size:40px">📱</div><h3 style="margin:4px 0">Le quiz est en cours sur un autre téléphone de votre équipe</h3><p>${quizReste({...S, debut:S.debut-DECAL, fin:S.fin?S.fin-DECAL:0})>0?'Il reste '+fmtT(quizReste({...S, debut:S.debut-DECAL, fin:S.fin?S.fin-DECAL:0}))+' : continuez sur ce téléphone-là.':'Le temps est écoulé : le résultat s\'enregistre sur ce téléphone-là.'}</p><button class="btn clair" onclick="reprendreQuizIci()">Ce téléphone-là est en panne ?<br><small>Reprendre le quiz ici</small></button></div>`;
 function quizSet(t, Q){ local.quiz=local.quiz||{}; local.quiz[t]=Q; save();
-  sauverEtat('quiz', CULTURE, Q ? { debut:Q.debut?Q.debut+DECAL:0, i:Q.i, phase:Q.phase, rep:(Q.rep||[]).map(x=>({i:x.i, ok:!!x.ok, passe:!!x.passe})), tempsFini:!!Q.tempsFini, fin:Q.fin?Q.fin+DECAL:0, refaire:!!Q.refaire } : null, t); }
+  sauverEtat('quiz', CULTURE, Q ? { debut:Q.debut?Q.debut+DECAL:0, i:Q.i, phase:Q.phase, rep:(Q.rep||[]).map(x=>({i:x.i, ok:!!x.ok, passe:!!x.passe, t:x.t})), tel:Q.tel||TEL, tempsFini:!!Q.tempsFini, fin:Q.fin?Q.fin+DECAL:0, refaire:!!Q.refaire } : null, t); }
 function quizReste(Q){ if(!Q || !Q.debut) return QUIZ_DUREE; const fin = Q.fin || Date.now(); return Math.max(0, Math.ceil(QUIZ_DUREE - (fin-Q.debut)/1000)); }
 const mmss = s => Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
 function normRep(x){ return String(x||'').replace(/\b(?:[A-Za-z]\.){1,}[A-Za-z]\b\.?/g, m=>m.replace(/\./g,'')).toLowerCase()   // « H.A.S », « P.L.S » : sigles à points recollés
@@ -1158,7 +1179,7 @@ function reponseOk(rep, oks){ const r=normRep(rep); if(!r) return false; const r
 function vQuiz(){
   const t=state.team, Q=quizEtat(t), N=QUIZ.length;
   if(fait(CULTURE,t) && !(Q && (Q.phase==='fin' || Q.refaire)) && !state.refaireQuiz) return `<div class="fait entree"><div class="gros">✓ Quiz déjà fait</div><p style="margin:6px 0 0">Le résultat de la culture d'entreprise est enregistré.</p></div><button class="btn clair" onclick="aller('home')">Voir toutes les épreuves</button>`;
-  if(!Q || !Q.debut){ repriseQuiz(); return `<div class="card entree"><div class="qNum">Épreuve ${CULTURE} · points doublés</div><h2 style="margin:4px 0 12px">🎓 Le quiz culture d'entreprise</h2><ul class="regQ"><li>⏱ <b>${N} questions, ${QUIZ_DUREE/60} minutes</b> : le chrono part dès que l'animateur lance le quiz.</li><li>✍️ Choix multiples ou réponse à taper : <b>pas besoin d'une orthographe parfaite</b>.</li><li>⏭ Vous séchez ? <b>Passez</b> la question : elle ne rapporte rien, mais vous gagnez du temps.</li><li>🏆 Classement au <b>nombre de bonnes réponses</b>, puis à la <b>rapidité</b>.</li></ul>
+  if(!Q || !Q.debut){ repriseQuiz(); const Sa=(state.quizAilleurs||{})[t]; if(Sa && !fait(CULTURE,t)) return carteQuizAilleurs(Sa); return `<div class="card entree"><div class="qNum">Épreuve ${CULTURE} · points doublés</div><h2 style="margin:4px 0 12px">🎓 Le quiz culture d'entreprise</h2><ul class="regQ"><li>⏱ <b>${N} questions, ${QUIZ_DUREE/60} minutes</b> : le chrono part dès que l'animateur lance le quiz.</li><li>✍️ Choix multiples ou réponse à taper : <b>pas besoin d'une orthographe parfaite</b>.</li><li>⏭ Vous séchez ? <b>Passez</b> la question : elle ne rapporte rien, mais vous gagnez du temps.</li><li>🏆 Classement au <b>nombre de bonnes réponses</b>, puis à la <b>rapidité</b>.</li></ul>
       ${codeDejaOk(CULTURE)?'<p class="muted">🔑 Code animateur déjà vérifié ✓</p>':''}<label ${codeDejaOk(CULTURE)?'style="display:none"':''}>Animateur : votre code pour lancer le chrono</label><input ${codeDejaOk(CULTURE)?'type="hidden"':'type="text"'} id="codeQ" autocomplete="off" autocapitalize="off" placeholder="Code de l'animateur" enterkeyhint="go" onkeydown="if(event.key==='Enter'){event.preventDefault();lancerQuiz();}">
       <button class="btn vert gros" onclick="lancerQuiz()">▶ Lancer le chrono</button></div>`; }
   const reste=quizReste(Q), bonnes=Q.rep.filter(x=>x.ok).length;
@@ -1186,9 +1207,11 @@ function vQuiz(){
       <p style="text-align:center"><button class="lnk" onclick="state.ep=CULTURE;demarrerSaisie()">Animateur : ajouter des bonus</button></p>`; }
   return h;
 }
-window.lancerQuiz = ()=>{ const t=state.team; const el=$('#codeQ'), c=el?el.value.trim():'';
+window.lancerQuiz = async ()=>{ const t=state.team; const el=$('#codeQ'), c=el?el.value.trim():'';
   if(!codeDejaOk(CULTURE) && !codeStandOk(CULTURE,c)){ dire(c?'Code de l\'animateur incorrect.':'Code de l\'animateur : à taper par l\'animateur.','err'); if(el){ el.value=''; el.focus(); } return; }
-  state.quizSel=[]; quizSet(t, { debut:Date.now(), i:0, rep:[], phase:'q', refaire:!!state.refaireQuiz }); state.refaireQuiz=false; vibre([40,30,40]); son(false); render(); window.scrollTo(0,0); };
+  if(state.lanceQuiz) return; state.lanceQuiz=true; const S=await lireEtat('quiz', CULTURE, t); state.lanceQuiz=false;
+  if(quizEnCoursAilleurs(S) && !state.refaireQuiz){ state.quizAilleurs=state.quizAilleurs||{}; state.quizAilleurs[t]=S; render(); dire('Le quiz est déjà lancé sur un autre téléphone de l\'équipe.','err'); return; }
+  state.quizSel=[]; quizSet(t, { debut:Date.now(), i:0, rep:[], phase:'q', refaire:!!state.refaireQuiz, tel:TEL }); state.refaireQuiz=false; vibre([40,30,40]); son(false); render(); window.scrollTo(0,0); };
 function quizAvance(Q){ if(quizReste(Q)<=0){ Q.phase='subsid'; Q.tempsFini=true; Q.fin=Q.fin||Q.debut+QUIZ_DUREE*1000; } }
 window.quizRepondre = k=>{ const t=state.team, Q=quizEtat(t); if(!Q || Q.phase!=='q') return; quizAvance(Q); if(Q.phase!=='q'){ quizSet(t,Q); render(); return; }
   const x=QUIZ[Q.i]; let r, ok;
@@ -1196,16 +1219,18 @@ window.quizRepondre = k=>{ const t=state.team, Q=quizEtat(t); if(!Q || Q.phase!=
     r=sel.map(i=>x.choix[i]).join(' · '); ok = sel.length===x.bons.length && x.bons.every(i=>sel.includes(i)); state.quizSel=[]; }
   else if(x.choix){ r=x.choix[k]; ok = k===x.bon; }
   else { r=String(($('#qRep')||{}).value||'').trim(); if(!r){ dire('Tapez votre réponse, ou passez la question.','err'); const el=$('#qRep'); if(el) el.focus(); return; } ok=reponseOk(r, x.ok||[x.rep]); }
-  Q.rep.push({ i:Q.i, r, ok }); Q.phase='fb'; quizSet(t,Q); vibre(ok?[25]:[60,40,60]); if(ok) son(false); render(); window.scrollTo(0,0); };
+  Q.rep.push({ i:Q.i, r, ok, t:Date.now()-Q.debut }); Q.phase='fb'; quizSet(t,Q); vibre(ok?[25]:[60,40,60]); if(ok) son(false); render(); window.scrollTo(0,0); };
 window.quizBasculer = k=>{ const l=state.quizSel=state.quizSel||[]; const i=l.indexOf(k); if(i>=0) l.splice(i,1); else l.push(k); vibre(10); render(); };
 window.quizPasser = ()=>{ state.quizSel=[]; const t=state.team, Q=quizEtat(t); if(!Q || Q.phase!=='q') return; Q.rep.push({ i:Q.i, r:null, ok:false, passe:true }); Q.phase='fb'; quizAvance(Q); quizSet(t,Q); render(); window.scrollTo(0,0); };
 window.quizSuivante = ()=>{ const t=state.team, Q=quizEtat(t); if(!Q || Q.phase!=='fb') return; Q.i++;
   if(Q.i>=QUIZ.length){ Q.phase='subsid'; Q.fin=Date.now(); } else Q.phase='q'; quizAvance(Q); quizSet(t,Q); render(); window.scrollTo(0,0);
   if(Q.phase==='q' && !QUIZ[Q.i].choix) setTimeout(()=>{ const el=$('#qRep'); if(el) el.focus(); }, 60); };
-window.quizEnregistrer = ()=>{ const t=state.team, Q=quizEtat(t); if(!Q || Q.phase!=='subsid' || state.quizEnvoi) return;
+window.quizEnregistrer = async ()=>{ const t=state.team, Q=quizEtat(t); if(!Q || Q.phase!=='subsid' || state.quizEnvoi) return;
   state.quizEnvoi=true; Q.fin=Q.fin||Date.now();
-  const bonnes=Q.rep.filter(x=>x.ok).length, sec=Math.min(QUIZ_DUREE, Math.round((Q.fin-Q.debut)/1000));
-  const row={ event:EVENT, stand:CULTURE, team:t, resultat:'F', mesure: QUIZ_OFF + bonnes*1000 + (QUIZ_DUREE-sec), code:CLE, updated_at:horloge().toISOString() }; BONUS.forEach(b=>row[b.col]=false);
+  const S=await lireEtat('quiz', CULTURE, t);
+  if(quizEnCoursAilleurs(S) || (state.passages[kp(CULTURE,t)] && valide(state.passages[kp(CULTURE,t)]) && !Q.refaire && !state.modifEnCours)){
+    local.quiz[t]=null; save(); state.quizEnvoi=false; dire(quizEnCoursAilleurs(S)?'Le quiz a été repris sur un autre téléphone : c\'est lui qui enregistre.':'Le quiz de votre équipe est déjà enregistré.','err'); aller('home'); return; }
+  const row={ event:EVENT, stand:CULTURE, team:t, resultat:'F', mesure: quizMesure(Q), code:CLE, updated_at:horloge().toISOString() }; BONUS.forEach(b=>row[b.col]=false);
   local.p[kp(CULTURE,t)]=row; pousser('tb_passages','event,stand,team','p-'+kp(CULTURE,t),row);
   Q.phase='fin'; quizSet(t,Q); state.quizEnvoi=false; state.modifEnCours=false; vibre([30,40,30]); quizBravo(); };   // directement le Bravo : pas besoin de rendre le téléphone à l'animateur
 window.quizBravo = ()=>{ const t=state.team, Q=quizEtat(t)||{rep:[]}; state.ep=CULTURE; state.bravo={ ep:CULTURE, quiz:true, tempsFini:!!Q.tempsFini, bonnes:(Q.rep||[]).filter(x=>x.ok).length }; state.vientDeFaire=CULTURE; setTimeout(()=>{ state.vientDeFaire=0; }, 4000);
@@ -1222,10 +1247,10 @@ function vEpreuve(){
       <p class="muted" style="margin:12px 0 0">L'animateur note votre résultat et peut ajouter des bonus : ambiance, cohésion, fair-play et coup de cœur. Les points restent secrets jusqu'au podium.</p></div>`;
   if(deja) h += `<div class="fait entree"><div class="gros">✓ Épreuve faite</div><p style="margin:6px 0 0">Résultat enregistré par l'animateur. Passez à une autre épreuve !</p></div>
       ${epSuivante()?`<button class="btn orange" onclick="suivante()">Épreuve suivante →</button>`:''}<button class="btn clair" onclick="aller('home')">Voir toutes les épreuves</button><div class="actionsAnim"><button class="btn clair" onclick="modifierResultat()">✏️ Modifier le résultat<br><small>animateur, avec son code</small></button><button class="btn clair" onclick="refaireEpreuve()">↺ Refaire l'épreuve<br><small>animateur, avec son code</small></button></div>`;
-  else if(e.n===CULTURE){ repriseQuiz(); const Q=quizEtat(t), enCours=Q && Q.debut && Q.phase!=='fin';
-    h += enCours ? `<button class="btn orange gros entree" onclick="aller('quiz')">▶ Reprendre le quiz<br><small>${quizReste(Q)>0?'il reste '+fmtT(quizReste(Q)):'temps écoulé'}</small></button>`
+  else if(e.n===CULTURE){ repriseQuiz(); const Q=quizEtat(t), enCours=Q && Q.debut && Q.phase!=='fin', Sa=(state.quizAilleurs||{})[t];
+    h += (!enCours && Sa) ? carteQuizAilleurs(Sa) : enCours ? `<button class="btn orange gros entree" onclick="aller('quiz')">▶ Reprendre le quiz<br><small>${quizReste(Q)>0?'il reste '+fmtT(quizReste(Q)):'temps écoulé'}</small></button>`
       : `<button class="btn vert gros entree" onclick="aller('quiz')">🎓 Lancer le quiz :<br>je tends le téléphone à l'animateur</button>`;
-    h += `<p style="text-align:center"><button class="lnk" onclick="passerTelephone()">Pas de quiz sur ce téléphone ? L'animateur saisit le résultat</button></p>`; }
+    if(!(!enCours && Sa)) h += `<p style="text-align:center"><button class="lnk" onclick="passerTelephone()">Pas de quiz sur ce téléphone ? L'animateur saisit le résultat</button></p>`; }
   else if(e.tirs) h += `<button class="btn vert gros entree" onclick="passerTelephone()">On commence :<br>je tends le téléphone à l'animateur</button><p class="muted" style="text-align:center">L'animateur compte chaque ${e.n===7?'hache':'tir'} sur ce téléphone.</p>`;
   else if(e.chronoDebut) h += `<button class="btn vert gros entree" onclick="passerTelephone()">On commence :<br>je tends le téléphone à l'animateur</button><p class="muted" style="text-align:center">L'animateur lance le chrono sur ce téléphone.</p>`;
   else h += `<button class="btn vert gros entree" onclick="passerTelephone()">Épreuve terminée :<br>je tends le téléphone à l'animateur</button>`;
@@ -1721,13 +1746,17 @@ window.ouvrir = n=>{ state.ep=n; state.view='ep'; render(); window.scrollTo(0,0)
 window.demarrerSaisie = ()=>{ chT0=0; chAcc=0; clearInterval(chTimer); const r=passages()[kp(state.ep,state.team)]; const ok=state.org&&valide(r)&&!state.saisieNeuve; const e=EPN[state.ep]; const okQ=valide(r)&&e.type==='quiz'&&!state.saisieNeuve;   // quiz : on garde le score et la rapidité pour ajouter des bonus
   state.saisie={ res: ok&&e.type==='duel'?r.resultat:'', adv: ok&&e.type==='duel'&&r.mesure>0?+r.mesure:null, contreAnim: !!(ok&&e.type==='duel'&&r.mesure!=null&&+r.mesure===0),
     note: ok&&e.type==='jury'&&r.mesure!=null?+r.mesure:null, mm: ok&&e.type==='chrono'&&r.mesure!=null?Math.floor(r.mesure/60):null, ss: ok&&e.type==='chrono'&&r.mesure!=null?Math.round(r.mesure%60):null,
-    mv: (ok||okQ)&&(e.type==='points'||e.type==='hauteur'||e.type==='quiz')&&r.mesure!=null?(e.type==='quiz'?qB(r.mesure):+r.mesure):null, qReste: (ok||okQ)&&e.type==='quiz'&&+r.mesure>=1000 ? +r.mesure%1000 : 0, bonus:{}, subsid: (state.org && e.type==='quiz' && state.subsid[state.team]!=null) ? state.subsid[state.team] : null };
+    mv: (ok||okQ)&&(e.type==='points'||e.type==='hauteur'||e.type==='quiz')&&r.mesure!=null?(e.type==='quiz'?qB(r.mesure):+r.mesure):null, qQueue: (ok||okQ)&&e.type==='quiz' ? qQueue(r.mesure) : 0, bonus:{}, subsid: (state.org && e.type==='quiz' && state.subsid[state.team]!=null) ? state.subsid[state.team] : null };
   BONUS.forEach(b=>state.saisie.bonus[b.k]=!!(ok&&r[b.col]));
   if(e.tirs){ state.saisie.tirs = lsGet(cleTirs(), []); if(state.saisie.tirs.length && state.saisie.mv==null) state.saisie.mv=state.saisie.tirs.reduce((a,b)=>a+b,0);
     if(!state.saisie.tirs.length && !state.saisieNeuve && !(state.org&&!state.orgRetour)) lireEtat('tirs', e.n).then(T=>{ if(!Array.isArray(T) || !T.length || state.view!=='saisie' || state.ep!==e.n || !state.saisie || (state.saisie.tirs||[]).length) return;
       state.saisie.tirs=T; majTirs(); dire('Lancers repris depuis l\'autre téléphone ✓','ok'); }); }
   const Qd=quizEtat(state.team); if(e.type==='quiz' && !state.saisieNeuve && state.saisie.mv==null && Qd && Qd.phase==='fin' && Qd.fin){        // le téléphone de l'équipe ne connaît pas les points : on reprend son quiz
-    state.saisie.mv=Qd.rep.filter(x=>x.ok).length; state.saisie.qReste=QUIZ_DUREE-Math.min(QUIZ_DUREE, Math.round((Qd.fin-Qd.debut)/1000)); }
+    state.saisie.mv=Qd.rep.filter(x=>x.ok).length; state.saisie.qQueue=qQueue(quizMesure(Qd)); }
+  else if(e.type==='quiz' && !state.saisieNeuve && state.saisie.mv==null && !(state.org&&!state.orgRetour)) lireEtat('quiz', CULTURE).then(S=>{   // quiz joué sur un autre téléphone de l'équipe : on reprend son résultat en ligne
+    if(!S || S.phase!=='fin' || !S.fin || state.view!=='saisie' || state.ep!==CULTURE || !state.saisie || state.saisie.mv!=null) return;
+    const Qs={...S, debut:S.debut-DECAL, fin:S.fin-DECAL}; state.saisie.mv=(S.rep||[]).filter(x=>x.ok).length; state.saisie.qQueue=qQueue(quizMesure(Qs));
+    const el=$('#mv'); if(el){ el.value=state.saisie.mv; majRecap(); } });
   if(e.type==='chrono'){ const c=lsGet(cleChrono(), null); if(c && (c.t0||c.acc)){ chT0=c.t0||0; chAcc=c.acc||0; } }      // chrono repris après une veille ou un rechargement
   if(e.type==='chrono' && !chT0 && !chAcc && !state.saisieNeuve && !(state.org&&!state.orgRetour)) lireEtat('chrono', e.n).then(c=>{       // nouveau téléphone : chrono repris en ligne
     if(!c || state.view!=='saisie' || state.ep!==e.n || chT0 || chAcc) return; chT0=c.t0?c.t0-DECAL:0; chAcc=c.acc||0; lsSet(cleChrono(), {t0:chT0, acc:chAcc}); chronoAff();
@@ -1798,7 +1827,7 @@ window.validerSaisie = ()=>{
   if(fait(e.n,t) && !state.modifEnCours && !state.org) alertes.push('Cette équipe a déjà un résultat sur cette épreuve : il sera remplacé.');
   if(alertes.length && !confirm('⚠️ Vérifiez avant de valider :\n\n• '+alertes.join('\n• ')+'\n\nC\'est bien ça ?')) return;
   if(!codeSaisieOk()) return;
-  if(e.type==='quiz') mes = QUIZ_OFF + Math.round(mes)*1000 + (s.qReste||0);            // même échelle que le quiz joué dans l'appli
+  if(e.type==='quiz') mes = QZ + Math.round(mes)*1e7 + (s.qQueue||0);            // même échelle que le quiz joué dans l'appli
   const maintenant=horloge().toISOString(); const etaitFait=fait(e.n,t);
   const row={ event:EVENT, stand:e.n, team:t, resultat:res, mesure:mes, code:CLE, updated_at:maintenant }; BONUS.forEach(b=>row[b.col]=!!s.bonus[b.k]);
   if(e.type==='quiz'){ const v=parseFloat(String(($('#subsid')||{}).value||'').replace(',','.')); if(!isNaN(v)) envoyerSubsid(t, v); }
