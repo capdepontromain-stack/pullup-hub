@@ -699,7 +699,7 @@ async function fetchReel(annee) {
   const numsAnt = Object.keys(FACTURES_ANTERIEURES_EVENEMENT_2026);
   const [rFac, rTx, rAnt] = await Promise.all([
     sb.from('banque_factures').select('numero,mois,client,ht,tva,ttc,statut,date_emission').eq('annee', annee),
-    sb.from('banque_transactions').select('transaction_id,mois,debit,credit,categorie,reference').eq('annee', annee),
+    selectTout(() => sb.from('banque_transactions').select('transaction_id,mois,debit,credit,categorie,reference').eq('annee', annee).order('transaction_id')),
     (annee === 2026 && numsAnt.length) ? sb.from('banque_factures').select('numero,ht,tva,statut').in('numero', numsAnt) : Promise.resolve({ data: [] })
   ]);
   const factures = rFac.data || [], txs = rTx.data || [];
@@ -1017,7 +1017,7 @@ async function renderBilanClair(reel) {
   const parMois = resultat / moisEcoules;
 
   // Ce qui coûte : familles de dépenses 2026 (Impôts + Cotisations regroupés pour la lecture)
-  const rCat = await sb.from('banque_transactions').select('categorie,debit').eq('annee', 2026).gt('debit', 0);
+  const rCat = await selectTout(() => sb.from('banque_transactions').select('categorie,debit').eq('annee', 2026).gt('debit', 0).order('transaction_id'));
   const fam = {};
   (rCat.data || []).forEach(t => {
     let c = t.categorie || 'Autres';
@@ -1564,8 +1564,8 @@ async function renderReports() {
   // Top prestataires & artistes (montants payés, depuis la banque)
   const tpEl = document.getElementById('rpt-top-prestas');
   if (tpEl) {
-    const { data } = await sb.from('banque_transactions').select('libelle,debit')
-      .eq('annee', 2026).eq('categorie', 'Artistes & prestataires').not('debit', 'is', null);
+    const { data } = await selectTout(() => sb.from('banque_transactions').select('libelle,debit')
+      .eq('annee', 2026).eq('categorie', 'Artistes & prestataires').not('debit', 'is', null).order('transaction_id'));
     const parPresta = {};
     (data || []).forEach(t => {
       const p = (t.libelle || '—').trim();

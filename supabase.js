@@ -15,6 +15,22 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   }
 });
 
+// Supabase ne renvoie que 1 000 lignes par requête. En 2026, la banque dépasse 1 000 opérations
+// (1 242 au 25/11/2026) : sans pagination, les mois les plus anciens disparaissaient des tableaux
+// (janvier et février vides dans Finances & Charges). selectTout() lit page par page.
+// fabrique = fonction qui renvoie une requête NEUVE (avec un tri stable) à chaque appel.
+async function selectTout(fabrique) {
+  let tout = [];
+  for (let de = 0; ; de += 1000) {
+    const { data, error } = await fabrique().range(de, de + 999);
+    if (error) return { data: tout.length ? tout : null, error };
+    tout = tout.concat(data || []);
+    if (!data || data.length < 1000) break;
+  }
+  return { data: tout, error: null };
+}
+
+
 // =============================================
 // AUTH
 // =============================================
@@ -4217,7 +4233,7 @@ async function loadCharges() {
     sb.from('charges_monthly').select('*').eq('year', annee).order('month'),
     sb.from('charges_fixes').select('*').eq('actif', true).order('categorie').order('label'),
     sb.from('charges_variables_items').select('*').eq('actif', true).order('categorie').order('label'),
-    sb.from('banque_transactions').select('*').eq('annee', annee).order('date_op', { ascending: false }),
+    selectTout(() => sb.from('banque_transactions').select('*').eq('annee', annee).order('date_op', { ascending: false }).order('transaction_id')),
     sb.from('finance_monthly').select('*').eq('year', annee),
     sb.from('banque_factures').select('*').eq('annee', annee).order('date_emission', { ascending: false })
   ]);
@@ -4607,7 +4623,7 @@ function refCiteFacture(reference, numero) {
 
 async function rapprocherDatesPaiement() {
   const [rc, rf] = await Promise.all([
-    sb.from('banque_transactions').select('date_op,libelle,credit,reference').gt('credit', 0),
+    selectTout(() => sb.from('banque_transactions').select('date_op,libelle,credit,reference').gt('credit', 0).order('transaction_id')),
     sb.from('banque_factures').select('numero,client,ttc,statut,payee_le,date_emission').eq('statut', 'paid')
   ]);
   const creds = (rc.data || []).map(c => ({ ...c, refnum: (c.reference || '').replace(/\D/g, '') }));
