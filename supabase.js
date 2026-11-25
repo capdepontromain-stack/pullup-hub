@@ -3971,12 +3971,15 @@ async function requestLeaveDay(dateStr) {
 
   // Notification pour Romain — uniquement pour une demande de congé
   if (currentUserName !== 'Romain' && leaveType === 'conge') {
-    await sb.from('notifications').insert({
-      type: 'leave_request',
-      title: `Congé demandé par ${currentUserName}`,
-      message: `${currentUserName} demande un congé le ${dateLabel}`,
-      read: false
-    }).catch(() => {});
+    // try/catch : le client Supabase n'a pas de .catch() (il plantait ici et bloquait la demande, 25/11/2026)
+    try {
+      await sb.from('notifications').insert({
+        type: 'leave_request',
+        title: `Congé demandé par ${currentUserName}`,
+        message: `${currentUserName} demande un congé le ${dateLabel}`,
+        read: false
+      });
+    } catch (e) { /* la notification est un bonus : on ne bloque pas la demande */ }
   }
 
   showToast((currentUserName !== 'Romain' && leaveType === 'conge') ? 'Demande envoyée à Romain ✓' : `${typeLabels[leaveType]} enregistré ✓`);
