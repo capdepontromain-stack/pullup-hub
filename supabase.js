@@ -3838,9 +3838,9 @@ function renderLeaveCalendar() {
     <span style="font-weight:700;font-size:1rem;min-width:160px;text-align:center;text-transform:capitalize">${monthLabel}</span>
     <button onclick="leaveNextMonth()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text1);width:36px;height:36px;border-radius:8px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center">›</button>
   </div>
-  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px">
+  <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-bottom:4px">
     ${days.map(d => `<div style="text-align:center;font-size:.75rem;font-weight:600;color:var(--text2);padding:4px">${d}</div>`).join('')}
-  </div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">`;
+  </div><div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px">`;
 
   // Cellules vides avant le premier jour
   for (let i = 0; i < startDow; i++) {
